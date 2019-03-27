@@ -16,14 +16,6 @@ function read_input(csv::String,myTime::Int64)
     return temp,IR
 end
 
-function PAR(phyt, I, zf, cell_num)
-    cumsum_cell = cumsum(cell_num, dims = 3)
-    i = trunc(Int, phyt.z)
-    atten = (katten_w *(-zf[i]) + katten_c * cumsum_cell[i])
-    PAR = α*I*exp(-atten)
-    return PAR
-end
-
 function setup_agents(N::Int64,Cquota::Array,mean::Float64,var::Float64,bdry)
     phyts0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[])
     for i in 1:N
