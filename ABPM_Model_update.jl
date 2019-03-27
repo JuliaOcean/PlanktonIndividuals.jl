@@ -81,5 +81,9 @@ end
  JLD.@write f output1
  JLD.@write f output2
  JLD.@write f nutrients
+ JLD.@write f bdry
+ JLD.@write f zf
+ JLD.@write f xg
+ JLD.@write f yg
  close(f)
 
