@@ -12,6 +12,14 @@ function daynight(t::Int64, IR)
     end
 end
 
+function PAR_cal(phyt, I, zf, cell_num)
+    cumsum_cell = cumsum(cell_num, dims = 3)
+    i = trunc(Int, phyt.z)
+    atten = (katten_w *(-zf[i]) + katten_c * cumsum_cell[i])
+    PAR = α*I*exp(-atten)
+    return PAR
+end
+
 function PC(PAR, Temp, phyt) 
     Tempstd = exp(TempAe*(1.0/(Temp+273.15)-1.0/Tempref))
     photoTempFunc = TempCoeff*max(1.0e-10,Tempstd)
@@ -149,6 +157,7 @@ function update(t::Int64, phyts_a, nutrients, IR, temp)
 	P_graz = rand(Bernoulli(exp(Num_phyt/N*Nsp)*phyt.size/Grz_P))
 # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
         P_dvi=max(0.0,phyt.size-dvid_size)*1.0e5*rand(Bernoulli(phyt.size/Dvid_P))
+	PAR = PAR_cal(phyt, IR[t], zf, cell_num)
         PP = PC(PAR,temp[t],phyt)
         VN = Nuptake(DIN,phyt)
         Dmd_NC = (1+k_respir(phyt.Cq1))*VN/R_NC
