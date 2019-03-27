@@ -157,7 +157,7 @@ function update(t::Int64, phyts_a, nutrients, IR, temp)
 	P_graz = rand(Bernoulli(exp(Num_phyt/N*Nsp)*phyt.size/Grz_P))
 # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
         P_dvi=max(0.0,phyt.size-dvid_size)*1.0e5*rand(Bernoulli(phyt.size/Dvid_P))
-	PAR = PAR_cal(phyt, IR[t], zf, cell_num)
+	PAR = PAR_cal(phyt, IR[t], zf, cell_num[:,:,:,t])
         PP = PC(PAR,temp[t],phyt)
         VN = Nuptake(DIN,phyt)
         Dmd_NC = (1+k_respir(phyt.Cq1))*VN/R_NC
