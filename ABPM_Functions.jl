@@ -12,11 +12,10 @@ function daynight(t::Int64, IR)
     end
 end
 
-function PC(I, Temp, phyt)
+function PC(PAR, Temp, phyt) 
     Tempstd = exp(TempAe*(1.0/(Temp+273.15)-1.0/Tempref))
     photoTempFunc = TempCoeff*max(1.0e-10,Tempstd)
-#without light inhibition
-    PC = PCmax*photoTempFunc*(1-exp(-α*I*phyt.chl/phyt.Cq2/PCmax))*Cquota[phyt.sp]*phyt.size
+    PC = PCmax*photoTempFunc*(1-exp(-PAR[trunc(Int,phyt.z)]*phyt.chl/phyt.Cq2/PCmax))*Cquota[phyt.sp]*phyt.size
     return PC
 end
 
@@ -150,7 +149,7 @@ function update(t::Int64, phyts_a, nutrients, IR, temp)
 	P_graz = rand(Bernoulli(exp(Num_phyt/N*Nsp)*phyt.size/Grz_P))
 # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
         P_dvi=max(0.0,phyt.size-dvid_size)*1.0e5*rand(Bernoulli(phyt.size/Dvid_P))
-        PP = PC(IR[t],temp[t],phyt)
+        PP = PC(PAR,temp[t],phyt)
         VN = Nuptake(DIN,phyt)
         Dmd_NC = (1+k_respir(phyt.Cq1))*VN/R_NC
         Res2 = respir(phyt.Cq2)

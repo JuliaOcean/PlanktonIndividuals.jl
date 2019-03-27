@@ -2,7 +2,7 @@ function read_input(csv::String,myTime::Int64)
     # irradiance(μmol photons/m^2) and temperature
     # will change later to make it able to choose different month
     input = CSV.read(csv)
-    days=myTime÷24 + 1
+    days=myTime÷24 
     temp = copy(input.Temp_Aug)
     for i in 1:days-1
         tt = copy(input.Temp_Aug)
@@ -16,13 +16,21 @@ function read_input(csv::String,myTime::Int64)
     return temp,IR
 end
 
+function PAR(phyt, I, zf, cell_num)
+    cumsum_cell = cumsum(cell_num, dims = 3)
+    i = trunc(Int, phyt.z)
+    atten = (katten_w *(-zf[i]) + katten_c * cumsum_cell[i])
+    PAR = α*I*exp(-atten)
+    return PAR
+end
+
 function setup_agents(N::Int64,Cquota::Array,mean::Float64,var::Float64,bdry)
     phyts0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[])
     for i in 1:N
         # agent location
         x = rand(bdry[1,1]*10:bdry[1,2]*10)/10
         y = rand(bdry[2,1]*10:bdry[2,2]*5)/10
-        z = rand(bdry[3,1]*10:bdry[3,2]*5)/10
+        z = rand(bdry[3,1]*10:bdry[3,2]*7.5)/10
         # a normal distribution with mean variance
         radm = max(0.05, rand(Normal(mean,var)))
         gen  = 1
@@ -70,4 +78,16 @@ function write_output(t,CR,output)
     chl_ave=mean(CR[1].chl)
     push!(output,(time=t, gen_ave=gen_ave, spec_ave=spec_ave, Cq1_ave=Cq1_ave, Cq2_ave=Cq2_ave, Nq_ave=Nq_ave, size_ave=size_ave, chl_ave=chl_ave, Population=size(CR[1],1), dvid=CR[2], graz=CR[3]))
     return output
+end
+
+function count_num(phyts_a, bdry)
+    cells = zeros(bdry[2,2], bdry[1,2], bdry[3,2])
+    for i in 1:size(phyts_a,1)
+        phyt = phyts_a[i,:]
+        x = trunc(Int, phyt.x)
+        y = trunc(Int, phyt.y)
+        z = trunc(Int, phyt.z)
+        cells[y, x, z] = cells[y, x, z] + 1
+    end
+    return cells
 end
