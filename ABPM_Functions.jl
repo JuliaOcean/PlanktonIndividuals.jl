@@ -14,8 +14,8 @@ end
 
 function PAR_cal(phyt, I, zf, cell_num)
     cumsum_cell = cumsum(cell_num, dims = 3)
-    i = trunc(Int, phyt.z)
-    atten = (katten_w *(-zf[i]) + katten_c * cumsum_cell[i])
+    z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
+    atten = (katten_w *(-zf[z]) + katten_c * cumsum_cell[y, x, z])
     PAR = α*I*exp(-atten)
     return PAR
 end
@@ -23,7 +23,7 @@ end
 function PC(PAR, Temp, phyt) 
     Tempstd = exp(TempAe*(1.0/(Temp+273.15)-1.0/Tempref))
     photoTempFunc = TempCoeff*max(1.0e-10,Tempstd)
-    PC = PCmax*photoTempFunc*(1-exp(-PAR[trunc(Int,phyt.z)]*phyt.chl/phyt.Cq2/PCmax))*Cquota[phyt.sp]*phyt.size
+    PC = PCmax*photoTempFunc*(1-exp(-PAR*phyt.chl/phyt.Cq2/PCmax))*Cquota[phyt.sp]*phyt.size
     return PC
 end
 
@@ -135,7 +135,7 @@ end
 ####################################
 # model update (ONE time step: 1h) #
 ####################################
-function update(t::Int64, phyts_a, nutrients, IR, temp)
+function update(t::Int64, phyts_a, nutrients, IR, temp, cell_num)
 # load nutrients
     DIN = copy(nutrients.DIN[t])
     DON = copy(nutrients.DON[t])
@@ -157,7 +157,7 @@ function update(t::Int64, phyts_a, nutrients, IR, temp)
 	P_graz = rand(Bernoulli(exp(Num_phyt/N*Nsp)*phyt.size/Grz_P))
 # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
         P_dvi=max(0.0,phyt.size-dvid_size)*1.0e5*rand(Bernoulli(phyt.size/Dvid_P))
-	PAR = PAR_cal(phyt, IR[t], zf, cell_num[:,:,:,t])
+	PAR = PAR_cal(phyt, IR[t], zf, cell_num)
         PP = PC(PAR,temp[t],phyt)
         VN = Nuptake(DIN,phyt)
         Dmd_NC = (1+k_respir(phyt.Cq1))*VN/R_NC
