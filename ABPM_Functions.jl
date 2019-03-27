@@ -12,9 +12,8 @@ function daynight(t::Int64, IR)
     end
 end
 
-function PAR_cal(phyt, I, zf, cumsum_cell)
-    z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
-    atten = (katten_w *(-zf[z]) + katten_c * cumsum_cell[y, x, z])
+function PAR_cal(phyt, I, z, cumsum_cell)
+    atten = (katten_w *(-z) + katten_c * cumsum_cell)
     PAR = α*I*exp(-atten)
     return PAR
 end
@@ -145,6 +144,7 @@ function update(t::Int64, phyts_a, nutrients, IR, temp, cell_num)
     graz_ct  = 0
     death_ct = 0
     Num_phyt = size(phyts_a,1)
+    cumsum_cell = cumsum(cell_num, dims = 3)
     #set up a dataframe to record all updated agents
     phyts_b = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[])
 #
@@ -152,12 +152,12 @@ function update(t::Int64, phyts_a, nutrients, IR, temp, cell_num)
 #
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
+        z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
         #compute probabilities of grazing and division
 	P_graz = rand(Bernoulli(exp(Num_phyt/N*Nsp)*phyt.size/Grz_P))
 # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
         P_dvi=max(0.0,phyt.size-dvid_size)*1.0e5*rand(Bernoulli(phyt.size/Dvid_P))
-        cumsum_cell = cumsum(cell_num, dims = 3)
-	PAR = PAR_cal(phyt, IR[t], zf, cumsum_cell)
+	PAR = PAR_cal(phyt, IR[t], zf[z], cumsum_cell[y, x, z])
         PP = PC(PAR,temp[t],phyt)
         VN = Nuptake(DIN,phyt)
         Dmd_NC = (1+k_respir(phyt.Cq1))*VN/R_NC
