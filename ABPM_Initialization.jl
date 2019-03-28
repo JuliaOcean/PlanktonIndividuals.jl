@@ -83,3 +83,14 @@ function count_num(phyts_a, bdry)
     end
     return cells
 end
+
+function convert_coordinates(phyts, zf, xg, yg, zgrid, xgrid, ygrid)
+    for i in 1:size(phyts,1)
+	phyt = phyts[i,:]
+	z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
+	dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
+	phyt.x = xg[x] - dx * xgrid[x];
+	phyt.y = yg[y] + dy * ygrid[y];
+	phyt.z = zf[z] - dz * zgrid[z];
+    end
+end
