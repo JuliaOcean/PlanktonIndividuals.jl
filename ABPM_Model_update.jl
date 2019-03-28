@@ -30,6 +30,7 @@ nutrients = DataFrame(DIN=5.0e-6, DOC=0.0, DON=6.0e-5, POC=0.0, PON=0.0);# μmol
 # model update
 for t in 1:myTime
     phyts_a = copy(B[t]) # read data from last time step
+    convert_coordinates(B[t],zf, xg, yg, zgrid, xgrid, ygrid) # convert grids to lon, lat and depth
     agent_move(phyts_a,bdry,u,v,w,xgrid,ygrid,zgrid,t) # agents advection and  convection
     cell_num = count_num(phyts_a, bdry)
     CR=update(t, phyts_a, nutrients, IR, temp, cell_num) # model update, return value: phyts_b, dvid_ct, and graz_ct
