@@ -26,9 +26,9 @@ function setup_agents(N::Int64,Cquota::Array,mean::Float64,var::Float64,bdry)
         # a normal distribution with mean variance
         radm = max(0.05, rand(Normal(mean,var)))
         gen  = 1
-	size = radm
-	Cq1  = Cquota[1]*1E-3
-	Cq2  = Cquota[1]*radm
+        size = radm
+        Cq1  = Cquota[1]*1E-3
+        Cq2  = Cquota[1]*radm
         Nq   = 13/106*2*Cq2
         chl  = Cq2*0.4
         sp   = 1
@@ -38,16 +38,16 @@ function setup_agents(N::Int64,Cquota::Array,mean::Float64,var::Float64,bdry)
         # agent location
         x = rand(bdry[1,1]*10:bdry[1,2]*10)/10
         y = rand(bdry[2,2]*5:bdry[2,2]*10)/10
-        z = rand(bdry[3,1]*10:bdry[3,2]*5)/10
+        z = rand(bdry[3,1]*10:bdry[3,2]*7.5)/10
         # a normal distribution with mean variance
         radm = max(0.05, rand(Normal(mean,var)))
         gen  = 1
-	size = radm
-	Cq1  = Cquota[2]*1E-3
-	Cq2  = Cquota[2]*radm
+        size = radm
+        Cq1  = Cquota[2]*1E-3
+        Cq2  = Cquota[2]*radm
         Nq   = 13/106*2*Cq2
         chl  = Cq2*0.4
-	sp   = 2
+        sp   = 2
         push!(phyts0,(x=x,y=y,z=z,gen=gen,size=size,Cq1=Cq1,Cq2=Cq2,Nq=Nq,chl=chl,sp=sp))
     end
     B = [phyts0]
