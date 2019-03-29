@@ -115,7 +115,7 @@ function compute_mean_species(B1, B2)
     for i in 1:720
         gen_ave1=mean(B1[i].gen)
         Cq1_ave1=mean(B1[i].Cq1)
-         Cq2_ave1=mean(B1[i].Cq2)
+        Cq2_ave1=mean(B1[i].Cq2)
         Nq_ave1=mean(B1[i].Nq)
         size_ave1=mean(B1[i].size)
         chl_ave1=mean(B1[i].chl)
