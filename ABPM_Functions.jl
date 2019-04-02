@@ -5,7 +5,7 @@ k_respir(Cq2) = respir_a*(12.0e9*Cq2)^respir_b/Cq2
 respir(Cq2) = respir_a*(12.0e9*Cq2)^respir_b
 
 function daynight(t::Int64, IR)
-    if IR[t] < 5.0
+    if IR[trunc(Int,t*deltaT/3600] < 5.0
         return false
     else
         return true
@@ -101,17 +101,17 @@ function trilinear_itpl(x,y,z,vel_field,t::Int64)
     return vel
 end
 
-function agent_move(phyts_a,bdry,u,v,w,xgrid,ygrid,zgrid,t::Int64)
+function agent_move(phyts_a,bdry,u,v,w,xgrid,ygrid,zgrid,t::Int64,deltaT::Int64)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
-        uvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, u, t)
+        uvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, u, t) # unit: m/s
         vvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, v, t)
         wvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, w, t)
 
         xi, yi, zi = trunc(Int,phyt.x), trunc(Int,phyt.y), trunc(Int,phyt.z)
-        dx = uvel*3600/1000/xgrid[xi]/96.4 # 1 degree of lat at 30N
-        dy = vvel*3600/1000/ygrid[yi]/111 # 1 degree of lon
-        dz = wvel*3600/zgrid[zi]
+        dx = uvel/1000/xgrid[xi]/96.4*deltaT # 1 degree of lat at 30N, unit: grid/h
+        dy = vvel/1000/ygrid[yi]/111*deltaT# 1 degree of lon, unit: grid/h
+        dz = wvel/zgrid[zi]*deltaT # vertical movement, unit: grid/h
         phyt.x = phyt.x - dx*(1+rand()/5)
         phyt.y = phyt.y - dy*(1+rand()/5)
         phyt.z = max(bdry[3,1],min(bdry[3,2],phyt.z - dz*(1+rand()/5)))
@@ -133,7 +133,7 @@ end
 ####################################
 # model update (ONE time step: 1h) #
 ####################################
-function update(t::Int64, phyts_a, nutrients, IR, temp, cell_num)
+function update(t::Int64, deltaT::Int64, phyts_a, nutrients, IR, temp, cell_num)
 # load nutrients
     DIN = copy(nutrients.DIN[t])
     DON = copy(nutrients.DON[t])
@@ -154,15 +154,15 @@ function update(t::Int64, phyts_a, nutrients, IR, temp, cell_num)
         phyt = phyts_a[i,:]
         z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
         #compute probabilities of grazing and division
-	P_graz = rand(Bernoulli(exp(Num_phyt/N*Nsp)*phyt.size/Grz_P))
+        P_graz = rand(Bernoulli(exp(Num_phyt/N*Nsp)*phyt.size/Grz_P))
 # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
         P_dvi=max(0.0,phyt.size-dvid_size)*1.0e5*rand(Bernoulli(phyt.size/Dvid_P))
-	PAR = PAR_cal(IR[t], zf[z], cumsum_cell[y, x, z])
-        PP = PC(PAR,temp[t],phyt)
-        VN = Nuptake(DIN,phyt)
+        PAR = PAR_cal(IR[trunc(Int,t*deltaT/3600)], zf[z], cumsum_cell[y, x, z])
+        PP = PC(PAR,temp[trunc(Int,t*deltaT/3600)],phyt)*deltaT
+        VN = Nuptake(DIN,phyt)*deltaT
         Dmd_NC = (1+k_respir(phyt.Cq1))*VN/R_NC
-        Res2 = respir(phyt.Cq2)
-        ρ_chl = chl_sync(phyt,PP,IR[t])
+        Res2 = respir(phyt.Cq2)*deltaT
+        ρ_chl = chl_sync(phyt,PP,IR[trunc(Int,t*deltaT/3600)])
         if P_graz < 1 #not grazed
             if phyt.Cq2+phyt.Cq1 ≤ Cmin # natural death
                 DOC = DOC + (phyt.Cq1+phyt.Cq2)*mortFracC
@@ -230,12 +230,12 @@ function update(t::Int64, phyts_a, nutrients, IR, temp, cell_num)
     end # while loop to traverse the array of agents
 #
 # update nutrients
-    sinkPOC  = POC*k_sink
-    sinkPON  = PON*k_sink
-    reminPOC = POC*kPOC
-    reminPON = PON*kPON
-    reminDOC = DOC*kDOC
-    reminDON = DON*kDON
+    sinkPOC  = POC*k_sink*deltaT
+    sinkPON  = PON*k_sink*deltaT
+    reminPOC = POC*kPOC*deltaT
+    reminPON = PON*kPON*deltaT
+    reminDOC = DOC*kDOC*deltaT
+    reminDON = DON*kDON*deltaT
 
     PON = PON - sinkPON - reminPON
     POC = POC - sinkPOC - reminPOC

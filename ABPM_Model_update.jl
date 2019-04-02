@@ -6,8 +6,9 @@ include("ABPM_Parameters.jl")
 include("ABPM_Functions.jl")
 include("ABPM_Initialization.jl")
 # Read input files
-myTime = 720 # runtime, time step: 1h
-temp,IR = read_input("T_IR.csv",myTime);
+nTime = 720 # number of time steps
+deltaT = 3600 # time step : 1h
+temp,IR = read_input("T_IR.csv",nTime);
 fieldroot = "/nobackup1b/users/zhenwu/vel_fields/";
 u = ncread(fieldroot*"UVEL_Mar.nc","u"); # zonal current speed, dx, positive to west
 v = ncread(fieldroot*"VVEL_Mar.nc","v"); # zonal current speed, dx, positive to west
@@ -28,11 +29,11 @@ B=setup_agents(N,Cquota,1.1,0.18,bdry) # Normal distribution with mean and varia
 output = create_output(B);
 nutrients = DataFrame(DIN=5.0e-6, DOC=0.0, DON=6.0e-5, POC=0.0, PON=0.0);# μmol
 # model update
-for t in 1:myTime
+for t in 1:nTime
     phyts_a = copy(B[t]) # read data from last time step
-    agent_move(phyts_a,bdry,u,v,w,xgrid,ygrid,zgrid,t) 
+    agent_move(phyts_a,bdry,u,v,w,xgrid,ygrid,zgrid,t,deltaT) 
     cell_num = count_num(phyts_a, bdry)
-    CR=update(t, phyts_a, nutrients, IR, temp, cell_num) # model update, return value: phyts_b, dvid_ct, and graz_ct
+    CR=update(t, deltaT, phyts_a, nutrients, IR, temp, cell_num) # model update, return value: phyts_b, dvid_ct, and graz_ct
     push!(B,CR[1])
     write_output(t,CR,output)
     println(output[t,:]) # save current output
