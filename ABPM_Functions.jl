@@ -5,7 +5,7 @@ k_respir(Cq2) = respir_a*(12.0e9*Cq2)^respir_b/Cq2
 respir(Cq2) = respir_a*(12.0e9*Cq2)^respir_b
 
 function daynight(t::Int64, IR)
-    if IR[trunc(Int,t*deltaT/3600] < 5.0
+    if IR[trunc(Int,t*deltaT/3600)] < 5.0
         return false
     else
         return true
@@ -21,7 +21,7 @@ end
 function PC(PAR, Temp, phyt) 
     Tempstd = exp(TempAe*(1.0/(Temp+273.15)-1.0/Tempref))
     photoTempFunc = TempCoeff*max(1.0e-10,Tempstd)
-    PC = PCmax*photoTempFunc*(1-exp(-PAR*phyt.chl/phyt.Cq2/PCmax))*Cquota[phyt.sp]*phyt.size
+    PC = PCmax[phyt.sp]*photoTempFunc*(1-exp(-PAR*phyt.chl/phyt.Cq2/PCmax[phyt.sp]))*Cquota[phyt.sp]*phyt.size
     return PC
 end
 
@@ -50,29 +50,30 @@ function divide(phyt::DataFrameRow)
     phytops[1,:].y = phyt.y
     phytops[1,:].z = phyt.z
     phytops[1,:].gen = phyt.gen + 1
-    phytops[1,:].Cq1 = phyt.Cq1 * 0.45
-    phytops[1,:].Cq2 = phyt.Cq2 * 0.45
-    phytops[1,:].Nq  = phyt.Nq  * 0.45
-    phytops[1,:].size= phyt.size* 0.45
-    phytops[1,:].chl = phyt.chl * 0.45
+    phytops[1,:].Cq1 = phyt.Cq1 * 0.5
+    phytops[1,:].Cq2 = phyt.Cq2 * 0.5
+    phytops[1,:].Nq  = phyt.Nq  * 0.5
+    phytops[1,:].size= phyt.size* 0.5
+    phytops[1,:].chl = phyt.chl * 0.5
     phytops[1,:].sp = phyt.sp
 
     phytops[2,:].x = phyt.x
     phytops[2,:].y = phyt.y
     phytops[2,:].z = phyt.z
     phytops[2,:].gen = phyt.gen + 1
-    phytops[2,:].Cq1 = phyt.Cq1 * 0.45
-    phytops[2,:].Cq2 = phyt.Cq2 * 0.45
-    phytops[2,:].Nq  = phyt.Nq  * 0.45
-    phytops[2,:].size= phyt.size* 0.45
-    phytops[2,:].chl = phyt.chl * 0.45
+    phytops[2,:].Cq1 = phyt.Cq1 * 0.5
+    phytops[2,:].Cq2 = phyt.Cq2 * 0.5
+    phytops[2,:].Nq  = phyt.Nq  * 0.5
+    phytops[2,:].size= phyt.size* 0.5
+    phytops[2,:].chl = phyt.chl * 0.5
     phytops[2,:].sp = phyt.sp
 
     return phytops
 end
-######################################
-# advection and convection of agents #
-######################################
+########################
+# advection  of agents #
+########################
+# trilinear interpolation: based on A grid(velocity on corners)
 function trilinear_itpl(x,y,z,vel_field,t::Int64)
     x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
     xᵈ = x - x₀
@@ -100,13 +101,30 @@ function trilinear_itpl(x,y,z,vel_field,t::Int64)
 
     return vel
 end
-
+# simple interpolation: interpolate according to C grid (velocity on faces)
+function simple_itpl(x, y, z, u, v, w, t::Int64)
+    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
+    xᵈ = x - x₀
+    yᵈ = y - y₀
+    zᵈ = z - z₀
+    u₋ = u[y₀, x₀, z₀, t]
+    u₊ = u[y₀, x₀+1, z₀, t]
+    v₋ = v[y₀, x₀, z₀, t]
+    v₊ = v[y₀+1, x₀, z₀, t]
+    w₋ = w[y₀, x₀, z₀, t]
+    w₊ = w[y₀, x₀, z₀+1, t]
+    uvel = u₋ * (1 - xᵈ) + u₊ * xᵈ
+    vvel = v₋ * (1 - yᵈ) + v₊ * yᵈ
+    wvel = w₋ * (1 - zᵈ) + w₊ * zᵈ
+    return uvel, vvel, wvel
+end
 function agent_move(phyts_a,bdry,u,v,w,xgrid,ygrid,zgrid,t::Int64,deltaT::Int64)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
-        uvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, u, t) # unit: m/s
-        vvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, v, t)
-        wvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, w, t)
+#       uvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, u, t) # unit: m/s, trilinear interpolation
+#       vvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, v, t) # unit: m/s, trilinear interpolation
+#       wvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, w, t) # unit: m/s, trilinear interpolation
+        uvel, vvel, wvel = simple_itpl(phyt.x, phyt.y, phyt.z, u, v, w, t) # unit: m/s, simple interpolation
 
         xi, yi, zi = trunc(Int,phyt.x), trunc(Int,phyt.y), trunc(Int,phyt.z)
         dx = uvel/1000/xgrid[xi]/96.4*deltaT # 1 degree of lat at 30N, unit: grid/h
@@ -217,6 +235,7 @@ function update(t::Int64, deltaT::Int64, phyts_a, nutrients, IR, temp, cell_num)
                         global dvdcount += 2
                         phyts2 = divide(phyt)
                         append!(phyts_b,phyts2)
+                        DOC = DOC + phyt.Cq2*0.0 # consume C when cell is divided
                     end # divide
                 end # day night?
             end # natural death
