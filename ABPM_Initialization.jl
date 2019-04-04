@@ -49,7 +49,7 @@ function grid_offline(fieldroot::String)
     zC = ncread(fieldroot*"UVEL_big.nc","zC"); # Cell centers depths
     xC = ncread(fieldroot*"WVEL_big.nc","xC"); # Cell centers point long..
     yC = ncread(fieldroot*"WVEL_big.nc","yC"); # Cell centers point lati..
-    Nx = length(xF); Ny = length(yF); Nz = length(zF);
+    Nx = length(xF)-1; Ny = length(yF)-1; Nz = length(zF)-1;
     Δz = zF[1:end-1] .- zF[2:end]; # unit: meters
     Δx = (xC[2:end] .- xC[1:end-1]) .* (111.32*cos(π/6)*1000); # unit: meters, at 30N
     Δy = (yC[2:end] .- yC[1:end-1]) .* (111*1000); # unit: meters
