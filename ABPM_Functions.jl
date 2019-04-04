@@ -28,7 +28,7 @@ end
 function Nuptake(Nit, phyt)
     Nqmax = Nqmax_a*phyt.size*Cquota[phyt.sp]
     Nqmin = Nqmin_a*phyt.size*Cquota[phyt.sp]
-#In-Cell N uptake limitation
+    #In-Cell N uptake limitation
     regQ = max(0.0,min(1.0,(Nqmax-phyt.Nq)/(Nqmax-Nqmin)))
     Nuptake = VNmax[phyt.sp]*Nit/(Nit+KsatN)*regQ*Cquota[phyt.sp]*phyt.size
     return Nuptake
@@ -45,7 +45,7 @@ end
 
 function divide(phyt::DataFrameRow)
     phytops = DataFrame(x=Float64[0.0,0.0], y=Float64[0.0,0.0], z=Float64[0.0,0.0], gen=Int64[1,1], size=Float64[0.0,0.0], Cq1=Float64[0.0,0.0], Cq2=Float64[0.0,0.0], Nq=Float64[0.0,0.0], chl=Float64[0.0,0.0], sp=Int64[0,0])  # initialize new cell
-# NOT all C and N can turn into new cells
+    # NOT all C and N can turn into new cells
     phytops[1,:].x = phyt.x
     phytops[1,:].y = phyt.y
     phytops[1,:].z = phyt.z
@@ -102,57 +102,57 @@ function trilinear_itpl(x,y,z,vel_field,t::Int64)
     return vel
 end
 # simple interpolation: interpolate according to C grid (velocity on faces)
-function simple_itpl(x, y, z, u, v, w, t::Int64)
+function simple_itpl(x, y, z, vel, t::Int64)
     x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
     xᵈ = x - x₀
     yᵈ = y - y₀
     zᵈ = z - z₀
-    u₋ = u[y₀, x₀, z₀, t]
-    u₊ = u[y₀, x₀+1, z₀, t]
-    v₋ = v[y₀, x₀, z₀, t]
-    v₊ = v[y₀+1, x₀, z₀, t]
-    w₋ = w[y₀, x₀, z₀, t]
-    w₊ = w[y₀, x₀, z₀+1, t]
+    u₋ = vel.u[y₀, x₀, z₀, t]
+    u₊ = vel.u[y₀, x₀+1, z₀, t]
+    v₋ = vel.v[y₀, x₀, z₀, t]
+    v₊ = vel.v[y₀+1, x₀, z₀, t]
+    w₋ = vel.w[y₀, x₀, z₀, t]
+    w₊ = vel.w[y₀, x₀, z₀+1, t]
     uvel = u₋ * (1 - xᵈ) + u₊ * xᵈ
     vvel = v₋ * (1 - yᵈ) + v₊ * yᵈ
     wvel = w₋ * (1 - zᵈ) + w₊ * zᵈ
     return uvel, vvel, wvel
 end
-function agent_move(phyts_a,bdry,u,v,w,xgrid,ygrid,zgrid,t::Int64,deltaT::Int64)
+function agent_move(phyts_a,vel,g,t::Int64,deltaT::Int64)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
-#       uvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, u, t) # unit: m/s, trilinear interpolation
-#       vvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, v, t) # unit: m/s, trilinear interpolation
-#       wvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, w, t) # unit: m/s, trilinear interpolation
-        uvel, vvel, wvel = simple_itpl(phyt.x, phyt.y, phyt.z, u, v, w, t) # unit: m/s, simple interpolation
+        #       uvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, u, t) # unit: m/s, trilinear interpolation
+        #       vvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, v, t) # unit: m/s, trilinear interpolation
+        #       wvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, w, t) # unit: m/s, trilinear interpolation
+        uvel, vvel, wvel = simple_itpl(phyt.x, phyt.y, phyt.z, vel, t) # unit: m/s, simple interpolation
 
         xi, yi, zi = trunc(Int,phyt.x), trunc(Int,phyt.y), trunc(Int,phyt.z)
-        dx = uvel/1000/xgrid[xi]/96.4*deltaT # 1 degree of lat at 30N, unit: grid/h
-        dy = vvel/1000/ygrid[yi]/111*deltaT# 1 degree of lon, unit: grid/h
-        dz = wvel/zgrid[zi]*deltaT # vertical movement, unit: grid/h
-        phyt.x = phyt.x - dx*(1+rand()/5)
-        phyt.y = phyt.y - dy*(1+rand()/5)
-        phyt.z = max(bdry[3,1],min(bdry[3,2],phyt.z - dz*(1+rand()/5)))
-	# periodic domian
-	if phyt.x ≥ bdry[1,2]
-		phyt.x = phyt.x - bdry[1,2]
-	end
-	if phyt.x ≤ bdry[1,1]
-		phyt.x = phyt.x + bdry[1,2]
-	end
-	if phyt.y ≥ bdry[2,2]
-		phyt.y = phyt.y - bdry[2,2]
-	end
-	if phyt.y ≤ bdry[2,1]
-		phyt.y = phyt.y + bdry[2,2]
-	end
+        dx = uvel/g.Δx[xi]*deltaT # 1 degree of lat at 30N, unit: grid/h
+        dy = vvel/g.Δy[yi]*deltaT# 1 degree of lon, unit: grid/h
+        dz = wvel/g.Δz[zi]*deltaT # vertical movement, unit: grid/h
+        phyt.x = max(1.0,min(g.Nx,phyt.x - dx*(1+rand()/5)))
+        phyt.y = max(1.0,min(g.Ny,phyt.y - dy*(1+rand()/5)))
+        phyt.z = max(1.0,min(g.Nz,phyt.z - dz*(1+rand()/5)))
+        # periodic domian
+#       if phyt.x ≥ bdry[1,2]
+#           phyt.x = phyt.x - bdry[1,2]
+#       end
+#       if phyt.x ≤ bdry[1,1]
+#           phyt.x = phyt.x + bdry[1,2]
+#       end
+#       if phyt.y ≥ bdry[2,2]
+#           phyt.y = phyt.y - bdry[2,2]
+#       end
+#       if phyt.y ≤ bdry[2,1]
+#           phyt.y = phyt.y + bdry[2,2]
+#       end
     end
 end
 ####################################
 # model update (ONE time step: 1h) #
 ####################################
 function update(t::Int64, deltaT::Int64, phyts_a, nutrients, IR, temp, cell_num)
-# load nutrients
+    # load nutrients
     DIN = copy(nutrients.DIN[t])
     DON = copy(nutrients.DON[t])
     PON = copy(nutrients.PON[t])
@@ -165,15 +165,15 @@ function update(t::Int64, deltaT::Int64, phyts_a, nutrients, IR, temp, cell_num)
     cumsum_cell = cumsum(cell_num, dims = 3)
     #set up a dataframe to record all updated agents
     phyts_b = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[])
-#
-# iterate phytoplankton agents
-#
+    #
+    # iterate phytoplankton agents
+    #
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
         z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
         #compute probabilities of grazing and division
         P_graz = rand(Bernoulli(exp(Num_phyt/N*Nsp)*phyt.size/Grz_P))
-# Hypothesis: the population of grazers is large enough to graze on phytoplanktons
+        # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
         P_dvi=max(0.0,phyt.size-dvid_size)*1.0e5*rand(Bernoulli(phyt.size/Dvid_P))
         PAR = PAR_cal(IR[trunc(Int,t*deltaT/3600)], zf[z], cumsum_cell[y, x, z])
         PP = PC(PAR,temp[trunc(Int,t*deltaT/3600)],phyt)*deltaT
@@ -247,8 +247,8 @@ function update(t::Int64, deltaT::Int64, phyts_a, nutrients, IR, temp, cell_num)
             PON = PON + phyt.Nq*(1.0 - grazFracN)*0.5
         end # graze
     end # while loop to traverse the array of agents
-#
-# update nutrients
+    #
+    # update nutrients
     sinkPOC  = POC*k_sink*deltaT
     sinkPON  = PON*k_sink*deltaT
     reminPOC = POC*kPOC*deltaT

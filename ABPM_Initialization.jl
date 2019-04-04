@@ -16,13 +16,54 @@ function read_input(csv::String,myTime::Int64)
     return temp,IR
 end
 
-function setup_agents(N::Int64,Cquota::Array,mean::Float64,var::Float64,bdry)
+struct velocity
+    u::Array
+    v::Array
+    w::Array
+end
+struct grid
+    xC::Array
+    yC::Array
+    zC::Array
+    xF::Array
+    yF::Array
+    zF::Array
+    Δx::Array # converted to m
+    Δy::Array # converted to m
+    Δz::Array # converted to m
+    Nx::Int
+    Ny::Int
+    Nz::Int
+end
+function read_offline_vels(fieldroot::String)
+    u = ncread(fieldroot*"UVEL_big.nc","u"); # zonal current speed, dx, positive to west
+    v = ncread(fieldroot*"VVEL_big.nc","v"); # zonal current speed, dx, positive to west
+    w = ncread(fieldroot*"WVEL_big.nc","w"); # zonal current speed, dx, positive to west
+    vel = velocity(u, v, w)
+    return vel
+end
+function grid_offline(fieldroot::String)
+    zF = ncread(fieldroot*"WVEL_big.nc","zF"); # Cell faces depths
+    xF = ncread(fieldroot*"UVEL_big.nc","xF"); # Cell faces point long..
+    yF = ncread(fieldroot*"VVEL_big.nc","yF"); # Cell faces point lati..
+    zC = ncread(fieldroot*"UVEL_big.nc","zC"); # Cell centers depths
+    xC = ncread(fieldroot*"WVEL_big.nc","xC"); # Cell centers point long..
+    yC = ncread(fieldroot*"WVEL_big.nc","yC"); # Cell centers point lati..
+    Nx = length(xF); Ny = length(yF); Nz = length(zF);
+    Δz = zF[1:end-1] .- zF[2:end]; # unit: meters
+    Δx = (xC[2:end] .- xC[1:end-1]) .* (111.32*cos(π/6)*1000); # unit: meters, at 30N
+    Δy = (yC[2:end] .- yC[1:end-1]) .* (111*1000); # unit: meters
+    g = grid(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Nx, Ny, Nz)
+    return g
+end
+
+function setup_agents(N::Int64,Cquota::Array,mean::Float64,var::Float64,grid)
     phyts0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[])
     for i in 1:N
         # agent location
-        x = rand(bdry[1,1]*10:bdry[1,2]*10)/10
-        y = rand(bdry[2,1]*10:bdry[2,2]*5)/10
-        z = rand(bdry[3,1]*10:bdry[3,2]*7.5)/10
+        x = rand(1.0*10:grid.Nx*10)/10
+        y = rand(1.0*10:grid.Ny*5)/10
+        z = rand(1.0*10:grid.Nz*7.5)/10
         # a normal distribution with mean variance
         radm = max(0.05, rand(Normal(mean,var)))
         gen  = 1
@@ -36,9 +77,9 @@ function setup_agents(N::Int64,Cquota::Array,mean::Float64,var::Float64,bdry)
     end
     for i in N+1:2N
         # agent location
-        x = rand(bdry[1,1]*10:bdry[1,2]*10)/10
-        y = rand(bdry[2,2]*5:bdry[2,2]*10)/10
-        z = rand(bdry[3,1]*10:bdry[3,2]*7.5)/10
+        x = rand(1.0*10:grid.Nx*10)/10
+        y = rand(grid.Ny*5:grid.Ny*10)/10
+        z = rand(1.0*10:grid.Nz*7.5)/10
         # a normal distribution with mean variance
         radm = max(0.05, rand(Normal(mean,var)))
         gen  = 1
@@ -72,8 +113,8 @@ function write_output(t,CR,output)
     return output
 end
 
-function count_num(phyts_a, bdry)
-    cells = zeros(bdry[2,2], bdry[1,2], bdry[3,2])
+function count_num(phyts_a, grid)
+    cells = zeros(grid.Ny, grid.Nx, grid.Nz)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
         x = trunc(Int, phyt.x)
@@ -84,14 +125,14 @@ function count_num(phyts_a, bdry)
     return cells
 end
 
-function convert_coordinates(phyts, zf, xg, yg, zgrid, xgrid, ygrid)
+function convert_coordinates(phyts, grid)
     for i in 1:size(phyts,1)
-	phyt = phyts[i,:]
-	z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
-	dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
-	phyt.x = xg[x] - dx * xgrid[x];
-	phyt.y = yg[y] + dy * ygrid[y];
-	phyt.z = zf[z] - dz * zgrid[z];
+    phyt = phyts[i,:]
+    z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
+    dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
+    phyt.x = grid.xF[x] - dx * grid.Δx[x] ./(1000*111.32*cos(π/6)); # converted to degree
+    phyt.y = grid.yF[y] + dy * grid.Δy[y] ./(1000*111.0);
+    phyt.z = grid.zF[z] - dz * grid.Δz[z];
     end
 end
 
