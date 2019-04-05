@@ -11,7 +11,7 @@ mutable struct velocity
     w::Array{Float64,3}
 end
 
-struct grid
+struct grids
     xC::Array
     yC::Array
     zC::Array

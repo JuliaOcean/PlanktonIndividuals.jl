@@ -33,7 +33,7 @@ function grid_offline(fieldroot::String)
     Δz = zF[1:end-1] .- zF[2:end]; # unit: meters
     Δx = (xC[2:end] .- xC[1:end-1]) .* (111.32*cos(π/6)*1000); # unit: meters, at 30N
     Δy = (yC[2:end] .- yC[1:end-1]) .* (111*1000); # unit: meters
-    g = grid(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Nx, Ny, Nz)
+    g = grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Nx, Ny, Nz)
     return g
 end
 
