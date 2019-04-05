@@ -29,13 +29,13 @@ nutrients = DataFrame(DIN=5.0e-6, DOC=0.0, DON=6.0e-5, POC=0.0, PON=0.0);# μmol
 # model update
 for t in 1:nTime
     phyts_a = copy(B[t]) # read data from last time step
-    agent_move(phyts_a,vel,g,t,deltaT) 
+    velᵇ = velocity(vel.u[:,:,:,t], vel.v[:,:,:,t], vel.w[:,:,:,t])
+    velᵈ = double_grid(velᵇ,g)
+    agent_move(phyts_a,velᵈ,g,deltaT)
     cell_num = count_num(phyts_a, g)
-    CR=update(t, deltaT, phyts_a, nutrients, IR, temp, cell_num) # model update, return value: phyts_b, dvid_ct, and graz_ct
+    CR=update(t, deltaT, phyts_a, nutrients, IR, temp, cell_num) # return value: phyts_b, dvid_ct, and graz_ct
     push!(B,CR[1])
     write_output(t,CR,output)
-    println(output[t,:]) # save current output
-    println(nutrients[t,:])
     convert_coordinates(B[t],g) # convert grids to lon, lat and depth
 end
 B1 = []; B2 = [];
@@ -54,9 +54,7 @@ output1, output2 = compute_mean_species(B1, B2)
  JLD.@write f output1
  JLD.@write f output2
  JLD.@write f nutrients
- JLD.@write f bdry
- JLD.@write f zf
- JLD.@write f xg
- JLD.@write f yg
+ JLD.@write f g
+ JLD.@write f IR
  close(f)
 
