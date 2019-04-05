@@ -15,31 +15,11 @@ function read_input(csv::String,myTime::Int64)
     end
     return temp,IR
 end
-
-struct velocity
-    u::Array
-    v::Array
-    w::Array
-end
-struct grid
-    xC::Array
-    yC::Array
-    zC::Array
-    xF::Array
-    yF::Array
-    zF::Array
-    Δx::Array # converted to m
-    Δy::Array # converted to m
-    Δz::Array # converted to m
-    Nx::Int
-    Ny::Int
-    Nz::Int
-end
 function read_offline_vels(fieldroot::String)
     u = ncread(fieldroot*"UVEL_big.nc","u"); # zonal current speed, dx, positive to west
     v = ncread(fieldroot*"VVEL_big.nc","v"); # zonal current speed, dx, positive to west
     w = ncread(fieldroot*"WVEL_big.nc","w"); # zonal current speed, dx, positive to west
-    vel = velocity(u, v, w)
+    vel = velocity_fields(u, v, w)
     return vel
 end
 function grid_offline(fieldroot::String)
@@ -49,50 +29,12 @@ function grid_offline(fieldroot::String)
     zC = ncread(fieldroot*"UVEL_big.nc","zC"); # Cell centers depths
     xC = ncread(fieldroot*"WVEL_big.nc","xC"); # Cell centers point long..
     yC = ncread(fieldroot*"WVEL_big.nc","yC"); # Cell centers point lati..
-    Nx = length(xF)-1; Ny = length(yF)-1; Nz = length(zF)-1;
+    Nx = length(xF); Ny = length(yF); Nz = length(zF);
     Δz = zF[1:end-1] .- zF[2:end]; # unit: meters
     Δx = (xC[2:end] .- xC[1:end-1]) .* (111.32*cos(π/6)*1000); # unit: meters, at 30N
     Δy = (yC[2:end] .- yC[1:end-1]) .* (111*1000); # unit: meters
     g = grid(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Nx, Ny, Nz)
     return g
-end
-
-function setup_agents(N::Int64,Cquota::Array,mean::Float64,var::Float64,grid)
-    phyts0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[])
-    for i in 1:N
-        # agent location
-        x = rand(1.0*10:grid.Nx*10)/10
-        y = rand(1.0*10:grid.Ny*5)/10
-        z = rand(1.0*10:grid.Nz*7.5)/10
-        # a normal distribution with mean variance
-        radm = max(0.05, rand(Normal(mean,var)))
-        gen  = 1
-        size = radm
-        Cq1  = Cquota[1]*1E-3
-        Cq2  = Cquota[1]*radm
-        Nq   = 13/106*2*Cq2
-        chl  = Cq2*0.4
-        sp   = 1
-        push!(phyts0,(x=x,y=y,z=z,gen=gen,size=size,Cq1=Cq1,Cq2=Cq2,Nq=Nq,chl=chl,sp=sp))
-    end
-    for i in N+1:2N
-        # agent location
-        x = rand(1.0*10:grid.Nx*10)/10
-        y = rand(grid.Ny*5:grid.Ny*10)/10
-        z = rand(1.0*10:grid.Nz*7.5)/10
-        # a normal distribution with mean variance
-        radm = max(0.05, rand(Normal(mean,var)))
-        gen  = 1
-        size = radm
-        Cq1  = Cquota[2]*1E-3
-        Cq2  = Cquota[2]*radm
-        Nq   = 13/106*2*Cq2
-        chl  = Cq2*0.4
-        sp   = 2
-        push!(phyts0,(x=x,y=y,z=z,gen=gen,size=size,Cq1=Cq1,Cq2=Cq2,Nq=Nq,chl=chl,sp=sp))
-    end
-    B = [phyts0]
-    return B
 end
 
 function create_output(B::Array{DataFrame,1})
