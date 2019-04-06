@@ -173,24 +173,26 @@ function agent_move(phyts_a,velᵈ,g,deltaT::Int64)
 #       uvel, vvel, wvel = simple_itpl(phyt.x, phyt.y, phyt.z, vel, t) # unit: m/s, simple interpolation
 
         xi, yi, zi = trunc(Int,phyt.x), trunc(Int,phyt.y), trunc(Int,phyt.z)
-        dx = uvel/g.Δx[xi]*deltaT # unit: grid/h
-        dy = vvel/g.Δy[yi]*deltaT # unit: grid/h
+        dx = uvel/g.Δx[xi]/(111.32*cos(π/6)*1000)*deltaT # unit: grid/h
+        dy = vvel/g.Δy[yi]/(111*1000)*deltaT # unit: grid/h
         dz = wvel/g.Δz[zi]*deltaT # vertical movement, unit: grid/h
-        phyt.x = max(1.5,min(g.Nx-0.5,phyt.x - dx*(1+rand()/5)))
-        phyt.y = max(1.5,min(g.Ny-0.5,phyt.y - dy*(1+rand()/5)))
+#       phyt.x = max(1.5,min(g.Nx-0.5,phyt.x - dx*(1+rand()/5)))
+#       phyt.y = max(1.5,min(g.Ny-0.5,phyt.y - dy*(1+rand()/5)))
+        phyt.x = phyt.x - dx*(1+rand()/5)
+        phyt.y = phyt.y - dy*(1+rand()/5)
         phyt.z = max(1.0,min(g.Nz-0.1,phyt.z - dz*(1+rand()/5)))
         # periodic domian
-#       if phyt.x ≥ bdry[1,2]
-#           phyt.x = phyt.x - bdry[1,2]
-#       end
-#       if phyt.x ≤ bdry[1,1]
-#           phyt.x = phyt.x + bdry[1,2]
-#       end
-#       if phyt.y ≥ bdry[2,2]
-#           phyt.y = phyt.y - bdry[2,2]
-#       end
-#       if phyt.y ≤ bdry[2,1]
-#           phyt.y = phyt.y + bdry[2,2]
-#       end
+        if phyt.x ≥ g.Nx - 0.5
+            phyt.x = phyt.x - g.Nx + 2.0
+        end
+        if phyt.x ≤ 1.5
+            phyt.x = phyt.x + g.Nx - 2.0
+        end
+        if phyt.y ≥ g.Ny - 0.5
+            phyt.y = phyt.y - g.Ny + 2.0
+        end
+        if phyt.y ≤ 1.5
+            phyt.y = phyt.y + g.Ny + 2.0
+        end
     end
 end

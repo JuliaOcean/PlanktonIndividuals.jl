@@ -31,8 +31,8 @@ function grid_offline(fieldroot::String)
     yC = ncread(fieldroot*"WVEL_big.nc","yC"); # Cell centers point lati..
     Nx = length(xF); Ny = length(yF); Nz = length(zF);
     Δz = zF[1:end-1] .- zF[2:end]; # unit: meters
-    Δx = (xC[2:end] .- xC[1:end-1]) .* (111.32*cos(π/6)*1000); # unit: meters, at 30N
-    Δy = (yC[2:end] .- yC[1:end-1]) .* (111*1000); # unit: meters
+    Δx = (xF[2:end] .- xF[1:end-1]); # unit: degree east
+    Δy = (yF[2:end] .- yF[1:end-1]); # unit: degree north
     g = grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Nx, Ny, Nz)
     return g
 end
@@ -72,8 +72,8 @@ function convert_coordinates(phyts, grid)
     phyt = phyts[i,:]
     z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
     dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
-    phyt.x = grid.xF[x] - dx * grid.Δx[x] ./(1000*111.32*cos(π/6)); # converted to degree
-    phyt.y = grid.yF[y] + dy * grid.Δy[y] ./(1000*111.0);
+    phyt.x = grid.xF[x] + dx * grid.Δx[x];
+    phyt.y = grid.yF[y] + dy * grid.Δy[y];
     phyt.z = grid.zF[z] - dz * grid.Δz[z];
     end
 end
