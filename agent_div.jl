@@ -192,7 +192,7 @@ function agent_move(phyts_a,velᵈ,g,deltaT::Int64)
             phyt.y = phyt.y - g.Ny + 2.0
         end
         if phyt.y ≤ 1.5
-            phyt.y = phyt.y + g.Ny + 2.0
+            phyt.y = phyt.y + g.Ny - 2.0
         end
     end
 end
