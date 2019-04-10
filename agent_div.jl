@@ -1,129 +1,21 @@
 #########################################################################
 # advection  of agents (including 3 ways to interpolate velocity fields)#
 #########################################################################
-# trilinear interpolation: based on C grid(local double gird,velocity on corners)
-function trilinear_local_itpl(x,y,z,velocity)
-    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
-    vel = zeros(3,3,2,3)
-    vel[1,1,1,1] = 0.5 * (velocity.u[x₀,y₀,z₀] + velocity.u[x₀,y₀-1,z₀])
-    vel[2,1,1,1] = velocity.u[x₀,y₀,z₀]
-    vel[3,1,1,1] = 0.5 * (velocity.u[x₀,y₀,z₀] + velocity.u[x₀,y₀+1,z₀])
-    vel[1,3,1,1] = 0.5 * (velocity.u[x₀+1,y₀,z₀] + velocity.u[x₀+1,y₀-1,z₀])
-    vel[2,3,1,1] = velocity.u[x₀+1,y₀,z₀]
-    vel[3,3,1,1] = 0.5 * (velocity.u[x₀+1,y₀,z₀] + velocity.u[x₀+1,y₀+1,z₀])
-    vel[1,2,1,1] = 0.5 * (vel[1,1,1,1] + vel[1,3,1,1])
-    vel[2,2,1,1] = 0.5 * (vel[2,1,1,1] + vel[2,3,1,1])
-    vel[3,2,1,1] = 0.5 * (vel[3,1,1,1] + vel[3,3,1,1])
-
-    vel[1,1,2,1] = 0.5 * (velocity.u[x₀,y₀,z₀+1] + velocity.u[x₀,y₀-1,z₀+1])
-    vel[2,1,2,1] = velocity.u[x₀,y₀,z₀+1]
-    vel[3,1,2,1] = 0.5 * (velocity.u[x₀,y₀,z₀+1] + velocity.u[x₀,y₀+1,z₀+1])
-    vel[1,3,2,1] = 0.5 * (velocity.u[x₀+1,y₀,z₀+1] + velocity.u[x₀+1,y₀-1,z₀+1])
-    vel[2,3,2,1] = velocity.u[x₀+1,y₀,z₀+1]
-    vel[3,3,2,1] = 0.5 * (velocity.u[x₀+1,y₀,z₀+1] + velocity.u[x₀+1,y₀+1,z₀+1])
-    vel[1,2,2,1] = 0.5 * (vel[1,1,2,1] + vel[1,3,2,1])
-    vel[2,2,2,1] = 0.5 * (vel[2,1,2,1] + vel[2,3,2,1])
-    vel[3,2,2,1] = 0.5 * (vel[3,1,2,1] + vel[3,3,2,1])
-
-    vel[1,1,1,2] = 0.5 * (velocity.v[x₀-1,y₀,z₀] + velocity.v[x₀,y₀,z₀])
-    vel[1,2,1,2] = velocity.v[x₀,y₀,z₀]
-    vel[1,3,1,2] = 0.5 * (velocity.v[x₀,y₀,z₀] + velocity.v[x₀+1,y₀,z₀])
-    vel[3,1,1,2] = 0.5 * (velocity.v[x₀-1,y₀+1,z₀] + velocity.v[x₀,y₀+1,z₀])
-    vel[3,2,1,2] = velocity.v[x₀,y₀+1,z₀]
-    vel[3,3,1,2] = 0.5 * (velocity.v[x₀,y₀+1,z₀] + velocity.v[x₀+1,y₀+1,z₀])
-    vel[2,1,1,2] = 0.5 * (vel[1,1,1,2] + vel[3,1,1,2])
-    vel[2,2,1,2] = 0.5 * (vel[1,2,1,2] + vel[3,2,1,2])
-    vel[2,3,1,2] = 0.5 * (vel[1,3,1,2] + vel[3,3,1,2])
-    
-    vel[1,1,2,2] = 0.5 * (velocity.v[x₀-1,y₀,z₀+1] + velocity.v[x₀,y₀,z₀+1])
-    vel[1,2,2,2] = velocity.v[x₀,y₀,z₀+1]
-    vel[1,3,2,2] = 0.5 * (velocity.v[x₀,y₀,z₀+1] + velocity.v[x₀+1,y₀,z₀+1])
-    vel[3,1,2,2] = 0.5 * (velocity.v[x₀-1,y₀+1,z₀+1] + velocity.v[x₀,y₀+1,z₀+1])
-    vel[3,2,2,2] = velocity.v[x₀,y₀+1,z₀+1]
-    vel[3,3,2,2] = 0.5 * (velocity.v[x₀,y₀+1,z₀+1] + velocity.v[x₀+1,y₀+1,z₀+1])
-    vel[2,1,2,2] = 0.5 * (vel[1,1,2,2] + vel[3,1,2,2])
-    vel[2,2,2,2] = 0.5 * (vel[1,2,2,2] + vel[3,2,2,2])
-    vel[2,3,2,2] = 0.5 * (vel[1,3,2,2] + vel[3,3,2,2])
-
-    vel[1,1,1,3] = velocity.w[x₀-1,y₀-1,z₀]
-    vel[1,2,1,3] = vel[1,3,1,3] = velocity.w[x₀,y₀-1,z₀]
-    vel[2,1,1,3] = vel[3,1,1,3] = velocity.w[x₀-1,y₀,z₀]
-    vel[2,2,1,3] = vel[3,2,1,3] = vel[2,3,1,3] = vel[3,3,1,3] = velocity.w[x₀,y₀,z₀]
-
-    vel[1,1,2,3] = velocity.w[x₀-1,y₀-1,z₀+1]
-    vel[1,2,2,3] = vel[1,3,2,3] = velocity.w[x₀,y₀-1,z₀+1]
-    vel[2,1,2,3] = vel[3,1,2,3] = velocity.w[x₀-1,y₀,z₀+1]
-    vel[2,2,2,3] = vel[3,2,2,3] = vel[2,3,2,3] = vel[3,3,2,3] = velocity.w[x₀,y₀,z₀+1]
-
-    xᵈ = x - x₀
-    yᵈ = y - y₀
-    zᵈ = z - z₀
-    if xᵈ ≤ 0.5 && yᵈ ≤ 0.5
-        vel_00 = vel[1,1,1,:] .* (1 - yᵈ) .+ vel[2,1,1,:] .* yᵈ
-        vel_01 = vel[1,1,2,:] .* (1 - yᵈ) .+ vel[2,1,2,:] .* yᵈ
-        vel_10 = vel[1,2,1,:] .* (1 - yᵈ) .+ vel[2,2,1,:] .* yᵈ
-        vel_11 = vel[1,2,2,:] .* (1 - yᵈ) .+ vel[2,2,2,:] .* yᵈ
-        vel_0 = vel_00 * (1 - xᵈ) + vel_10 * xᵈ
-        vel_1 = vel_01 * (1 - xᵈ) + vel_11 * xᵈ
-        vel₀ = vel_0 * (1-zᵈ) + vel_1 * zᵈ
-    elseif xᵈ ≤ 0.5 && yᵈ > 0.5
-        vel_00 = vel[2,1,1,:] .* (1 - yᵈ) .+ vel[3,1,1,:] .* yᵈ
-        vel_01 = vel[2,1,2,:] .* (1 - yᵈ) .+ vel[3,1,2,:] .* yᵈ
-        vel_10 = vel[2,2,1,:] .* (1 - yᵈ) .+ vel[3,2,1,:] .* yᵈ
-        vel_11 = vel[2,2,2,:] .* (1 - yᵈ) .+ vel[3,2,2,:] .* yᵈ
-        vel_0 = vel_00 * (1 - xᵈ) + vel_10 * xᵈ
-        vel_1 = vel_01 * (1 - xᵈ) + vel_11 * xᵈ
-        vel₀ = vel_0 * (1-zᵈ) + vel_1 * zᵈ
-    elseif xᵈ > 0.5 && yᵈ ≤ 0.5
-        vel_00 = vel[1,2,1,:] .* (1 - yᵈ) .+ vel[2,2,1,:] .* yᵈ
-        vel_01 = vel[1,2,2,:] .* (1 - yᵈ) .+ vel[2,2,2,:] .* yᵈ
-        vel_10 = vel[1,3,1,:] .* (1 - yᵈ) .+ vel[2,3,1,:] .* yᵈ
-        vel_11 = vel[1,3,2,:] .* (1 - yᵈ) .+ vel[2,3,2,:] .* yᵈ
-        vel_0 = vel_00 * (1 - xᵈ) + vel_10 * xᵈ
-        vel_1 = vel_01 * (1 - xᵈ) + vel_11 * xᵈ
-        vel₀ = vel_0 * (1-zᵈ) + vel_1 * zᵈ
-    else # xᵈ > 0.5 && yᵈ > 0.5
-        vel_00 = vel[2,2,1,:] .* (1 - yᵈ) .+ vel[3,2,1,:] .* yᵈ
-        vel_01 = vel[2,2,2,:] .* (1 - yᵈ) .+ vel[3,2,2,:] .* yᵈ
-        vel_10 = vel[2,3,1,:] .* (1 - yᵈ) .+ vel[3,3,1,:] .* yᵈ
-        vel_11 = vel[2,3,2,:] .* (1 - yᵈ) .+ vel[3,3,2,:] .* yᵈ
-        vel_0 = vel_00 * (1 - xᵈ) + vel_10 * xᵈ
-        vel_1 = vel_01 * (1 - xᵈ) + vel_11 * xᵈ
-        vel₀ = vel_0 * (1-zᵈ) + vel_1 * zᵈ
-    end
-    return vel₀
-end
-# simple interpolation: interpolate according to C grid (velocity on faces)
-function simple_itpl(x, y, z, vel)
-    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
-    xᵈ = x - x₀
-    yᵈ = y - y₀
-    zᵈ = z - z₀
-    u₋ = vel.u[y₀, x₀, z₀]
-    u₊ = vel.u[y₀, x₀+1, z₀]
-    v₋ = vel.v[y₀, x₀, z₀]
-    v₊ = vel.v[y₀+1, x₀, z₀]
-    w₋ = vel.w[y₀, x₀, z₀]
-    w₊ = vel.w[y₀, x₀, z₀+1]
-    uvel = u₋ * (1 - xᵈ) + u₊ * xᵈ
-    vvel = v₋ * (1 - yᵈ) + v₊ * yᵈ
-    wvel = w₋ * (1 - zᵈ) + w₊ * zᵈ
-    return uvel, vvel, wvel
-end
 # compute double grid of each time step
 # velᵇ is the velocitiy fields on big grids of current time step
 function double_grid(velᵇ,grid)
-    u = zeros(grid.Ny*2-2,grid.Nx*2-2,grid.Nz);
-    v = zeros(grid.Ny*2-2,grid.Nx*2-2,grid.Nz);
-    w = zeros(grid.Ny*2-2,grid.Nx*2-2,grid.Nz);
+    Ny = grid.Ny + 1; Nx = grid.Nx + 1; Nz = grid.Nz +1;
+    u = zeros(Ny*2-2,Nx*2-2,Nz);
+    v = zeros(Ny*2-2,Nx*2-2,Nz);
+    w = zeros(Ny*2-2,Nx*2-2,Nz);
     velᵈ = velocity(u, v, w);
-    ny2h = grid.Ny * 2 - 1; nx2h = grid.Nx * 2 - 1;
-    vel_sh = (ny2h, nx2h, grid.Nz);
+    ny2h = Ny * 2 - 1; nx2h = Nx * 2 - 1;
+    vel_sh = (ny2h, nx2h, Nz);
     u2h = zeros(Float32,vel_sh);
     v2h = zeros(Float32,vel_sh);
     # Compute values for new grids
-    uX = 0.5*(velᵇ.u[:,1:grid.Nx-1,:] + velᵇ.u[:,2:grid.Nx,:]);
-    vY = 0.5*(velᵇ.v[1:grid.Ny-1,:,:] + velᵇ.v[2:grid.Ny,:,:]);
+    uX = 0.5*(velᵇ.u[:,1:Nx-1,:] + velᵇ.u[:,2:Nx,:]);
+    vY = 0.5*(velᵇ.v[1:Ny-1,:,:] + velᵇ.v[2:Ny,:,:]);
     u2h[1:2:ny2h,2:2:nx2h,:] = uX;
     u2h[1:2:ny2h,1:2:nx2h,:] = velᵇ.u;
     v2h[2:2:ny2h,1:2:nx2h,:] = vY;
@@ -135,8 +27,8 @@ function double_grid(velᵇ,grid)
     # Delete the boundaries
     velᵈ.u = u2h[1:ny2h-1,2:nx2h,:]; velᵈ.v = v2h[2:ny2h,1:nx2h-1,:];
     # Deal with vertical velocities
-    velᵈ.w[1:2:ny2h-1,1:2:nx2h-1,:] = velᵇ.w[1:grid.Ny-1,1:grid.Nx-1,:];
-    velᵈ.w[2:2:ny2h,1:2:nx2h-1,:] = velᵇ.w[1:grid.Ny-1,1:grid.Nx-1,:];
+    velᵈ.w[1:2:ny2h-1,1:2:nx2h-1,:] = velᵇ.w[1:Ny-1,1:Nx-1,:];
+    velᵈ.w[2:2:ny2h,1:2:nx2h-1,:] = velᵇ.w[1:Ny-1,1:Nx-1,:];
     velᵈ.w[:,2:2:nx2h,:] = velᵈ.w[:,1:2:nx2h-1,:];
     return velᵈ
 end
@@ -164,7 +56,7 @@ function trilinear_itpl(x, y, z, a)
     return vel
 end
 
-function agent_move(phyts_a,velᵈ,g,deltaT::Int64)
+function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
         uvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.u) # unit: m/s, trilinear interpolation
@@ -173,9 +65,9 @@ function agent_move(phyts_a,velᵈ,g,deltaT::Int64)
 #       uvel, vvel, wvel = simple_itpl(phyt.x, phyt.y, phyt.z, vel, t) # unit: m/s, simple interpolation
 
         xi, yi, zi = trunc(Int,phyt.x), trunc(Int,phyt.y), trunc(Int,phyt.z)
-        dx = uvel/g.Δx[xi]/(111.32*cos(π/6)*1000)*deltaT # unit: grid/h
-        dy = vvel/g.Δy[yi]/(111*1000)*deltaT # unit: grid/h
-        dz = wvel/g.Δz[zi]*deltaT # vertical movement, unit: grid/h
+        dx = uvel/g.Δx[xi]*ΔT # unit: grid/h
+        dy = vvel/g.Δy[yi]*ΔT # unit: grid/h
+        dz = wvel/g.Δz[zi]*ΔT # vertical movement, unit: grid/h
 #       phyt.x = max(1.5,min(g.Nx-0.5,phyt.x - dx*(1+rand()/5)))
 #       phyt.y = max(1.5,min(g.Ny-0.5,phyt.y - dy*(1+rand()/5)))
         phyt.x = phyt.x - dx*(1+rand()/5)
@@ -196,3 +88,112 @@ function agent_move(phyts_a,velᵈ,g,deltaT::Int64)
         end
     end
 end
+# trilinear interpolation: based on C grid(local double gird,velocity on corners)
+#function trilinear_local_itpl(x,y,z,velocity)
+#    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
+#    vel = zeros(3,3,2,3)
+#    vel[1,1,1,1] = 0.5 * (velocity.u[x₀,y₀,z₀] + velocity.u[x₀,y₀-1,z₀])
+#    vel[2,1,1,1] = velocity.u[x₀,y₀,z₀]
+#    vel[3,1,1,1] = 0.5 * (velocity.u[x₀,y₀,z₀] + velocity.u[x₀,y₀+1,z₀])
+#    vel[1,3,1,1] = 0.5 * (velocity.u[x₀+1,y₀,z₀] + velocity.u[x₀+1,y₀-1,z₀])
+#    vel[2,3,1,1] = velocity.u[x₀+1,y₀,z₀]
+#    vel[3,3,1,1] = 0.5 * (velocity.u[x₀+1,y₀,z₀] + velocity.u[x₀+1,y₀+1,z₀])
+#    vel[1,2,1,1] = 0.5 * (vel[1,1,1,1] + vel[1,3,1,1])
+#    vel[2,2,1,1] = 0.5 * (vel[2,1,1,1] + vel[2,3,1,1])
+#    vel[3,2,1,1] = 0.5 * (vel[3,1,1,1] + vel[3,3,1,1])
+#
+#    vel[1,1,2,1] = 0.5 * (velocity.u[x₀,y₀,z₀+1] + velocity.u[x₀,y₀-1,z₀+1])
+#    vel[2,1,2,1] = velocity.u[x₀,y₀,z₀+1]
+#    vel[3,1,2,1] = 0.5 * (velocity.u[x₀,y₀,z₀+1] + velocity.u[x₀,y₀+1,z₀+1])
+#    vel[1,3,2,1] = 0.5 * (velocity.u[x₀+1,y₀,z₀+1] + velocity.u[x₀+1,y₀-1,z₀+1])
+#    vel[2,3,2,1] = velocity.u[x₀+1,y₀,z₀+1]
+#    vel[3,3,2,1] = 0.5 * (velocity.u[x₀+1,y₀,z₀+1] + velocity.u[x₀+1,y₀+1,z₀+1])
+#    vel[1,2,2,1] = 0.5 * (vel[1,1,2,1] + vel[1,3,2,1])
+#    vel[2,2,2,1] = 0.5 * (vel[2,1,2,1] + vel[2,3,2,1])
+#    vel[3,2,2,1] = 0.5 * (vel[3,1,2,1] + vel[3,3,2,1])
+#
+#    vel[1,1,1,2] = 0.5 * (velocity.v[x₀-1,y₀,z₀] + velocity.v[x₀,y₀,z₀])
+#    vel[1,2,1,2] = velocity.v[x₀,y₀,z₀]
+#    vel[1,3,1,2] = 0.5 * (velocity.v[x₀,y₀,z₀] + velocity.v[x₀+1,y₀,z₀])
+#    vel[3,1,1,2] = 0.5 * (velocity.v[x₀-1,y₀+1,z₀] + velocity.v[x₀,y₀+1,z₀])
+#    vel[3,2,1,2] = velocity.v[x₀,y₀+1,z₀]
+#    vel[3,3,1,2] = 0.5 * (velocity.v[x₀,y₀+1,z₀] + velocity.v[x₀+1,y₀+1,z₀])
+#    vel[2,1,1,2] = 0.5 * (vel[1,1,1,2] + vel[3,1,1,2])
+#    vel[2,2,1,2] = 0.5 * (vel[1,2,1,2] + vel[3,2,1,2])
+#    vel[2,3,1,2] = 0.5 * (vel[1,3,1,2] + vel[3,3,1,2])
+#    
+#    vel[1,1,2,2] = 0.5 * (velocity.v[x₀-1,y₀,z₀+1] + velocity.v[x₀,y₀,z₀+1])
+#    vel[1,2,2,2] = velocity.v[x₀,y₀,z₀+1]
+#    vel[1,3,2,2] = 0.5 * (velocity.v[x₀,y₀,z₀+1] + velocity.v[x₀+1,y₀,z₀+1])
+#    vel[3,1,2,2] = 0.5 * (velocity.v[x₀-1,y₀+1,z₀+1] + velocity.v[x₀,y₀+1,z₀+1])
+#    vel[3,2,2,2] = velocity.v[x₀,y₀+1,z₀+1]
+#    vel[3,3,2,2] = 0.5 * (velocity.v[x₀,y₀+1,z₀+1] + velocity.v[x₀+1,y₀+1,z₀+1])
+#    vel[2,1,2,2] = 0.5 * (vel[1,1,2,2] + vel[3,1,2,2])
+#    vel[2,2,2,2] = 0.5 * (vel[1,2,2,2] + vel[3,2,2,2])
+#    vel[2,3,2,2] = 0.5 * (vel[1,3,2,2] + vel[3,3,2,2])
+#
+#    vel[1,1,1,3] = velocity.w[x₀-1,y₀-1,z₀]
+#    vel[1,2,1,3] = vel[1,3,1,3] = velocity.w[x₀,y₀-1,z₀]
+#    vel[2,1,1,3] = vel[3,1,1,3] = velocity.w[x₀-1,y₀,z₀]
+#    vel[2,2,1,3] = vel[3,2,1,3] = vel[2,3,1,3] = vel[3,3,1,3] = velocity.w[x₀,y₀,z₀]
+#
+#    vel[1,1,2,3] = velocity.w[x₀-1,y₀-1,z₀+1]
+#    vel[1,2,2,3] = vel[1,3,2,3] = velocity.w[x₀,y₀-1,z₀+1]
+#    vel[2,1,2,3] = vel[3,1,2,3] = velocity.w[x₀-1,y₀,z₀+1]
+#    vel[2,2,2,3] = vel[3,2,2,3] = vel[2,3,2,3] = vel[3,3,2,3] = velocity.w[x₀,y₀,z₀+1]
+#
+#    xᵈ = x - x₀
+#    yᵈ = y - y₀
+#    zᵈ = z - z₀
+#    if xᵈ ≤ 0.5 && yᵈ ≤ 0.5
+#        vel_00 = vel[1,1,1,:] .* (1 - yᵈ) .+ vel[2,1,1,:] .* yᵈ
+#        vel_01 = vel[1,1,2,:] .* (1 - yᵈ) .+ vel[2,1,2,:] .* yᵈ
+#        vel_10 = vel[1,2,1,:] .* (1 - yᵈ) .+ vel[2,2,1,:] .* yᵈ
+#        vel_11 = vel[1,2,2,:] .* (1 - yᵈ) .+ vel[2,2,2,:] .* yᵈ
+#        vel_0 = vel_00 * (1 - xᵈ) + vel_10 * xᵈ
+#        vel_1 = vel_01 * (1 - xᵈ) + vel_11 * xᵈ
+#        vel₀ = vel_0 * (1-zᵈ) + vel_1 * zᵈ
+#    elseif xᵈ ≤ 0.5 && yᵈ > 0.5
+#        vel_00 = vel[2,1,1,:] .* (1 - yᵈ) .+ vel[3,1,1,:] .* yᵈ
+#        vel_01 = vel[2,1,2,:] .* (1 - yᵈ) .+ vel[3,1,2,:] .* yᵈ
+#        vel_10 = vel[2,2,1,:] .* (1 - yᵈ) .+ vel[3,2,1,:] .* yᵈ
+#        vel_11 = vel[2,2,2,:] .* (1 - yᵈ) .+ vel[3,2,2,:] .* yᵈ
+#        vel_0 = vel_00 * (1 - xᵈ) + vel_10 * xᵈ
+#        vel_1 = vel_01 * (1 - xᵈ) + vel_11 * xᵈ
+#        vel₀ = vel_0 * (1-zᵈ) + vel_1 * zᵈ
+#    elseif xᵈ > 0.5 && yᵈ ≤ 0.5
+#        vel_00 = vel[1,2,1,:] .* (1 - yᵈ) .+ vel[2,2,1,:] .* yᵈ
+#        vel_01 = vel[1,2,2,:] .* (1 - yᵈ) .+ vel[2,2,2,:] .* yᵈ
+#        vel_10 = vel[1,3,1,:] .* (1 - yᵈ) .+ vel[2,3,1,:] .* yᵈ
+#        vel_11 = vel[1,3,2,:] .* (1 - yᵈ) .+ vel[2,3,2,:] .* yᵈ
+#        vel_0 = vel_00 * (1 - xᵈ) + vel_10 * xᵈ
+#        vel_1 = vel_01 * (1 - xᵈ) + vel_11 * xᵈ
+#        vel₀ = vel_0 * (1-zᵈ) + vel_1 * zᵈ
+#    else # xᵈ > 0.5 && yᵈ > 0.5
+#        vel_00 = vel[2,2,1,:] .* (1 - yᵈ) .+ vel[3,2,1,:] .* yᵈ
+#        vel_01 = vel[2,2,2,:] .* (1 - yᵈ) .+ vel[3,2,2,:] .* yᵈ
+#        vel_10 = vel[2,3,1,:] .* (1 - yᵈ) .+ vel[3,3,1,:] .* yᵈ
+#        vel_11 = vel[2,3,2,:] .* (1 - yᵈ) .+ vel[3,3,2,:] .* yᵈ
+#        vel_0 = vel_00 * (1 - xᵈ) + vel_10 * xᵈ
+#        vel_1 = vel_01 * (1 - xᵈ) + vel_11 * xᵈ
+#        vel₀ = vel_0 * (1-zᵈ) + vel_1 * zᵈ
+#    end
+#    return vel₀
+#end
+# simple interpolation: interpolate according to C grid (velocity on faces)
+#function simple_itpl(x, y, z, vel)
+#    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
+#    xᵈ = x - x₀
+#    yᵈ = y - y₀
+#    zᵈ = z - z₀
+#    u₋ = vel.u[y₀, x₀, z₀]
+#    u₊ = vel.u[y₀, x₀+1, z₀]
+#    v₋ = vel.v[y₀, x₀, z₀]
+#    v₊ = vel.v[y₀+1, x₀, z₀]
+#    w₋ = vel.w[y₀, x₀, z₀]
+#    w₊ = vel.w[y₀, x₀, z₀+1]
+#    uvel = u₋ * (1 - xᵈ) + u₊ * xᵈ
+#    vvel = v₋ * (1 - yᵈ) + v₊ * yᵈ
+#    wvel = w₋ * (1 - zᵈ) + w₊ * zᵈ
+#    return uvel, vvel, wvel
+#end

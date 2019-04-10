@@ -29,10 +29,10 @@ function grid_offline(fieldroot::String)
     zC = ncread(fieldroot*"UVEL_big.nc","zC"); # Cell centers depths
     xC = ncread(fieldroot*"WVEL_big.nc","xC"); # Cell centers point long..
     yC = ncread(fieldroot*"WVEL_big.nc","yC"); # Cell centers point lati..
-    Nx = length(xF); Ny = length(yF); Nz = length(zF);
+    Nx = length(xF)-1; Ny = length(yF)-1; Nz = length(zF)-1;
     Δz = zF[1:end-1] .- zF[2:end]; # unit: meters
-    Δx = (xF[2:end] .- xF[1:end-1]); # unit: degree east
-    Δy = (yF[2:end] .- yF[1:end-1]); # unit: degree north
+    Δx = (xF[2:end] .- xF[1:end-1]) * (111.32*cos(π/6)*1000); # unit: meters
+    Δy = (yF[2:end] .- yF[1:end-1]) * (111*1000);             # unit: meters
     g = grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Nx, Ny, Nz)
     return g
 end
@@ -42,16 +42,16 @@ function create_output(B::Array{DataFrame,1})
     return output
 end
 
-function write_output(t,CR,output)
+function write_output(t,phyts_b,dvid_ct,graz_ct,output)
     # summary of current step
-    gen_ave=mean(CR[1].gen)
-    spec_ave=mean(CR[1].sp)
-    Cq1_ave=mean(CR[1].Cq1)
-    Cq2_ave=mean(CR[1].Cq2)
-    Nq_ave=mean(CR[1].Nq)
-    size_ave=mean(CR[1].size)
-    chl_ave=mean(CR[1].chl)
-    push!(output,(time=t, gen_ave=gen_ave, spec_ave=spec_ave, Cq1_ave=Cq1_ave, Cq2_ave=Cq2_ave, Nq_ave=Nq_ave, size_ave=size_ave, chl_ave=chl_ave, Population=size(CR[1],1), dvid=CR[2], graz=CR[3]))
+    gen_ave=mean(phyts_b.gen)
+    spec_ave=mean(phyts_b.sp)
+    Cq1_ave=mean(phyts_b.Cq1)
+    Cq2_ave=mean(phyts_b.Cq2)
+    Nq_ave=mean(phyts_b.Nq)
+    size_ave=mean(phyts_b.size)
+    chl_ave=mean(phyts_b.chl)
+    push!(output,(time=t, gen_ave=gen_ave, spec_ave=spec_ave, Cq1_ave=Cq1_ave, Cq2_ave=Cq2_ave, Nq_ave=Nq_ave, size_ave=size_ave, chl_ave=chl_ave, Population=size(phyts_b,1), dvid=dvid_ct, graz=graz_ct))
     return output
 end
 
@@ -72,8 +72,8 @@ function convert_coordinates(phyts, grid)
     phyt = phyts[i,:]
     z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
     dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
-    phyt.x = grid.xF[x] + dx * grid.Δx[x];
-    phyt.y = grid.yF[y] + dy * grid.Δy[y];
+    phyt.x = grid.xF[x] + dx * grid.Δx[x] / (111.32*cos(π/6)*1000);
+    phyt.y = grid.yF[y] + dy * grid.Δy[y] / (111*1000);
     phyt.z = grid.zF[z] - dz * grid.Δz[z];
     end
 end
