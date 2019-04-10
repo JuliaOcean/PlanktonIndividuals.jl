@@ -2,20 +2,19 @@ using DataFrames, CSV, LaTeXStrings, Plots, NetCDF, ProgressMeter
 using Random
 using Distributions
 cd("/home/zhenwu/ABPM_3D")
-include("ABPM_Parameters.jl")
-include("ABPM_Functions.jl")
-include("ABPM_Initialization.jl")
+include("parameters.jl")
+include("phyt_process.jl")
+include("utils.jl")
+include("agent_div.jl")
+include("model_setup.jl")
+include("model_struct.jl")
+include("nutrient_processes.jl")
+include("flux_div_diffusion_operators.jl")
 # Read input files
 nTime = 720 # number of time steps
-deltaT = 3600 # time step : 1h
+ΔT = 3600 # time step: 1h
 temp,IR = read_input("T_IR.csv",nTime);
 fieldroot = "/nobackup1b/users/zhenwu/vel_fields/";
-#u = ncread(fieldroot*"UVEL_Mar.nc","u"); # zonal current speed, dx, positive to west
-#v = ncread(fieldroot*"VVEL_Mar.nc","v"); # zonal current speed, dx, positive to west
-#w = ncread(fieldroot*"WVEL_Mar.nc","w"); # zonal current speed, dx, positive to west
-#zf = ncread(fieldroot*"WVEL_Mar.nc","zC"); # Cell faces depths
-#xg = ncread(fieldroot*"WVEL_Mar.nc","xC"); # Cell corner point long..
-#yg = ncread(fieldroot*"WVEL_Mar.nc","yC"); # Cell corner point lati..
 vel = read_offline_vels(fieldroot);
 g = grid_offline(fieldroot);
 # SETUP
@@ -25,7 +24,12 @@ B=setup_agents(N,Cquota,1.1,0.18,g) # Normal distribution with mean and variance
 # model initialization
 # create output file
 output = create_output(B);
-nutrients = DataFrame(DIN=5.0e-6, DOC=0.0, DON=6.0e-5, POC=0.0, PON=0.0);# μmol
+nut = [2.0, 0.5, 20.0, 2.0, 1.0, 1.0,] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
+nutrients = setup_nutrients(g,nut)
+CN = []
+F = nutrient_fields(zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz))
+gtr = nutrient_fields(zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz))
+remin = rem(kDOC,kDON,kPOC,kPON)
 # model update
 for t in 1:nTime
     phyts_a = copy(B[t]) # read data from last time step
@@ -37,6 +41,10 @@ for t in 1:nTime
     push!(B,CR[1])
     write_output(t,CR,output)
     convert_coordinates(B[t],g) # convert grids to lon, lat and depth
+    compute_nut_biochem(nutrients, F, remin)
+    compute_source_term(gtr, nutrients, velᵇ, g, F)
+    nutp = nut_update(nutrients, consume, g, gtr, ΔT)
+    push!(CN, nutp)
 end
 B1 = []; B2 = [];
 @showprogress 1 "Computing..." for i in 1:720
