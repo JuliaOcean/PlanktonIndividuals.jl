@@ -27,13 +27,13 @@ output = create_output(B);
 nut = [2.0, 0.5, 20.0, 2.0, 1.0, 1.0,] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
 nutrients = setup_nutrients(g,nut)
 CN = []
-F = nutrient_fields(zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz))
-gtr = nutrient_fields(zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz))
 remin = rem(kDOC,kDON,kPOC,kPON)
 # model update
 for t in 1:nTime
     phyts_a = copy(B[t]) # read data from last time step
-    velᵇ = velocity(vel.u[:,:,:,t], vel.v[:,:,:,t], vel.w[:,:,:,t])
+    velᵇ = velocity(vel.u[:,:,:,trunc(Int,t*ΔT/3600)],
+                    vel.v[:,:,:,trunc(Int,t*ΔT/3600)],
+                    vel.w[:,:,:,trunc(Int,t*ΔT/3600)])
     velᵈ = double_grid(velᵇ,g)
     agent_move(phyts_a,velᵈ,g,deltaT)
     cell_num = count_num(phyts_a, g)
@@ -41,8 +41,8 @@ for t in 1:nTime
     push!(B,CR[1])
     write_output(t,CR,output)
     convert_coordinates(B[t],g) # convert grids to lon, lat and depth
-    compute_nut_biochem(nutrients, F, remin)
-    compute_source_term(gtr, nutrients, velᵇ, g, F)
+    F = compute_nut_biochem(nutrients, remin)
+    gtr = compute_source_term(nutrients, velᵇ, g, F)
     nutp = nut_update(nutrients, consume, g, gtr, ΔT)
     push!(CN, nutp)
 end
