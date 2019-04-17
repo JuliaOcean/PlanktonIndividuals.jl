@@ -15,25 +15,75 @@ function read_input(csv::String,myTime::Int64)
     end
     return temp,IR
 end
-function read_offline_vels(fieldroot::String)
-    u = ncread(fieldroot*"UVEL_big.nc","u"); # zonal current speed, dx, positive to west
-    v = ncread(fieldroot*"VVEL_big.nc","v"); # zonal current speed, dx, positive to west
-    w = ncread(fieldroot*"WVEL_big.nc","w"); # zonal current speed, dx, positive to west
-    vel = velocity_fields(u, v, w)
+function read_offline_vels(vfroot::String,itList,tN,t::Int64)
+    fuvel = open(vfroot*"/UVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
+    fvvel = open(vfroot*"/VVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
+    fwvel = open(vfroot*"/WVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
+    uvel = reverse(reinterpret(Float32,reverse(read(fuvel,))));
+    vvel = reverse(reinterpret(Float32,reverse(read(fvvel,))));
+    wvel = reverse(reinterpret(Float32,reverse(read(fwvel,))));
+    close(fuvel);close(fvvel);close(fwvel);
+    uvel = reshape(uvel, 1080, 2700, 90);
+    vvel = reshape(vvel, 1080, 2700, 90);
+    wvel = reshape(wvel, 1080, 2700, 90);
+    # seletc grids
+    u = uvel[551:750,1351:1550,1:40]; v = vvel[551:750,1351:1550,1:40]; w = wvel[551:750,1351:1550,1:40];
+    vel = velocity(u, v, w)
     return vel
 end
 function grid_offline(fieldroot::String)
-    zF = ncread(fieldroot*"WVEL_big.nc","zF"); # Cell faces depths
-    xF = ncread(fieldroot*"UVEL_big.nc","xF"); # Cell faces point long..
-    yF = ncread(fieldroot*"VVEL_big.nc","yF"); # Cell faces point lati..
-    zC = ncread(fieldroot*"UVEL_big.nc","zC"); # Cell centers depths
-    xC = ncread(fieldroot*"WVEL_big.nc","xC"); # Cell centers point long..
-    yC = ncread(fieldroot*"WVEL_big.nc","yC"); # Cell centers point lati..
-    Nx = length(xF)-1; Ny = length(yF)-1; Nz = length(zF)-1;
-    Δz = zF[1:end-1] .- zF[2:end]; # unit: meters
-    Δx = (xF[2:end] .- xF[1:end-1]) * (111.32*cos(π/6)*1000); # unit: meters
-    Δy = (yF[2:end] .- yF[1:end-1]) * (111*1000);             # unit: meters
-    g = grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Nx, Ny, Nz)
+    nx=1080;ny=2700;nz=40;
+    fxg = open(fieldroot*"XG.data","r");
+    fyg = open(fieldroot*"YG.data","r");
+    fxc = open(fieldroot*"XC.data","r");
+    fyc = open(fieldroot*"YC.data","r");
+    fdx = open(fieldroot*"DXG.data","r");
+    fdy = open(fieldroot*"DYG.data","r");
+    fdrf= open(fieldroot*"DRF.data","r");
+    fAz = open(fieldroot*"RAC.data","r");
+    fhfc= open(fieldroot*"hFacC.data","r");
+    fhfs= open(fieldroot*"hFacS.data","r");
+    fhfw= open(fieldroot*"hFacW.data","r");
+    xf = reverse(reinterpret(Float32,reverse(read(fxg,))));
+    yf = reverse(reinterpret(Float32,reverse(read(fyg,))));
+    xc = reverse(reinterpret(Float32,reverse(read(fxc,))));
+    yc = reverse(reinterpret(Float32,reverse(read(fyc,))));
+    dx = reverse(reinterpret(Float32,reverse(read(fdx,))));
+    dy = reverse(reinterpret(Float32,reverse(read(fdy,))));
+    drf= reverse(reinterpret(Float32,reverse(read(fdrf,))));
+    Az = reverse(reinterpret(Float32,reverse(read(fAz,))));
+    hFC= reverse(reinterpret(Float32,reverse(read(fhfc,))));
+    hFS= reverse(reinterpret(Float32,reverse(read(fhfs,))));
+    hFW= reverse(reinterpret(Float32,reverse(read(fhfw,))));
+    close(fxg);close(fyg);close(fxc);close(fyc);close(fdx);close(fdy);
+    close(fdrf);close(fAz);close(fhfc);close(fhfs);close(fhfw);
+    xf = reshape(xf,nx,ny); yf = reshape(yf,nx,ny); 
+    xc = reshape(xc,nx,ny); yc = reshape(yc,nx,ny);
+    dx = reshape(dx,nx,ny); dy = reshape(dy,nx,ny);
+    Az = reshape(Az,nx,ny); hFC= reshape(hFC,nx,ny,nz);
+    hFS= reshape(hFS,nx,ny,nz);hFW= reshape(hFW,nx,ny,nz);
+    zf = -cumsum(drf); pushfirst!(zf,0); zc = 0.5*(zf[1:end-1]+zf[2:end]);
+    Δx = (xf[2:end,:] .- xf[1:end-1,:]); # unit: degree
+    Δy = (yf[:,2:end] .- yf[:,1:end-1]); # unit: degree
+    Ax = zeros(nx,ny,nz); Ay = zeros(nx,ny,nz); V = zeros(nx,ny,nz);
+    for i in 1:nx
+        for j in 1:ny
+            for k in 1:nz
+                Ax[i,j,k] = drf[k] * dy[i,j] * hFW[i,j,k]
+                Ay[i,j,k] = drf[k] * dx[i,j] * hFS[i,j,k]
+                V[i,j,k] = drf[k] * Az[i,j] * hFC[i,j,k]
+            end
+        end
+    end
+    # seletc grids 29.0047N to 32.2864N, 161.563W to 157.417W
+    xcS = xc[551:750,1351:1550]; ycS = yc[551:750,1351:1550];
+    xfS = xf[551:750,1351:1550]; yfS = yf[551:750,1351:1550];
+    dxS = dx[551:750,1351:1550]; dyS = dy[551:750,1351:1550];
+    ΔxS = Δx[551:750,1351:1550]; ΔyS = Δy[551:750,1351:1550];
+    AzS = Az[551:750,1351:1550]; AxS = Ax[551:750,1351:1550,:];
+    AyS = Ay[551:750,1351:1550,:];VS = V[551:750,1351:1550,:];
+    Nx, Ny = size(AzS)
+    g = grids(xcS, ycS, zc, xfS, yfS, zf, ΔxS, ΔyS, dxS, dyS, drf, AxS, AyS, AzS, VS, Nx, Ny, nz)
     return g
 end
 
@@ -72,9 +122,9 @@ function convert_coordinates(phyts, grid)
     phyt = phyts[i,:]
     z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
     dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
-    phyt.x = grid.xF[x] + dx * grid.Δx[x] / (111.32*cos(π/6)*1000);
-    phyt.y = grid.yF[y] + dy * grid.Δy[y] / (111*1000);
-    phyt.z = grid.zF[z] - dz * grid.Δz[z];
+    phyt.x = grid.xF[x] + dx * grid.Δx[x,y];
+    phyt.y = grid.yF[y] + dy * grid.Δy[x,y];
+    phyt.z = grid.zF[z] - dz * grid.Lz[z];
     end
 end
 

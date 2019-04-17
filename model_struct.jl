@@ -12,15 +12,21 @@ mutable struct velocity
 end
 
 struct grids
-    xC::Array
-    yC::Array
-    zC::Array
-    xF::Array
-    yF::Array
-    zF::Array
-    Δx::Array # unit: degree
-    Δy::Array # unit: degree
-    Δz::Array # unit: degree
+    xC::Array{Float32,2}
+    yC::Array{Float32,2}
+    zC::Array{Float32,1}
+    xF::Array{Float32,2}
+    yF::Array{Float32,2}
+    zF::Array{Float32,1}
+    Δx::Array{Float32,2} # unit: degree
+    Δy::Array{Float32,2} # unit: degree
+    Lx::Array{Float32,2} # unit: meter
+    Ly::Array{Float32,2} # unit: meter
+    Lz::Array{Float32,1} # unit: meter
+    Ax::Array{Float32,3} # unit: m²
+    Ay::Array{Float32,3} # unit: m²
+    Az::Array{Float32,2} # unit: m²
+    V ::Array{Float32,3} # unit: m³
     Nx::Int
     Ny::Int
     Nz::Int

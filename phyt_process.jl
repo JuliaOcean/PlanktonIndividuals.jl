@@ -1,8 +1,8 @@
 ###########################################
 # define functions of pysiology processes #
 ###########################################
-k_respir(Cq2) = respir_a*(12.0e9*Cq2)^respir_b/Cq2
-respir(Cq2) = respir_a*(12.0e9*Cq2)^respir_b
+k_respir(Cq2) = respir_a*(12.0e9*Cq2/1.0e6)^respir_b/Cq2/1.0e6
+respir(Cq2) = respir_a*(12.0e9*Cq2/1.0e6)^respir_b
 
 function daynight(t::Int64, IR)
     if IR[trunc(Int,t*ΔT/3600)] < 5.0
@@ -82,13 +82,13 @@ function phyt_update(t::Int64, ΔT::Int64, g, phyts_a, nutrients, IR, temp)
     #set up a dataframe to record all updated agents
     phyts_b = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[])
     #
-    consume = nutrient_fields(zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz), zeros(g.Ny, g.Nx, g.Nz))
+    consume = nutrient_fields(zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
     # iterate phytoplankton agents
     #
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
         z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
-        DIN = nutrients.DIN[y, x, z]
+        DIN = nutrients.DIN[x, y, z]
         #compute probabilities of grazing and division
         P_graz = rand(Bernoulli(exp(Num_phyt/N*Nsp)*phyt.size/Grz_P))
         # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
@@ -101,10 +101,10 @@ function phyt_update(t::Int64, ΔT::Int64, g, phyts_a, nutrients, IR, temp)
         ρ_chl = chl_sync(phyt,PP,IR[trunc(Int,t*ΔT/3600)])
         if P_graz < 1 #not grazed
             if phyt.Cq2+phyt.Cq1 ≤ Cmin # natural death
-                consume.DOC[y, x, z] = consume.DOC[y, x, z] + (phyt.Cq1+phyt.Cq2)*mortFracC
-                consume.DON[y, x, z] = consume.DON[y, x, z] + phyt.Nq*mortFracN
-                consume.POC[y, x, z] = consume.POC[y, x, z] + (phyt.Cq1+phyt.Cq2)*(1.0 - mortFracC)
-                consume.PON[y, x, z] = consume.PON[y, x, z] + phyt.Nq*(1.0 - mortFracN)
+                consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt.Cq1+phyt.Cq2)*mortFracC
+                consume.DON[x, y, z] = consume.DON[x, y, z] + phyt.Nq*mortFracN
+                consume.POC[x, y, z] = consume.POC[x, y, z] + (phyt.Cq1+phyt.Cq2)*(1.0 - mortFracC)
+                consume.PON[x, y, z] = consume.PON[x, y, z] + phyt.Nq*(1.0 - mortFracN)
                 death_ct += 1
             else # not natural death
                 if daynight(t,IR) # day
@@ -121,16 +121,16 @@ function phyt_update(t::Int64, ΔT::Int64, g, phyts_a, nutrients, IR, temp)
                     dCq1 = PP - CostC - ExuC
                     dCq2 = SynC - Res2
                     dNq  = VN - Res2*R_NC
-                    dsize= max((dCq1+dCq2)/(phyt.Cq1+phyt.Cq2),dNq/phyt.Nq)
+                    dsize= dCq2/phyt.Cq2
                     phyt.Cq1 = max(0.0,phyt.Cq1 + dCq1)
                     phyt.Cq2 = max(0.0,phyt.Cq2 + dCq2)
                     phyt.Nq  = max(0.0,phyt.Nq + dNq)
                     phyt.size= phyt.size+dsize
                     phyt.chl = phyt.chl + ρ_chl*VN*Chl2N
                     push!(phyts_b,phyt)
-                    consume.DIC[y, x, z] = consume.DIC[y, x, z] + Res2
-                    consume.DIN[y, x, z] = consume.DIN[y, x, z] - VN + Res2 * R_NC
-                    consume.DOC[y, x, z] = consume.DOC[y, x, z] + ExuC
+                    consume.DIC[x, y, z] = consume.DIC[x, y, z] + Res2 + CostC - SynC
+                    consume.DIN[x, y, z] = consume.DIN[x, y, z] - VN + Res2*R_NC
+                    consume.DOC[x, y, z] = consume.DOC[x, y, z] + ExuC
                 else # night
                     if P_dvi < 1 # not divide
                         CostC= min(0.4*phyt.Cq1,Dmd_NC)
@@ -140,31 +140,31 @@ function phyt_update(t::Int64, ΔT::Int64, g, phyts_a, nutrients, IR, temp)
                         dCq1 = PP - CostC - ExuC
                         dCq2 = SynC - Res2
                         dNq  = VN - Res2*R_NC
-                        dsize= max((dCq1+dCq2)/(phyt.Cq1+phyt.Cq2),dNq/phyt.Nq)
+                        dsize= dCq2/phyt.Cq2
                         phyt.Cq1 = max(0.0,phyt.Cq1 + dCq1)
                         phyt.Cq2 = max(0.0,phyt.Cq2 + dCq2)
                         phyt.Nq  = max(0.0,phyt.Nq + dNq)
                         phyt.size= phyt.size+dsize
                         phyt.chl = phyt.chl + ρ_chl*VN*Chl2N
                         push!(phyts_b,phyt)
-                        consume.DIC[y, x, z] = consume.DIC[y, x, z] + Res2
-                        consume.DIN[y, x, z] = consume.DIN[y, x, z] - VN + Res2 * R_NC
-                        consume.DOC[y, x, z] = consume.DOC[y, x, z] + ExuC
+                        consume.DIC[x, y, z] = consume.DIC[x, y, z] + Res2 + CostC - SynC
+                        consume.DIN[x, y, z] = consume.DIN[x, y, z] - VN + Res2*R_NC
+                        consume.DOC[x, y, z] = consume.DOC[x, y, z] + ExuC
                     else #divide
                         dvid_ct += 2
                         global dvdcount += 2
                         phyts2 = divide(phyt)
                         append!(phyts_b,phyts2)
-                        consume.DIC[y, x, z] = consume.DIC[y, x, z] + phyt.Cq2*0.1 # consume C when cell is divided
+                        consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt.Cq2*0.1 # consume C when cell is divided
                     end # divide
                 end # day night?
             end # natural death
         else #grazed
             graz_ct += 1
-            consume.DOC[y, x, z] = consume.DOC[y, x, z] + (phyt.Cq1+phyt.Cq2)*grazFracC*0.5
-            consume.DON[y, x, z] = consume.DON[y, x, z] + phyt.Nq*grazFracN*0.5
-            consume.POC[y, x, z] = consume.POC[y, x, z] + (phyt.Cq1+phyt.Cq2)*(1.0 - grazFracC)*0.5
-            consume.PON[y, x, z] = consume.PON[y, x, z] + phyt.Nq*(1.0 - grazFracN)*0.5
+            consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt.Cq1+phyt.Cq2)*grazFracC*0.5
+            consume.DON[x, y, z] = consume.DON[x, y, z] + phyt.Nq*grazFracN*0.5
+            consume.POC[x, y, z] = consume.POC[x, y, z] + (phyt.Cq1+phyt.Cq2)*(1.0 - grazFracC)*0.5
+            consume.PON[x, y, z] = consume.PON[x, y, z] + phyt.Nq*(1.0 - grazFracN)*0.5
         end # graze
     end # while loop to traverse the array of agents
     return phyts_b,dvid_ct,graz_ct,consume

@@ -4,12 +4,12 @@
 # compute double grid of each time step
 # velᵇ is the velocitiy fields on big grids of current time step
 function double_grid(velᵇ,grid)
-    Ny = grid.Ny + 1; Nx = grid.Nx + 1; Nz = grid.Nz +1;
-    u = zeros(Ny*2-2,Nx*2-2,Nz);
-    v = zeros(Ny*2-2,Nx*2-2,Nz);
-    w = zeros(Ny*2-2,Nx*2-2,Nz);
+    Ny = grid.Ny; Nx = grid.Nx; Nz = grid.Nz;
+    u = zeros(Ny*2-1,Nx*2-1,Nz);
+    v = zeros(Ny*2-1,Nx*2-1,Nz);
+    w = zeros(Ny*2-1,Nx*2-1,Nz);
     velᵈ = velocity(u, v, w);
-    ny2h = Ny * 2 - 1; nx2h = Nx * 2 - 1;
+    ny2h = Ny*2-1; nx2h = Nx*2-1;
     vel_sh = (ny2h, nx2h, Nz);
     u2h = zeros(Float32,vel_sh);
     v2h = zeros(Float32,vel_sh);
@@ -65,9 +65,9 @@ function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
 #       uvel, vvel, wvel = simple_itpl(phyt.x, phyt.y, phyt.z, vel, t) # unit: m/s, simple interpolation
 
         xi, yi, zi = trunc(Int,phyt.x), trunc(Int,phyt.y), trunc(Int,phyt.z)
-        dx = uvel/g.Δx[xi]*ΔT # unit: grid/h
-        dy = vvel/g.Δy[yi]*ΔT # unit: grid/h
-        dz = wvel/g.Δz[zi]*ΔT # vertical movement, unit: grid/h
+        dx = uvel/g.Lx[xi]*ΔT # unit: grid/h
+        dy = vvel/g.Ly[yi]*ΔT # unit: grid/h
+        dz = wvel/g.Lz[zi]*ΔT # vertical movement, unit: grid/h
 #       phyt.x = max(1.5,min(g.Nx-0.5,phyt.x - dx*(1+rand()/5)))
 #       phyt.y = max(1.5,min(g.Ny-0.5,phyt.y - dy*(1+rand()/5)))
         phyt.x = phyt.x - dx*(1+rand()/5)
@@ -181,19 +181,19 @@ end
 #    return vel₀
 #end
 # simple interpolation: interpolate according to C grid (velocity on faces)
-#function simple_itpl(x, y, z, vel)
-#    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
-#    xᵈ = x - x₀
-#    yᵈ = y - y₀
-#    zᵈ = z - z₀
-#    u₋ = vel.u[y₀, x₀, z₀]
-#    u₊ = vel.u[y₀, x₀+1, z₀]
-#    v₋ = vel.v[y₀, x₀, z₀]
-#    v₊ = vel.v[y₀+1, x₀, z₀]
-#    w₋ = vel.w[y₀, x₀, z₀]
-#    w₊ = vel.w[y₀, x₀, z₀+1]
-#    uvel = u₋ * (1 - xᵈ) + u₊ * xᵈ
-#    vvel = v₋ * (1 - yᵈ) + v₊ * yᵈ
-#    wvel = w₋ * (1 - zᵈ) + w₊ * zᵈ
-#    return uvel, vvel, wvel
-#end
+function simple_itpl(x, y, z, vel)
+    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
+    xᵈ = x - x₀
+    yᵈ = y - y₀
+    zᵈ = z - z₀
+    u₋ = vel.u[x₀, y₀, z₀]
+    u₊ = vel.u[x₀+1, y₀, z₀]
+    v₋ = vel.v[x₀, y₀, z₀]
+    v₊ = vel.v[x₀, y₀+1, z₀]
+    w₋ = vel.w[x₀, y₀, z₀]
+    w₊ = vel.w[x₀, y₀, z₀+1]
+    uvel = u₋ * (1 - xᵈ) + u₊ * xᵈ
+    vvel = v₋ * (1 - yᵈ) + v₊ * yᵈ
+    wvel = w₋ * (1 - zᵈ) + w₊ * zᵈ
+    return uvel, vvel, wvel
+end

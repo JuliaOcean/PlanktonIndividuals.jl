@@ -25,26 +25,22 @@ B=setup_agents(N,Cquota,1.1,0.18,g) # Normal distribution with mean and variance
 # create output file
 output = create_output(B);
 nut = [2.0, 0.5, 20.0, 2.0, 1.0, 1.0,] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
-nutrients = setup_nutrients(g,nut)
-CN = []
+nut₀ = setup_nutrients(g,nut)
+CN = [nut₀]
 remin = rem(kDOC,kDON,kPOC,kPON)
 # model update
 for t in 1:nTime
     phyts_a = copy(B[t]) # read data from last time step
-    velᵇ = velocity(vel.u[:,:,:,trunc(Int,t*ΔT/3600)],
-                    vel.v[:,:,:,trunc(Int,t*ΔT/3600)],
-                    vel.w[:,:,:,trunc(Int,t*ΔT/3600)])
+    velᵇ = read_offline_vels(vfroot, itList, tN, t); 
     velᵈ = double_grid(velᵇ,g)
-    agent_move(phyts_a,velᵈ,g,deltaT)
-    cell_num = count_num(phyts_a, g)
-    CR=update(t, deltaT, phyts_a, nutrients, IR, temp, cell_num) # return value: phyts_b, dvid_ct, and graz_ct
-    push!(B,CR[1])
-    write_output(t,CR,output)
+    agent_move(phyts_a,velᵈ,g,ΔT)
+    phyts_b,dvid_ct,graz_ct,consume=phyt_update(t, ΔT, g, phyts_a, nutrients, IR, temp)
+    push!(B,phyts_b)
+    write_output(t,phyts_b,dvid_ct,graz_ct,output)
     convert_coordinates(B[t],g) # convert grids to lon, lat and depth
     F = compute_nut_biochem(nutrients, remin)
     gtr = compute_source_term(nutrients, velᵇ, g, F)
-    nutp = nut_update(nutrients, consume, g, gtr, ΔT)
-    push!(CN, nutp)
+    nutₜ = nut_update(nutrients, consume, g, gtr, ΔT)
 end
 B1 = []; B2 = [];
 @showprogress 1 "Computing..." for i in 1:720
