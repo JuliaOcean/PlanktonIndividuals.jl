@@ -23,6 +23,9 @@ struct grids
     Lx::Array{Float32,2} # unit: meter
     Ly::Array{Float32,2} # unit: meter
     Lz::Array{Float32,1} # unit: meter
+    dxC::Array{Float32,2} # unit: meter, distance from center to center
+    dyC::Array{Float32,2} # unit: meter, distance from center to center
+    dzC::Array{Float32,1} # unit: meter, distance from center to center
     Ax::Array{Float32,3} # unit: m²
     Ay::Array{Float32,3} # unit: m²
     Az::Array{Float32,2} # unit: m²

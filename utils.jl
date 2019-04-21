@@ -40,6 +40,9 @@ function grid_offline(fieldroot::String)
     fdx = open(fieldroot*"DXG.data","r");
     fdy = open(fieldroot*"DYG.data","r");
     fdrf= open(fieldroot*"DRF.data","r");
+    fdxc= open(fieldroot*"DXC.data","r");
+    fdyc= open(fieldroot*"DYC.data","r");
+    fdrc= open(fieldroot*"DRC.data","r");
     fAz = open(fieldroot*"RAC.data","r");
     fhfc= open(fieldroot*"hFacC.data","r");
     fhfs= open(fieldroot*"hFacS.data","r");
@@ -51,6 +54,9 @@ function grid_offline(fieldroot::String)
     dx = reverse(reinterpret(Float32,reverse(read(fdx,))));
     dy = reverse(reinterpret(Float32,reverse(read(fdy,))));
     drf= reverse(reinterpret(Float32,reverse(read(fdrf,))));
+    dxc= reverse(reinterpret(Float32,reverse(read(fdxc,))));
+    dyc= reverse(reinterpret(Float32,reverse(read(fdyc,))));
+    drc= reverse(reinterpret(Float32,reverse(read(fdrc,))));
     Az = reverse(reinterpret(Float32,reverse(read(fAz,))));
     hFC= reverse(reinterpret(Float32,reverse(read(fhfc,))));
     hFS= reverse(reinterpret(Float32,reverse(read(fhfs,))));
@@ -60,6 +66,7 @@ function grid_offline(fieldroot::String)
     xf = reshape(xf,nx,ny); yf = reshape(yf,nx,ny); 
     xc = reshape(xc,nx,ny); yc = reshape(yc,nx,ny);
     dx = reshape(dx,nx,ny); dy = reshape(dy,nx,ny);
+    dxc= reshape(dxc,nx,ny);dyc= reshape(dyc,nx,ny);
     Az = reshape(Az,nx,ny); hFC= reshape(hFC,nx,ny,nz);
     hFS= reshape(hFS,nx,ny,nz);hFW= reshape(hFW,nx,ny,nz);
     zf = -cumsum(drf); pushfirst!(zf,0); zc = 0.5*(zf[1:end-1]+zf[2:end]);
@@ -79,11 +86,12 @@ function grid_offline(fieldroot::String)
     xcS = xc[551:750,1351:1550]; ycS = yc[551:750,1351:1550];
     xfS = xf[551:750,1351:1550]; yfS = yf[551:750,1351:1550];
     dxS = dx[551:750,1351:1550]; dyS = dy[551:750,1351:1550];
+    dxcS= dxc[551:750,1351:1550];dycS= dyc[551:750,1351:1550];
     ΔxS = Δx[551:750,1351:1550]; ΔyS = Δy[551:750,1351:1550];
     AzS = Az[551:750,1351:1550]; AxS = Ax[551:750,1351:1550,:];
     AyS = Ay[551:750,1351:1550,:];VS = V[551:750,1351:1550,:];
     Nx, Ny = size(AzS)
-    g = grids(xcS, ycS, zc, xfS, yfS, zf, ΔxS, ΔyS, dxS, dyS, drf, AxS, AyS, AzS, VS, Nx, Ny, nz)
+    g = grids(xcS, ycS, zc, xfS, yfS, zf, ΔxS, ΔyS, dxS, dyS, drf, dxcS, dycS, drc, AxS, AyS, AzS, VS, Nx, Ny, nz)
     return g
 end
 

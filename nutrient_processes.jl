@@ -1,5 +1,7 @@
 function compute_nut_biochem(nutrients, rem)
-    DIC, DIN, DOC, DON, POC, PON = nutrients.DIC, nutrients.DIN, nutrients.DOC, nutrients.DON, nutrients.POC, nutrients.PON
+    DIC = max(0.0, nutrients.DIC);DIN = max(0.0, nutrients.DIN);
+    DOC = max(0.0, nutrients.DOC);DON = max(0.0, nutrients.DON);
+    POC = max(0.0, nutrients.POC);PON = max(0.0, nutrients.PON);
     F = nutrient_fields(zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
     # compute remineralization of organic nutrients
     F.DIC .= F.DIC .+ DOC .* rem.DOC
@@ -14,18 +16,23 @@ end
 
 
 function compute_source_term(nutrients, velᵇ, g, F)
-    u, v, w = velᵇ.u, velᵇ.v, velᵇ.w
     DIC, DIN, DOC, DON, POC, PON = nutrients.DIC, nutrients.DIN, nutrients.DOC, nutrients.DON, nutrients.POC, nutrients.PON
     gtr = nutrient_fields(zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
+    adv_DIC = MultiDim_adv(g, DIC, velᵇ, ΔT);
+    adv_DIN = MultiDim_adv(g, DIN, velᵇ, ΔT);
+    adv_DOC = MultiDim_adv(g, DOC, velᵇ, ΔT);
+    adv_DON = MultiDim_adv(g, DON, velᵇ, ΔT);
+    adv_POC = MultiDim_adv(g, POC, velᵇ, ΔT);
+    adv_PON = MultiDim_adv(g, PON, velᵇ, ΔT);
     for k in 1:g.Nz
         for j in 1:g.Ny
             for i in 1:g.Nx
-                gtr.DIC[i, j, k] = -div_flux(g, u, v, w, DIC, i, j, k) + κ∇²(g, DIC, κh, κv, i, j, k) + F.DIC[i, j, k]
-                gtr.DIN[i, j, k] = -div_flux(g, u, v, w, DIN, i, j, k) + κ∇²(g, DIN, κh, κv, i, j, k) + F.DIN[i, j, k]
-                gtr.DOC[i, j, k] = -div_flux(g, u, v, w, DOC, i, j, k) + κ∇²(g, DOC, κh, κv, i, j, k) + F.DOC[i, j, k]
-                gtr.DON[i, j, k] = -div_flux(g, u, v, w, DON, i, j, k) + κ∇²(g, DON, κh, κv, i, j, k) + F.DON[i, j, k]
-                gtr.POC[i, j, k] = -div_flux(g, u, v, w, POC, i, j, k) + κ∇²(g, POC, κh, κv, i, j, k) + F.POC[i, j, k]
-                gtr.PON[i, j, k] = -div_flux(g, u, v, w, PON, i, j, k) + κ∇²(g, PON, κh, κv, i, j, k) + F.PON[i, j, k]
+                gtr.DIC[i, j, k] = -adv_DIC[i, j, k] + κ∇²(g, DIC, κh, κv, i, j, k) + F.DIC[i, j, k]
+                gtr.DIN[i, j, k] = -adv_DIN[i, j, k] + κ∇²(g, DIN, κh, κv, i, j, k) + F.DIN[i, j, k]
+                gtr.DOC[i, j, k] = -adv_DOC[i, j, k] + κ∇²(g, DOC, κh, κv, i, j, k) + F.DOC[i, j, k]
+                gtr.DON[i, j, k] = -adv_DON[i, j, k] + κ∇²(g, DON, κh, κv, i, j, k) + F.DON[i, j, k]
+                gtr.POC[i, j, k] = -adv_POC[i, j, k] + κ∇²(g, POC, κh, κv, i, j, k) + F.POC[i, j, k]
+                gtr.PON[i, j, k] = -adv_PON[i, j, k] + κ∇²(g, PON, κh, κv, i, j, k) + F.PON[i, j, k]
             end
         end
     end
@@ -37,16 +44,15 @@ end
 function nut_update(nutrients, consume, g, gtr, ΔT)
     # store nutrients of the former time step
     nutₜ = nutrient_fields(zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
-    ε = 0.0
     for k in 1:g.Nz
         for j in 1:g.Ny
             for i in 1:g.Nx
-                nutₜ.DIC[i, j, k] = max(ε, nutrients.DIC[i, j, k] + gtr.DIC[i, j, k] * ΔT + consume.DIC[i, j, k])
-                nutₜ.DIN[i, j, k] = max(ε, nutrients.DIN[i, j, k] + gtr.DIN[i, j, k] * ΔT + consume.DIN[i, j, k])
-                nutₜ.DOC[i, j, k] = max(ε, nutrients.DOC[i, j, k] + gtr.DOC[i, j, k] * ΔT + consume.DOC[i, j, k])
-                nutₜ.DON[i, j, k] = max(ε, nutrients.DON[i, j, k] + gtr.DON[i, j, k] * ΔT + consume.DON[i, j, k])
-                nutₜ.POC[i, j, k] = max(ε, nutrients.POC[i, j, k] + gtr.POC[i, j, k] * ΔT + consume.POC[i, j, k])
-                nutₜ.PON[i, j, k] = max(ε, nutrients.PON[i, j, k] + gtr.PON[i, j, k] * ΔT + consume.PON[i, j, k])
+                nutₜ.DIC[i, j, k] = nutrients.DIC[i, j, k] + gtr.DIC[i, j, k] * ΔT + consume.DIC[i, j, k]
+                nutₜ.DIN[i, j, k] = nutrients.DIN[i, j, k] + gtr.DIN[i, j, k] * ΔT + consume.DIN[i, j, k]
+                nutₜ.DOC[i, j, k] = nutrients.DOC[i, j, k] + gtr.DOC[i, j, k] * ΔT + consume.DOC[i, j, k]
+                nutₜ.DON[i, j, k] = nutrients.DON[i, j, k] + gtr.DON[i, j, k] * ΔT + consume.DON[i, j, k]
+                nutₜ.POC[i, j, k] = nutrients.POC[i, j, k] + gtr.POC[i, j, k] * ΔT + consume.POC[i, j, k]
+                nutₜ.PON[i, j, k] = nutrients.PON[i, j, k] + gtr.PON[i, j, k] * ΔT + consume.PON[i, j, k]
             end
         end
     end
