@@ -1,7 +1,10 @@
 function compute_nut_biochem(nutrients, rem)
-    DIC = max(0.0, nutrients.DIC);DIN = max(0.0, nutrients.DIN);
-    DOC = max(0.0, nutrients.DOC);DON = max(0.0, nutrients.DON);
-    POC = max(0.0, nutrients.POC);PON = max(0.0, nutrients.PON);
+    DIC = copy(nutrients.DIC);DIN = copy(nutrients.DIN);
+    DOC = copy(nutrients.DOC);DON = copy(nutrients.DON);
+    POC = copy(nutrients.POC);PON = copy(nutrients.PON);
+    DIC[DIC .< 0.0] .= 0.0;DIN[DIN .< 0.0] .= 0.0;
+    DOC[DOC .< 0.0] .= 0.0;DON[DON .< 0.0] .= 0.0;
+    POC[POC .< 0.0] .= 0.0;PON[PON .< 0.0] .= 0.0;
     F = nutrient_fields(zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
     # compute remineralization of organic nutrients
     F.DIC .= F.DIC .+ DOC .* rem.DOC
