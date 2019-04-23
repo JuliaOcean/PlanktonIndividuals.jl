@@ -150,10 +150,10 @@ function sort_species(Bi, B1, B2)
     push!(B2,phyts2)
 end
     
-function compute_mean_species(B1, B2)
+function compute_mean_species(B1, B2, nTime)
     output1 = DataFrame(time=Int64[], gen_ave=Float64[], Cq1_ave=Float64[], Cq2_ave=Float64[], Nq_ave=Float64[], size_ave=Float64[], chl_ave=Float64[], Population=Int64[]);
     output2 = DataFrame(time=Int64[], gen_ave=Float64[], Cq1_ave=Float64[], Cq2_ave=Float64[], Nq_ave=Float64[], size_ave=Float64[], chl_ave=Float64[], Population=Int64[]);
-    for i in 1:720
+    for i in 1:nTime
         gen_ave1=mean(B1[i].gen)
         Cq1_ave1=mean(B1[i].Cq1)
         Cq2_ave1=mean(B1[i].Cq2)

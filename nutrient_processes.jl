@@ -30,12 +30,12 @@ function compute_source_term(nutrients, velᵇ, g, F)
     for k in 1:g.Nz
         for j in 1:g.Ny
             for i in 1:g.Nx
-                gtr.DIC[i, j, k] = -adv_DIC[i, j, k] + κ∇²(g, DIC, κh, κv, i, j, k) + F.DIC[i, j, k]
-                gtr.DIN[i, j, k] = -adv_DIN[i, j, k] + κ∇²(g, DIN, κh, κv, i, j, k) + F.DIN[i, j, k]
-                gtr.DOC[i, j, k] = -adv_DOC[i, j, k] + κ∇²(g, DOC, κh, κv, i, j, k) + F.DOC[i, j, k]
-                gtr.DON[i, j, k] = -adv_DON[i, j, k] + κ∇²(g, DON, κh, κv, i, j, k) + F.DON[i, j, k]
-                gtr.POC[i, j, k] = -adv_POC[i, j, k] + κ∇²(g, POC, κh, κv, i, j, k) + F.POC[i, j, k]
-                gtr.PON[i, j, k] = -adv_PON[i, j, k] + κ∇²(g, PON, κh, κv, i, j, k) + F.PON[i, j, k]
+                gtr.DIC[i, j, k] = adv_DIC[i, j, k] + κ∇²(g, DIC, κh, κv, i, j, k) + F.DIC[i, j, k]
+                gtr.DIN[i, j, k] = adv_DIN[i, j, k] + κ∇²(g, DIN, κh, κv, i, j, k) + F.DIN[i, j, k]
+                gtr.DOC[i, j, k] = adv_DOC[i, j, k] + κ∇²(g, DOC, κh, κv, i, j, k) + F.DOC[i, j, k]
+                gtr.DON[i, j, k] = adv_DON[i, j, k] + κ∇²(g, DON, κh, κv, i, j, k) + F.DON[i, j, k]
+                gtr.POC[i, j, k] = adv_POC[i, j, k] + κ∇²(g, POC, κh, κv, i, j, k) + F.POC[i, j, k]
+                gtr.PON[i, j, k] = adv_PON[i, j, k] + κ∇²(g, PON, κh, κv, i, j, k) + F.PON[i, j, k]
             end
         end
     end
