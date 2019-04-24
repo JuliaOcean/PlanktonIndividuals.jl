@@ -171,3 +171,33 @@ function compute_mean_species(B1, B2, nTime)
     end
     return output1, output2
 end
+function write_nut_nc(g::grids, nut::nutrient_fields, t::Int64)
+    filepath = "results/nut."*lpad(string(t),4,"0")*".nc"
+    xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
+    yC_attr = Dict("longname" => "Locations of the cell centers in the y-direction.", "units" => "m")
+    zC_attr = Dict("longname" => "Locations of the cell centers in the z-direction.", "units" => "m")
+    C_attr = Dict("units" => "mmolC/m^3")
+    N_attr = Dict("units" => "mmolN/m^3")
+    isfile(filepath) && rm(filepath)
+    nccreate(filepath, "DIC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=C_attr);
+    nccreate(filepath, "DIN", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
+    nccreate(filepath, "DOC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=C_attr);
+    nccreate(filepath, "DON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
+    nccreate(filepath, "POC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=C_attr);
+    nccreate(filepath, "PON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
+    ncwrite(nut.DIC,filepath,"DIC"); ncwrite(nut.DIN,filepath,"DIN");
+    ncwrite(nut.DOC,filepath,"DOC"); ncwrite(nut.DON,filepath,"DON");
+    ncwrite(nut.POC,filepath,"POC"); ncwrite(nut.PON,filepath,"PON");
+    ncclose(filepath)
+    return nothing
+end
+function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, vel::velocity, t::Int64)
+    Σgtrⁿ = sum(gtr.DIN .* g.V)+sum(gtr.DON .* g.V)+sum(gtr.PON .* g.V)
+    Σgtrᶜ = sum(gtr.DIC .* g.V)+sum(gtr.DOC .* g.V)+sum(gtr.POC .* g.V)
+    ΣsurFⁿ= sum((nutₜ.DIN[:,:,1]+nutₜ.DON[:,:,1]+nutₜ.PON[:,:,1]) .* g.Az .* vel.w[:,:,1])
+    ΣsurFᶜ= sum((nutₜ.DIC[:,:,1]+nutₜ.DOC[:,:,1]+nutₜ.POC[:,:,1]) .* g.Az .* vel.w[:,:,1])
+    Cio = open("results/cons_C.txt","a"); Nio = open("results/cons_N.txt","a");
+    println(Cio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrᶜ,ΣsurFᶜ,Σgtrᶜ+ΣsurFᶜ))
+    println(Nio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrⁿ,ΣsurFⁿ,Σgtrⁿ+ΣsurFⁿ))
+    close(Cio);close(Nio);
+end

@@ -1,10 +1,4 @@
 #for offline only, include time series
-struct velocity_fields 
-    u::Array{Float64,4}
-    v::Array{Float64,4}
-    w::Array{Float64,4}
-end
-
 mutable struct velocity
     u::Array{Float64,3}
     v::Array{Float64,3}

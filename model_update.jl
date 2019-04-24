@@ -14,7 +14,7 @@
 #     name: julia-1.1
 # ---
 
-using DataFrames, CSV, NetCDF, ProgressMeter
+using DataFrames, NetCDF, ProgressMeter, Printf
 using Random
 using Distributions
 cd("/nobackup1b/users/zhenwu/ABPM_3D/")
@@ -50,15 +50,14 @@ B=setup_agents(N,Cquota,1.1,0.18,g) # Normal distribution with mean and variance
 # create output file
 output = create_output(B);
 nut = [2.0, 1.0, 20.0, 2.0, 1.0, 1.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
-nut₀= setup_nutrients(g,nut)
-#nut₀.DIN[100,100,1] = 1.0
-CN = [nut₀]
+nutrients= setup_nutrients(g,nut)
 remin = rem(kDOC,kDON,kPOC,kPON)
 #nutrients = DataFrame(DIN=1.0e-5, DOC=0.0, DON=3.0e-5, POC=0.0, PON=0.0);# mmol
+#CN = [nut₀]
+#nut₀.DIN[100,100,1] = 1.0
 
-@showprogress 1 "Updating..." for t in 1:600
+@showprogress 1 "Updating..." for t in 1:2
     phyts_a = copy(B[t]) # read data from last time step
-    nutrients = CN[t]
     velᵇ = read_offline_vels(vfroot,itList,tN,t);
     velᵈ = double_grid(velᵇ,g)
     agent_move(phyts_a,velᵈ,g,ΔT) 
@@ -69,8 +68,9 @@ remin = rem(kDOC,kDON,kPOC,kPON)
     F = compute_nut_biochem(nutrients, remin)
     gtr = compute_source_term(nutrients, velᵇ, g, F)
     nutₜ = nut_update(nutrients, consume, g, gtr, ΔT)
-    #println("t_DIN:"*string(sum(nutₜ.DIN .* g.V)+sum(nutₜ.DON .* g.V)+sum(nutₜ.PON .* g.V))) #
-    push!(CN, nutₜ)
+    write_nut_nc(g, nutₜ, t)
+    write_nut_cons(g, gtr, nutₜ, velᵇ, t)
+    global nutrients = nutₜ;
 end
 
 B1 = []; B2 = [];
@@ -90,7 +90,6 @@ JLD.@write f B2
 JLD.@write f output
 JLD.@write f output1
 JLD.@write f output2
-JLD.@write f CN
 JLD.@write f g
 JLD.@write f IR
 close(f)
@@ -110,11 +109,7 @@ p5 = plot(output2.size_ave, xlims=(0,720), ylims=(0.0,3.1), title="Relative Size
 p6= plot(output2.Cq1_ave, xlims=(0,720), ylims=(0.0,1.2e-9), title="Average C&N Quotas (mmol)", xticks = 0:24:720, rotation=45, label = "Cq1 sp2");
 plot!(p6,output2.Cq2_ave, xlims=(0,720), xticks = 0:24:720, rotation=45, label="Cq2 sp2");
 plot!(p6,output2.Nq_ave, xlims=(0,720), xticks = 0:24:720, rotation=45, label="Nq sp2");
-p7 = plot(nutrients.DIN, xlims=(0,720), ylims=(0.0,5.0e-5), title= "DIN&DON (mmol)", xticks = 0:24:720, rotation=45,label="DIN",legend=:topleft);
-plot!(p7,nutrients.DON, xlims=(0,720), xticks = 0:24:720, rotation=45, label="DON");
-p8 = plot(nutrients.DOC, xlims=(0,720), ylims=(0.0,3.0e-4), title= "POC&DOC (mmol)", xticks = 0:24:720, rotation=45,label="DOC",legend=:topleft);
-plot!(p8,nutrients.POC, xlims=(0,720), xticks = 0:24:720, rotation=45, label="POC");
-plt=plot(p1,p2,p3,p4,p5,p6,p7,p8,layout=grid(4,2),size=(1200,1000),dpi=200)
+plt=plot(p1,p2,p3,p4,p5,p6,layout=grid(3,2),size=(1200,1000),dpi=200)
 savefig(plt,"results/plot.png")
 
 
