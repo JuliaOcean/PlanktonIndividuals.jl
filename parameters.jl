@@ -32,7 +32,7 @@ FracExuC  = 0.7 # Fraction of extra fixed carbon to be exuded
 
 k_sink = 0.05/86400 # Sink rates for particulate carbon and nitrogen (per second)
 kDOC   = 1/40/86400 # remineralization rate for DOC, turn over time: 40 days (per second)
-kDON   = 1/16/86400 # remineralization rate for DON, turn over time: 16 days (per second)
+kDON   = 1/30/86400 # remineralization rate for DON, turn over time: a month (per second)
 kPOC   = 1/30/86400 # remineralization rate for POC, turn over time: a month (per second)
 kPON   = 1/30/86400 # remineralization rate for PON, turn over time: a month (per second)
 

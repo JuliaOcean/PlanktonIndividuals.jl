@@ -49,16 +49,13 @@ B=setup_agents(N,Cquota,1.1,0.18,g) # Normal distribution with mean and variance
 # model initialization
 # create output file
 output = create_output(B);
-nut = [2.0, 0.7, 20.0, 2.0, 1.0, 1.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
+nut = [2.0, 0.2, 20.0, 0.5, 1.0, 1.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
 nutrients= setup_nutrients(g,nut)
 remin = rem(kDOC,kDON,kPOC,kPON)
-#nutrients = DataFrame(DIN=1.0e-5, DOC=0.0, DON=3.0e-5, POC=0.0, PON=0.0);# mmol
-#CN = [nut₀]
-#nut₀.DIN[100,100,1] = 1.0
 isfile("results/cons_C.txt") && rm("results/cons_C.txt");
 isfile("results/cons_N.txt") && rm("results/cons_N.txt");
 
-@showprogress 1 "Updating..." for t in 1:nTime
+@showprogress 1 "Updating..." for t in 1:1
     phyts_a = copy(B[t]) # read data from last time step
     velᵇ = read_offline_vels(vfroot,itList,tN,trunc(Int,t*ΔT/3600));
     velᵈ = double_grid(velᵇ,g)
@@ -113,11 +110,11 @@ plot!(p1,output.dvid, xlims=(0,720), xticks = 0:24:720, rotation=45,label="Cell 
 p2 = plot(output1.gen_ave, xlims=(0,720), ylims=(0.0,35.0), title="Average Generation", xticks = 0:24:720, rotation=45,legend=:best,label="Average Generation sp1");
 plot!(p2,output2.gen_ave, xlims=(0,720), xticks = 0:24:720, rotation=45,legend=:best,label="Average Generation sp2");
 p3 = plot(output1.size_ave, xlims=(0,720), ylims=(0.0,3.1), title="Relative Size sp1", xticks = 0:24:720, rotation=45, legend=:topright, label="Relative Size sp1");
-p4 = plot(output1.Cq1_ave, xlims=(0,720), ylims=(0.0,1.8e-10), title="Average C&N Quotas (mmol)", xticks = 0:24:720, rotation=45, label = "Cq1 sp1");
+p4 = plot(output1.Cq1_ave, xlims=(0,720), ylims=(0.0,1.8e-5), title="Average C&N Quotas (mmol)", xticks = 0:24:720, rotation=45, label = "Cq1 sp1");
 plot!(p4,output1.Cq2_ave, xlims=(0,720), xticks = 0:24:720, rotation=45, label="Cq2 sp1");
 plot!(p4,output1.Nq_ave, xlims=(0,720), xticks = 0:24:720, rotation=45, label="Nq sp1");
 p5 = plot(output2.size_ave, xlims=(0,720), ylims=(0.0,3.1), title="Relative Size sp2", xticks = 0:24:720, rotation=45, legend=:topright, label="Relative Size sp2");
-p6= plot(output2.Cq1_ave, xlims=(0,720), ylims=(0.0,1.2e-9), title="Average C&N Quotas (mmol)", xticks = 0:24:720, rotation=45, label = "Cq1 sp2");
+p6= plot(output2.Cq1_ave, xlims=(0,720), ylims=(0.0,1.2e-4), title="Average C&N Quotas (mmol)", xticks = 0:24:720, rotation=45, label = "Cq1 sp2");
 plot!(p6,output2.Cq2_ave, xlims=(0,720), xticks = 0:24:720, rotation=45, label="Cq2 sp2");
 plot!(p6,output2.Nq_ave, xlims=(0,720), xticks = 0:24:720, rotation=45, label="Nq sp2");
 plt=plot(p1,p2,p3,p4,p5,p6,layout=grid(3,2),size=(900,800),dpi=100)

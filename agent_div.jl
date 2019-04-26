@@ -5,31 +5,31 @@
 # velᵇ is the velocitiy fields on big grids of current time step
 function double_grid(velᵇ,grid)
     Ny = grid.Ny; Nx = grid.Nx; Nz = grid.Nz;
-    u = zeros(Ny*2-1,Nx*2-1,Nz);
-    v = zeros(Ny*2-1,Nx*2-1,Nz);
-    w = zeros(Ny*2-1,Nx*2-1,Nz);
+    u = zeros(Nx*2-1,Ny*2-1,Nz);
+    v = zeros(Nx*2-1,Ny*2-1,Nz);
+    w = zeros(Nx*2-1,Ny*2-1,Nz);
     velᵈ = velocity(u, v, w);
     ny2h = Ny*2-1; nx2h = Nx*2-1;
-    vel_sh = (ny2h, nx2h, Nz);
+    vel_sh = (nx2h, ny2h, Nz);
     u2h = zeros(Float32,vel_sh);
     v2h = zeros(Float32,vel_sh);
     # Compute values for new grids
-    uX = 0.5*(velᵇ.u[:,1:Nx-1,:] + velᵇ.u[:,2:Nx,:]);
-    vY = 0.5*(velᵇ.v[1:Ny-1,:,:] + velᵇ.v[2:Ny,:,:]);
-    u2h[1:2:ny2h,2:2:nx2h,:] = uX;
-    u2h[1:2:ny2h,1:2:nx2h,:] = velᵇ.u;
-    v2h[2:2:ny2h,1:2:nx2h,:] = vY;
-    v2h[1:2:ny2h,1:2:nx2h,:] = velᵇ.v;
-    uY = 0.5*(u2h[1:2:ny2h-1,:,:] + u2h[3:2:ny2h,:,:]);
-    vX = 0.5*(v2h[:,1:2:nx2h-1,:] + v2h[:,3:2:nx2h,:]);
-    u2h[2:2:ny2h,:,:] = uY;
-    v2h[:,2:2:nx2h,:] = vX;
+    uX = 0.5*(velᵇ.u[1:Nx-1,:,:] + velᵇ.u[2:Nx,:,:]);
+    vY = 0.5*(velᵇ.v[:,1:Ny-1,:] + velᵇ.v[:,2:Ny,:]);
+    u2h[2:2:nx2h,1:2:ny2h,:] = uX;
+    u2h[1:2:nx2h,1:2:ny2h,:] = velᵇ.u;
+    v2h[1:2:nx2h,2:2:ny2h,:] = vY;
+    v2h[1:2:nx2h,1:2:ny2h,:] = velᵇ.v;
+    uY = 0.5*(u2h[:,1:2:ny2h-1,:] + u2h[:,3:2:ny2h,:]);
+    vX = 0.5*(v2h[1:2:nx2h-1,:,:] + v2h[3:2:nx2h,:,:]);
+    u2h[:,2:2:ny2h,:] = uY;
+    v2h[2:2:nx2h,:,:] = vX;
     # Delete the boundaries
-    velᵈ.u = u2h[1:ny2h-1,2:nx2h,:]; velᵈ.v = v2h[2:ny2h,1:nx2h-1,:];
+    velᵈ.u = u2h[2:nx2h,1:ny2h-1,:]; velᵈ.v = v2h[1:nx2h-1,2:ny2h,:];
     # Deal with vertical velocities
-    velᵈ.w[1:2:ny2h-1,1:2:nx2h-1,:] = velᵇ.w[1:Ny-1,1:Nx-1,:];
-    velᵈ.w[2:2:ny2h,1:2:nx2h-1,:] = velᵇ.w[1:Ny-1,1:Nx-1,:];
-    velᵈ.w[:,2:2:nx2h,:] = velᵈ.w[:,1:2:nx2h-1,:];
+    velᵈ.w[1:2:nx2h-1,1:2:ny2h-1,:] = velᵇ.w[1:Nx-1,1:Ny-1,:];
+    velᵈ.w[1:2:nx2h-1,2:2:ny2h,:] = velᵇ.w[1:Nx-1,1:Ny-1,:];
+    velᵈ.w[2:2:nx2h,:,:] = velᵈ.w[1:2:nx2h-1,:,:];
     return velᵈ
 end
 function trilinear_itpl(x, y, z, a)
