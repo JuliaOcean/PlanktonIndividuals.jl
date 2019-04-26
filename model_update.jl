@@ -14,7 +14,7 @@
 #     name: julia-1.1
 # ---
 
-using DataFrames, NetCDF, ProgressMeter, Printf
+using DataFrames, NetCDF, ProgressMeter, Printf, CSV, Serialization
 using Random
 using Distributions
 cd("/nobackup1b/users/zhenwu/ABPM_3D/")
@@ -28,9 +28,9 @@ include("dst3fl.jl")
 include("nutrient_processes.jl")
 include("flux_div_diffusion_operators.jl")
 # Read input files
-nTime = 600 # number of time steps
-ΔT = 3600 # time step: 1h
-temp,IR = read_input("T_IR.csv",nTime);
+nTime = 360 # number of time steps
+ΔT = 3600 # time step: 3600 for 1 hour
+temp,IR = read_input("T_IR.csv",trunc(Int,nTime*ΔT/3600));
 
 # grid selected : [41:1040,1201:2600]: 26.46N to 47.71N, 172.188W to 151.375W
 fieldroot = "/nobackup1b/users/jahn/hinpac/grazsame3/run/run.0354/";
@@ -49,16 +49,18 @@ B=setup_agents(N,Cquota,1.1,0.18,g) # Normal distribution with mean and variance
 # model initialization
 # create output file
 output = create_output(B);
-nut = [2.0, 1.0, 20.0, 2.0, 1.0, 1.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
+nut = [2.0, 0.7, 20.0, 2.0, 1.0, 1.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
 nutrients= setup_nutrients(g,nut)
 remin = rem(kDOC,kDON,kPOC,kPON)
 #nutrients = DataFrame(DIN=1.0e-5, DOC=0.0, DON=3.0e-5, POC=0.0, PON=0.0);# mmol
 #CN = [nut₀]
 #nut₀.DIN[100,100,1] = 1.0
+isfile("results/cons_C.txt") && rm("results/cons_C.txt");
+isfile("results/cons_N.txt") && rm("results/cons_N.txt");
 
-@showprogress 1 "Updating..." for t in 1:2
+@showprogress 1 "Updating..." for t in 1:nTime
     phyts_a = copy(B[t]) # read data from last time step
-    velᵇ = read_offline_vels(vfroot,itList,tN,t);
+    velᵇ = read_offline_vels(vfroot,itList,tN,trunc(Int,t*ΔT/3600));
     velᵈ = double_grid(velᵇ,g)
     agent_move(phyts_a,velᵈ,g,ΔT) 
     phyts_b,dvid_ct,graz_ct,consume=phyt_update(t, ΔT, g, phyts_a, nutrients, IR, temp)
@@ -74,25 +76,34 @@ remin = rem(kDOC,kDON,kPOC,kPON)
 end
 
 B1 = []; B2 = [];
-@showprogress 1 "Computing..." for i in 1:600
+@showprogress 1 "Computing..." for i in 1:nTime+1
     sort_species(B[i], B1, B2)
 end
 
 output1, output2 = compute_mean_species(B1, B2, nTime);
 
-###########################################################
-# to save all the agents of all time steps run code below #
-###########################################################
-using JLD, FileIO
-f = JLD.jldopen("results/output.jld", "w", compress=true)
-JLD.@write f B1
-JLD.@write f B2
-JLD.@write f output
-JLD.@write f output1
-JLD.@write f output2
-JLD.@write f g
-JLD.@write f IR
-close(f)
+# save model output
+open("results/B1.bin", "w") do io
+    serialize(io, B1)
+end
+open("results/B2.bin", "w") do io
+    serialize(io, B2)
+end
+open("results/grid.bin", "w") do io
+    serialize(io, g)
+end
+open("results/output.bin", "w") do io
+    serialize(io, output)
+end
+open("results/output1.bin", "w") do io
+    serialize(io, output1)
+end
+open("results/output2.bin", "w") do io
+    serialize(io, output2)
+end
+open("results/IR.bin", "w") do io
+    serialize(io, IR)
+end
 
 using Plots, LaTeXStrings
 gr()
@@ -109,9 +120,7 @@ p5 = plot(output2.size_ave, xlims=(0,720), ylims=(0.0,3.1), title="Relative Size
 p6= plot(output2.Cq1_ave, xlims=(0,720), ylims=(0.0,1.2e-9), title="Average C&N Quotas (mmol)", xticks = 0:24:720, rotation=45, label = "Cq1 sp2");
 plot!(p6,output2.Cq2_ave, xlims=(0,720), xticks = 0:24:720, rotation=45, label="Cq2 sp2");
 plot!(p6,output2.Nq_ave, xlims=(0,720), xticks = 0:24:720, rotation=45, label="Nq sp2");
-plt=plot(p1,p2,p3,p4,p5,p6,layout=grid(3,2),size=(1200,1000),dpi=200)
-savefig(plt,"results/plot.png")
-
-
+plt=plot(p1,p2,p3,p4,p5,p6,layout=grid(3,2),size=(900,800),dpi=100)
+#savefig(plt,"results/plot.png")
 
 

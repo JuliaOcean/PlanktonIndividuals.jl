@@ -130,8 +130,8 @@ function convert_coordinates(phyts, grid)
     phyt = phyts[i,:]
     z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
     dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
-    phyt.x = grid.xF[x] + dx * grid.Δx[x,y];
-    phyt.y = grid.yF[y] + dy * grid.Δy[x,y];
+    phyt.x = grid.xF[x,1] + dx * grid.Δx[x,y];
+    phyt.y = grid.yF[1,y] + dy * grid.Δy[x,y];
     phyt.z = grid.zF[z] - dz * grid.Lz[z];
     end
 end
@@ -172,7 +172,7 @@ function compute_mean_species(B1, B2, nTime)
     return output1, output2
 end
 function write_nut_nc(g::grids, nut::nutrient_fields, t::Int64)
-    filepath = "results/nut."*lpad(string(t),4,"0")*".nc"
+    filepath = "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
     xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
     yC_attr = Dict("longname" => "Locations of the cell centers in the y-direction.", "units" => "m")
     zC_attr = Dict("longname" => "Locations of the cell centers in the z-direction.", "units" => "m")
