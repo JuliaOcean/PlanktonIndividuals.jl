@@ -14,7 +14,7 @@
 #     name: julia-1.1
 # ---
 
-using DataFrames, NetCDF, ProgressMeter, Printf, CSV, Serialization
+using DataFrames, NetCDF, Printf, CSV, Serialization
 using Random
 using Distributions
 cd("/nobackup1b/users/zhenwu/ABPM_3D/")
@@ -28,11 +28,11 @@ include("dst3fl.jl")
 include("nutrient_processes.jl")
 include("flux_div_diffusion_operators.jl")
 # Read input files
-nTime = 360 # number of time steps
+nTime = 240 # number of time steps
 ΔT = 3600 # time step: 3600 for 1 hour
 temp,IR = read_input("T_IR.csv",trunc(Int,nTime*ΔT/3600));
 
-# grid selected : [41:1040,1201:2600]: 26.46N to 47.71N, 172.188W to 151.375W
+# grid selected : [251:750,1251:1800]: 27.3242N to 36.2605N, 167.802W to 157.406W
 fieldroot = "/nobackup1b/users/jahn/hinpac/grazsame3/run/run.0354/";
 g = grid_offline(fieldroot);
 
@@ -43,19 +43,19 @@ itList = collect(itvalLo:144:itvalHi);
 tN = 4056; # starting time
 vfroot = "/nobackup1b/users/jahn/hinpac/grazsame3/run/run.0354/offline-0604/"; # directory of velocity fields
 
-N = 50000   # Number of initial individuals of each species
+N = 100000   # Number of initial individuals of each species
 Nsp = 2     # Number of species
 B=setup_agents(N,Cquota,1.1,0.18,g) # Normal distribution with mean and variance
 # model initialization
 # create output file
 output = create_output(B);
-nut = [2.0, 0.2, 20.0, 0.5, 1.0, 1.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
+nut = [2.0, 0.002, 20.0, 0.0, 0.0, 0.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
 nutrients= setup_nutrients(g,nut)
 remin = rem(kDOC,kDON,kPOC,kPON)
 isfile("results/cons_C.txt") && rm("results/cons_C.txt");
 isfile("results/cons_N.txt") && rm("results/cons_N.txt");
 
-@showprogress 1 "Updating..." for t in 1:1
+for t in 1:nTime
     phyts_a = copy(B[t]) # read data from last time step
     velᵇ = read_offline_vels(vfroot,itList,tN,trunc(Int,t*ΔT/3600));
     velᵈ = double_grid(velᵇ,g)
@@ -73,13 +73,29 @@ isfile("results/cons_N.txt") && rm("results/cons_N.txt");
 end
 
 B1 = []; B2 = [];
-@showprogress 1 "Computing..." for i in 1:nTime+1
+for i in 1:nTime+1
     sort_species(B[i], B1, B2)
+end
+
+VD1 = []; VD2 = [];
+for i in 1:nTime
+    VD_1 = count_vertical_num(B1[i]);
+    push!(VD1,VD_1)
+    VD_2 = count_vertical_num(B2[i]);
+    push!(VD2,VD_2)
 end
 
 output1, output2 = compute_mean_species(B1, B2, nTime);
 
 # save model output
+isfile("results/B1.bin") && rm("results/B1.bin");
+isfile("results/B2.bin") && rm("results/B2.bin");
+isfile("results/output.bin") && rm("results/output.bin");
+isfile("results/output1.bin") && rm("results/output1.bin");
+isfile("results/output2.bin") && rm("results/output2.bin");
+isfile("results/grid.bin") && rm("results/grid.bin");
+isfile("results/IR.bin") && rm("results/IR.bin");
+
 open("results/B1.bin", "w") do io
     serialize(io, B1)
 end
@@ -98,26 +114,14 @@ end
 open("results/output2.bin", "w") do io
     serialize(io, output2)
 end
+open("results/VD1.bin", "w") do io
+    serialize(io, VD1)
+end
+open("results/VD2.bin", "w") do io
+    serialize(io, VD2)
+end
 open("results/IR.bin", "w") do io
     serialize(io, IR)
 end
-
-using Plots, LaTeXStrings
-gr()
-p1 = plot(output1.Population, xlims=(0,720), ylims=(0.0,135000.0), title="Population", xticks = 0:24:720, rotation=45, label="Population sp1", legend=:topleft);
-plot!(p1,output2.Population, xlims=(0,720), xticks = 0:24:720, rotation=45,label="Population sp2");
-plot!(p1,output.dvid, xlims=(0,720), xticks = 0:24:720, rotation=45,label="Cell Divide");
-p2 = plot(output1.gen_ave, xlims=(0,720), ylims=(0.0,35.0), title="Average Generation", xticks = 0:24:720, rotation=45,legend=:best,label="Average Generation sp1");
-plot!(p2,output2.gen_ave, xlims=(0,720), xticks = 0:24:720, rotation=45,legend=:best,label="Average Generation sp2");
-p3 = plot(output1.size_ave, xlims=(0,720), ylims=(0.0,3.1), title="Relative Size sp1", xticks = 0:24:720, rotation=45, legend=:topright, label="Relative Size sp1");
-p4 = plot(output1.Cq1_ave, xlims=(0,720), ylims=(0.0,1.8e-5), title="Average C&N Quotas (mmol)", xticks = 0:24:720, rotation=45, label = "Cq1 sp1");
-plot!(p4,output1.Cq2_ave, xlims=(0,720), xticks = 0:24:720, rotation=45, label="Cq2 sp1");
-plot!(p4,output1.Nq_ave, xlims=(0,720), xticks = 0:24:720, rotation=45, label="Nq sp1");
-p5 = plot(output2.size_ave, xlims=(0,720), ylims=(0.0,3.1), title="Relative Size sp2", xticks = 0:24:720, rotation=45, legend=:topright, label="Relative Size sp2");
-p6= plot(output2.Cq1_ave, xlims=(0,720), ylims=(0.0,1.2e-4), title="Average C&N Quotas (mmol)", xticks = 0:24:720, rotation=45, label = "Cq1 sp2");
-plot!(p6,output2.Cq2_ave, xlims=(0,720), xticks = 0:24:720, rotation=45, label="Cq2 sp2");
-plot!(p6,output2.Nq_ave, xlims=(0,720), xticks = 0:24:720, rotation=45, label="Nq sp2");
-plt=plot(p1,p2,p3,p4,p5,p6,layout=grid(3,2),size=(900,800),dpi=100)
-#savefig(plt,"results/plot.png")
 
 
