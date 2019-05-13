@@ -70,9 +70,9 @@ function divide(phyt::DataFrameRow)
 
     return phytops
 end
-####################################
-# model update (ONE time step: 1h) #
-####################################
+###################################
+# model update for phytoplanktons #
+###################################
 function phyt_update(t::Int64, ΔT::Int64, g, phyts_a, nutrients, IR, temp)
     # load nutrients
     dvid_ct = 0; graz_ct = 0; death_ct = 0

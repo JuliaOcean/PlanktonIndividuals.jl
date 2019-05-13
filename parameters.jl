@@ -16,10 +16,10 @@ Tempref = 293.15   # reference temperature in K
 TempAe = -4000.0   # Arrenhius equation
 TempCoeff = 0.8    # Arrenhius equation
 
-VNmax = [0.8, 0.6] ./ 86400 # Maximum N uptake rate (per second)
+VNmax = [1.8, 1.6] ./ 86400 # Maximum N uptake rate (per second)
 Nqmax_a = 0.5   # Maximum N quota in cell (mmol N/mmol C)
 Nqmin_a = 0.13  # Minimum N quota in cell (mmol N/mmol C)
-KsatN = 0.2  # Half-saturation coeff
+KsatN = 0.05  # Half-saturation coeff
 
 respir_a = 1.0e-22 # Respiration ratio 
 respir_b = 0.93    # Shape parameter
