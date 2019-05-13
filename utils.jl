@@ -125,6 +125,16 @@ function count_num(phyts_a, grid)
     return cells
 end
 
+function count_vertical_num(phyts_a)
+    VD = zeros(500)
+    for i in 1:size(phyts_a,1)
+        phyt = phyts_a[i,:]
+        z = -trunc(Int, phyt.z) + 1
+        VD[z] = VD[z] + 1.0
+    end
+    return VD
+end
+
 function convert_coordinates(phyts, grid)
     for i in 1:size(phyts,1)
     phyt = phyts[i,:]
