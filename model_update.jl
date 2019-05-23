@@ -60,7 +60,7 @@ vfroot = "/nobackup1b/users/jahn/hinpac/grazsame3/run/run.0354/offline-0604/"; #
 
 N = 80000   # Number of initial individuals of each species
 Nsp = 2     # Number of species
-Nn = 1e10   # Number of cells one super-agent represents
+Nn = Int(1e10)   # Number of cells one super-agent represents
 B=setup_agents(N,Cquota,Nn,1.1,0.18,g) # Normal distribution with mean and variance
 # model initialization
 # create output file
