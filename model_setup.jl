@@ -1,5 +1,5 @@
 # set up a series of agents following a normal distribution
-function setup_agents(N::Int64,Cquota::Array,mean::Float64,var::Float64,grid)
+function setup_agents(N::Int64,Cquota::Array,Nn::Int64,mean::Float64,var::Float64,grid)
     phyts0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[])
     for i in 1:N
         # agent location
@@ -10,10 +10,10 @@ function setup_agents(N::Int64,Cquota::Array,mean::Float64,var::Float64,grid)
         radm = max(0.05, rand(Normal(mean,var)))
         gen  = 1
         size = radm
-        Cq1  = Cquota[1]
-        Cq2  = Cquota[1]*radm
-        Nq   = 13/106*2*Cq2
-        chl  = Cq2*0.4
+        Cq1  = Cquota[1]*Nn # Nn is the number of cells one super agent repersents
+        Cq2  = Cquota[1]*Nn*radm
+        Nq   = 13/106*2*Cq2*Nn
+        chl  = Cq2*0.4*Nn
         sp   = 1
         push!(phyts0,(x=x,y=y,z=z,gen=gen,size=size,Cq1=Cq1,Cq2=Cq2,Nq=Nq,chl=chl,sp=sp))
     end
@@ -26,10 +26,10 @@ function setup_agents(N::Int64,Cquota::Array,mean::Float64,var::Float64,grid)
         radm = max(0.05, rand(Normal(mean,var)))
         gen  = 1
         size = radm
-        Cq1  = Cquota[2]
-        Cq2  = Cquota[2]*radm
-        Nq   = 13/106*2*Cq2
-        chl  = Cq2*0.4
+        Cq1  = Cquota[2]*Nn
+        Cq2  = Cquota[2]*Nn*radm
+        Nq   = 13/106*2*Cq2*Nn
+        chl  = Cq2*0.4*Nn
         sp   = 2
         push!(phyts0,(x=x,y=y,z=z,gen=gen,size=size,Cq1=Cq1,Cq2=Cq2,Nq=Nq,chl=chl,sp=sp))
     end
