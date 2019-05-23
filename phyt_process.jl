@@ -1,8 +1,8 @@
 ###########################################
 # define functions of pysiology processes #
 ###########################################
-k_respir(Cq2) = respir_a*(12.0e9*Cq2/1.0e6)^respir_b/Cq2/1.0e6
-respir(Cq2) = respir_a*(12.0e9*Cq2/1.0e6)^respir_b
+k_respir(Cq2) = respir_a*(12.0e9*Cq2)^respir_b/Cq2
+respir(Cq2) = respir_a*(12.0e9*Cq2)^respir_b
 
 function daynight(t::Int64, IR)
     if IR[trunc(Int,t*ΔT/3600)] < 5.0
