@@ -26,8 +26,8 @@ function PC(PAR, Temp, phyt)
 end
 
 function Nuptake(Nit, phyt)
-    Nqmax = Nqmax_a*phyt.size*Cquota[phyt.sp]
-    Nqmin = Nqmin_a*phyt.size*Cquota[phyt.sp]
+    Nqmax = Nqmax_a*phyt.size*Cquota[phyt.sp]*Nn
+    Nqmin = Nqmin_a*phyt.size*Cquota[phyt.sp]*Nn
     #In-Cell N uptake limitation
     regQ = max(0.0,min(1.0,(Nqmax-phyt.Nq)/(Nqmax-Nqmin)))
     Nuptake = VNmax[phyt.sp]*Nit/(Nit+KsatN)*regQ
@@ -94,8 +94,8 @@ function phyt_update(t::Int64, ΔT::Int64, g, phyts_a, nutrients, IR, temp)
         # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
         P_dvi=max(0.0,phyt.size-dvid_size)*1.0e5*rand(Bernoulli(phyt.size/Dvid_P))
         PAR = PAR_cal(IR[trunc(Int,t*ΔT/3600)], g.zF[z], cumsum_cell[x, y, z])
-        PP = PC(PAR,temp[trunc(Int,t*ΔT/3600)],phyt)*Cquota[phyt.sp]*phyt.size*ΔT
-        VN = min(DIN*g.V[x,y,z]/10.0,Nuptake(DIN,phyt)*Cquota[phyt.sp]*phyt.size*ΔT)
+        PP = PC(PAR,temp[trunc(Int,t*ΔT/3600)],phyt)*Cquota[phyt.sp]*phyt.size*ΔT*Nn
+        VN = min(DIN*g.V[x,y,z]/10.0,Nuptake(DIN,phyt)*Cquota[phyt.sp]*phyt.size*ΔT*Nn)
         Dmd_NC = (1+k_respir(phyt.Cq1))*VN/R_NC
         Res2 = respir(phyt.Cq2)*ΔT
         ρ_chl = chl_sync(phyt,PC(PAR,temp[trunc(Int,t*ΔT/3600)],phyt),IR[trunc(Int,t*ΔT/3600)])
