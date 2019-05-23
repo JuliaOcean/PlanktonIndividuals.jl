@@ -113,14 +113,14 @@ function write_output(t,phyts_b,dvid_ct,graz_ct,output)
     return output
 end
 
-function count_num(phyts_a, grid)
-    cells = zeros(grid.Ny, grid.Nx, grid.Nz)
+function count_chl(phyts_a, grid)
+    cells = zeros(grid.Nx, grid.Ny, grid.Nz)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
         x = trunc(Int, phyt.x)
         y = trunc(Int, phyt.y)
         z = trunc(Int, phyt.z)
-        cells[y, x, z] = cells[y, x, z] + 1
+        cells[x, y, z] = cells[x, y, z] + phyt.chl
     end
     return cells
 end
@@ -133,6 +133,17 @@ function count_vertical_num(phyts_a)
         VD[z] = VD[z] + 1.0
     end
     return VD
+end
+
+function count_horizontal_num(phyts_a,grid)
+    HD = zeros(grid.Nx,grid.Ny)
+    for i in 1:size(phyts_a,1)
+        phyt = phyts_a[i,:]
+        x = trunc(Int, phyt.x)
+        y = trunc(Int, phyt.y)
+        HD[x,y] = HD[x,y] + 1.0
+    end
+    return HD
 end
 
 function convert_coordinates(phyts, grid)
@@ -151,9 +162,9 @@ function sort_species(Bi, B1, B2)
     phyts2 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[],sp=Int64[])
     for j in 1:size(Bi,1)
         if Bi[j,:].sp == 1
-            append!(phyts1,Bi[j,:])
+            push!(phyts1,Bi[j,:])
         elseif Bi[j,:].sp == 2
-            append!(phyts2,Bi[j,:])
+            push!(phyts2,Bi[j,:])
         end
     end
     push!(B1,phyts1)
@@ -206,8 +217,11 @@ function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields,
     Σgtrᶜ = sum(gtr.DIC .* g.V)+sum(gtr.DOC .* g.V)+sum(gtr.POC .* g.V)
     ΣsurFⁿ= sum((nutₜ.DIN[:,:,1]+nutₜ.DON[:,:,1]+nutₜ.PON[:,:,1]) .* g.Az .* vel.w[:,:,1])
     ΣsurFᶜ= sum((nutₜ.DIC[:,:,1]+nutₜ.DOC[:,:,1]+nutₜ.POC[:,:,1]) .* g.Az .* vel.w[:,:,1])
+    ΣDIN = sum(nutₜ.DIN .* g.V)
     Cio = open("results/cons_C.txt","a"); Nio = open("results/cons_N.txt","a");
+    DINio = open("results/cons_DIN.txt","a");
     println(Cio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrᶜ,ΣsurFᶜ,Σgtrᶜ+ΣsurFᶜ))
     println(Nio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrⁿ,ΣsurFⁿ,Σgtrⁿ+ΣsurFⁿ))
+    println(DINio,@sprintf("%3.0f  %.16E",t,ΣDIN))
     close(Cio);close(Nio);
 end

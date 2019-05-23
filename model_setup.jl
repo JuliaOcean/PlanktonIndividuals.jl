@@ -3,9 +3,9 @@ function setup_agents(N::Int64,Cquota::Array,mean::Float64,var::Float64,grid)
     phyts0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[])
     for i in 1:N
         # agent location
-        x = rand(25*grid.Nx:75*grid.Nx)/100
-        y = rand(25*grid.Nx:grid.Ny*50)/100
-        z = rand(3.5*10:grid.Nz*7)/10
+        x = rand(40*grid.Nx:60*grid.Nx)/100
+        y = rand(40*grid.Nx:grid.Ny*50)/100
+        z = rand(3.5*10:grid.Nz*8)/10
         # a normal distribution with mean variance
         radm = max(0.05, rand(Normal(mean,var)))
         gen  = 1
@@ -19,9 +19,9 @@ function setup_agents(N::Int64,Cquota::Array,mean::Float64,var::Float64,grid)
     end
     for i in N+1:2N
         # agent location
-        x = rand(25*grid.Nx:75*grid.Nx)/100
-        y = rand(50*grid.Ny:75*grid.Ny)/100
-        z = rand(3.5*10:grid.Nz*7)/10
+        x = rand(40*grid.Nx:60*grid.Nx)/100
+        y = rand(50*grid.Ny:60*grid.Ny)/100
+        z = rand(3.5*10:grid.Nz*8)/10
         # a normal distribution with mean variance
         radm = max(0.05, rand(Normal(mean,var)))
         gen  = 1
@@ -46,9 +46,9 @@ function setup_nutrients(g,nut)
     DON = zeros(g.Nx, g.Ny, g.Nz)
     POC = zeros(g.Nx, g.Ny, g.Nz)
     PON = zeros(g.Nx, g.Ny, g.Nz)
-    for i in trunc(Int,0.25*g.Nx):trunc(Int,0.75*g.Nx)
-        for j in trunc(Int,0.25*g.Ny):trunc(Int,0.75*g.Ny)
-            for k in 1:Int(0.5*g.Nz)
+    for i in trunc(Int,0.3*g.Nx):trunc(Int,0.7*g.Nx)
+        for j in trunc(Int,0.3*g.Ny):trunc(Int,0.7*g.Ny)
+            for k in 1:Int(0.6*g.Nz)
                 DIC[i, j, k] = DIC[i, j, k] + nut[1]
                 DIN[i, j, k] = DIN[i, j, k] + nut[2]*0.5
                 DOC[i, j, k] = DOC[i, j, k] + nut[3]
@@ -56,9 +56,9 @@ function setup_nutrients(g,nut)
                 POC[i, j, k] = POC[i, j, k] + nut[5]
                 PON[i, j, k] = PON[i, j, k] + nut[6]
             end
-            for k in Int(0.5*g.Nz)+1:Int(0.80*g.Nz)
+            for k in Int(0.6*g.Nz)+1:Int(0.80*g.Nz)
                 DIC[i, j, k] = DIC[i, j, k] + nut[1]
-                DIN[i, j, k] = DIN[i, j, k] + nut[2]*1.5
+                DIN[i, j, k] = DIN[i, j, k] + nut[2]*1.0
                 DOC[i, j, k] = DOC[i, j, k] + nut[3]
                 DON[i, j, k] = DON[i, j, k] + nut[4]
                 POC[i, j, k] = POC[i, j, k] + nut[5]

@@ -70,9 +70,9 @@ function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
         dz = wvel/g.Lz[zi]*ΔT # vertical movement, unit: grid/h
 #       phyt.x = max(1.5,min(g.Nx-0.5,phyt.x - dx*(1+rand()/5)))
 #       phyt.y = max(1.5,min(g.Ny-0.5,phyt.y - dy*(1+rand()/5)))
-        phyt.x = phyt.x - dx*(1+rand()/5)
-        phyt.y = phyt.y - dy*(1+rand()/5)
-        phyt.z = max(1.0,min(g.Nz-0.1,phyt.z - dz*(1+rand()/5)))
+        phyt.x = phyt.x - dx*(1+rand()/3)
+        phyt.y = phyt.y - dy*(1+rand()/3)
+        phyt.z = max(1.0,min(g.Nz-0.1,phyt.z - dz*(1+rand()/3)))
         # periodic domian
         if phyt.x ≥ g.Nx - 0.5
             phyt.x = phyt.x - g.Nx + 2.0

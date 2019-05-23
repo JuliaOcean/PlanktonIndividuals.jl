@@ -26,7 +26,22 @@ include("utils.jl")
 include("agent_div.jl")
 include("dst3fl.jl")
 include("nutrient_processes.jl")
-include("flux_div_diffusion_operators.jl")
+include("2nd_adv_diffu.jl")
+# remove old files
+isfile("results/cons_C.txt") && rm("results/cons_C.txt");
+isfile("results/cons_N.txt") && rm("results/cons_N.txt");
+isfile("results/cons_DIN.txt") && rm("results/cons_DIN.txt");
+isfile("results/B1.bin") && rm("results/B1.bin");
+isfile("results/B2.bin") && rm("results/B2.bin");
+isfile("results/output.bin") && rm("results/output.bin");
+isfile("results/output1.bin") && rm("results/output1.bin");
+isfile("results/output2.bin") && rm("results/output2.bin");
+isfile("results/grid.bin") && rm("results/grid.bin");
+isfile("results/IR.bin") && rm("results/IR.bin");
+isfile("results/VD1.bin") && rm("results/VD1.bin");
+isfile("results/VD2.bin") && rm("results/VD2.bin");
+isfile("results/HD1.bin") && rm("results/HD1.bin");
+isfile("results/HD2.bin") && rm("results/HD2.bin");
 # Read input files
 nTime = 240 # number of time steps
 ΔT = 3600 # time step: 3600 for 1 hour
@@ -43,17 +58,15 @@ itList = collect(itvalLo:144:itvalHi);
 tN = 4056; # starting time
 vfroot = "/nobackup1b/users/jahn/hinpac/grazsame3/run/run.0354/offline-0604/"; # directory of velocity fields
 
-N = 100000   # Number of initial individuals of each species
+N = 80000   # Number of initial individuals of each species
 Nsp = 2     # Number of species
 B=setup_agents(N,Cquota,1.1,0.18,g) # Normal distribution with mean and variance
 # model initialization
 # create output file
 output = create_output(B);
-nut = [2.0, 0.002, 20.0, 0.0, 0.0, 0.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
+nut = [2.0, 0.1, 20.0, 0.0, 0.0, 0.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
 nutrients= setup_nutrients(g,nut)
 remin = rem(kDOC,kDON,kPOC,kPON)
-isfile("results/cons_C.txt") && rm("results/cons_C.txt");
-isfile("results/cons_N.txt") && rm("results/cons_N.txt");
 
 for t in 1:nTime
     phyts_a = copy(B[t]) # read data from last time step
@@ -63,7 +76,6 @@ for t in 1:nTime
     phyts_b,dvid_ct,graz_ct,consume=phyt_update(t, ΔT, g, phyts_a, nutrients, IR, temp)
     push!(B,phyts_b)
     write_output(t,phyts_b,dvid_ct,graz_ct,output)
-    convert_coordinates(B[t],g) # convert grids to lon, lat and depth
     F = compute_nut_biochem(nutrients, remin)
     gtr = compute_source_term(nutrients, velᵇ, g, F)
     nutₜ = nut_update(nutrients, consume, g, gtr, ΔT)
@@ -77,6 +89,19 @@ for i in 1:nTime+1
     sort_species(B[i], B1, B2)
 end
 
+HD1 = []; HD2 = [];
+for i in 1:nTime
+    HD_1 = count_horizontal_num(B1[i],g);
+    push!(HD1,HD_1)
+    HD_2 = count_horizontal_num(B2[i],g);
+    push!(HD2,HD_2)
+end
+
+for i in 1:nTime
+    convert_coordinates(B1[i],g) # convert grids to lon, lat and depth
+    convert_coordinates(B2[i],g) # convert grids to lon, lat and depth
+end
+
 VD1 = []; VD2 = [];
 for i in 1:nTime
     VD_1 = count_vertical_num(B1[i]);
@@ -88,14 +113,6 @@ end
 output1, output2 = compute_mean_species(B1, B2, nTime);
 
 # save model output
-isfile("results/B1.bin") && rm("results/B1.bin");
-isfile("results/B2.bin") && rm("results/B2.bin");
-isfile("results/output.bin") && rm("results/output.bin");
-isfile("results/output1.bin") && rm("results/output1.bin");
-isfile("results/output2.bin") && rm("results/output2.bin");
-isfile("results/grid.bin") && rm("results/grid.bin");
-isfile("results/IR.bin") && rm("results/IR.bin");
-
 open("results/B1.bin", "w") do io
     serialize(io, B1)
 end
@@ -119,6 +136,12 @@ open("results/VD1.bin", "w") do io
 end
 open("results/VD2.bin", "w") do io
     serialize(io, VD2)
+end
+open("results/HD1.bin", "w") do io
+    serialize(io, HD1)
+end
+open("results/HD2.bin", "w") do io
+    serialize(io, HD2)
 end
 open("results/IR.bin", "w") do io
     serialize(io, IR)

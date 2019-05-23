@@ -13,15 +13,15 @@ function daynight(t::Int64, IR)
 end
 
 function PAR_cal(I, z, cumsum_cell)
-    atten = (katten_w *(-z) + katten_c * cumsum_cell)
-    PAR = α*I*exp(-atten)
+    atten = (katten_w + katten_c * cumsum_cell)*(-z)
+    PAR = α*I*(1.0 - exp(-atten))/atten
     return PAR
 end
 
 function PC(PAR, Temp, phyt) 
     Tempstd = exp(TempAe*(1.0/(Temp+273.15)-1.0/Tempref))
     photoTempFunc = TempCoeff*max(1.0e-10,Tempstd)
-    PC = PCmax[phyt.sp]*photoTempFunc*(1-exp(-PAR*phyt.chl/phyt.Cq2/PCmax[phyt.sp]))*Cquota[phyt.sp]*phyt.size
+    PC = PCmax[phyt.sp]*photoTempFunc*(1-exp(-PAR*phyt.chl/(phyt.Cq2*PCmax[phyt.sp]*photoTempFunc)))
     return PC
 end
 
@@ -30,13 +30,13 @@ function Nuptake(Nit, phyt)
     Nqmin = Nqmin_a*phyt.size*Cquota[phyt.sp]
     #In-Cell N uptake limitation
     regQ = max(0.0,min(1.0,(Nqmax-phyt.Nq)/(Nqmax-Nqmin)))
-    Nuptake = VNmax[phyt.sp]*Nit/(Nit+KsatN)*regQ*Cquota[phyt.sp]*phyt.size
+    Nuptake = VNmax[phyt.sp]*Nit/(Nit+KsatN)*regQ
     return Nuptake
 end
 
 function chl_sync(phyt,PP,I)
     if I > 0
-        ρ_chl = PP/(α*I*phyt.chl)
+        ρ_chl = PP/(α*I*phyt.chl/phyt.Cq2)
     else
         ρ_chl = 1.0
     end
@@ -77,7 +77,7 @@ function phyt_update(t::Int64, ΔT::Int64, g, phyts_a, nutrients, IR, temp)
     # load nutrients
     dvid_ct = 0; graz_ct = 0; death_ct = 0
     Num_phyt = size(phyts_a,1)
-    cell_num = count_num(phyts_a, g)
+    cell_num = count_chl(phyts_a, g)
     cumsum_cell = cumsum(cell_num, dims = 3)
     #set up a dataframe to record all updated agents
     phyts_b = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[])
@@ -93,12 +93,12 @@ function phyt_update(t::Int64, ΔT::Int64, g, phyts_a, nutrients, IR, temp)
         P_graz = rand(Bernoulli(exp(Num_phyt/N*Nsp)*phyt.size/Grz_P))
         # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
         P_dvi=max(0.0,phyt.size-dvid_size)*1.0e5*rand(Bernoulli(phyt.size/Dvid_P))
-        PAR = PAR_cal(IR[trunc(Int,t*ΔT/3600)], g.zF[z], cumsum_cell[y, x, z])
-        PP = PC(PAR,temp[trunc(Int,t*ΔT/3600)],phyt)*ΔT
-        VN = Nuptake(DIN,phyt)*ΔT
+        PAR = PAR_cal(IR[trunc(Int,t*ΔT/3600)], g.zF[z], cumsum_cell[x, y, z])
+        PP = PC(PAR,temp[trunc(Int,t*ΔT/3600)],phyt)*Cquota[phyt.sp]*phyt.size*ΔT
+        VN = min(DIN*g.V[x,y,z]/10.0,Nuptake(DIN,phyt)*Cquota[phyt.sp]*phyt.size*ΔT)
         Dmd_NC = (1+k_respir(phyt.Cq1))*VN/R_NC
         Res2 = respir(phyt.Cq2)*ΔT
-        ρ_chl = chl_sync(phyt,PP,IR[trunc(Int,t*ΔT/3600)])
+        ρ_chl = chl_sync(phyt,PC(PAR,temp[trunc(Int,t*ΔT/3600)],phyt),IR[trunc(Int,t*ΔT/3600)])
         if P_graz < 1 #not grazed
             if phyt.Cq2+phyt.Cq1 ≤ Cmin # natural death
                 consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt.Cq1+phyt.Cq2)*mortFracC
