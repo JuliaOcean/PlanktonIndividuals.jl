@@ -50,12 +50,12 @@ function nut_update(nutrients, consume, g, gtr, ΔT)
     for k in 1:g.Nz
         for j in 1:g.Ny
             for i in 1:g.Nx
-                nutₜ.DIC[i, j, k] = nutrients.DIC[i, j, k] + gtr.DIC[i, j, k] * ΔT + consume.DIC[i, j, k]
-                nutₜ.DIN[i, j, k] = nutrients.DIN[i, j, k] + gtr.DIN[i, j, k] * ΔT + consume.DIN[i, j, k]
-                nutₜ.DOC[i, j, k] = nutrients.DOC[i, j, k] + gtr.DOC[i, j, k] * ΔT + consume.DOC[i, j, k]
-                nutₜ.DON[i, j, k] = nutrients.DON[i, j, k] + gtr.DON[i, j, k] * ΔT + consume.DON[i, j, k]
-                nutₜ.POC[i, j, k] = nutrients.POC[i, j, k] + gtr.POC[i, j, k] * ΔT + consume.POC[i, j, k]
-                nutₜ.PON[i, j, k] = nutrients.PON[i, j, k] + gtr.PON[i, j, k] * ΔT + consume.PON[i, j, k]
+                nutₜ.DIC[i, j, k] = nutrients.DIC[i, j, k] + gtr.DIC[i, j, k] * ΔT + consume.DIC[i, j, k]/g.V[i, j, k]
+                nutₜ.DIN[i, j, k] = nutrients.DIN[i, j, k] + gtr.DIN[i, j, k] * ΔT + consume.DIN[i, j, k]/g.V[i, j, k]
+                nutₜ.DOC[i, j, k] = nutrients.DOC[i, j, k] + gtr.DOC[i, j, k] * ΔT + consume.DOC[i, j, k]/g.V[i, j, k]
+                nutₜ.DON[i, j, k] = nutrients.DON[i, j, k] + gtr.DON[i, j, k] * ΔT + consume.DON[i, j, k]/g.V[i, j, k]
+                nutₜ.POC[i, j, k] = nutrients.POC[i, j, k] + gtr.POC[i, j, k] * ΔT + consume.POC[i, j, k]/g.V[i, j, k]
+                nutₜ.PON[i, j, k] = nutrients.PON[i, j, k] + gtr.PON[i, j, k] * ΔT + consume.PON[i, j, k]/g.V[i, j, k]
             end
         end
     end

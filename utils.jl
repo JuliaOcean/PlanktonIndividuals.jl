@@ -96,11 +96,11 @@ function grid_offline(fieldroot::String)
 end
 
 function create_output(B::Array{DataFrame,1})
-    output = DataFrame(time=0, gen_ave=mean(B[1].gen), spec_ave = mean(B[1].sp), Cq1_ave=mean(B[1].Cq1), Cq2_ave=mean(B[1].Cq2), Nq_ave=mean(B[1].Nq), size_ave=mean(B[1].size), chl_ave=mean(B[1].chl), Population=size(B[1],1), dvid=0, graz=0)
+    output = DataFrame(time=0, gen_ave=mean(B[1].gen), spec_ave = mean(B[1].sp), Cq1_ave=mean(B[1].Cq1), Cq2_ave=mean(B[1].Cq2), Nq_ave=mean(B[1].Nq), size_ave=mean(B[1].size), chl_ave=mean(B[1].chl), Population=size(B[1],1), dvid=0, graz=0,death=0)
     return output
 end
 
-function write_output(t,phyts_b,dvid_ct,graz_ct,output)
+function write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,output)
     # summary of current step
     gen_ave=mean(phyts_b.gen)
     spec_ave=mean(phyts_b.sp)
@@ -109,7 +109,7 @@ function write_output(t,phyts_b,dvid_ct,graz_ct,output)
     Nq_ave=mean(phyts_b.Nq)
     size_ave=mean(phyts_b.size)
     chl_ave=mean(phyts_b.chl)
-    push!(output,(time=t, gen_ave=gen_ave, spec_ave=spec_ave, Cq1_ave=Cq1_ave, Cq2_ave=Cq2_ave, Nq_ave=Nq_ave, size_ave=size_ave, chl_ave=chl_ave, Population=size(phyts_b,1), dvid=dvid_ct, graz=graz_ct))
+    push!(output,(time=t, gen_ave=gen_ave, spec_ave=spec_ave, Cq1_ave=Cq1_ave, Cq2_ave=Cq2_ave, Nq_ave=Nq_ave, size_ave=size_ave, chl_ave=chl_ave, Population=size(phyts_b,1), dvid=dvid_ct, graz=graz_ct, death=death_ct))
     return output
 end
 
@@ -212,7 +212,7 @@ function write_nut_nc(g::grids, nut::nutrient_fields, t::Int64)
     ncclose(filepath)
     return nothing
 end
-function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, vel::velocity, t::Int64)
+function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, vel::velocity, agent_num::Int64, t::Int64)
     Σgtrⁿ = sum(gtr.DIN .* g.V)+sum(gtr.DON .* g.V)+sum(gtr.PON .* g.V)
     Σgtrᶜ = sum(gtr.DIC .* g.V)+sum(gtr.DOC .* g.V)+sum(gtr.POC .* g.V)
     ΣsurFⁿ= sum((nutₜ.DIN[:,:,1]+nutₜ.DON[:,:,1]+nutₜ.PON[:,:,1]) .* g.Az .* vel.w[:,:,1])
@@ -222,6 +222,6 @@ function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields,
     DINio = open("results/cons_DIN.txt","a");
     println(Cio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrᶜ,ΣsurFᶜ,Σgtrᶜ+ΣsurFᶜ))
     println(Nio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrⁿ,ΣsurFⁿ,Σgtrⁿ+ΣsurFⁿ))
-    println(DINio,@sprintf("%3.0f  %.16E",t,ΣDIN))
-    close(Cio);close(Nio);
+    println(DINio,@sprintf("%3.0f  %.16E %7.0f",t,ΣDIN,agent_num))
+    close(Cio);close(Nio);close(DINio);
 end
