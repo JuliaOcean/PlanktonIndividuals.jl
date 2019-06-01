@@ -11,7 +11,7 @@ katten_c = 0.14              # PAR attenuation (/chl/m)
 Cquota = [1.8e-11, 1.8e-10]  # Average C quota in cell (mmolC).
 Grz_P  = 2000                # phyt.size/Grz_P is the probability to be grazed
 dvid_size = 1.6              # relative cell size a cell can start divide
-Dvid_P = 6.0                 # should be greater than 2.0,phyt.size/Dvid_P is the probability to divide
+Dvid_P = 15.0                 # should be greater than 2.0,phyt.size/Dvid_P is the probability to divide
 
 Tempref = 293.15   # reference temperature in K
 TempAe = -4000.0   # Arrenhius equation

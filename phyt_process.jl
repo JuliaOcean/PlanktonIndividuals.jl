@@ -122,7 +122,15 @@ function phyt_update(t::Int64, ΔT::Int64, g, phyts_a, nutrients, IR, temp)
                 phyt.size= phyt.size+dsize
                 phyt.chl = phyt.chl + ρ_chl*VN*Chl2N
                 if phyt.Cq2+phyt.Cq1 ≥ Cmin*Nn # not natural death
-                    push!(phyts_b,phyt)
+                    if P_dvi < 1 # not divide
+                        push!(phyts_b,phyt)
+                    else # divide
+                        dvid_ct += 2
+                        global dvdcount += 2
+                        phyts2 = divide(phyt)
+                        append!(phyts_b,phyts2)
+                        consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt.Cq2*0.1 # consume C when cell is divided
+                    end # divide
                 else # natural death
                     consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt.Cq1+phyt.Cq2)*mortFracC
                     consume.DON[x, y, z] = consume.DON[x, y, z] + phyt.Nq*mortFracN
@@ -134,39 +142,39 @@ function phyt_update(t::Int64, ΔT::Int64, g, phyts_a, nutrients, IR, temp)
                 consume.DIN[x, y, z] = consume.DIN[x, y, z] - VN + Res2*R_NC
                 consume.DOC[x, y, z] = consume.DOC[x, y, z] + ExuC
             else # night
-                if P_dvi < 1 # not divide
-                    CostC= min(0.2*phyt.Cq1,Dmd_NC)
-                    SynC = min(VN/R_NC,0.2*phyt.Cq1/(1+respir_extra(phyt.Cq1)))
-                    ExuC = 0.0
-                    VN   = SynC*R_NC
-                    dCq1 = PP - CostC - ExuC
-                    dCq2 = SynC - Res2
-                    dNq  = VN - Res2*R_NC
-                    dsize= dCq2/phyt.Cq2
-                    phyt.Cq1 = max(Cmin*Nn/10.0,phyt.Cq1 + dCq1)
-                    phyt.Cq2 = max(Cmin*Nn/10.0,phyt.Cq2 + dCq2)
-                    phyt.Nq  = max(Cmin*Nn/10.0,phyt.Nq + dNq)
-                    phyt.size= phyt.size+dsize
-                    phyt.chl = phyt.chl + ρ_chl*VN*Chl2N
-                    if phyt.Cq2+phyt.Cq1 ≥ Cmin*Nn # not natural death
+                CostC= min(0.2*phyt.Cq1,Dmd_NC)
+                SynC = min(VN/R_NC,0.2*phyt.Cq1/(1+respir_extra(phyt.Cq1)))
+                ExuC = 0.0
+                VN   = SynC*R_NC
+                dCq1 = PP - CostC - ExuC
+                dCq2 = SynC - Res2
+                dNq  = VN - Res2*R_NC
+                dsize= dCq2/phyt.Cq2
+                phyt.Cq1 = max(Cmin*Nn/10.0,phyt.Cq1 + dCq1)
+                phyt.Cq2 = max(Cmin*Nn/10.0,phyt.Cq2 + dCq2)
+                phyt.Nq  = max(Cmin*Nn/10.0,phyt.Nq + dNq)
+                phyt.size= phyt.size+dsize
+                phyt.chl = phyt.chl + ρ_chl*VN*Chl2N
+                if phyt.Cq2+phyt.Cq1 ≥ Cmin*Nn # not natural death
+                    if P_dvi < 1 # not divide
                         push!(phyts_b,phyt)
-                    else # natural death
-                        consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt.Cq1+phyt.Cq2)*mortFracC
-                        consume.DON[x, y, z] = consume.DON[x, y, z] + phyt.Nq*mortFracN
-                        consume.POC[x, y, z] = consume.POC[x, y, z] + (phyt.Cq1+phyt.Cq2)*(1.0 - mortFracC)
-                        consume.PON[x, y, z] = consume.PON[x, y, z] + phyt.Nq*(1.0 - mortFracN)
-                        death_ct += 1
-                    end # natural death
-                    consume.DIC[x, y, z] = consume.DIC[x, y, z] + Res2 + CostC - SynC
-                    consume.DIN[x, y, z] = consume.DIN[x, y, z] - VN + Res2*R_NC
-                    consume.DOC[x, y, z] = consume.DOC[x, y, z] + ExuC
-                else #divide
-                    dvid_ct += 2
-                    global dvdcount += 2
-                    phyts2 = divide(phyt)
-                    append!(phyts_b,phyts2)
-                    consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt.Cq2*0.1 # consume C when cell is divided
-                end # divide
+                    else # divide
+                        dvid_ct += 2
+                        global dvdcount += 2
+                        phyts2 = divide(phyt)
+                        append!(phyts_b,phyts2)
+                        consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt.Cq2*0.1 # consume C when cell is divided
+                    end # divide
+                else # natural death
+                    consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt.Cq1+phyt.Cq2)*mortFracC
+                    consume.DON[x, y, z] = consume.DON[x, y, z] + phyt.Nq*mortFracN
+                    consume.POC[x, y, z] = consume.POC[x, y, z] + (phyt.Cq1+phyt.Cq2)*(1.0 - mortFracC)
+                    consume.PON[x, y, z] = consume.PON[x, y, z] + phyt.Nq*(1.0 - mortFracN)
+                    death_ct += 1
+                end # natural death
+                consume.DIC[x, y, z] = consume.DIC[x, y, z] + Res2 + CostC - SynC
+                consume.DIN[x, y, z] = consume.DIN[x, y, z] - VN + Res2*R_NC
+                consume.DOC[x, y, z] = consume.DOC[x, y, z] + ExuC
             end # day night?
         else #grazed
             graz_ct += 1
