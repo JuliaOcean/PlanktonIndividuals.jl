@@ -152,7 +152,7 @@ function phyt_update(t::Int64, ΔT::Int64, g, phyts_a, nutrients, IR, temp)
                 dsize= dCq2/phyt.Cq2
                 phyt.Cq1 = max(Cmin*Nn/10.0,phyt.Cq1 + dCq1)
                 phyt.Cq2 = max(Cmin*Nn/10.0,phyt.Cq2 + dCq2)
-                phyt.Nq  = max(Cmin*Nn/10.0,phyt.Nq + dNq)
+                phyt.Nq  = max(Cmin*Nn*R_NC/10.0,phyt.Nq + dNq)
                 phyt.size= phyt.size+dsize
                 phyt.chl = phyt.chl + ρ_chl*VN*Chl2N
                 if phyt.Cq2+phyt.Cq1 ≥ Cmin*Nn # not natural death
