@@ -87,25 +87,25 @@ for t in 1:nTime
 end
 
 B1 = []; B2 = [];
-for i in 1:nTime+1
+for i in 1:size(B,1)
     sort_species(B[i], B1, B2)
 end
 
 HD1 = []; HD2 = [];
-for i in 1:nTime
+for i in 1:size(B,1)
     HD_1 = count_horizontal_num(B1[i],g);
     push!(HD1,HD_1)
     HD_2 = count_horizontal_num(B2[i],g);
     push!(HD2,HD_2)
 end
 
-for i in 1:nTime
+for i in 1:size(B,1)
     convert_coordinates(B1[i],g) # convert grids to lon, lat and depth
     convert_coordinates(B2[i],g) # convert grids to lon, lat and depth
 end
 
 VD1 = []; VD2 = [];
-for i in 1:nTime
+for i in 1:size(B,1)
     VD_1 = count_vertical_num(B1[i]);
     push!(VD1,VD_1)
     VD_2 = count_vertical_num(B2[i]);
