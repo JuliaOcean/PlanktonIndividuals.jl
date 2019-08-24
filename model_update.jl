@@ -14,6 +14,8 @@
 #     name: julia-1.1
 # ---
 
+# ### Load modules and include functions
+
 using DataFrames, NetCDF, Printf, CSV, Serialization
 using Random
 using Distributions
@@ -27,7 +29,9 @@ include("agent_div.jl")
 include("dst3fl.jl")
 include("nutrient_processes.jl")
 include("2nd_adv_diffu.jl")
-# remove old files
+
+# ### remove old files
+
 isfile("results/cons_C.txt") && rm("results/cons_C.txt");
 isfile("results/cons_N.txt") && rm("results/cons_N.txt");
 isfile("results/cons_DIN.txt") && rm("results/cons_DIN.txt");
@@ -42,22 +46,27 @@ isfile("results/VD1.bin") && rm("results/VD1.bin");
 isfile("results/VD2.bin") && rm("results/VD2.bin");
 isfile("results/HD1.bin") && rm("results/HD1.bin");
 isfile("results/HD2.bin") && rm("results/HD2.bin");
-# Read input files
+
+# ### Read input files
+
 #nTime = 1440 # number of time steps
 nTime = 10 # number of time steps
 ΔT = 3600 # time step: 3600 for 1 hour
 temp,IR = read_input("T_IR.csv",trunc(Int,nTime*ΔT/3600));
 
 # grid selected : [500,1500]
-fieldroot = "/nobackup1b/users/jahn/hinpac/grazsame3/run/run.0354/";
+fieldroot = "run.0354/";
 g = grid_offline(fieldroot);
 
-# deal with time steps of offline velocityfields
+# ### deal with time steps of offline velocity fields
+
 itvalLo = 144;
 itvalHi = 687888;
 itList = collect(itvalLo:144:itvalHi);
 tN = 3336; # starting time
-vfroot = "/nobackup1b/users/jahn/hinpac/grazsame3/run/run.0354/offline-0604/"; # directory of velocity fields
+vfroot = "run.0354/offline-0604/"; # directory of velocity fields
+
+# ### Various model parameters
 
 N = 100000   # Number of initial individuals of each species
 Nsp = 2     # Number of species
@@ -69,6 +78,8 @@ output = create_output(B);
 nut = [2.0, 0.15, 20.0, 0.0, 0.0, 0.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
 nutrients= setup_nutrients(g,nut)
 remin = rem(kDOC,kDON,kPOC,kPON);
+
+# ### the main loop
 
 for t in 1:nTime
     phyts_a = copy(B[t]) # read data from last time step
@@ -86,6 +97,8 @@ for t in 1:nTime
     write_nut_cons(g, gtr, nutₜ, velᵇ, agent_num, t)
     global nutrients = nutₜ;
 end
+
+# ### post-processing steps
 
 B1 = []; B2 = [];
 for i in 1:size(B,1)
@@ -105,6 +118,8 @@ for i in 1:size(B,1)
     convert_coordinates(B2[i],g) # convert grids to lon, lat and depth
 end
 
+# ### more post-processing steps
+
 VD1 = []; VD2 = [];
 for i in 1:size(B,1)
     VD_1 = count_vertical_num(B1[i]);
@@ -114,6 +129,8 @@ for i in 1:size(B,1)
 end
 
 output1, output2 = compute_mean_species(B1, B2, nTime);
+
+# ### save to file
 
 # save model output
 open("results/B1.bin", "w") do io
