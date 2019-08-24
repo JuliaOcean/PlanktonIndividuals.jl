@@ -7,7 +7,7 @@
 #       extension: .jl
 #       format_name: light
 #       format_version: '1.4'
-#       jupytext_version: 1.1.1
+#       jupytext_version: 1.2.1
 #   kernelspec:
 #     display_name: Julia 1.1.0
 #     language: julia
@@ -17,7 +17,7 @@
 using DataFrames, NetCDF, Printf, CSV, Serialization
 using Random
 using Distributions
-cd("../AgentPhytModel_3D")
+# cd("../AgentPhytModel_3D")
 include("parameters.jl")
 include("model_setup.jl")
 include("model_struct.jl")
@@ -43,7 +43,8 @@ isfile("results/VD2.bin") && rm("results/VD2.bin");
 isfile("results/HD1.bin") && rm("results/HD1.bin");
 isfile("results/HD2.bin") && rm("results/HD2.bin");
 # Read input files
-nTime = 1440 # number of time steps
+#nTime = 1440 # number of time steps
+nTime = 10 # number of time steps
 ΔT = 3600 # time step: 3600 for 1 hour
 temp,IR = read_input("T_IR.csv",trunc(Int,nTime*ΔT/3600));
 
@@ -74,7 +75,7 @@ for t in 1:nTime
     phyts_b,dvid_ct,graz_ct,death_ct,consume=phyt_update(t, ΔT, g, phyts_a, nutrients, IR, temp)
     velᵇ = read_offline_vels(vfroot,itList,tN,trunc(Int,t*ΔT/3600));
 #   velᵈ = double_grid(velᵇ,g)
-    agent_move_1d(phyts_b,velᵇ,g,ΔT) 
+    agent_move_1D(phyts_b,velᵇ,g,ΔT) 
     push!(B,phyts_b)
     write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,output)
     agent_num = size(phyts_b,1)
