@@ -15,44 +15,17 @@
 # ---
 
 # ### Load modules and include functions
-
-using DataFrames, NetCDF, Printf, CSV, Serialization
-using Random
-using Distributions
-# cd("../AgentPhytModel_3D")
-include("parameters.jl")
-include("model_setup.jl")
-include("model_struct.jl")
-include("phyt_process.jl")
-include("utils.jl")
-include("agent_div.jl")
-include("dst3fl.jl")
-include("nutrient_processes.jl")
-include("2nd_adv_diffu.jl")
+include("model_includes.jl")
 
 # ### remove old files
-
-isfile("results/cons_C.txt") && rm("results/cons_C.txt");
-isfile("results/cons_N.txt") && rm("results/cons_N.txt");
-isfile("results/cons_DIN.txt") && rm("results/cons_DIN.txt");
-isfile("results/B1.bin") && rm("results/B1.bin");
-isfile("results/B2.bin") && rm("results/B2.bin");
-isfile("results/output.bin") && rm("results/output.bin");
-isfile("results/output1.bin") && rm("results/output1.bin");
-isfile("results/output2.bin") && rm("results/output2.bin");
-isfile("results/grid.bin") && rm("results/grid.bin");
-isfile("results/IR.bin") && rm("results/IR.bin");
-isfile("results/VD1.bin") && rm("results/VD1.bin");
-isfile("results/VD2.bin") && rm("results/VD2.bin");
-isfile("results/HD1.bin") && rm("results/HD1.bin");
-isfile("results/HD2.bin") && rm("results/HD2.bin");
+PrepRunDir()
 
 # ### Read input files
 
 #nTime = 1440 # number of time steps
 nTime = 10 # number of time steps
 ΔT = 3600 # time step: 3600 for 1 hour
-temp,IR = read_input("T_IR.csv",trunc(Int,nTime*ΔT/3600));
+temp,IR = read_input("samples/T_IR.csv",trunc(Int,nTime*ΔT/3600));
 
 # grid selected : [500,1500]
 fieldroot = "run.0354/";

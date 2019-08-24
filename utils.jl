@@ -212,3 +212,33 @@ function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields,
     println(DINio,@sprintf("%4.0f  %.16E %6.0f",t,ΣDIN,agent_num))
     close(Cio);close(Nio);close(DINio);
 end
+
+"""
+    PrepRunDir(res::String="results/")
+
+Create `res/` folder if needed. Remove old files from it if needed.
+"""
+function PrepRunDir(res::String="results/")
+
+isdir(res) || mkdir(res)
+isdir("$res"*"nutrients/") || mkdir("$res"*"nutrients/")
+println("$res"*"nutrients/")
+
+isfile("$res"*"cons_C.txt") && rm("$res"*"cons_C.txt");
+isfile("$res"*"cons_N.txt") && rm("$res"*"cons_N.txt");
+isfile("$res"*"cons_DIN.txt") && rm("$res"*"cons_DIN.txt");
+isfile("$res"*"B1.bin") && rm("$res"*"B1.bin");
+isfile("$res"*"B2.bin") && rm("$res"*"B2.bin");
+isfile("$res"*"output.bin") && rm("$res"*"output.bin");
+isfile("$res"*"output1.bin") && rm("$res"*"output1.bin");
+isfile("$res"*"output2.bin") && rm("$res"*"output2.bin");
+isfile("$res"*"grid.bin") && rm("$res"*"grid.bin");
+isfile("$res"*"IR.bin") && rm("$res"*"IR.bin");
+isfile("$res"*"VD1.bin") && rm("$res"*"VD1.bin");
+isfile("$res"*"VD2.bin") && rm("$res"*"VD2.bin");
+isfile("$res"*"HD1.bin") && rm("$res"*"HD1.bin");
+isfile("$res"*"HD2.bin") && rm("$res"*"HD2.bin");
+
+return "done"
+
+end
