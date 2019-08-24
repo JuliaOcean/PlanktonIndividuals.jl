@@ -1,0 +1,6 @@
+.DS_Store
+.ipynb_checkpoints/
+devel/
+model_update.ipynb
+notes/
+results/
