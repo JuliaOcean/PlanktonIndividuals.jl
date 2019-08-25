@@ -1,3 +1,55 @@
+## function inventory
+
+`model_update.jl` is the main program. It runs the time stepping loop + pre- + post-processing.
+
+**Infrastructure functions:**
+
+- `model_includes.jl` include other files (will later be in module file)
+- `model_struct.jl` defines `velocity`, `grids`, `nutrient_fields`, and `rem` structs.
+- `model_setup.jl` is `setup_agents` and `setup_nutrients`
+- `parameters.jl` model parameter values
+- `utils.jl` utility functions for IO and operations.
+
+**process functions:**
+
+- `phyt_process.jl` = `daynight `, `PAR_cal `, `PC `, `Nuptake `, `chl_sync `, `divide `, `phyt_update `
+- `nutrient_processes.jl` = `compute_nut_biochem`, `compute_source_term`, `nut_update`
+- `dst3fl.jl` 3rd order DST Scheme with flux limiting
+- `2nd_adv_diffu.jl` right hand side term functions (?)
+- `agent_div.jl` = is mostly `agent_move `, `agent_move_1D ` + `double_grid `, `trilinear_itpl `, `simple_itpl `
+
+## model variables
+
+####1) state variables
+
+```
+phyts_a
+nutrients
+```
+
+####2) input variables
+
+- `g` from `grid_offline()` (grid variables)
+- `temp, IR` from `read_input()` (before loop)
+- `remin` from `rem()` (before loop)
+- `velᵇ` from `read_offline_vels()` (in loop)
+
+Notes:
+
+- `IR` and `temp` get cycle through / interpolated inside `phyt_update` (via `IR[trunc(Int,t*ΔT/3600)]`). Not sure about `daynight(t,IR)` in `phyt_update`. 
+- `read_offline_vels` receives `trunc(Int,t*ΔT/3600)` as argument.
+- `remin` is time-invariant; like `g`.
+
+####3) intermediate variables
+
+- `F` = `compute_nut_biochem(nutrients, remin)`
+- `gtr` = `compute_source_term(nutrients, velᵇ, g, F)`
+- `nutₜ` = `nut_update(nutrients, consume, g, gtr, ΔT)`
+
+####4) diagnostic variables 
+
+- `dvid_ct`, `graz_ct`, `death_ct` from `phyt_update`
+- `gtr`, `nutₜ`, `velᵇ`, `agent_num` from 
 
 ## output files 
 
