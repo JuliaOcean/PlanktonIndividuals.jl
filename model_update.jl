@@ -28,7 +28,7 @@ nTime = 10 # number of time steps
 temp,IR = read_input("samples/T_IR.csv",trunc(Int,nTime*ΔT/3600));
 
 # grid selected : [500,1500]
-fieldroot = "run.0354/";
+fieldroot = "samples/run.0354/";
 g = grid_offline(fieldroot);
 
 # ### deal with time steps of offline velocity fields
@@ -37,7 +37,7 @@ itvalLo = 144;
 itvalHi = 687888;
 itList = collect(itvalLo:144:itvalHi);
 tN = 3336; # starting time
-vfroot = "run.0354/offline-0604/"; # directory of velocity fields
+vfroot = "samples/run.0354/offline-0604/"; # directory of velocity fields
 
 # ### Various model parameters
 
@@ -54,10 +54,13 @@ remin = rem(kDOC,kDON,kPOC,kPON);
 
 # ### the main loop
 
+store_vel=[]
+
 for t in 1:nTime
     phyts_a = copy(B[t]) # read data from last time step
     phyts_b,dvid_ct,graz_ct,death_ct,consume=phyt_update(t, ΔT, g, phyts_a, nutrients, IR, temp)
     velᵇ = read_offline_vels(vfroot,itList,tN,trunc(Int,t*ΔT/3600));
+    global store_vel=push!(store_vel,velᵇ)
 #   velᵈ = double_grid(velᵇ,g)
     agent_move_1D(phyts_b,velᵇ,g,ΔT) 
     push!(B,phyts_b)
@@ -140,5 +143,16 @@ end
 =#
 open("results/IR.bin", "w") do io
     serialize(io, IR)
+end
+
+using JLD
+save("results/uvw.jld", "uvw", store_vel)
+
+function output_w(store_vel)
+  tmp=zeros(length(store_vel[1].w),length(store_vel))
+  for t=1:length(store_vel)
+    tmp[:,t]=collect(store_vel[t].w[:])
+  end
+  save("w.jld", "w", tmp)
 end
 
