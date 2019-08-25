@@ -1,7 +1,6 @@
 .DS_Store
-.ipynb_checkpoints/
+src/.ipynb_checkpoints/
+src/model_update.ipynb
 devel/
-model_update.ipynb
 notes/
 results/
-samples/
