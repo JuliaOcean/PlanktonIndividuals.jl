@@ -27,9 +27,16 @@ nTime = 10 # number of time steps
 ΔT = 3600 # time step: 3600 for 1 hour
 temp,IR = read_input("samples/T_IR.csv",trunc(Int,nTime*ΔT/3600));
 
+RunParams=Dict("grid"=>2,"vel"=>2,"SaveGrid"=>false,"SaveVel"=>false)
+
+function load_grid_0354()
 # grid selected : [500,1500]
-#fieldroot = "samples/run.0354/";
-#g = grid_offline(fieldroot);
+  fieldroot = "samples/run.0354/";
+  g = grid_offline(fieldroot);
+end
+
+RunParams["grid"]==1 ? load_grid_0354() : g=load("samples/grid.jld", "grid")
+RunParams["SaveGrid"] ? save("results/grid.jld", "grid", g) : nothing
 
 # ### deal with time steps of offline velocity fields
 
@@ -38,11 +45,9 @@ itvalHi = 687888;
 itList = collect(itvalLo:144:itvalHi);
 tN = 3336; # starting time
 
-#vfroot = "samples/run.0354/offline-0604/"; # directory of velocity fields
-#store_vel=[]
-using JLD;
-store_vel=load("samples/uvw.jld", "uvw")
-g=load("samples/grid.jld", "grid")
+vfroot = "samples/run.0354/offline-0604/" # directory of velocity fields
+store_vel=[] #for storing and saving velocities when RunParams["SaveVel"]
+RunParams["vel"]==2 ? store_vel=load("samples/uvw.jld", "uvw") : nothing
 
 # ### Various model parameters
 
@@ -62,10 +67,13 @@ remin = rem(kDOC,kDON,kPOC,kPON);
 for t in 1:nTime
     phyts_a = copy(B[t]) # read data from last time step
     phyts_b,dvid_ct,graz_ct,death_ct,consume=phyt_update(t, ΔT, g, phyts_a, nutrients, IR, temp)
-    velᵇ=store_vel[t]
-    #velᵇ = read_offline_vels(vfroot,itList,tN,trunc(Int,t*ΔT/3600));
-    #global store_vel=push!(store_vel,velᵇ)
-#   velᵈ = double_grid(velᵇ,g)
+    if RunParams["vel"]==1
+        velᵇ = read_offline_vels(vfroot,itList,tN,trunc(Int,t*ΔT/3600))
+    else
+        velᵇ=store_vel[t]
+    end
+    global store_vel; RunParams["SaveVel"] ? store_vel=push!(store_vel,velᵇ) : nothing
+    #velᵈ = double_grid(velᵇ,g)
     agent_move_1D(phyts_b,velᵇ,g,ΔT)
     push!(B,phyts_b)
     write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,output)
@@ -149,14 +157,4 @@ open("results/IR.bin", "w") do io
     serialize(io, IR)
 end
 
-#using JLD
-#save("results/uvw.jld", "uvw", store_vel)
-#save("results/grid.jld", "grid", g)
-
-#function output_w(store_vel)
-#  tmp=zeros(length(store_vel[1].w),length(store_vel))
-#  for t=1:length(store_vel)
-#    tmp[:,t]=collect(store_vel[t].w[:])
-#  end
-#  save("w.jld", "w", tmp)
-#end
+RunParams["SaveVel"] ? save("results/uvw.jld", "uvw", store_vel) : nothing
