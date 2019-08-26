@@ -6,6 +6,8 @@
 include("src/model_update.jl")
 ```
 
+(this uses `samples/T_IR.csv`, `grid.jld`, and `uvw.jld`)
+
 ### To test the package
 
 ```
@@ -13,9 +15,9 @@ include("src/model_update.jl")
 ]test PhytoAgentModel
 ```
 
-### To build and serve the docs
+(for now this just issues a print statement...)
 
-(Requires mkdocs)
+### To build and serve the docs
 
 ```
 cd AgentPhytModel_3D/docs
@@ -24,3 +26,4 @@ mkdocs build
 mkdocs serve
 ```
 
+(this requires mkdocs since `format = Markdown()` is set in `docs/make.jl`)
