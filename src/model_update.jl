@@ -17,26 +17,31 @@
 # ### Load modules and include functions
 include("model_includes.jl")
 
-# ### remove old files
-PrepRunDir()
+#path names
+samples=dirname(pathof(PhytoAgentModel))*"/../samples/"
+results=dirname(pathof(PhytoAgentModel))*"/../results/"
 
 # ### Read input files
 
 #nTime = 1440 # number of time steps
 nTime = 10 # number of time steps
 ΔT = 3600 # time step: 3600 for 1 hour
-temp,IR = read_input("samples/T_IR.csv",trunc(Int,nTime*ΔT/3600));
+temp,IR = read_input(samples*"T_IR.csv",trunc(Int,nTime*ΔT/3600));
 
-RunParams=Dict("grid"=>2,"vel"=>2,"SaveGrid"=>false,"SaveVel"=>false)
+RunParams=Dict("OutputResults"=>false,"GridChoice"=>2,"VelChoice"=>2,
+"SaveGrid"=>false,"SaveVel"=>false,"SaveTests"=>false)
 
-function load_grid_0354()
+function load_grid_0354(path)
 # grid selected : [500,1500]
-  fieldroot = "samples/run.0354/";
+  fieldroot = path*"/run.0354/";
   g = grid_offline(fieldroot);
 end
 
-RunParams["grid"]==1 ? load_grid_0354() : g=load("samples/grid.jld", "grid")
-RunParams["SaveGrid"] ? save("results/grid.jld", "grid", g) : nothing
+RunParams["GridChoice"]==1 ? g=load_grid_0354(samples) : g=load(samples*"grid.jld", "grid")
+RunParams["SaveGrid"] ? save(results*"grid.jld", "grid", g) : nothing
+
+# ### remove old result files and create `results/` if needed
+RunParams["OutputResults"] ? PrepRunDir(results) : nothing
 
 # ### deal with time steps of offline velocity fields
 
@@ -45,9 +50,9 @@ itvalHi = 687888;
 itList = collect(itvalLo:144:itvalHi);
 tN = 3336; # starting time
 
-vfroot = "samples/run.0354/offline-0604/" # directory of velocity fields
+vfroot = samples*"run.0354/offline-0604/" # directory of velocity fields
 store_vel=[] #for storing and saving velocities when RunParams["SaveVel"]
-RunParams["vel"]==2 ? store_vel=load("samples/uvw.jld", "uvw") : nothing
+RunParams["VelChoice"]==2 ? store_vel=load(samples*"uvw.jld", "uvw") : nothing
 
 # ### Various model parameters
 
@@ -67,7 +72,7 @@ remin = rem(kDOC,kDON,kPOC,kPON);
 for t in 1:nTime
     phyts_a = copy(B[t]) # read data from last time step
     phyts_b,dvid_ct,graz_ct,death_ct,consume=phyt_update(t, ΔT, g, phyts_a, nutrients, IR, temp)
-    if RunParams["vel"]==1
+    if RunParams["VelChoice"]==1
         velᵇ = read_offline_vels(vfroot,itList,tN,trunc(Int,t*ΔT/3600))
     else
         velᵇ=store_vel[t]
@@ -81,8 +86,8 @@ for t in 1:nTime
     F = compute_nut_biochem(nutrients, remin)
     gtr = compute_source_term(nutrients, velᵇ, g, F)
     nutₜ = nut_update(nutrients, consume, g, gtr, ΔT)
-    write_nut_nc(g, nutₜ, t)
-    write_nut_cons(g, gtr, nutₜ, velᵇ, agent_num, t)
+    RunParams["OutputResults"] ? write_nut_nc(g, nutₜ, t) : nothing
+    RunParams["OutputResults"] ? write_nut_cons(g, gtr, nutₜ, velᵇ, agent_num, t) : nothing
     global nutrients = nutₜ;
 end
 
@@ -120,41 +125,47 @@ output1, output2 = compute_mean_species(B1, B2, nTime);
 
 # ### save to file
 
+if RunParams["OutputResults"]
+
 # save model output
-open("results/B1.bin", "w") do io
+open(results*"B1.bin", "w") do io
     serialize(io, B1)
 end
-open("results/B2.bin", "w") do io
+open(results*"B2.bin", "w") do io
     serialize(io, B2)
 end
-open("results/grid.bin", "w") do io
+open(results*"grid.bin", "w") do io
     serialize(io, g)
 end
-open("results/output.bin", "w") do io
+open(results*"output.bin", "w") do io
     serialize(io, output)
 end
-open("results/output1.bin", "w") do io
+open(results*"output1.bin", "w") do io
     serialize(io, output1)
 end
-open("results/output2.bin", "w") do io
+open(results*"output2.bin", "w") do io
     serialize(io, output2)
 end
-open("results/VD1.bin", "w") do io
+open(results*"VD1.bin", "w") do io
     serialize(io, VD1)
 end
-open("results/VD2.bin", "w") do io
+open(results*"VD2.bin", "w") do io
     serialize(io, VD2)
 end
 #=
-open("results/HD1.bin", "w") do io
+open(results*"HD1.bin", "w") do io
     serialize(io, HD1)
 end
-open("results/HD2.bin", "w") do io
+open(results*"HD2.bin", "w") do io
     serialize(io, HD2)
 end
 =#
-open("results/IR.bin", "w") do io
+open(results*"IR.bin", "w") do io
     serialize(io, IR)
 end
 
-RunParams["SaveVel"] ? save("results/uvw.jld", "uvw", store_vel) : nothing
+RunParams["SaveVel"] ? save(results*"uvw.jld", "uvw", store_vel) : nothing
+
+RunParams["SaveTests"] ? CSV.write(results*"testB1B2.csv",testB1B2(B1,B2)) : nothing
+
+end #if RunParams["OutputResults"]

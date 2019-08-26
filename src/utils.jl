@@ -2,7 +2,7 @@ function read_input(csv::String,myTime::Int64)
     # irradiance(μmol photons/m^2) and temperature
     # will change later to make it able to choose different month
     input = CSV.read(csv)
-    days=myTime÷24 
+    days=myTime÷24
     temp = copy(input.Temp_Aug)
     for i in 1:days-1
         tt = copy(input.Temp_Aug)
@@ -15,6 +15,7 @@ function read_input(csv::String,myTime::Int64)
     end
     return temp,IR
 end
+
 function read_offline_vels(vfroot::String,itList,tN,t::Int64)
     fwvel = open(vfroot*"/WVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
     wvel = reverse(reinterpret(Float32,reverse(read(fwvel,))));
@@ -27,6 +28,7 @@ function read_offline_vels(vfroot::String,itList,tN,t::Int64)
     vel = velocity(u, v, w)
     return vel
 end
+
 function grid_offline(fieldroot::String)
     nx=1080;ny=2700;nz=40;
     fxg = open(fieldroot*"XG.data","r");
@@ -59,7 +61,7 @@ function grid_offline(fieldroot::String)
     hFW= reverse(reinterpret(Float32,reverse(read(fhfw,))));
     close(fxg);close(fyg);close(fxc);close(fyc);close(fdx);close(fdy);
     close(fdrf);close(fAz);close(fhfc);close(fhfs);close(fhfw);
-    xf = reshape(xf,nx,ny); yf = reshape(yf,nx,ny); 
+    xf = reshape(xf,nx,ny); yf = reshape(yf,nx,ny);
     xc = reshape(xc,nx,ny); yc = reshape(yc,nx,ny);
     dx = reshape(dx,nx,ny); dy = reshape(dy,nx,ny);
     dxc= reshape(dxc,nx,ny);dyc= reshape(dyc,nx,ny);
@@ -157,7 +159,7 @@ function sort_species(Bi, B1, B2)
     push!(B1,phyts1)
     push!(B2,phyts2)
 end
-    
+
 function compute_mean_species(B1, B2, nTime)
     output1 = DataFrame(time=Int64[], gen_ave=Float64[], Cq1_ave=Float64[], Cq2_ave=Float64[], Nq_ave=Float64[], size_ave=Float64[], chl_ave=Float64[], Population=Int64[]);
     output2 = DataFrame(time=Int64[], gen_ave=Float64[], Cq1_ave=Float64[], Cq2_ave=Float64[], Nq_ave=Float64[], size_ave=Float64[], chl_ave=Float64[], Population=Int64[]);
@@ -179,6 +181,7 @@ function compute_mean_species(B1, B2, nTime)
     end
     return output1, output2
 end
+
 function write_nut_nc(g::grids, nut::nutrient_fields, t::Int64)
     filepath = "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
     xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
@@ -199,6 +202,7 @@ function write_nut_nc(g::grids, nut::nutrient_fields, t::Int64)
     ncclose(filepath)
     return nothing
 end
+
 function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, vel::velocity,agent_num, t::Int64)
     Σgtrⁿ = sum(gtr.DIN .* g.V)+sum(gtr.DON .* g.V)+sum(gtr.PON .* g.V)
     Σgtrᶜ = sum(gtr.DIC .* g.V)+sum(gtr.DOC .* g.V)+sum(gtr.POC .* g.V)
@@ -241,4 +245,31 @@ isfile("$res"*"HD2.bin") && rm("$res"*"HD2.bin");
 
 return "done"
 
+end
+
+"""
+    testB1B2(B1,B2,fil="")
+
+Compute mean size for `B1` & `B2`, add `B1ref` & `B2ref` reference result
+    obtained from `fil`, and output all time series in one DataFrame.
+
+```
+tst=testB1B2(B1,B2,"samples/testB1B2.csv")
+tst2=[tst[!,:B1],tst[!,:B1ref],tst[!,:B2],tst[!,:B2ref]]
+isapprox(tst[end,:B1],tst[end,:B1ref]; atol=1e-2)
+isapprox(tst[end,:B2],tst[end,:B2ref]; atol=1e-2)
+using Plots; plot(tst2,lab=["B1" "B1ref" "B2" "B2ref"])
+```
+"""
+function testB1B2(B1,B2,fil="")
+    n=length(B1)
+    tmpB1=map(x -> mean(B1[x][!,:size]), 1:n)
+    tmpB2=map(x -> mean(B2[x][!,:size]), 1:n)
+    df=DataFrame(B1=tmpB1,B2=tmpB2)
+    if ~isempty(fil)
+        tmpB1B2=CSV.read(fil)
+        df[!,:B1ref]=tmpB1B2[!,:B1]
+        df[!,:B2ref]=tmpB1B2[!,:B2]
+    end
+    return df
 end

@@ -1,21 +1,22 @@
 
-### To run the test case
-
-```
-;cd ./AgentPhytModel_3D/
-include("src/model_update.jl")
-```
-
-(this uses `samples/T_IR.csv`, `grid.jld`, and `uvw.jld`)
-
 ### To test the package
 
 ```
-]dev ./AgentPhytModel_3D/
-]test PhytoAgentModel
+Pkg.develop(PackageSpec(path="AgentPhytModel_3D"))
+Pkg.test("PhytoAgentModel")
 ```
 
-(for now this just issues a print statement...)
+_Note: this uses `AgentPhytModel_3D/samples/T_IR.csv`, `grid.jld`, & `uvw.jld`, and then compares results to `samples/testB1B2.csv`_
+
+### To run the example
+
+```
+Pkg.develop(PackageSpec(path="AgentPhytModel_3D"))
+using PhytoAgentModel
+include("AgentPhytModel_3D/src/model_update.jl")
+```
+
+_Note: this runs the same example as `Pkg.test("PhytoAgentModel")` but interactively._
 
 ### To build and serve the docs
 
@@ -26,4 +27,4 @@ mkdocs build
 mkdocs serve
 ```
 
-(this requires mkdocs since `format = Markdown()` is set in `docs/make.jl`)
+_Note: this requires mkdocs since `format = Markdown()` is set in `docs/make.jl`_
