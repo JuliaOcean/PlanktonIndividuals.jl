@@ -4,7 +4,11 @@ using PhytoAgentModel
 makedocs(
     sitename = "PhytoAgentModel",
     format = Documenter.HTML(),
-    modules = [PhytoAgentModel]
+    modules = [PhytoAgentModel],
+    pages = [
+    "Home" => "index.md",
+    "Various" => "various.md",
+            ]
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.

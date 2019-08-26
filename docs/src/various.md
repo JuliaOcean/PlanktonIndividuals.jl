@@ -1,4 +1,6 @@
-## function inventory
+## Miscellaneous
+
+### function inventory
 
 `model_update.jl` is the main program. It runs the time stepping loop + pre- + post-processing.
 
@@ -18,7 +20,7 @@
 - `2nd_adv_diffu.jl` right hand side term functions (?)
 - `agent_div.jl` = is mostly `agent_move `, `agent_move_1D ` + `double_grid `, `trilinear_itpl `, `simple_itpl `
 
-## model variables
+### model variables
 
 ####1) state variables
 
@@ -51,7 +53,9 @@ Notes:
 - `dvid_ct`, `graz_ct`, `death_ct` from `phyt_update`
 - `gtr`, `nutₜ`, `velᵇ`, `agent_num` from 
 
-## output files 
+### output files 
+
+####1) listing
 
 ```
 B1.bin		all agents at all time steps for species 1
@@ -70,7 +74,7 @@ VD1.bin		vertical profile of the agents opouplation for species 1
 VD2.bin		... species 2
 ```
 
-## netcdf
+####2) netcdf output
 
 ```
 netcdf nut.0001 {
@@ -102,7 +106,7 @@ variables:
                 PON:units = "mmolN/m^3" ;
 ```
 
-## data structures
+### data structures
 
 ```
  output = DataFrame(time=0, 
@@ -119,7 +123,7 @@ variables:
  death = 0)
 ```
 
-## plotting results
+### plotting results
 
 ```
 julia> using DataFrames, Serialization
