@@ -1,5 +1,13 @@
 ## Miscellaneous
 
+To build and serve the docs
+
+```
+julia make.jl
+mkdocs build
+mkdocs serve
+```
+
 ### function inventory
 
 `model_update.jl` is the main program. It runs the time stepping loop + pre- + post-processing.

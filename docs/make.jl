@@ -1,9 +1,11 @@
 using Documenter
+using DocumenterMarkdown
 using PhytoAgentModel
 
 makedocs(
     sitename = "PhytoAgentModel",
-    format = Documenter.HTML(),
+#    format = Documenter.HTML(),
+    format = Markdown(),
     modules = [PhytoAgentModel],
     pages = [
     "Home" => "index.md",
