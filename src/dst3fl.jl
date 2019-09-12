@@ -10,19 +10,9 @@ const θmax = 1.0e20
 # Increment and decrement integer a with periodic wrapping
 incmod1(a, n) = ifelse(a==n, 1, a+1)
 decmod1(a, n) = ifelse(a==1, n, a-1)
-function incmod2(a, n)
-    if a == n
-        a = 2
-    elseif a == n - 1
-        a = 1
-    else
-        a = a + 2
-    end
-    return a
-end
 function decmod2(a, n)
     if a == 1
-        a = max(1,n - 1)
+        a = max(1, n - 1)
     elseif a == 2
         a = n 
     else
