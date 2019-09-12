@@ -2,7 +2,7 @@ function read_input(csv::String,myTime::Int64)
     # irradiance(μmol photons/m^2) and temperature
     # will change later to make it able to choose different month
     input = CSV.read(csv)
-    days=myTime÷24 
+    days=myTime÷24
     temp = copy(input.Temp_Aug)
     for i in 1:days-1
         tt = copy(input.Temp_Aug)
@@ -15,22 +15,20 @@ function read_input(csv::String,myTime::Int64)
     end
     return temp,IR
 end
+
 function read_offline_vels(vfroot::String,itList,tN,t::Int64)
-    fuvel = open(vfroot*"/UVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
-    fvvel = open(vfroot*"/VVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
     fwvel = open(vfroot*"/WVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
-    uvel = reverse(reinterpret(Float32,reverse(read(fuvel,))));
-    vvel = reverse(reinterpret(Float32,reverse(read(fvvel,))));
     wvel = reverse(reinterpret(Float32,reverse(read(fwvel,))));
-    close(fuvel);close(fvvel);close(fwvel);
-    uvel = reshape(uvel, 1080, 2700, 90);
-    vvel = reshape(vvel, 1080, 2700, 90);
+    close(fwvel);
     wvel = reshape(wvel, 1080, 2700, 90);
     # seletc grids
-    u = uvel[251:750,1251:1800,1:40]; v = vvel[251:750,1251:1800,1:40]; w = wvel[251:750,1251:1800,1:40];
+    u = zeros(Float64,1,1,40); v = zeros(Float64,1,1,40);
+    w = zeros(Float64,1,1,40);
+    u .= 0.0; v .= 0.0; w[1,1,:] = wvel[500,1500,1:40];
     vel = velocity(u, v, w)
     return vel
 end
+
 function grid_offline(fieldroot::String)
     nx=1080;ny=2700;nz=40;
     fxg = open(fieldroot*"XG.data","r");
@@ -63,7 +61,7 @@ function grid_offline(fieldroot::String)
     hFW= reverse(reinterpret(Float32,reverse(read(fhfw,))));
     close(fxg);close(fyg);close(fxc);close(fyc);close(fdx);close(fdy);
     close(fdrf);close(fAz);close(fhfc);close(fhfs);close(fhfw);
-    xf = reshape(xf,nx,ny); yf = reshape(yf,nx,ny); 
+    xf = reshape(xf,nx,ny); yf = reshape(yf,nx,ny);
     xc = reshape(xc,nx,ny); yc = reshape(yc,nx,ny);
     dx = reshape(dx,nx,ny); dy = reshape(dy,nx,ny);
     dxc= reshape(dxc,nx,ny);dyc= reshape(dyc,nx,ny);
@@ -82,21 +80,27 @@ function grid_offline(fieldroot::String)
             end
         end
     end
-    # seletc grids 29.0047N to 32.2864N, 161.563W to 157.417W
-    xcS = xc[251:750,1251:1800]; ycS = yc[251:750,1251:1800];
-    xfS = xf[251:750,1251:1800]; yfS = yf[251:750,1251:1800];
-    dxS = dx[251:750,1251:1800]; dyS = dy[251:750,1251:1800];
-    dxcS= dxc[251:750,1251:1800];dycS= dyc[251:750,1251:1800];
-    ΔxS = Δx[251:750,1251:1800]; ΔyS = Δy[251:750,1251:1800];
-    AzS = Az[251:750,1251:1800]; AxS = Ax[251:750,1251:1800,:];
-    AyS = Ay[251:750,1251:1800,:];VS = V[251:750,1251:1800,:];
-    Nx, Ny = size(AzS)
-    g = grids(xcS, ycS, zc, xfS, yfS, zf, ΔxS, ΔyS, dxS, dyS, drf, dxcS, dycS, drc, AxS, AyS, AzS, VS, Nx, Ny, nz)
+    # seletc grids
+    xcS = zeros(Float32,1,1); ycS = zeros(Float32,1,1);
+    xfS = zeros(Float32,1,1); yfS = zeros(Float32,1,1);
+    dxS = zeros(Float32,1,1); dyS = zeros(Float32,1,1);
+    dxcS= zeros(Float32,1,1);dycS = zeros(Float32,1,1);
+    ΔxS = zeros(Float32,1,1); ΔyS = zeros(Float32,1,1);
+    AzS = zeros(Float32,1,1); AxS = zeros(Float32,1,1,40);
+    AyS = zeros(Float32,1,1,40); VS = zeros(Float32,1,1,40);
+    xcS[1,1] = xc[500,1500]; ycS[1,1] = yc[500,1500];
+    xfS[1,1] = xf[500,1500]; yfS[1,1] = yf[500,1500];
+    dxS[1,1] = dx[500,1500]; dyS[1,1] = dy[500,1500];
+    dxcS[1,1]= dxc[500,1500];dycS[1,1]= dyc[500,1500];
+    ΔxS[1,1] = Δx[500,1500]; ΔyS[1,1] = Δy[500,1500];
+    AzS[1,1] = Az[500,1500]; AxS[1,1,:] = Ax[500,1500,:];
+    AyS[1,1,:] = Ay[500,1500,:];VS[1,1,:] = V[500,1500,:];
+    g = grids(xcS, ycS, zc, xfS, yfS, zf, ΔxS, ΔyS, dxS, dyS, drf, dxcS, dycS, drc, AxS, AyS, AzS, VS, 1, 1, nz)
     return g
 end
 
 function create_output(B::Array{DataFrame,1})
-    output = DataFrame(time=0, gen_ave=mean(B[1].gen), spec_ave = mean(B[1].sp), Cq1_ave=mean(B[1].Cq1), Cq2_ave=mean(B[1].Cq2), Nq_ave=mean(B[1].Nq), size_ave=mean(B[1].size), chl_ave=mean(B[1].chl), Population=size(B[1],1), dvid=0, graz=0,death=0)
+    output = DataFrame(time=0, gen_ave=mean(B[1].gen), spec_ave = mean(B[1].sp), Cq1_ave=mean(B[1].Cq1), Cq2_ave=mean(B[1].Cq2), Nq_ave=mean(B[1].Nq), size_ave=mean(B[1].size), chl_ave=mean(B[1].chl), Population=size(B[1],1), dvid=0, graz=0, death = 0)
     return output
 end
 
@@ -117,10 +121,8 @@ function count_chl(phyts_a, grid)
     cells = zeros(grid.Nx, grid.Ny, grid.Nz)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
-        x = trunc(Int, phyt.x)
-        y = trunc(Int, phyt.y)
         z = trunc(Int, phyt.z)
-        cells[x, y, z] = cells[x, y, z] + phyt.chl
+        cells[1, 1, z] = cells[1, 1, z] + phyt.chl
     end
     return cells
 end
@@ -135,24 +137,11 @@ function count_vertical_num(phyts_a)
     return VD
 end
 
-function count_horizontal_num(phyts_a,grid)
-    HD = zeros(grid.Nx,grid.Ny)
-    for i in 1:size(phyts_a,1)
-        phyt = phyts_a[i,:]
-        x = trunc(Int, phyt.x)
-        y = trunc(Int, phyt.y)
-        HD[x,y] = HD[x,y] + 1.0
-    end
-    return HD
-end
-
 function convert_coordinates(phyts, grid)
     for i in 1:size(phyts,1)
     phyt = phyts[i,:]
-    z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
-    dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
-    phyt.x = grid.xF[x,1] + dx * grid.Δx[x,y];
-    phyt.y = grid.yF[1,y] + dy * grid.Δy[x,y];
+    z = trunc(Int, phyt.z);
+    dz = phyt.z - z;
     phyt.z = grid.zF[z] - dz * grid.Lz[z];
     end
 end
@@ -170,7 +159,7 @@ function sort_species(Bi, B1, B2)
     push!(B1,phyts1)
     push!(B2,phyts2)
 end
-    
+
 function compute_mean_species(B1, B2, nTime)
     output1 = DataFrame(time=Int64[], gen_ave=Float64[], Cq1_ave=Float64[], Cq2_ave=Float64[], Nq_ave=Float64[], size_ave=Float64[], chl_ave=Float64[], Population=Int64[]);
     output2 = DataFrame(time=Int64[], gen_ave=Float64[], Cq1_ave=Float64[], Cq2_ave=Float64[], Nq_ave=Float64[], size_ave=Float64[], chl_ave=Float64[], Population=Int64[]);
@@ -192,6 +181,7 @@ function compute_mean_species(B1, B2, nTime)
     end
     return output1, output2
 end
+
 function write_nut_nc(g::grids, nut::nutrient_fields, t::Int64)
     filepath = "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
     xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
@@ -212,7 +202,8 @@ function write_nut_nc(g::grids, nut::nutrient_fields, t::Int64)
     ncclose(filepath)
     return nothing
 end
-function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, vel::velocity, agent_num::Int64, t::Int64)
+
+function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, vel::velocity,agent_num, t::Int64)
     Σgtrⁿ = sum(gtr.DIN .* g.V)+sum(gtr.DON .* g.V)+sum(gtr.PON .* g.V)
     Σgtrᶜ = sum(gtr.DIC .* g.V)+sum(gtr.DOC .* g.V)+sum(gtr.POC .* g.V)
     ΣsurFⁿ= sum((nutₜ.DIN[:,:,1]+nutₜ.DON[:,:,1]+nutₜ.PON[:,:,1]) .* g.Az .* vel.w[:,:,1])
@@ -220,8 +211,65 @@ function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields,
     ΣDIN = sum(nutₜ.DIN .* g.V)
     Cio = open("results/cons_C.txt","a"); Nio = open("results/cons_N.txt","a");
     DINio = open("results/cons_DIN.txt","a");
-    println(Cio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrᶜ,ΣsurFᶜ,Σgtrᶜ+ΣsurFᶜ))
-    println(Nio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrⁿ,ΣsurFⁿ,Σgtrⁿ+ΣsurFⁿ))
-    println(DINio,@sprintf("%3.0f  %.16E %7.0f",t,ΣDIN,agent_num))
+    println(Cio,@sprintf("%4.0f  %.16E  %.16E  %.8E",t,Σgtrᶜ,ΣsurFᶜ,Σgtrᶜ+ΣsurFᶜ))
+    println(Nio,@sprintf("%4.0f  %.16E  %.16E  %.8E",t,Σgtrⁿ,ΣsurFⁿ,Σgtrⁿ+ΣsurFⁿ))
+    println(DINio,@sprintf("%4.0f  %.16E %6.0f",t,ΣDIN,agent_num))
     close(Cio);close(Nio);close(DINio);
+end
+
+"""
+    PrepRunDir(res::String="results/")
+
+Create `res/` folder if needed. Remove old files from it if needed.
+"""
+function PrepRunDir(res::String="results/")
+
+isdir(res) || mkdir(res)
+isdir("$res"*"nutrients/") || mkdir("$res"*"nutrients/")
+println("$res"*"nutrients/")
+
+isfile("$res"*"cons_C.txt") && rm("$res"*"cons_C.txt");
+isfile("$res"*"cons_N.txt") && rm("$res"*"cons_N.txt");
+isfile("$res"*"cons_DIN.txt") && rm("$res"*"cons_DIN.txt");
+isfile("$res"*"B1.bin") && rm("$res"*"B1.bin");
+isfile("$res"*"B2.bin") && rm("$res"*"B2.bin");
+isfile("$res"*"output.bin") && rm("$res"*"output.bin");
+isfile("$res"*"output1.bin") && rm("$res"*"output1.bin");
+isfile("$res"*"output2.bin") && rm("$res"*"output2.bin");
+isfile("$res"*"grid.bin") && rm("$res"*"grid.bin");
+isfile("$res"*"IR.bin") && rm("$res"*"IR.bin");
+isfile("$res"*"VD1.bin") && rm("$res"*"VD1.bin");
+isfile("$res"*"VD2.bin") && rm("$res"*"VD2.bin");
+isfile("$res"*"HD1.bin") && rm("$res"*"HD1.bin");
+isfile("$res"*"HD2.bin") && rm("$res"*"HD2.bin");
+
+return "done"
+
+end
+
+"""
+    testB1B2(B1,B2,fil="")
+
+Compute mean size for `B1` & `B2`, add `B1ref` & `B2ref` reference result
+    obtained from `fil`, and output all time series in one DataFrame.
+
+```
+tst=testB1B2(B1,B2,"samples/testB1B2.csv")
+tst2=[tst[!,:B1],tst[!,:B1ref],tst[!,:B2],tst[!,:B2ref]]
+isapprox(tst[end,:B1],tst[end,:B1ref]; atol=1e-2)
+isapprox(tst[end,:B2],tst[end,:B2ref]; atol=1e-2)
+using Plots; plot(tst2,lab=["B1" "B1ref" "B2" "B2ref"])
+```
+"""
+function testB1B2(B1,B2,fil="")
+    n=length(B1)
+    tmpB1=map(x -> mean(B1[x][!,:size]), 1:n)
+    tmpB2=map(x -> mean(B2[x][!,:size]), 1:n)
+    df=DataFrame(B1=tmpB1,B2=tmpB2)
+    if ~isempty(fil)
+        tmpB1B2=CSV.read(fil)
+        df[!,:B1ref]=tmpB1B2[!,:B1]
+        df[!,:B2ref]=tmpB1B2[!,:B2]
+    end
+    return df
 end

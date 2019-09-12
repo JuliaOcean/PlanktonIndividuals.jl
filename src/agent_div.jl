@@ -56,6 +56,15 @@ function trilinear_itpl(x, y, z, a)
     return vel
 end
 
+function simple_itpl(x, y, z, vel)
+    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
+    zᵈ = z - z₀
+    w₋ = vel.w[x₀, y₀, z₀]
+    w₊ = vel.w[x₀, y₀, z₀+1]
+    wvel = w₋ * (1 - zᵈ) + w₊ * zᵈ
+    return wvel
+end
+
 function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
@@ -86,6 +95,15 @@ function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
         if phyt.y ≤ 1.5
             phyt.y = phyt.y + g.Ny - 2.0
         end
+    end
+end
+function agent_move_1D(phyts_a,vel,g,ΔT::Int64)
+    for i in 1:size(phyts_a,1)
+        phyt = phyts_a[i,:]
+        wvel = simple_itpl(phyt.x,phyt.y,phyt.z, vel) # unit: m/s, simple interpolation
+        zi = trunc(Int,phyt.z)
+        dz = wvel/g.Lz[zi]*ΔT # vertical movement, unit: grid/h
+        phyt.z = max(1.0,min(g.Nz-0.1,phyt.z - dz*(1+rand()/5)))
     end
 end
 # trilinear interpolation: based on C grid(local double gird,velocity on corners)
@@ -181,19 +199,3 @@ end
 #    return vel₀
 #end
 # simple interpolation: interpolate according to C grid (velocity on faces)
-function simple_itpl(x, y, z, vel)
-    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
-    xᵈ = x - x₀
-    yᵈ = y - y₀
-    zᵈ = z - z₀
-    u₋ = vel.u[x₀, y₀, z₀]
-    u₊ = vel.u[x₀+1, y₀, z₀]
-    v₋ = vel.v[x₀, y₀, z₀]
-    v₊ = vel.v[x₀, y₀+1, z₀]
-    w₋ = vel.w[x₀, y₀, z₀]
-    w₊ = vel.w[x₀, y₀, z₀+1]
-    uvel = u₋ * (1 - xᵈ) + u₊ * xᵈ
-    vvel = v₋ * (1 - yᵈ) + v₊ * yᵈ
-    wvel = w₋ * (1 - zᵈ) + w₊ * zᵈ
-    return uvel, vvel, wvel
-end

@@ -1,5 +1,5 @@
 ####################################### Parameters ########################################
-PCmax = [2.7, 2.5] ./86400   # Maximum primary production rate (per second)
+PCmax = [1.1, 1.0] ./86400   # Maximum primary production rate (per second)
 PC_b = [-0.15, -0.2]         # Shape parameter
 Chl2N = 3.0                  # Maximum Chla:N ratio in phytoplankton
 R_NC  = 16/106               # N:C ratio in cell biomass, should be lower than 16:106
@@ -11,20 +11,20 @@ katten_c = 0.14              # PAR attenuation (/chl/m)
 Cquota = [1.8e-11, 1.8e-10]  # Average C quota in cell (mmolC).
 Grz_P  = 2000                # phyt.size/Grz_P is the probability to be grazed
 dvid_size = 1.6              # relative cell size a cell can start divide
-Dvid_P = 6.0                 # should be greater than 2.0,phyt.size/Dvid_P is the probability to divide
+Dvid_P = 15.0                 # should be greater than 2.0,phyt.size/Dvid_P is the probability to divide
 
 Tempref = 293.15   # reference temperature in K
 TempAe = -4000.0   # Arrenhius equation
 TempCoeff = 0.8    # Arrenhius equation
 
-VNmax = [1.2, 1.0] ./ 86400 # Maximum N uptake rate (per second)
+VNmax = [0.8, 0.7] ./ 86400 # Maximum N uptake rate (per second)
 Nqmax = 0.5               # Maximum N quota in cell (mmol N/mmol C)
 Nqmin = 0.13              # Minimum N quota in cell (mmol N/mmol C)
 KsatN = 0.05                # Half-saturation coeff
 VN_b = [-0.15, -0.2]        # Shape parameter
 
-respir_a = 1.0e-20 # Respiration ratio 
-respir_ex= 1.0e-13 # Extra cost of C for biosynthesis
+respir_a = 5.0e-8  # Respiration ratio 
+respir_ex= 3.0e-10 # Extra cost of C for biosynthesis
 respir_b = 0.93    # Shape parameter
 
 grazFracC = 0.7 # Fraction goes into dissolved organic pool

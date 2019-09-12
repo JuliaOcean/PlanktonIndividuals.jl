@@ -22,7 +22,7 @@ function incmod2(a, n)
 end
 function decmod2(a, n)
     if a == 1
-        a = n - 1
+        a = max(1,n - 1)
     elseif a == 2
         a = n 
     else

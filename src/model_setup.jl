@@ -3,8 +3,8 @@ function setup_agents(N::Int64,Cquota::Array,Nn::Int64,mean::Float64,var::Float6
     phyts0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[])
     for i in 1:N
         # agent location
-        x = rand(30*grid.Nx:70*grid.Nx)/100
-        y = rand(30*grid.Nx:grid.Ny*50)/100
+        x = 1
+        y = 1
         z = rand(3.5*10:grid.Nz*8)/10
         # a normal distribution with mean variance
         radm = max(0.05, rand(Normal(mean,var)))
@@ -19,8 +19,8 @@ function setup_agents(N::Int64,Cquota::Array,Nn::Int64,mean::Float64,var::Float6
     end
     for i in N+1:2N
         # agent location
-        x = rand(30*grid.Nx:70*grid.Nx)/100
-        y = rand(50*grid.Ny:70*grid.Ny)/100
+        x = 1
+        y = 1
         z = rand(3.5*10:grid.Nz*8)/10
         # a normal distribution with mean variance
         radm = max(0.05, rand(Normal(mean,var)))
@@ -46,8 +46,8 @@ function setup_nutrients(g,nut)
     DON = zeros(g.Nx, g.Ny, g.Nz)
     POC = zeros(g.Nx, g.Ny, g.Nz)
     PON = zeros(g.Nx, g.Ny, g.Nz)
-    for i in trunc(Int,0.25*g.Nx):trunc(Int,0.75*g.Nx)
-        for j in trunc(Int,0.25*g.Ny):trunc(Int,0.75*g.Ny)
+    for i in 1:1
+        for j in 1:1 
             for k in 1:Int(0.625*g.Nz)
                 DIC[i, j, k] = DIC[i, j, k] + nut[1]
                 DIN[i, j, k] = DIN[i, j, k] + nut[2]*0.5
