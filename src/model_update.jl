@@ -20,6 +20,7 @@ include("model_includes.jl")
 #path names
 samples=dirname(pathof(PhytoAgentModel))*"/../samples/"
 results=dirname(pathof(PhytoAgentModel))*"/../results/"
+gridroot = "/nobackup1b/users/jahn/hinpac/grazsame3/run"
 
 # ### Read input files
 
@@ -37,7 +38,7 @@ function load_grid_0354(path)
   g = grid_offline(fieldroot);
 end
 
-RunParams["GridChoice"]==1 ? g=load_grid_0354(samples) : g=load(samples*"grid.jld", "grid")
+RunParams["GridChoice"]==1 ? g=load_grid_0354(gridroot) : g=load(samples*"grid.jld", "grid")
 RunParams["SaveGrid"] ? save(results*"grid.jld", "grid", g) : nothing
 
 # ### remove old result files and create `results/` if needed
@@ -50,7 +51,7 @@ itvalHi = 687888;
 itList = collect(itvalLo:144:itvalHi);
 tN = 3336; # starting time
 
-vfroot = samples*"run.0354/offline-0604/" # directory of velocity fields
+vfroot = gridroot*"/run.0354/offline-0604" # directory of velocity fields
 store_vel=[] #for storing and saving velocities when RunParams["SaveVel"]
 RunParams["VelChoice"]==2 ? store_vel=load(samples*"uvw.jld", "uvw") : nothing
 
@@ -87,7 +88,7 @@ for t in 1:nTime
     gtr = compute_source_term(nutrients, velᵇ, g, F)
     nutₜ = nut_update(nutrients, consume, g, gtr, ΔT)
     RunParams["OutputResults"] ? write_nut_nc(g, nutₜ, t) : nothing
-    RunParams["OutputResults"] ? write_nut_cons(g, gtr, nutₜ, velᵇ, agent_num, t) : nothing
+    RunParams["OutputResults"] ? write_nut_cons(g, gtr, nutₜ, velᵇ, agent_num, t, death_ct, graz_ct, dvid_ct) : nothing
     global nutrients = nutₜ;
 end
 

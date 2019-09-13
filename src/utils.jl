@@ -27,7 +27,7 @@ function read_offline_vels(vfroot::String,itList,tN,t::Int64)
     vvel = reshape(vvel, 1080, 2700, 90);
     wvel = reshape(wvel, 1080, 2700, 90);
     # seletc grids
-    u = uvel[551:650,1501:1600,1:40]; v = vvel[551:650,1501:1600,1:40]; w = wvel[551:650,1501:1600,1:40];
+    u = uvel[551:560,1501:1510,1:40]; v = vvel[551:560,1501:1510,1:40]; w = wvel[551:560,1501:1510,1:40];
     vel = velocity(u, v, w)
     return vel
 end
@@ -83,13 +83,13 @@ function grid_offline(fieldroot::String)
         end
     end
     # seletc grids 
-    xcS = xc[551:650,1501:1600]; ycS = yc[551:650,1501:1600];
-    xfS = xf[551:650,1501:1600]; yfS = yf[551:650,1501:1600];
-    dxS = dx[551:650,1501:1600]; dyS = dy[551:650,1501:1600];
-    dxcS= dxc[551:650,1501:1600];dycS= dyc[551:650,1501:1600];
-    ΔxS = Δx[551:650,1501:1600]; ΔyS = Δy[551:650,1501:1600];
-    AzS = Az[551:650,1501:1600]; AxS = Ax[551:650,1501:1600,:];
-    AyS = Ay[551:650,1501:1600,:];VS = V[551:650,1501:1600,:];
+    xcS = xc[551:560,1501:1510]; ycS = yc[551:560,1501:1510];
+    xfS = xf[551:560,1501:1510]; yfS = yf[551:560,1501:1510];
+    dxS = dx[551:560,1501:1510]; dyS = dy[551:560,1501:1510];
+    dxcS= dxc[551:560,1501:1510];dycS= dyc[551:560,1501:1510];
+    ΔxS = Δx[551:560,1501:1510]; ΔyS = Δy[551:560,1501:1510];
+    AzS = Az[551:560,1501:1510]; AxS = Ax[551:560,1501:1510,:];
+    AyS = Ay[551:560,1501:1510,:];VS = V[551:560,1501:1510,:];
     Nx, Ny = size(AzS)
     g = grids(xcS, ycS, zc, xfS, yfS, zf, ΔxS, ΔyS, dxS, dyS, drf, dxcS, dycS, drc, AxS, AyS, AzS, VS, Nx, Ny, nz)
     return g
