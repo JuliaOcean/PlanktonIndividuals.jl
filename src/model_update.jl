@@ -20,7 +20,6 @@ include("model_includes.jl")
 #path names
 samples=dirname(pathof(PhytoAgentModel))*"/../samples/"
 results=dirname(pathof(PhytoAgentModel))*"/../results/"
-gridroot = "/nobackup1b/users/jahn/hinpac/grazsame3/run"
 
 # ### Read input files
 
@@ -34,11 +33,11 @@ RunParams=Dict("OutputResults"=>false,"GridChoice"=>2,"VelChoice"=>2,
 
 function load_grid_0354(path)
 # grid selected : 
-  fieldroot = path*"/run.0354/";
+  fieldroot = path*"grid/run.0354/";
   g = grid_offline(fieldroot);
 end
 
-RunParams["GridChoice"]==1 ? g=load_grid_0354(gridroot) : g=load(samples*"grid.jld", "grid")
+RunParams["GridChoice"]==1 ? g=load_grid_0354(samples) : g=load(samples*"grid.jld", "grid")
 RunParams["SaveGrid"] ? save(results*"grid.jld", "grid", g) : nothing
 
 # ### remove old result files and create `results/` if needed
@@ -51,7 +50,7 @@ itvalHi = 687888;
 itList = collect(itvalLo:144:itvalHi);
 tN = 3336; # starting time
 
-vfroot = gridroot*"/run.0354/offline-0604" # directory of velocity fields
+vfroot = samples*"grid/run.0354/offline-0604" # directory of velocity fields
 store_vel=[] #for storing and saving velocities when RunParams["SaveVel"]
 RunParams["VelChoice"]==2 ? store_vel=load(samples*"uvw.jld", "uvw") : nothing
 
