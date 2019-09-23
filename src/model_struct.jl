@@ -38,7 +38,7 @@ mutable struct nutrient_fields # for tendencies, forcings and consumptions
     PON::Array{Float64,3}
 end
 
-struct rem # parameters for nutrient remineralization
+struct remineralization # parameters for nutrient remineralization
     DOC::Float64
     DON::Float64
     POC::Float64

@@ -32,8 +32,8 @@ RunParams=Dict("OutputResults"=>false,"GridChoice"=>2,"VelChoice"=>2,
 "SaveGrid"=>false,"SaveVel"=>false,"SaveTests"=>false)
 
 function load_grid_0354(path)
-# grid selected : [500,1500]
-  fieldroot = path*"/run.0354/";
+# grid selected : 
+  fieldroot = path*"grid/run.0354/";
   g = grid_offline(fieldroot);
 end
 
@@ -50,7 +50,7 @@ itvalHi = 687888;
 itList = collect(itvalLo:144:itvalHi);
 tN = 3336; # starting time
 
-vfroot = samples*"run.0354/offline-0604/" # directory of velocity fields
+vfroot = samples*"grid/run.0354/offline-0604" # directory of velocity fields
 store_vel=[] #for storing and saving velocities when RunParams["SaveVel"]
 RunParams["VelChoice"]==2 ? store_vel=load(samples*"uvw.jld", "uvw") : nothing
 
@@ -58,14 +58,14 @@ RunParams["VelChoice"]==2 ? store_vel=load(samples*"uvw.jld", "uvw") : nothing
 
 N = 100000   # Number of initial individuals of each species
 Nsp = 2     # Number of species
-Nn = Int(1e5)   # Number of cells one super-agent represents
-B=setup_agents(N,Cquota,Nn,1.1,0.18,g) # Normal distribution with mean and variance
+Nn = Int(1e15)   # Number of cells one super-agent represents
+B=setup_agents(N,Cquota,Nn,1.0,0.25,g) # Normal distribution with mean and variance
 # model initialization
 # create output file
 output = create_output(B);
-nut = [2.0, 0.15, 20.0, 0.0, 0.0, 0.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
+nut = [2.0, 0.05, 20.0, 0.0, 0.0, 0.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
 nutrients= setup_nutrients(g,nut)
-remin = rem(kDOC,kDON,kPOC,kPON);
+remin = remineralization(kDOC,kDON,kPOC,kPON);
 
 # ### the main loop
 
@@ -78,8 +78,8 @@ for t in 1:nTime
         velᵇ=store_vel[t]
     end
     global store_vel; RunParams["SaveVel"] ? store_vel=push!(store_vel,velᵇ) : nothing
-    #velᵈ = double_grid(velᵇ,g)
-    agent_move_1D(phyts_b,velᵇ,g,ΔT)
+    velᵈ = double_grid(velᵇ,g)
+    agent_move(phyts_b,velᵈ,g,ΔT)
     push!(B,phyts_b)
     write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,output)
     agent_num = size(phyts_b,1)
@@ -87,7 +87,7 @@ for t in 1:nTime
     gtr = compute_source_term(nutrients, velᵇ, g, F)
     nutₜ = nut_update(nutrients, consume, g, gtr, ΔT)
     RunParams["OutputResults"] ? write_nut_nc(g, nutₜ, t) : nothing
-    RunParams["OutputResults"] ? write_nut_cons(g, gtr, nutₜ, velᵇ, agent_num, t) : nothing
+    RunParams["OutputResults"] ? write_nut_cons(g, gtr, nutₜ, velᵇ, agent_num, t, death_ct, graz_ct, dvid_ct) : nothing
     global nutrients = nutₜ;
 end
 
@@ -97,7 +97,7 @@ B1 = []; B2 = [];
 for i in 1:size(B,1)
     sort_species(B[i], B1, B2)
 end
-#=
+
 HD1 = []; HD2 = [];
 for i in 1:size(B,1)
     HD_1 = count_horizontal_num(B1[i],g);
@@ -105,7 +105,7 @@ for i in 1:size(B,1)
     HD_2 = count_horizontal_num(B2[i],g);
     push!(HD2,HD_2)
 end
-=#
+
 for i in 1:size(B,1)
     convert_coordinates(B1[i],g) # convert grids to lon, lat and depth
     convert_coordinates(B2[i],g) # convert grids to lon, lat and depth
@@ -126,46 +126,39 @@ output1, output2 = compute_mean_species(B1, B2, nTime);
 # ### save to file
 
 if RunParams["OutputResults"]
-
-# save model output
-open(results*"B1.bin", "w") do io
-    serialize(io, B1)
-end
-open(results*"B2.bin", "w") do io
-    serialize(io, B2)
-end
-open(results*"grid.bin", "w") do io
-    serialize(io, g)
-end
-open(results*"output.bin", "w") do io
-    serialize(io, output)
-end
-open(results*"output1.bin", "w") do io
-    serialize(io, output1)
-end
-open(results*"output2.bin", "w") do io
-    serialize(io, output2)
-end
-open(results*"VD1.bin", "w") do io
-    serialize(io, VD1)
-end
-open(results*"VD2.bin", "w") do io
-    serialize(io, VD2)
-end
-#=
-open(results*"HD1.bin", "w") do io
-    serialize(io, HD1)
-end
-open(results*"HD2.bin", "w") do io
-    serialize(io, HD2)
-end
-=#
-open(results*"IR.bin", "w") do io
-    serialize(io, IR)
-end
-
-RunParams["SaveVel"] ? save(results*"uvw.jld", "uvw", store_vel) : nothing
-
-RunParams["SaveTests"] ? CSV.write(results*"testB1B2.csv",testB1B2(B1,B2)) : nothing
-
+    open(results*"B1.bin", "w") do io
+        serialize(io, B1)
+    end
+    open(results*"B2.bin", "w") do io
+        serialize(io, B2)
+    end
+    open(results*"grid.bin", "w") do io
+        serialize(io, g)
+    end
+    open(results*"output.bin", "w") do io
+        serialize(io, output)
+    end
+    open(results*"output1.bin", "w") do io
+        serialize(io, output1)
+    end
+    open(results*"output2.bin", "w") do io
+        serialize(io, output2)
+    end
+    open(results*"VD1.bin", "w") do io
+        serialize(io, VD1)
+    end
+    open(results*"VD2.bin", "w") do io
+        serialize(io, VD2)
+    end
+    open(results*"HD1.bin", "w") do io
+        serialize(io, HD1)
+    end
+    open(results*"HD2.bin", "w") do io
+        serialize(io, HD2)
+    end
+    open(results*"IR.bin", "w") do io
+        serialize(io, IR)
+    end
+    RunParams["SaveVel"] ? save(results*"uvw.jld", "uvw", store_vel) : nothing
+    RunParams["SaveTests"] ? CSV.write(results*"testB1B2.csv",testB1B2(B1,B2)) : nothing
 end #if RunParams["OutputResults"]

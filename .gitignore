@@ -4,3 +4,6 @@ src/model_update.ipynb
 devel/
 notes/
 results/
+*.ipynb
+*.sh
+.ipynb_checkpoints/

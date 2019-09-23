@@ -56,15 +56,6 @@ function trilinear_itpl(x, y, z, a)
     return vel
 end
 
-function simple_itpl(x, y, z, vel)
-    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
-    zᵈ = z - z₀
-    w₋ = vel.w[x₀, y₀, z₀]
-    w₊ = vel.w[x₀, y₀, z₀+1]
-    wvel = w₋ * (1 - zᵈ) + w₊ * zᵈ
-    return wvel
-end
-
 function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
@@ -76,7 +67,7 @@ function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
         xi, yi, zi = trunc(Int,phyt.x), trunc(Int,phyt.y), trunc(Int,phyt.z)
         dx = uvel/g.Lx[xi]*ΔT # unit: grid/h
         dy = vvel/g.Ly[yi]*ΔT # unit: grid/h
-        dz = wvel/g.Lz[zi]*ΔT # vertical movement, unit: grid/h
+        dz = (wvel+k_sink)/g.Lz[zi]*ΔT # vertical movement, plus sinking, unit: grid/h
 #       phyt.x = max(1.5,min(g.Nx-0.5,phyt.x - dx*(1+rand()/5)))
 #       phyt.y = max(1.5,min(g.Ny-0.5,phyt.y - dy*(1+rand()/5)))
         phyt.x = phyt.x - dx*(1+rand()/3)
@@ -95,15 +86,6 @@ function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
         if phyt.y ≤ 1.5
             phyt.y = phyt.y + g.Ny - 2.0
         end
-    end
-end
-function agent_move_1D(phyts_a,vel,g,ΔT::Int64)
-    for i in 1:size(phyts_a,1)
-        phyt = phyts_a[i,:]
-        wvel = simple_itpl(phyt.x,phyt.y,phyt.z, vel) # unit: m/s, simple interpolation
-        zi = trunc(Int,phyt.z)
-        dz = wvel/g.Lz[zi]*ΔT # vertical movement, unit: grid/h
-        phyt.z = max(1.0,min(g.Nz-0.1,phyt.z - dz*(1+rand()/5)))
     end
 end
 # trilinear interpolation: based on C grid(local double gird,velocity on corners)
@@ -198,4 +180,22 @@ end
 #    end
 #    return vel₀
 #end
-# simple interpolation: interpolate according to C grid (velocity on faces)
+
+# simple interpolation: interpolate according to C grid (velocity on faces), for 1D only
+function simple_itpl(x, y, z, vel)
+    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
+    zᵈ = z - z₀
+    w₋ = vel.w[x₀, y₀, z₀]
+    w₊ = vel.w[x₀, y₀, z₀+1]
+    wvel = w₋ * (1 - zᵈ) + w₊ * zᵈ
+    return wvel
+end
+function agent_move_1D(phyts_a,vel,g,ΔT::Int64)
+    for i in 1:size(phyts_a,1)
+        phyt = phyts_a[i,:]
+        wvel = simple_itpl(phyt.x,phyt.y,phyt.z, vel) # unit: m/s, simple interpolation
+        zi = trunc(Int,phyt.z)
+        dz = wvel/g.Lz[zi]*ΔT # vertical movement, unit: grid/h
+        phyt.z = max(1.0,min(g.Nz-0.1,phyt.z - dz*(1+rand()/5)))
+    end
+end
