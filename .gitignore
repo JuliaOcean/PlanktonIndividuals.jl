@@ -4,6 +4,7 @@ src/model_update.ipynb
 devel/
 notes/
 results/
+samples/grid
 *.ipynb
 *.sh
 .ipynb_checkpoints/
