@@ -221,7 +221,7 @@ function compute_mean_species(B1, B2, nTime)
     end
     return output1, output2
 end
-function write_nut_nc(g::grids, nut::nutrient_fields, t::Int64)
+function write_nut_nc_each_step(g::grids, nut::nutrient_fields, t::Int64)
     filepath = "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
     xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
     yC_attr = Dict("longname" => "Locations of the cell centers in the y-direction.", "units" => "m")
@@ -235,6 +235,28 @@ function write_nut_nc(g::grids, nut::nutrient_fields, t::Int64)
     nccreate(filepath, "DON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
     nccreate(filepath, "POC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=C_attr);
     nccreate(filepath, "PON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
+    ncwrite(nut.DIC,filepath,"DIC"); ncwrite(nut.DIN,filepath,"DIN");
+    ncwrite(nut.DOC,filepath,"DOC"); ncwrite(nut.DON,filepath,"DON");
+    ncwrite(nut.POC,filepath,"POC"); ncwrite(nut.PON,filepath,"PON");
+    ncclose(filepath)
+    return nothing
+end
+function write_nut_nc_alltime(g::grids, DIC, DIN, DOC, DON, POC, PON, nTime)
+    filepath = "results/nutrients.nc"
+    tt = collect(1:nTime);
+    xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
+    yC_attr = Dict("longname" => "Locations of the cell centers in the y-direction.", "units" => "m")
+    zC_attr = Dict("longname" => "Locations of the cell centers in the z-direction.", "units" => "m")
+    T_attr = Dict("longname" => "Time", "units" => "H")
+    C_attr = Dict("units" => "mmolC/m^3")
+    N_attr = Dict("units" => "mmolN/m^3")
+    isfile(filepath) && rm(filepath)
+    nccreate(filepath, "DIC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=C_attr);
+    nccreate(filepath, "DIN", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
+    nccreate(filepath, "DOC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=C_attr);
+    nccreate(filepath, "DON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
+    nccreate(filepath, "POC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=C_attr);
+    nccreate(filepath, "PON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
     ncwrite(nut.DIC,filepath,"DIC"); ncwrite(nut.DIN,filepath,"DIN");
     ncwrite(nut.DOC,filepath,"DOC"); ncwrite(nut.DON,filepath,"DON");
     ncwrite(nut.POC,filepath,"POC"); ncwrite(nut.PON,filepath,"PON");

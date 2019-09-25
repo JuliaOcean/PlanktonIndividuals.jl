@@ -12,8 +12,14 @@ nTime = 10 # number of time steps
 ΔT = 3600 # time step: 3600 for 1 hour
 temp,IR = read_input(samples*"T_IR.csv",trunc(Int,nTime*ΔT/3600));
 
-RunParams=Dict("OutputResults"=>false,"GridChoice"=>2,"VelChoice"=>2,
-"SaveGrid"=>false,"SaveVel"=>false,"SaveTests"=>false)
+RunParams=Dict("OutputResults"=>false,
+               "Dims"=>"3D",
+               "NutOutputChoice"=>1,
+               "GridChoice"=>2,
+               "VelChoice"=>2,
+               "SaveGrid"=>false,
+               "SaveVel"=>false,
+               "SaveTests"=>false)
 
 #Define Grid Selection
 Grid_sel = Dict("Nx"=>[551,560],"Ny"=>[1501,1510],"Nz"=>[1,40])
@@ -51,6 +57,14 @@ B=setup_agents(N,Cquota,Nn,1.0,0.25,g) # Normal distribution with mean and varia
 output = create_output(B);
 nut = [2.0, 0.05, 20.0, 0.0, 0.0, 0.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
 nutrients= setup_nutrients(g,nut)
+if RunParams["NutOutputChoice"] == 2
+    DIC = zeros(g.Nx, g.Ny, g.Nz, nTime)
+    DIN = zeros(g.Nx, g.Ny, g.Nz, nTime)
+    DOC = zeros(g.Nx, g.Ny, g.Nz, nTime)
+    DON = zeros(g.Nx, g.Ny, g.Nz, nTime)
+    POC = zeros(g.Nx, g.Ny, g.Nz, nTime)
+    PON = zeros(g.Nx, g.Ny, g.Nz, nTime)
+end
 remin = remineralization(kDOC,kDON,kPOC,kPON);
 
 # ### the main loop
@@ -64,20 +78,38 @@ for t in 1:nTime
         velᵇ=store_vel[t]
     end
     global store_vel; RunParams["SaveVel"] ? store_vel=push!(store_vel,velᵇ) : nothing
-    velᵈ = double_grid(velᵇ,g)
-    agent_move(phyts_b,velᵈ,g,ΔT)
+    if g.Nx > 1 & g.Ny > 1 
+        velᵈ = double_grid(velᵇ,g)
+        agent_move(phyts_b,velᵈ,g,ΔT)
+    elseif g.Nx == 1 & g.Ny == 1 & g.Nz > 1
+        agent_move(phyts_b,velᵇ,g,ΔT) # for 1D only, use big grid velocities
+    elseif g.Nx == 1 & g.Ny == 1 & g.Nz == 1
+        nothing #for 0D only
+    end
     push!(B,phyts_b)
     write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,output)
     agent_num = size(phyts_b,1)
     F = compute_nut_biochem(nutrients, remin)
-    gtr = compute_source_term(nutrients, velᵇ, g, F)
+    RunParams["Dims"] == "0D" ? nothing : gtr = compute_source_term(nutrients, velᵇ, g, F)
     nutₜ = nut_update(nutrients, consume, g, gtr, ΔT)
-    RunParams["OutputResults"] ? write_nut_nc(g, nutₜ, t) : nothing
     RunParams["OutputResults"] ? write_nut_cons(g, gtr, nutₜ, velᵇ, agent_num, t, death_ct, graz_ct, dvid_ct) : nothing
+    if RunParams["NutOutputChoice"] == 1
+        write_nut_nc_each_step(g, nutₜ, t) 
+    else
+        DIC[:,:,:,t] = nutₜ.DIC
+        DIN[:,:,:,t] = nutₜ.DIN
+        DOC[:,:,:,t] = nutₜ.DOC
+        DON[:,:,:,t] = nutₜ.DON
+        POC[:,:,:,t] = nutₜ.POC
+        PON[:,:,:,t] = nutₜ.PON
+    end
     global nutrients = nutₜ;
 end
 
 # ### post-processing steps
+if RunParams["NutOutputChoice"] == 2
+    write_nut_nc_alltime(g, DIC, DIN, DOC, DON, POC, PON, nTime)
+end
 
 B1 = []; B2 = [];
 for i in 1:size(B,1)
