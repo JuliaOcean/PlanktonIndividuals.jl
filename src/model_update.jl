@@ -14,7 +14,7 @@ temp,IR = read_input(samples*"T_IR.csv",trunc(Int,nTime*ΔT/3600));
 
 RunParams=Dict("OutputResults"=>false,
                "Dims"=>"3D",
-               "NutOutputChoice"=>1,
+               "NutOutputChoice"=>0,
                "GridChoice"=>2,
                "VelChoice"=>2,
                "SaveGrid"=>false,
@@ -95,13 +95,15 @@ for t in 1:nTime
     RunParams["OutputResults"] ? write_nut_cons(g, gtr, nutₜ, velᵇ, agent_num, t, death_ct, graz_ct, dvid_ct) : nothing
     if RunParams["NutOutputChoice"] == 1
         write_nut_nc_each_step(g, nutₜ, t) 
-    else
+    elseif RunParams["NutOutputChoice"] == 2
         DIC[:,:,:,t] = nutₜ.DIC
         DIN[:,:,:,t] = nutₜ.DIN
         DOC[:,:,:,t] = nutₜ.DOC
         DON[:,:,:,t] = nutₜ.DON
         POC[:,:,:,t] = nutₜ.POC
         PON[:,:,:,t] = nutₜ.PON
+    else
+        nothing
     end
     global nutrients = nutₜ;
 end
