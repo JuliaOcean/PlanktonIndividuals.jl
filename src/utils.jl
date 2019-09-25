@@ -15,23 +15,44 @@ function read_input(csv::String,myTime::Int64)
     end
     return temp,IR
 end
-function read_offline_vels(vfroot::String,itList,tN,t::Int64)
-    fuvel = open(vfroot*"/UVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
-    fvvel = open(vfroot*"/VVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
-    fwvel = open(vfroot*"/WVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
-    uvel = reverse(reinterpret(Float32,reverse(read(fuvel,))));
-    vvel = reverse(reinterpret(Float32,reverse(read(fvvel,))));
-    wvel = reverse(reinterpret(Float32,reverse(read(fwvel,))));
-    close(fuvel);close(fvvel);close(fwvel);
-    uvel = reshape(uvel, 1080, 2700, 90);
-    vvel = reshape(vvel, 1080, 2700, 90);
-    wvel = reshape(wvel, 1080, 2700, 90);
-    # seletc grids
-    u = uvel[551:560,1501:1510,1:40]; v = vvel[551:560,1501:1510,1:40]; w = wvel[551:560,1501:1510,1:40];
+function read_offline_vels(vfroot::String,Grid_sel,itList,tN,t::Int64)
+    Nx⁻ = Grid_sel["Nx"][1]; Nx⁺ = Grid_sel["Nx"][2]
+    Ny⁻ = Grid_sel["Ny"][1]; Ny⁺ = Grid_sel["Ny"][2]
+    Nz⁻ = Grid_sel["Nz"][1]; Nz⁺ = Grid_sel["Nz"][2]
+    Nx = Nx⁺ - Nx⁻ + 1; Ny = Ny⁺ - Ny⁻ + 1; Nz = Nz⁺ - Nz⁻ + 1;
+    if Nx == 1 
+        u = zeros(Nx, Ny, Nz)
+    else
+        fuvel = open(vfroot*"/UVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
+        uvel = reverse(reinterpret(Float32,reverse(read(fuvel,))));
+        close(fuvel);
+        uvel = reshape(uvel, 1080, 2700, 90);
+        u = uvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
+    end
+
+    if Ny == 1
+        v = zeros(Nx, Ny, Nz)
+    else
+        fvvel = open(vfroot*"/VVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
+        vvel = reverse(reinterpret(Float32,reverse(read(fvvel,))));
+        close(fvvel);
+        vvel = reshape(vvel, 1080, 2700, 90);
+        v = vvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
+    end
+
+    if Nz == 1
+        w = zeros(Nx, Ny, Nz)
+    else
+        fwvel = open(vfroot*"/WVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
+        wvel = reverse(reinterpret(Float32,reverse(read(fwvel,))));
+        close(fwvel);
+        wvel = reshape(wvel, 1080, 2700, 90);
+        w = wvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
+    end
     vel = velocity(u, v, w)
     return vel
 end
-function grid_offline(fieldroot::String)
+function grid_offline(fieldroot::String,Grid_sel)
     nx=1080;ny=2700;nz=40;
     fxg = open(fieldroot*"XG.data","r");
     fyg = open(fieldroot*"YG.data","r");
@@ -83,14 +104,18 @@ function grid_offline(fieldroot::String)
         end
     end
     # seletc grids 
-    xcS = xc[551:560,1501:1510]; ycS = yc[551:560,1501:1510];
-    xfS = xf[551:560,1501:1510]; yfS = yf[551:560,1501:1510];
-    dxS = dx[551:560,1501:1510]; dyS = dy[551:560,1501:1510];
-    dxcS= dxc[551:560,1501:1510];dycS= dyc[551:560,1501:1510];
-    ΔxS = Δx[551:560,1501:1510]; ΔyS = Δy[551:560,1501:1510];
-    AzS = Az[551:560,1501:1510]; AxS = Ax[551:560,1501:1510,:];
-    AyS = Ay[551:560,1501:1510,:];VS = V[551:560,1501:1510,:];
-    Nx, Ny = size(AzS)
+    Nx⁻ = Grid_sel["Nx"][1]; Nx⁺ = Grid_sel["Nx"][2]
+    Ny⁻ = Grid_sel["Ny"][1]; Ny⁺ = Grid_sel["Ny"][2]
+    Nz⁻ = Grid_sel["Nz"][1]; Nz⁺ = Grid_sel["Nz"][2]
+    xcS = xc[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; ycS = yc[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
+    xfS = xf[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; yfS = yf[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
+    dxS = dx[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; dyS = dy[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
+    dxcS= dxc[Nx⁻:Nx⁺,Ny⁻:Ny⁺];dycS= dyc[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
+    ΔxS = Δx[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; ΔyS = Δy[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
+    AzS = Az[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; AxS = Ax[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
+    AyS = Ay[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
+    VS  =  V[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
+    Nx, Ny, Nz = size(VS)
     g = grids(xcS, ycS, zc, xfS, yfS, zf, ΔxS, ΔyS, dxS, dyS, drf, dxcS, dycS, drc, AxS, AyS, AzS, VS, Nx, Ny, nz)
     return g
 end

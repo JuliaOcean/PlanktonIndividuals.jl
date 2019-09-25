@@ -3,9 +3,9 @@ function setup_agents(N::Int64,Cquota::Array,Nn::Int64,mean::Float64,var::Float6
     phyts0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[], age=[])
     for i in 1:N
         # agent location
-        x = rand(30*grid.Nx:70*grid.Nx)/100
-        y = rand(30*grid.Ny:grid.Ny*70)/100
-        z = rand(3.5*10:grid.Nz*8)/10
+        grid.Nx == 1 ? x = 1 : x = rand(30*grid.Nx:70*grid.Nx)/100
+        grid.Ny == 1 ? y = 1 : y = rand(30*grid.Ny:70*grid.Ny)/100
+        grid.Nz == 1 ? z = 1 : z = rand(3.5*10:grid.Nz*8)/10
         # a normal distribution with mean variance
         radm = max(0.05, rand(Normal(mean,var)))
         gen  = 1
@@ -20,9 +20,9 @@ function setup_agents(N::Int64,Cquota::Array,Nn::Int64,mean::Float64,var::Float6
     end
     for i in N+1:2N
         # agent location
-        x = rand(30*grid.Nx:70*grid.Nx)/100
-        y = rand(30*grid.Ny:70*grid.Ny)/100
-        z = rand(3.5*10:grid.Nz*8)/10
+        grid.Nx == 1 ? x = 1 : x = rand(30*grid.Nx:70*grid.Nx)/100
+        grid.Ny == 1 ? y = 1 : y = rand(30*grid.Ny:70*grid.Ny)/100
+        grid.Nz == 1 ? z = 1 : z = rand(3.5*10:grid.Nz*8)/10
         # a normal distribution with mean variance
         radm = max(0.05, rand(Normal(mean,var)))
         gen  = 1

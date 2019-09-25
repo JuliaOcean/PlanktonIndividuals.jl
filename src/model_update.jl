@@ -1,19 +1,3 @@
-# -*- coding: utf-8 -*-
-# ---
-# jupyter:
-#   jupytext:
-#     formats: ipynb,jl:light
-#     text_representation:
-#       extension: .jl
-#       format_name: light
-#       format_version: '1.4'
-#       jupytext_version: 1.2.1
-#   kernelspec:
-#     display_name: Julia 1.1.0
-#     language: julia
-#     name: julia-1.1
-# ---
-
 # ### Load modules and include functions
 include("model_includes.jl")
 
@@ -31,10 +15,12 @@ temp,IR = read_input(samples*"T_IR.csv",trunc(Int,nTime*ΔT/3600));
 RunParams=Dict("OutputResults"=>false,"GridChoice"=>2,"VelChoice"=>2,
 "SaveGrid"=>false,"SaveVel"=>false,"SaveTests"=>false)
 
+#Define Grid Selection
+Grid_sel = Dict("Nx"=>[551,560],"Ny"=>[1501,1510],"Nz"=>[1,40])
+
 function load_grid_0354(path)
-# grid selected : 
   fieldroot = path*"grid/run.0354/";
-  g = grid_offline(fieldroot);
+  g = grid_offline(fieldroot,Grid_sel);
 end
 
 RunParams["GridChoice"]==1 ? g=load_grid_0354(samples) : g=load(samples*"grid.jld", "grid")
@@ -73,7 +59,7 @@ for t in 1:nTime
     phyts_a = copy(B[t]) # read data from last time step
     phyts_b,dvid_ct,graz_ct,death_ct,consume=phyt_update(t, ΔT, g, phyts_a, nutrients, IR, temp)
     if RunParams["VelChoice"]==1
-        velᵇ = read_offline_vels(vfroot,itList,tN,trunc(Int,t*ΔT/3600))
+        velᵇ = read_offline_vels(vfroot,Grid_sel,itList,tN,trunc(Int,t*ΔT/3600))
     else
         velᵇ=store_vel[t]
     end
