@@ -1,8 +1,11 @@
 #########################################################################
 # advection  of agents (including 3 ways to interpolate velocity fields)#
 #########################################################################
-# compute double grid of each time step
-# velᵇ is the velocitiy fields on big grids of current time step
+"""
+    double_grid(velᵇ,grid)
+Compute double grid of each time step
+'velᵇ' is the velocitiy fields on big grids of current time step
+"""
 function double_grid(velᵇ,grid)
     Ny = grid.Ny; Nx = grid.Nx; Nz = grid.Nz;
     u = zeros(Nx*2-1,Ny*2-1,Nz);
@@ -32,6 +35,12 @@ function double_grid(velᵇ,grid)
     velᵈ.w[2:2:nx2h,:,:] = velᵈ.w[1:2:nx2h-1,:,:];
     return velᵈ
 end
+
+"""
+    trilinear_itlp(x, y, z, a)
+Trilinear interpolation of velocities
+'x', 'y', 'z' are grid indices, 'a' is the velocity field need to interpolate, e.g. u, v, w
+"""
 function trilinear_itpl(x, y, z, a)
     x = 2*x-2; y=2*y-2;
     x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
@@ -56,6 +65,14 @@ function trilinear_itpl(x, y, z, a)
     return vel
 end
 
+"""
+    agent_move(phyts_a,vel,g,ΔT)
+Update grid indices of all the individuals according to velocity fields of each time step
+Periodic domain is used
+'phyts_a' is a dataframe contains all the individuals of current time step
+'vel' is the struc contains u, v, w velocites of current time step
+'g' is the grid information and 'ΔT' is time step
+"""
 function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
@@ -89,7 +106,11 @@ function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
     end
 end
 
-# simple interpolation: interpolate according to C grid (velocity on faces), for 1D only
+"""
+    simple_itpl(x, y, z, vel)
+Simple interpolation: interpolate according to C grid (velocity on faces), for 1D only
+'x', 'y', 'z' are grid indices, 'vel' is the w velocity field need to interpolate
+"""
 function simple_itpl(x, y, z, vel)
     x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
     zᵈ = z - z₀
