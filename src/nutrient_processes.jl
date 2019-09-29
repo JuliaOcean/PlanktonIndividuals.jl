@@ -1,3 +1,7 @@
+"""
+    function compute_nut_biochem(nutrients, rem)
+Calculate remineralization of DOM and POM
+"""
 function compute_nut_biochem(nutrients, rem)
     DIC = copy(nutrients.DIC);DIN = copy(nutrients.DIN);
     DOC = copy(nutrients.DOC);DON = copy(nutrients.DON);
@@ -16,8 +20,11 @@ function compute_nut_biochem(nutrients, rem)
     return F
 end
 
-
-
+"""
+    function compute_source_term(nutrients, velᵇ, g, F)
+Compute nutrient advection using DST3FL scheme 'MultiDim_adv(g, DIC, vel, ΔT)
+Compute nutrient diffusion 'κ∇²(g, DIC, κh, κv, i, j, k)
+"""
 function compute_source_term(nutrients, velᵇ, g, F)
     DIC, DIN, DOC, DON, POC, PON = nutrients.DIC, nutrients.DIN, nutrients.DOC, nutrients.DON, nutrients.POC, nutrients.PON
     gtr = nutrient_fields(zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
@@ -42,8 +49,10 @@ function compute_source_term(nutrients, velᵇ, g, F)
     return gtr
 end
 
-
-
+"""
+    function nut_update(nutrients, consume, g, gtr, ΔT)
+Update nutrient fields to next time step with source term and consumption by phytoplankton ('consume')
+"""
 function nut_update(nutrients, consume, g, gtr, ΔT)
     # store nutrients of the former time step
     nutₜ = nutrient_fields(zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
