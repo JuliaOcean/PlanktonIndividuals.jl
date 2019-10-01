@@ -1,3 +1,7 @@
+"""
+    read_input(csv, myTime)
+Read input of irradiance and temperature from a csv file
+"""
 function read_input(csv::String,myTime::Int64)
     # irradiance(μmol photons/m^2) and temperature
     # will change later to make it able to choose different month
@@ -15,6 +19,12 @@ function read_input(csv::String,myTime::Int64)
     end
     return temp,IR
 end
+
+"""
+    read_offline_vels(vfroot, Grid_sel, itList, tN, t)
+Read velocity fields of selected grids at 't' from cluster
+Return a velocity 'struc'
+"""
 function read_offline_vels(vfroot::String,Grid_sel,itList,tN,t::Int64)
     Nx⁻ = Grid_sel["Nx"][1]; Nx⁺ = Grid_sel["Nx"][2]
     Ny⁻ = Grid_sel["Ny"][1]; Ny⁺ = Grid_sel["Ny"][2]
@@ -52,6 +62,12 @@ function read_offline_vels(vfroot::String,Grid_sel,itList,tN,t::Int64)
     vel = velocity(u, v, w)
     return vel
 end
+
+"""
+    grid_offline(fieldroot, Grid_sel)
+Read grid information of selected grids from cluster
+Return a grid 'struc'
+"""
 function grid_offline(fieldroot::String,Grid_sel)
     nx=1080;ny=2700;nz=40;
     fxg = open(fieldroot*"XG.data","r");
@@ -116,15 +132,23 @@ function grid_offline(fieldroot::String,Grid_sel)
     AyS = Ay[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
     VS  =  V[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
     Nx, Ny, Nz = size(VS)
-    g = grids(xcS, ycS, zc, xfS, yfS, zf, ΔxS, ΔyS, dxS, dyS, drf, dxcS, dycS, drc, AxS, AyS, AzS, VS, Nx, Ny, nz)
+    g = grids(xcS, ycS, zc, xfS, yfS, zf, ΔxS, ΔyS, dxS, dyS, drf, dxcS, dycS, drc, AxS, AyS, AzS, VS, Nx, Ny, Nz)
     return g
 end
 
+"""
+    creat_output(B)
+Creat a dataframe to record the average attributes of indivuduals of each time step
+"""
 function create_output(B::Array{DataFrame,1})
     output = DataFrame(time=0, gen_ave=mean(B[1].gen), spec_ave = mean(B[1].sp), Cq1_ave=mean(B[1].Cq1), Cq2_ave=mean(B[1].Cq2), Nq_ave=mean(B[1].Nq), size_ave=mean(B[1].size), chl_ave=mean(B[1].chl), Population=size(B[1],1), age_ave=mean(B[1].age), dvid=0, graz=0,death=0)
     return output
 end
 
+"""
+    write_output(t, phyts_b, dvid_ct, graz_ct, death_ct, output)
+Compute the average attributes of individuals at 't' time step and push them into 'output' dataframe
+"""
 function write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,output)
     # summary of current step
     gen_ave=mean(phyts_b.gen)
@@ -139,6 +163,10 @@ function write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,output)
     return output
 end
 
+"""
+    count_chl(phyts_a, grid)
+Compute total chl concentration in each grid cell
+"""
 function count_chl(phyts_a, grid)
     cells = zeros(grid.Nx, grid.Ny, grid.Nz)
     for i in 1:size(phyts_a,1)
@@ -152,6 +180,10 @@ function count_chl(phyts_a, grid)
     return cells
 end
 
+"""
+    count_vertical_num(phyts_a)
+Count individual numbers in each meter vertically, accumulate horizontally
+"""
 function count_vertical_num(phyts_a)
     VD = zeros(500)
     for i in 1:size(phyts_a,1)
@@ -162,6 +194,10 @@ function count_vertical_num(phyts_a)
     return VD
 end
 
+"""
+    count_horizontal_num(phyts_a, grid)
+Count individual numbers in each horizontal grid cell, accumulate in vertical direction
+"""
 function count_horizontal_num(phyts_a,grid)
     HD = zeros(grid.Nx,grid.Ny)
     for i in 1:size(phyts_a,1)
@@ -173,6 +209,10 @@ function count_horizontal_num(phyts_a,grid)
     return HD
 end
 
+"""
+    convert_coordinates(phyts, grid)
+Convert grid indices of each individual into lat, lon, and depth
+"""
 function convert_coordinates(phyts, grid)
     for i in 1:size(phyts,1)
     phyt = phyts[i,:]
@@ -184,43 +224,45 @@ function convert_coordinates(phyts, grid)
     end
 end
 
-function sort_species(Bi, B1, B2)
-    phyts1 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[],sp=Int64[],age=Float64[])
-    phyts2 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[],sp=Int64[],age=Float64[])
+"""
+    sort_species(Bi, Bsp, sp)
+Sort individuals of different species into different dataframes
+'Bi' is a dataframe row, 'Nsp' is an empty array
+"""
+function sort_species(Bi, Bsp, sp::Int64)
+    phyts = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[],sp=Int64[],age=Float64[])
     for j in 1:size(Bi,1)
-        if Bi[j,:].sp == 1
-            push!(phyts1,Bi[j,:])
-        elseif Bi[j,:].sp == 2
-            push!(phyts2,Bi[j,:])
+        if Bi[j,:].sp == sp
+            push!(phyts,Bi[j,:])
         end
     end
-    push!(B1,phyts1)
-    push!(B2,phyts2)
+    push!(Bsp,phyts)
+    return Bsp
 end
-    
-function compute_mean_species(B1, B2, nTime)
-    output1 = DataFrame(time=Int64[], gen_ave=Float64[], Cq1_ave=Float64[], Cq2_ave=Float64[], Nq_ave=Float64[], size_ave=Float64[], chl_ave=Float64[], Population=Int64[], age_ave=Float64[]);
-    output2 = DataFrame(time=Int64[], gen_ave=Float64[], Cq1_ave=Float64[], Cq2_ave=Float64[], Nq_ave=Float64[], size_ave=Float64[], chl_ave=Float64[], Population=Int64[], age_ave=Float64[]);
+
+"""
+    compute_mean_species(Bsp, nTime)
+Compute the average attributes of individuals of different species
+"""
+function compute_mean_species(Bsp, nTime)
+    output = DataFrame(time=Int64[], gen_ave=Float64[], Cq1_ave=Float64[], Cq2_ave=Float64[], Nq_ave=Float64[], size_ave=Float64[], chl_ave=Float64[], Population=Int64[], age_ave=Float64[]);
     for i in 1:nTime
-        gen_ave1=mean(B1[i].gen)
-        Cq1_ave1=mean(B1[i].Cq1)
-        Cq2_ave1=mean(B1[i].Cq2)
-        Nq_ave1=mean(B1[i].Nq)
-        size_ave1=mean(B1[i].size)
-        chl_ave1=mean(B1[i].chl)
-        age_ave1=mean(B1[i].age)
-        push!(output1,(time=i, gen_ave=gen_ave1, Cq1_ave=Cq1_ave1, Cq2_ave=Cq2_ave1, Nq_ave=Nq_ave1, size_ave=size_ave1, chl_ave=chl_ave1, Population=size(B1[i],1),age_ave=age_ave1))
-        gen_ave2=mean(B2[i].gen)
-        Cq1_ave2=mean(B2[i].Cq1)
-        Cq2_ave2=mean(B2[i].Cq2)
-        Nq_ave2=mean(B2[i].Nq)
-        size_ave2=mean(B2[i].size)
-        chl_ave2=mean(B2[i].chl)
-        age_ave2=mean(B2[i].age)
-        push!(output2,(time=i, gen_ave=gen_ave2, Cq1_ave=Cq1_ave2, Cq2_ave=Cq2_ave2, Nq_ave=Nq_ave2, size_ave=size_ave2, chl_ave=chl_ave2, Population=size(B2[i],1),age_ave=age_ave2))
+        gen_ave1=mean(Bsp[i].gen)
+        Cq1_ave1=mean(Bsp[i].Cq1)
+        Cq2_ave1=mean(Bsp[i].Cq2)
+        Nq_ave1=mean(Bsp[i].Nq)
+        size_ave1=mean(Bsp[i].size)
+        chl_ave1=mean(Bsp[i].chl)
+        age_ave1=mean(Bsp[i].age)
+        push!(output,(time=i, gen_ave=gen_ave1, Cq1_ave=Cq1_ave1, Cq2_ave=Cq2_ave1, Nq_ave=Nq_ave1, size_ave=size_ave1, chl_ave=chl_ave1, Population=size(B1[i],1),age_ave=age_ave1))
     end
-    return output1, output2
+    return output
 end
+
+"""
+    write_nut_nc_each_step(g, nut, t)
+Write a NetCDF file of nutrient fields at each time step
+"""
 function write_nut_nc_each_step(g::grids, nut::nutrient_fields, t::Int64)
     filepath = "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
     xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
@@ -241,6 +283,11 @@ function write_nut_nc_each_step(g::grids, nut::nutrient_fields, t::Int64)
     ncclose(filepath)
     return nothing
 end
+
+"""
+    write_nut_nc_alltime(a, DIC, DIN, DOC, DON, POC, PON, nTime)
+Write a NetCDF file of nutrient fields for the whole run, especially for 0D configuration
+"""
 function write_nut_nc_alltime(g::grids, DIC, DIN, DOC, DON, POC, PON, nTime)
     filepath = "results/nutrients.nc"
     tt = collect(1:nTime);
@@ -263,6 +310,12 @@ function write_nut_nc_alltime(g::grids, DIC, DIN, DOC, DON, POC, PON, nTime)
     ncclose(filepath)
     return nothing
 end
+
+"""
+    write_nut_cons(g, gtr, nutₜ, vel, agent_num, t, death_ct, graz_ct, dvid_ct)
+Compute total gtr (supposed to be 0), and surface vertical tracer flux(supposed to be 0)
+Write a brief summary of each time step into a txt file
+"""
 function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, vel::velocity, agent_num::Int64, t::Int64, death_ct::Int64, graz_ct::Int64, dvid_ct::Int64)
     Σgtrⁿ = sum(gtr.DIN .* g.V)+sum(gtr.DON .* g.V)+sum(gtr.PON .* g.V)
     Σgtrᶜ = sum(gtr.DIC .* g.V)+sum(gtr.DOC .* g.V)+sum(gtr.POC .* g.V)
@@ -279,7 +332,6 @@ end
 
 """
     PrepRunDir(res::String="results/")
-
 Create `res/` folder if needed. Remove old files from it if needed.
 """
 function PrepRunDir(res::String="results/")
@@ -308,9 +360,7 @@ end
 
 """
   testB1B2(B1,B2,fil="")
-
 Compute mean size for `B1` & `B2`, add `B1ref` & `B2ref` reference result obtained from `fil`, and output all time series in one DataFrame.
-
 
 ```
 tst=testB1B2(B1,B2,"samples/testB1B2.csv")

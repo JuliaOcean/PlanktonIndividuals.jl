@@ -76,8 +76,13 @@ Periodic domain is used
 function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
-        grid.Nx == 1 ? uvel = 0 : uvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.u) # unit: m/s, trilinear interpolation
-        grid.Ny == 1 ? vvel = 0 : vvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.v) # unit: m/s, trilinear interpolation
+        if grid.Nz >1 
+            grid.Nx == 1 ? uvel = 0.0 : uvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.u) # unit: m/s, trilinear interpolation
+            grid.Ny == 1 ? vvel = 0.0 : vvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.v) # unit: m/s, trilinear interpolation
+        else
+            grid.Nx == 1 ? uvel = 0.0 : uvel = bilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.u) # unit: m/s, bilinear interpolation
+            grid.Ny == 1 ? vvel = 0.0 : vvel = bilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.v) # unit: m/s, bilinear interpolation
+        end
         if (grid.Nx == 1) & (grid.Ny == 1) & (grid.Nz ≠ 1)
             wvel = simple_itpl(phyt.x,phyt.y,phyt.z, velᵈ) # unit: m/s, simple interpolation
         else
@@ -120,6 +125,25 @@ function simple_itpl(x, y, z, vel)
     return wvel
 end
 
+"""
+    bilinear_itlp(x, y, z, a)
+Bilinear interpolation of horizontal velocities
+'x', 'y', 'z' are grid indices, 'a' is the velocity field need to interpolate, e.g. u, v
+"""
+function bilinear_itpl(x, y, z, a)
+    x = 2*x-2; y=2*y-2;
+    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
+    xᵈ = x - x₀
+    yᵈ = y - y₀
+    vel_00 = a[x₀, y₀, z₀]
+    vel_10 = a[x₀+1, y₀, z₀]
+    vel_01 = a[x₀, y₀+1, z₀]
+    vel_11 = a[x₀+1, y₀+1, z₀]
+    vel_0 = vel_00 * (1 - yᵈ) + vel_10 * yᵈ
+    vel_1 = vel_01 * (1 - yᵈ) + vel_11 * yᵈ
+    vel = vel_0 * (1 - xᵈ) + vel_1 * xᵈ
+    return vel
+end
 # trilinear interpolation: based on C grid(local double gird,velocity on corners)
 #function trilinear_local_itpl(x,y,z,velocity)
 #    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)

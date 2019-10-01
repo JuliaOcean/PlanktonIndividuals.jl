@@ -13,7 +13,7 @@ nTime = 10 # number of time steps
 temp,IR = read_input(samples*"T_IR.csv",trunc(Int,nTime*ΔT/3600));
 
 RunParams=Dict("OutputResults"=>false,
-               "Dims"=>"3D",
+               "Dims"=>3,
                "NutOutputChoice"=>0,
                "GridChoice"=>2,
                "VelChoice"=>2,
@@ -51,12 +51,13 @@ RunParams["VelChoice"]==2 ? store_vel=load(samples*"uvw.jld", "uvw") : nothing
 N = 100000   # Number of initial individuals of each species
 Nsp = 2     # Number of species
 Nn = Int(1e15)   # Number of cells one super-agent represents
-B=setup_agents(N,Cquota,Nn,1.0,0.25,g) # Normal distribution with mean and variance
+B=setup_agents(N,Nsp,Cquota,Nn,1.0,0.25,g) # Normal distribution with mean and variance
 # model initialization
 # create output file
 output = create_output(B);
 nut = [2.0, 0.05, 20.0, 0.0, 0.0, 0.0] #DIC, DIN, DOC, DON, POC, PON, mmol/m3
 nutrients= setup_nutrients(g,nut)
+gtr_0D = nutrient_fields(zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
 if RunParams["NutOutputChoice"] == 2
     DIC = zeros(g.Nx, g.Ny, g.Nz, nTime)
     DIN = zeros(g.Nx, g.Ny, g.Nz, nTime)
@@ -90,7 +91,7 @@ for t in 1:nTime
     write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,output)
     agent_num = size(phyts_b,1)
     F = compute_nut_biochem(nutrients, remin)
-    RunParams["Dims"] == "0D" ? nothing : gtr = compute_source_term(nutrients, velᵇ, g, F)
+    RunParams["Dims"] == 0 ? gtr = gtr_0D : gtr = compute_source_term(nutrients, velᵇ, g, F)
     nutₜ = nut_update(nutrients, consume, g, gtr, ΔT)
     RunParams["OutputResults"] ? write_nut_cons(g, gtr, nutₜ, velᵇ, agent_num, t, death_ct, graz_ct, dvid_ct) : nothing
     if RunParams["NutOutputChoice"] == 1
@@ -115,15 +116,20 @@ end
 
 B1 = []; B2 = [];
 for i in 1:size(B,1)
-    sort_species(B[i], B1, B2)
+    sort_species(B[i], B1, 1)
+    sort_species(B[i], B2, 2)
 end
 
-HD1 = []; HD2 = [];
-for i in 1:size(B,1)
-    HD_1 = count_horizontal_num(B1[i],g);
-    push!(HD1,HD_1)
-    HD_2 = count_horizontal_num(B2[i],g);
-    push!(HD2,HD_2)
+if RunParams["Dims"] == 2 | RunParams["Dims"] == 3
+    HD1 = []; HD2 = [];
+    for i in 1:size(B,1)
+        HD_1 = count_horizontal_num(B1[i],g);
+        push!(HD1,HD_1)
+        HD_2 = count_horizontal_num(B2[i],g);
+        push!(HD2,HD_2)
+    end
+else
+    nothing # for 1D or 0D
 end
 
 for i in 1:size(B,1)
@@ -132,16 +138,20 @@ for i in 1:size(B,1)
 end
 
 # ### more post-processing steps
-
-VD1 = []; VD2 = [];
-for i in 1:size(B,1)
-    VD_1 = count_vertical_num(B1[i]);
-    push!(VD1,VD_1)
-    VD_2 = count_vertical_num(B2[i]);
-    push!(VD2,VD_2)
+if RunParams["Dims"] == 0 | RunParams["Dims"] == 2
+    nothing
+else
+    VD1 = []; VD2 = [];
+    for i in 1:size(B,1)
+        VD_1 = count_vertical_num(B1[i]);
+        push!(VD1,VD_1)
+        VD_2 = count_vertical_num(B2[i]);
+        push!(VD2,VD_2)
+    end
 end
 
-output1, output2 = compute_mean_species(B1, B2, nTime);
+output1 = compute_mean_species(B1, nTime);
+output2 = compute_mean_species(B2, nTime);
 
 # ### save to file
 
@@ -179,6 +189,6 @@ if RunParams["OutputResults"]
     open(results*"IR.bin", "w") do io
         serialize(io, IR)
     end
-    RunParams["SaveVel"] ? save(results*"uvw.jld", "uvw", store_vel) : nothing
-    RunParams["SaveTests"] ? CSV.write(results*"testB1B2.csv",testB1B2(B1,B2)) : nothing
 end #if RunParams["OutputResults"]
+RunParams["SaveVel"] ? save(results*"uvw.jld", "uvw", store_vel) : nothing
+RunParams["SaveTests"] ? CSV.write(results*"testB1B2.csv",testB1B2(B1,B2)) : nothing
