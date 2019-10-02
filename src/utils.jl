@@ -34,9 +34,9 @@ function read_offline_vels(vfroot::String,Grid_sel,itList,tN,t::Int64)
         u = zeros(Nx, Ny, Nz)
     else
         fuvel = open(vfroot*"/UVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
-        uvel = reverse(reinterpret(Float32,reverse(read(fuvel,))));
+        uvel = zeros(Float32, 1080, 2700, 90)
+        read!(fuvel, uvel); uvel .= ntoh.(uvel)
         close(fuvel);
-        uvel = reshape(uvel, 1080, 2700, 90);
         u = uvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
     end
 
@@ -44,9 +44,9 @@ function read_offline_vels(vfroot::String,Grid_sel,itList,tN,t::Int64)
         v = zeros(Nx, Ny, Nz)
     else
         fvvel = open(vfroot*"/VVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
-        vvel = reverse(reinterpret(Float32,reverse(read(fvvel,))));
+        vvel = zeros(Float32, 1080, 2700, 90)
+        read!(fvvel, vvel); vvel .= ntoh.(vvel)
         close(fvvel);
-        vvel = reshape(vvel, 1080, 2700, 90);
         v = vvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
     end
 
@@ -54,9 +54,9 @@ function read_offline_vels(vfroot::String,Grid_sel,itList,tN,t::Int64)
         w = zeros(Nx, Ny, Nz)
     else
         fwvel = open(vfroot*"/WVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
-        wvel = reverse(reinterpret(Float32,reverse(read(fwvel,))));
+        wvel = zeros(Float32, 1080, 2700, 90)
+        read!(fwvel, wvel); wvel .= ntoh.(wvel)
         close(fwvel);
-        wvel = reshape(wvel, 1080, 2700, 90);
         w = wvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
     end
     vel = velocity(u, v, w)
@@ -84,28 +84,26 @@ function grid_offline(fieldroot::String,Grid_sel)
     fhfc= open(fieldroot*"hFacC.data","r");
     fhfs= open(fieldroot*"hFacS.data","r");
     fhfw= open(fieldroot*"hFacW.data","r");
-    xf = reverse(reinterpret(Float32,reverse(read(fxg,))));
-    yf = reverse(reinterpret(Float32,reverse(read(fyg,))));
-    xc = reverse(reinterpret(Float32,reverse(read(fxc,))));
-    yc = reverse(reinterpret(Float32,reverse(read(fyc,))));
-    dx = reverse(reinterpret(Float32,reverse(read(fdx,))));
-    dy = reverse(reinterpret(Float32,reverse(read(fdy,))));
-    drf= reverse(reinterpret(Float32,reverse(read(fdrf,))));
-    dxc= reverse(reinterpret(Float32,reverse(read(fdxc,))));
-    dyc= reverse(reinterpret(Float32,reverse(read(fdyc,))));
-    drc= reverse(reinterpret(Float32,reverse(read(fdrc,))));
-    Az = reverse(reinterpret(Float32,reverse(read(fAz,))));
-    hFC= reverse(reinterpret(Float32,reverse(read(fhfc,))));
-    hFS= reverse(reinterpret(Float32,reverse(read(fhfs,))));
-    hFW= reverse(reinterpret(Float32,reverse(read(fhfw,))));
+    xf = zeros(Float32,nx,ny); yf = zeros(Float32,nx,ny); 
+    xc = zeros(Float32,nx,ny); yc = zeros(Float32,nx,ny);
+    dx = zeros(Float32,nx,ny); dy = zeros(Float32,nx,ny);
+    drf= zeros(Float32,nz); drc = zeros(Float32,nz);
+    dxc= zeros(Float32,nx,ny); dyc= zeros(Float32,nx,ny);
+    Az = zeros(Float32,nx,ny); hFC= zeros(Float32,nx,ny,nz);
+    hFS= zeros(Float32,nx,ny,nz);hFW= zeros(Float32,nx,ny,nz);
+    read!(fxg,xf); read!(fyg,yf); read!(fxc,xc); read!(fyc,yc);
+    read!(fdx,dx); read!(fdy,dy); read!(fdrf,drf); read!(fdxc,dxc);
+    read!(fdyc,dyc); read!(fdrc,drc); read!(fAz,Az); 
+    read!(fhfc,hFC); read!(fhfs,hFS); read!(fhfw,hFW);
     close(fxg);close(fyg);close(fxc);close(fyc);close(fdx);close(fdy);
     close(fdrf);close(fAz);close(fhfc);close(fhfs);close(fhfw);
-    xf = reshape(xf,nx,ny); yf = reshape(yf,nx,ny); 
-    xc = reshape(xc,nx,ny); yc = reshape(yc,nx,ny);
-    dx = reshape(dx,nx,ny); dy = reshape(dy,nx,ny);
-    dxc= reshape(dxc,nx,ny);dyc= reshape(dyc,nx,ny);
-    Az = reshape(Az,nx,ny); hFC= reshape(hFC,nx,ny,nz);
-    hFS= reshape(hFS,nx,ny,nz);hFW= reshape(hFW,nx,ny,nz);
+    xf .= ntoh.(xf); yf .= ntoh.(yf); 
+    xc .= ntoh.(xc); yc .= ntoh.(yc);
+    dx .= ntoh.(dx); dy .= ntoh.(dy);
+    drf.= ntoh.(drf);drc.= ntoh.(drc);
+    dxc.= ntoh.(dxc);dyc.= ntoh.(dyc);
+    Az .= ntoh.(Az); hFC.= ntoh.(hFC);
+    hFS.= ntoh.(hFS);hFW.= ntoh.(hFW);
     zf = -cumsum(drf); pushfirst!(zf,0); zc = 0.5*(zf[1:end-1]+zf[2:end]);
     Δx = (xf[2:end,:] .- xf[1:end-1,:]); # unit: degree
     Δy = (yf[:,2:end] .- yf[:,1:end-1]); # unit: degree
@@ -127,12 +125,14 @@ function grid_offline(fieldroot::String,Grid_sel)
     xfS = xf[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; yfS = yf[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
     dxS = dx[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; dyS = dy[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
     dxcS= dxc[Nx⁻:Nx⁺,Ny⁻:Ny⁺];dycS= dyc[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
+    zcS = zc[Nz⁻:Nz⁺]; zfS = zf[Nz⁻:Nz⁺];
+    drfS = drf[Nz⁻:Nz⁺]; drcS = drc[Nz⁻:Nz⁺];
     ΔxS = Δx[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; ΔyS = Δy[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
     AzS = Az[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; AxS = Ax[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
     AyS = Ay[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
     VS  =  V[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
     Nx, Ny, Nz = size(VS)
-    g = grids(xcS, ycS, zc, xfS, yfS, zf, ΔxS, ΔyS, dxS, dyS, drf, dxcS, dycS, drc, AxS, AyS, AzS, VS, Nx, Ny, Nz)
+    g = grids(xcS, ycS, zcS, xfS, yfS, zfS, ΔxS, ΔyS, dxS, dyS, drfS, dxcS, dycS, drcS, AxS, AyS, AzS, VS, Nx, Ny, Nz)
     return g
 end
 
