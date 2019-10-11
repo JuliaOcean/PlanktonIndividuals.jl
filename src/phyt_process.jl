@@ -1,16 +1,33 @@
 ###########################################
 # define functions of pysiology processes #
 ###########################################
-respir_extra(size) = respir_ex*size^respir_b # extra cost for biosynthesis, related to Cq1
+"""
+    respir_extra(size)
+Compute extra cost for biosynthesis, return a rate (per hour)
+"""
+respir_extra(size) = respir_ex*size^respir_b 
 
-β(size) = a_β*size^b_β/(1+a_β*size^b_β) # metabolic partitioning for biosynthesis, decrese with size
+"""
+    β(size)
+Metabolic partitioning for biosynthesis, decrease with size
+"""
+β(size) = a_β*size^b_β/(1+a_β*size^b_β) 
 
+"""
+    α_I_cal(I, z, cumsum_chl)
+Compute the attenuation of PAR for different depth
+"""
 function α_I_cal(I, z, cumsum_chl)
     atten = (katten_w + katten_c * cumsum_chl)*(-z)
-    α_I = α*I*(1.0 - exp(-atten))/atten
+    atten == 0.0 ? α_I = α*I : α_I = α*I*(1.0 - exp(-atten))/atten
     return α_I
 end
 
+"""
+    PC(α_I, Temp, phyt)
+Compute cell-based light-limited photosynthetic rate  
+Unit: mmol C/second/individual
+"""
 function PC(α_I, Temp, phyt)  
     Tempstd = exp(TempAe*(1.0/(Temp+273.15)-1.0/Tempref))
     photoTempFunc = TempCoeff*max(1.0e-10,Tempstd)
@@ -22,9 +39,14 @@ function PC(α_I, Temp, phyt)
     if (tmp > Eₖ) & (inhibcoef[phyt.sp] == 1.0)
         PS = PS*Eₖ/tmp*inhibcoef[phyt.sp]
     end
-    return PS # unit: mmol C/second/individual
+    return PS 
 end
 
+"""
+    Nuptake(Nit, phyt)
+Compute cell-based N uptake rate according Droop limitation
+Unit: mmol N/second/individual
+"""
 function Nuptake(Nit, phyt)
     Qn = phyt.Nq/(phyt.Cq1+phyt.Cq2)
     #In-Cell N uptake limitation
@@ -35,6 +57,11 @@ function Nuptake(Nit, phyt)
     return VNcell # unit: mmol N/second/individual
 end
 
+"""
+    chl_syn(phyt,PP,I)
+Compute the ratio of chl synthesis and N uptake
+ρ equals to ratio of the realised quantum efficiency for photosynthesis divided by the maximum efficiency
+"""
 function chl_sync(phyt,PP,I)
     if I > 0
         ρ_chl = PP/(α*I*phyt.chl/phyt.Cq2)
@@ -44,6 +71,11 @@ function chl_sync(phyt,PP,I)
     return ρ_chl
 end
 
+"""
+    divide(phyt)
+An adult cell divides evenly into two daughter cells
+Two daughter cells will be in the same place of the adult cell
+"""
 function divide(phyt::DataFrameRow)
     phytops = DataFrame(x=Float64[0.0,0.0], y=Float64[0.0,0.0], z=Float64[0.0,0.0], gen=Int64[1,1], size=Float64[0.0,0.0], Cq1=Float64[0.0,0.0], Cq2=Float64[0.0,0.0], Nq=Float64[0.0,0.0], chl=Float64[0.0,0.0], sp=Int64[0,0], age=Float64[0.0,0.0])  # initialize new cell
     # NOT all C and N can turn into new cells
@@ -76,6 +108,12 @@ end
 ###################################
 # model update for phytoplanktons #
 ###################################
+"""
+    phyt_update(t, ΔT, g, phyts_a, nutrients, IR, temp)
+Update the individuals of current time step into next time step
+Control flow: Graze ->Grow(photosynthesis, biosynthesis, maintenance) -> Natural Death -> Division 
+Return a dataframe of next time step individuals, graze number, divide number, death number, and nutrient consumption
+"""
 function phyt_update(t::Int64, ΔT::Int64, g, phyts_a, nutrients, IR, temp)
     # load nutrients
     dvid_ct = 0; graz_ct = 0; death_ct = 0
@@ -94,7 +132,7 @@ function phyt_update(t::Int64, ΔT::Int64, g, phyts_a, nutrients, IR, temp)
         z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
         DIN = max(0.0, nutrients.DIN[x, y, z])
         # compute probabilities of grazing and division
-        P_graz = rand(Bernoulli(exp(Num_phyt/N*Nsp)*phyt.size/Grz_P))
+        P_graz = rand(Bernoulli(exp(Num_phyt/N/Nsp)*phyt.size/Grz_P))
         # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
         reg_size = max(0.0, phyt.size - dvid_size)
         P_dvi = rand(Bernoulli((a_dvi[sp]*reg_size)^b_dvi[sp]/(1+(a_dvi[sp]*reg_size)^b_dvi[sp]))) 

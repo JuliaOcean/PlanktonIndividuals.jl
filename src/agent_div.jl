@@ -1,8 +1,11 @@
 #########################################################################
 # advection  of agents (including 3 ways to interpolate velocity fields)#
 #########################################################################
-# compute double grid of each time step
-# velᵇ is the velocitiy fields on big grids of current time step
+"""
+    double_grid(velᵇ,grid)
+Compute double grid of each time step
+'velᵇ' is the velocitiy fields on big grids of current time step
+"""
 function double_grid(velᵇ,grid)
     Ny = grid.Ny; Nx = grid.Nx; Nz = grid.Nz;
     u = zeros(Nx*2-1,Ny*2-1,Nz);
@@ -32,6 +35,12 @@ function double_grid(velᵇ,grid)
     velᵈ.w[2:2:nx2h,:,:] = velᵈ.w[1:2:nx2h-1,:,:];
     return velᵈ
 end
+
+"""
+    trilinear_itlp(x, y, z, a)
+Trilinear interpolation of velocities
+'x', 'y', 'z' are grid indices, 'a' is the velocity field need to interpolate, e.g. u, v, w
+"""
 function trilinear_itpl(x, y, z, a)
     x = 2*x-2; y=2*y-2;
     x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
@@ -56,20 +65,33 @@ function trilinear_itpl(x, y, z, a)
     return vel
 end
 
+"""
+    agent_move(phyts_a,vel,g,ΔT)
+Update grid indices of all the individuals according to velocity fields of each time step
+Periodic domain is used
+'phyts_a' is a dataframe contains all the individuals of current time step
+'vel' is the struc contains u, v, w velocites of current time step
+'g' is the grid information and 'ΔT' is time step
+"""
 function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
-        uvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.u) # unit: m/s, trilinear interpolation
-        vvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.v) # unit: m/s, trilinear interpolation
-        wvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.w) # unit: m/s, trilinear interpolation
-#       uvel, vvel, wvel = simple_itpl(phyt.x, phyt.y, phyt.z, vel, t) # unit: m/s, simple interpolation
-
+        if grid.Nz >1 
+            grid.Nx == 1 ? uvel = 0.0 : uvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.u) # unit: m/s, trilinear interpolation
+            grid.Ny == 1 ? vvel = 0.0 : vvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.v) # unit: m/s, trilinear interpolation
+        else
+            grid.Nx == 1 ? uvel = 0.0 : uvel = bilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.u) # unit: m/s, bilinear interpolation
+            grid.Ny == 1 ? vvel = 0.0 : vvel = bilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.v) # unit: m/s, bilinear interpolation
+        end
+        if (grid.Nx == 1) & (grid.Ny == 1) & (grid.Nz ≠ 1)
+            wvel = simple_itpl(phyt.x,phyt.y,phyt.z, velᵈ) # unit: m/s, simple interpolation
+        else
+            wvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.w) # unit: m/s, trilinear interpolation
+        end
         xi, yi, zi = trunc(Int,phyt.x), trunc(Int,phyt.y), trunc(Int,phyt.z)
         dx = uvel/g.Lx[xi]*ΔT # unit: grid/h
         dy = vvel/g.Ly[yi]*ΔT # unit: grid/h
         dz = (wvel+k_sink)/g.Lz[zi]*ΔT # vertical movement, plus sinking, unit: grid/h
-#       phyt.x = max(1.5,min(g.Nx-0.5,phyt.x - dx*(1+rand()/5)))
-#       phyt.y = max(1.5,min(g.Ny-0.5,phyt.y - dy*(1+rand()/5)))
         phyt.x = phyt.x - dx*(1+rand()/3)
         phyt.y = phyt.y - dy*(1+rand()/3)
         phyt.z = max(2.0,min(g.Nz-0.1,phyt.z - dz*(1+rand()/3)))
@@ -87,6 +109,40 @@ function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
             phyt.y = phyt.y + g.Ny - 2.0
         end
     end
+end
+
+"""
+    simple_itpl(x, y, z, vel)
+Simple interpolation: interpolate according to C grid (velocity on faces), for 1D only
+'x', 'y', 'z' are grid indices, 'vel' is the w velocity field need to interpolate
+"""
+function simple_itpl(x, y, z, vel)
+    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
+    zᵈ = z - z₀
+    w₋ = vel.w[x₀, y₀, z₀]
+    w₊ = vel.w[x₀, y₀, z₀+1]
+    wvel = w₋ * (1 - zᵈ) + w₊ * zᵈ
+    return wvel
+end
+
+"""
+    bilinear_itlp(x, y, z, a)
+Bilinear interpolation of horizontal velocities
+'x', 'y', 'z' are grid indices, 'a' is the velocity field need to interpolate, e.g. u, v
+"""
+function bilinear_itpl(x, y, z, a)
+    x = 2*x-2; y=2*y-2;
+    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
+    xᵈ = x - x₀
+    yᵈ = y - y₀
+    vel_00 = a[x₀, y₀, z₀]
+    vel_10 = a[x₀+1, y₀, z₀]
+    vel_01 = a[x₀, y₀+1, z₀]
+    vel_11 = a[x₀+1, y₀+1, z₀]
+    vel_0 = vel_00 * (1 - yᵈ) + vel_10 * yᵈ
+    vel_1 = vel_01 * (1 - yᵈ) + vel_11 * yᵈ
+    vel = vel_0 * (1 - xᵈ) + vel_1 * xᵈ
+    return vel
 end
 # trilinear interpolation: based on C grid(local double gird,velocity on corners)
 #function trilinear_local_itpl(x,y,z,velocity)
@@ -180,22 +236,3 @@ end
 #    end
 #    return vel₀
 #end
-
-# simple interpolation: interpolate according to C grid (velocity on faces), for 1D only
-function simple_itpl(x, y, z, vel)
-    x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
-    zᵈ = z - z₀
-    w₋ = vel.w[x₀, y₀, z₀]
-    w₊ = vel.w[x₀, y₀, z₀+1]
-    wvel = w₋ * (1 - zᵈ) + w₊ * zᵈ
-    return wvel
-end
-function agent_move_1D(phyts_a,vel,g,ΔT::Int64)
-    for i in 1:size(phyts_a,1)
-        phyt = phyts_a[i,:]
-        wvel = simple_itpl(phyt.x,phyt.y,phyt.z, vel) # unit: m/s, simple interpolation
-        zi = trunc(Int,phyt.z)
-        dz = wvel/g.Lz[zi]*ΔT # vertical movement, unit: grid/h
-        phyt.z = max(1.0,min(g.Nz-0.1,phyt.z - dz*(1+rand()/5)))
-    end
-end
