@@ -2,7 +2,7 @@ module PhytoAgentModel
 
 greet() = print("Hello World!")
 
-using DataFrames, NetCDF, CSV, Serialization, JLD
+using DataFrames, NetCDF, CSV, JLD
 using Random, Distributions
 using Printf, YAML
 
@@ -27,7 +27,8 @@ export
 
     # read input functions
     read_default_IR_input, read_default_temp_input,
-    update_params, grid_offline,
+    update_params, grid_offline, param_default,
+    PrepRunDir,
 
     # initialize nutrient field and individual sets
     setup_agents, setup_nutrients,
