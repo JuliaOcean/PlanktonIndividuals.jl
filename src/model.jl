@@ -60,10 +60,7 @@ function ModelRun(model::Model_struct, RunParam::RunParams, RunOption::RunOption
         model.nutrients = nutₜ;
     end
     if RunOption.NutOutputChoice == false
-        nutrient_alltime = Dict("DIC" => DIC, "DIN" => DIN,
-                                "DOC" => DOC, "DON" => DON,
-                                "POC" => POC, "PON" => PON)
-        return nutrient_alltime
+        write_nut_nc_alltime(g, DIC, DIN, DOC, DON, POC, PON, RunParam.nTime)
     else
         return nothing
     end
