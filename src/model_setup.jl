@@ -1,13 +1,13 @@
 """
-    setup_agents((N::Int64,sp::Int64,Cquota::Array,Nn::Int64,mean::Float64,var::Float64,grid)
+    setup_agents(RunParams,mean::Float64,var::Float64,grid)
 Set up a series of agents following a normal distribution (mean,var)
-'N' is agent number for each species, 'sp' is number of species, 'Nn' is the number of cells one agent represents,
+'Nindivi' is agent number for each species, 'sp' is number of species, 'Nsuper' is the number of cells one agent represents,
 'Cquota' is the initial biomass for one cell
 """
-function setup_agents(N::Int64,sp::Int64,Cquota::Array,Nn::Int64,mean::Float64,var::Float64,grid)
+function setup_agents(RunParam::RunParams,mean::Float64,var::Float64,grid)
     phyts0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[], age=[])
-    for i in 1:sp
-        for j in 1:N
+    for i in 1:RunParam.Nsp
+        for j in 1:RunParam.Nindivi
             # agent location
             grid.Nx == 1 ? x = 1 : x = rand(30*grid.Nx:70*grid.Nx)/100
             grid.Ny == 1 ? y = 1 : y = rand(30*grid.Ny:70*grid.Ny)/100
@@ -16,8 +16,8 @@ function setup_agents(N::Int64,sp::Int64,Cquota::Array,Nn::Int64,mean::Float64,v
             radm = max(0.05, rand(Normal(mean,var)))
             gen  = 1
             size = radm
-            Cq1  = Cquota[i]*Nn # Nn is the number of cells one super agent repersents
-            Cq2  = Cquota[i]*Nn*radm
+            Cq1  = RunParam.Cquota[i]*RunParam.Nsuper # Nsuper is the number of cells one super agent repersents
+            Cq2  = RunParam.Cquota[i]*RunParam.Nsuper*radm
             Nq   = 13/120*Cq2
             chl  = Cq2*0.4 # mgChl(/mmolC)
             sp   = i
