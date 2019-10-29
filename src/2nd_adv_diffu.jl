@@ -43,13 +43,13 @@ end
     end
 end
 
-@inline function δx²_c2f2c(g::grids, f, i, j, k)
+@inline function δx²_c2f2c(g::grids, f, i, j, k, κh)
     @inbounds (κh * g.Ax[incmod1(i, g.Nx), j, k] * δx_c2f(g, f, incmod1(i, g.Nx), j, k) - κh * g.Ax[i, j, k] * δx_c2f(g, f, i, j, k))
 end
-@inline function δy²_c2f2c(g::grids, f, i, j, k)
+@inline function δy²_c2f2c(g::grids, f, i, j, k, κh)
     @inbounds (κh * g.Ay[i, incmod1(j, g.Ny), k] * δy_c2f(g, f, i, incmod1(j, g.Ny), k) - κh * g.Ay[i, j, k] * δy_c2f(g, f, i, j, k))
 end
-@inline function δz²_c2f2c(g::grids, f, i, j, k)
+@inline function δz²_c2f2c(g::grids, f, i, j, k, κv)
     if k == g.Nz
         return κv * g.Az[i, j] * δz_c2f(g, f, i, j, k)
     else
@@ -57,5 +57,5 @@ end
     end
 end
 @inline function κ∇²(g::grids, Q, κh, κv, i, j, k)
-    return (δx²_c2f2c(g, Q, i, j, k) + δy²_c2f2c(g, Q, i, j, k) + δz²_c2f2c(g, Q, i, j, k)) / g.V[i, j, k]
+    return (δx²_c2f2c(g, Q, i, j, k, κh) + δy²_c2f2c(g, Q, i, j, k, κh) + δz²_c2f2c(g, Q, i, j, k, κv)) / g.V[i, j, k]
 end

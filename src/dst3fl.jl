@@ -8,8 +8,8 @@
 ###################################################################################
 const θmax = 1.0e20
 # Increment and decrement integer a with periodic wrapping
-incmod1(a, n) = ifelse(a==n, 1, a+1)
-decmod1(a, n) = ifelse(a==1, n, a-1)
+#incmod1(a, n) = ifelse(a==n, 1, a+1)
+#decmod1(a, n) = ifelse(a==1, n, a-1)
 function decmod2(a, n)
     if a == 1
         a = max(1, n - 1)
