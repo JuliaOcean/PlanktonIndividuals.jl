@@ -10,9 +10,6 @@ g=load(samples*"grid_1D.jld", "grid")
 model = Model(g, RunParam;
               nutrients = setup_nutrients(g,[2.0, 0.05, 20.0, 0.0, 0.0, 0.0])) #DIC, DIN, DOC, DON, POC, PON, mmol/m3
 
-# prase biogeochemical paramters to global variables
-include(dirname(pathof(PhytoAgentModel))*"/params.jl")
-
 ModelRun(model, RunParam, RunOption)
 
 # ### post-processing steps
