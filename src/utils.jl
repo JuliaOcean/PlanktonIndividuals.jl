@@ -1,31 +1,48 @@
 """
-    read_input(csv, myTime)
-Read input of irradiance and temperature from a csv file
+    read_default_IR_input(myTime)
+Read input of irradiance from default csv file
 """
-function read_input(csv::String,myTime::Int64)
-    # irradiance(μmol photons/m^2) and temperature
+function read_default_IR_input(myTime::Int64)
+    # irradiance(μmol photons/m^2)
     # will change later to make it able to choose different month
-    input = CSV.read(csv)
+    path = dirname(pathof(PhytoAgentModel))*"/../samples/T_IR.csv"
+    input = CSV.read(path)
+    days=myTime÷24 
+    IR = copy(input.IR_Aug)
+    for i in 1:days-1
+        tt = copy(input.IR_Aug)
+        tt = append!(IR,tt)
+    end
+    return IR
+end
+
+"""
+    read_default_temp_input(myTime)
+Read input of temperature from default csv file
+"""
+function read_default_temp_input(myTime::Int64)
+    # will change later to make it able to choose different month
+    path = dirname(pathof(PhytoAgentModel))*"/../samples/T_IR.csv"
+    input = CSV.read(path)
     days=myTime÷24 
     temp = copy(input.Temp_Aug)
     for i in 1:days-1
         tt = copy(input.Temp_Aug)
         tt = append!(temp,tt)
     end
-    IR = copy(input.IR_Aug)
-    for i in 1:days-1
-        tt = copy(input.IR_Aug)
-        tt = append!(IR,tt)
-    end
-    return temp,IR
+    return temp
 end
 
 """
-    read_offline_vels(vfroot, Grid_sel, itList, tN, t)
+    read_offline_vels(VelOfflineOpt, t)
 Read velocity fields of selected grids at 't' from cluster
 Return a velocity 'struc'
 """
-function read_offline_vels(vfroot::String,Grid_sel,itList,tN,t::Int64)
+function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
+    vfroot  = VelOfflineOpt["velpath"]
+    itList  = VelOfflineOpt["itList"]
+    Grid_sel= VelOfflineOpt["GridSel"]
+    tN      = VelOfflineOpt["tN"]
     Nx⁻ = Grid_sel["Nx"][1]; Nx⁺ = Grid_sel["Nx"][2]
     Ny⁻ = Grid_sel["Ny"][1]; Ny⁺ = Grid_sel["Ny"][2]
     Nz⁻ = Grid_sel["Nz"][1]; Nz⁺ = Grid_sel["Nz"][2]
@@ -64,11 +81,13 @@ function read_offline_vels(vfroot::String,Grid_sel,itList,tN,t::Int64)
 end
 
 """
-    grid_offline(fieldroot, Grid_sel)
+    grid_offline(GridOfflineOpt)
 Read grid information of selected grids from cluster
 Return a grid 'struc'
 """
-function grid_offline(fieldroot::String,Grid_sel)
+function grid_offline(GridOfflineOpt::Dict)
+    fieldroot = GridOfflineOpt["gridpath"]
+    Grid_sel  = GridOfflineOpt["GridSel"]
     nx=1080;ny=2700;nz=40;
     fxg = open(fieldroot*"XG.data","r");
     fyg = open(fieldroot*"YG.data","r");
@@ -141,7 +160,11 @@ end
 Creat a dataframe to record the average attributes of indivuduals of each time step
 """
 function create_output(B::Array{DataFrame,1})
-    output = DataFrame(time=0, gen_ave=mean(B[1].gen), spec_ave = mean(B[1].sp), Cq1_ave=mean(B[1].Cq1), Cq2_ave=mean(B[1].Cq2), Nq_ave=mean(B[1].Nq), size_ave=mean(B[1].size), chl_ave=mean(B[1].chl), Population=size(B[1],1), age_ave=mean(B[1].age), dvid=0, graz=0,death=0)
+    output = DataFrame(time=0, gen_ave=mean(B[1].gen), spec_ave = mean(B[1].sp),
+                       Cq1_ave=mean(B[1].Cq1), Cq2_ave=mean(B[1].Cq2),
+                       Nq_ave=mean(B[1].Nq), size_ave=mean(B[1].size),
+                       chl_ave=mean(B[1].chl), Population=size(B[1],1),
+                       age_ave=mean(B[1].age), dvid=0, graz=0,death=0)
     return output
 end
 
@@ -159,7 +182,10 @@ function write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,output)
     size_ave=mean(phyts_b.size)
     chl_ave=mean(phyts_b.chl)
     age_ave=mean(phyts_b.age)
-    push!(output,(time=t, gen_ave=gen_ave, spec_ave=spec_ave, Cq1_ave=Cq1_ave, Cq2_ave=Cq2_ave, Nq_ave=Nq_ave, size_ave=size_ave, chl_ave=chl_ave, Population=size(phyts_b,1), age_ave=age_ave, dvid=dvid_ct, graz=graz_ct, death=death_ct))
+    push!(output,(time=t, gen_ave=gen_ave, spec_ave=spec_ave,
+                  Cq1_ave=Cq1_ave, Cq2_ave=Cq2_ave, Nq_ave=Nq_ave,
+                  size_ave=size_ave, chl_ave=chl_ave, Population=size(phyts_b,1),
+                  age_ave=age_ave, dvid=dvid_ct, graz=graz_ct, death=death_ct))
     return output
 end
 
@@ -176,7 +202,7 @@ function count_chl(phyts_a, grid)
         z = trunc(Int, phyt.z)
         cells[x, y, z] = cells[x, y, z] + phyt.chl
     end
-    cells .= cells ./ g.V
+    cells .= cells ./ grid.V
     return cells
 end
 
@@ -230,7 +256,9 @@ Sort individuals of different species into different dataframes
 'Bi' is a dataframe row, 'Nsp' is an empty array
 """
 function sort_species(Bi, Bsp, sp::Int64)
-    phyts = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[],sp=Int64[],age=Float64[])
+    phyts = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[],
+                      size=Float64[], Cq1=Float64[], Cq2=Float64[],
+                      Nq=Float64[], chl=Float64[],sp=Int64[],age=Float64[])
     for j in 1:size(Bi,1)
         if Bi[j,:].sp == sp
             push!(phyts,Bi[j,:])
@@ -245,7 +273,9 @@ end
 Compute the average attributes of individuals of different species
 """
 function compute_mean_species(Bsp, nTime)
-    output = DataFrame(time=Int64[], gen_ave=Float64[], Cq1_ave=Float64[], Cq2_ave=Float64[], Nq_ave=Float64[], size_ave=Float64[], chl_ave=Float64[], Population=Int64[], age_ave=Float64[]);
+    output = DataFrame(time=Int64[], gen_ave=Float64[], Cq1_ave=Float64[],
+                       Cq2_ave=Float64[], Nq_ave=Float64[], size_ave=Float64[],
+                       chl_ave=Float64[], Population=Int64[], age_ave=Float64[]);
     for i in 1:nTime
         gen_ave1=mean(Bsp[i].gen)
         Cq1_ave1=mean(Bsp[i].Cq1)
@@ -254,7 +284,9 @@ function compute_mean_species(Bsp, nTime)
         size_ave1=mean(Bsp[i].size)
         chl_ave1=mean(Bsp[i].chl)
         age_ave1=mean(Bsp[i].age)
-        push!(output,(time=i, gen_ave=gen_ave1, Cq1_ave=Cq1_ave1, Cq2_ave=Cq2_ave1, Nq_ave=Nq_ave1, size_ave=size_ave1, chl_ave=chl_ave1, Population=size(B1[i],1),age_ave=age_ave1))
+        push!(output,(time=i, gen_ave=gen_ave1, Cq1_ave=Cq1_ave1,
+                      Cq2_ave=Cq2_ave1, Nq_ave=Nq_ave1, size_ave=size_ave1,
+                      chl_ave=chl_ave1, Population=size(Bsp[i],1),age_ave=age_ave1))
     end
     return output
 end

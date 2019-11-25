@@ -73,7 +73,7 @@ Periodic domain is used
 'vel' is the struc contains u, v, w velocites of current time step
 'g' is the grid information and 'ΔT' is time step
 """
-function agent_move(phyts_a,velᵈ,g,ΔT::Int64)
+function agent_move(phyts_a,velᵈ,g,k_sink,ΔT::Int64)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
         if grid.Nz >1 
