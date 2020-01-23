@@ -124,8 +124,6 @@ function grid_offline(GridOfflineOpt::Dict)
     Az .= ntoh.(Az); hFC.= ntoh.(hFC);
     hFS.= ntoh.(hFS);hFW.= ntoh.(hFW);
     zf = -cumsum(drf); pushfirst!(zf,0); zc = 0.5*(zf[1:end-1]+zf[2:end]);
-    Δx = (xf[2:end,:] .- xf[1:end-1,:]); # unit: degree
-    Δy = (yf[:,2:end] .- yf[:,1:end-1]); # unit: degree
     Ax = zeros(nx,ny,nz); Ay = zeros(nx,ny,nz); V = zeros(nx,ny,nz);
     for i in 1:nx
         for j in 1:ny
@@ -146,12 +144,11 @@ function grid_offline(GridOfflineOpt::Dict)
     dxcS= dxc[Nx⁻:Nx⁺,Ny⁻:Ny⁺];dycS= dyc[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
     zcS = zc[Nz⁻:Nz⁺]; zfS = zf[Nz⁻:Nz⁺];
     drfS = drf[Nz⁻:Nz⁺]; drcS = drc[Nz⁻:Nz⁺];
-    ΔxS = Δx[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; ΔyS = Δy[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
     AzS = Az[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; AxS = Ax[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
     AyS = Ay[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
     VS  =  V[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
     Nx, Ny, Nz = size(VS)
-    g = grids(xcS, ycS, zcS, xfS, yfS, zfS, ΔxS, ΔyS, dxS, dyS, drfS, dxcS, dycS, drcS, AxS, AyS, AzS, VS, Nx, Ny, Nz)
+    g = grids(xcS, ycS, zcS, xfS, yfS, zfS, dxS, dyS, drfS, dxcS, dycS, drcS, AxS, AyS, AzS, VS, Nx, Ny, Nz)
     return g
 end
 

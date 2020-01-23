@@ -33,8 +33,6 @@ struct grids
     xF::Array{Float32,2}
     yF::Array{Float32,2}
     zF::Array{Float32,1}
-    Δx::Array{Float32,2} # unit: degree
-    Δy::Array{Float32,2} # unit: degree
     Lx::Array{Float32,2} # unit: meter
     Ly::Array{Float32,2} # unit: meter
     Lz::Array{Float32,1} # unit: meter
