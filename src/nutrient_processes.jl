@@ -2,7 +2,7 @@
     function nut_update(model, velᵇ, consume, ΔT, Dim)
 Update nutrient fields to next time step with source term and consumption by phytoplankton ('consume')
 """
-function nut_update(model, velᵇ, consume, ΔT, Dim)
+function nut_update(model, velᵇ, consume, ΔT, Dim=3)
     nutrients = model.nutrients
     g = model.grid
     κh = model.params["κh"]
