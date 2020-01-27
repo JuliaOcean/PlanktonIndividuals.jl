@@ -67,11 +67,11 @@ function phyt_update(t::Int64, ΔT::Int64, phyts_a, model)
                               zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
     # iterate phytoplankton agents
     for i in 1:size(phyts_a,1)
-        temp_t = temp[trunc(Int,t*ΔT/3600)]
-        IR_t = IR[trunc(Int,t*ΔT/3600)]
         phyt = phyts_a[i,:]
         sp = phyt.sp
         z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
+        temp_t = temp[x,y,z,t]
+        IR_t = IR[x,y,t]
         DIN = max(0.0, nutrients.DIN[x, y, z])
         
         # compute probabilities of grazing and division

@@ -1,36 +1,78 @@
 """
-    read_default_IR_input(myTime)
-Read input of irradiance from default csv file
+    read_default_IR_input(nTime, ΔT, grid)
+    nTime -> number of time step
+    ΔT -> length of each time step
+    grid -> grid information
+Read input of irradiance from default binary file
 """
-function read_default_IR_input(myTime::Int64)
+function read_default_IR_input(nTime::Int64, ΔT::Int64,grid)
     # irradiance(μmol photons/m^2)
+    # start from mid-night
     # will change later to make it able to choose different month
-    path = dirname(pathof(PhytoAgentModel))*"/../samples/T_IR.csv"
-    input = CSV.read(path)
-    days=myTime÷24 
-    IR = copy(input.IR_Aug)
-    for i in 1:days-1
-        tt = copy(input.IR_Aug)
-        tt = append!(IR,tt)
+    path = dirname(pathof(PhytoAgentModel))*"/../samples/PAR.bin"
+    PAR_hour = deserialize(path)
+    # convert hour to second in a day
+    t_htos = collect(0:1:24) .* 3600
+    # convert each time step to second in a day
+    t_ΔT = collect(1:ΔT:86400)
+    # interpolation of PAR time series
+    itp_PAR = interpolate((t_htos,), PAR_hour, Gridded(Linear()));
+    PAR_itped = itp_PAR.(t_ΔT)
+    # deal with nTime
+    if nTime*ΔT < 86400
+        PAR = PAR_itped[1:nTime]
+    else
+        nday = (nTime*ΔT)÷86400
+        res = (nTime*ΔT)%86400÷ΔT
+        PAR = repeat(PAR_itped,nday)
+        PAR = vcat(PAR,PAR_itped[1:res])
     end
-    return IR
+    # expand to the whole domain surface
+    PAR_surf = zeros(grid.Nx, grid.Ny, size(PAR,1))
+    for i in 1:size(PAR,1)
+        PAR_surf[:,:,i] .= PAR[i]
+    end
+    return PAR_surf
 end
 
 """
-    read_default_temp_input(myTime)
-Read input of temperature from default csv file
+    read_default_temp_input(nTime, ΔT, grid, ∂T∂z)
+    nTime -> number of time step
+    ΔT -> length of each time step
+    grid -> grid information
+    ∂T∂z -> linear vertical temp gradient
+Read input of temperature from default binary file
 """
-function read_default_temp_input(myTime::Int64)
+function read_default_temp_input(nTime::Int64, ΔT::Int64, grid, ∂T∂z=0.04)
     # will change later to make it able to choose different month
-    path = dirname(pathof(PhytoAgentModel))*"/../samples/T_IR.csv"
-    input = CSV.read(path)
-    days=myTime÷24 
-    temp = copy(input.Temp_Aug)
-    for i in 1:days-1
-        tt = copy(input.Temp_Aug)
-        tt = append!(temp,tt)
+    path = dirname(pathof(PhytoAgentModel))*"/../samples/temp.bin"
+    temp_hour = deserialize(path)
+    # convert hour to second in a day
+    t_htos = collect(0:1:24) .* 3600
+    # convert each time step to second in a day
+    t_ΔT = collect(1:ΔT:86400)
+    # interpolation of PAR time series
+    itp_temp = interpolate((t_htos,), temp_hour, Gridded(Linear()));
+    temp_itped = itp_temp.(t_ΔT)
+    # deal with nTime
+    if nTime*ΔT < 86400
+        temp = temp_itped[1:nTime]
+    else
+        nday = (nTime*ΔT)÷86400
+        res = (nTime*ΔT)%86400÷ΔT
+        temp = repeat(temp_itped,nday)
+        temp = vcat(temp,temp_itped[1:res])
     end
-    return temp
+    # espand to the whole domain
+    temp_domain = zeros(grid.Nx, grid.Ny, grid.Nz, size(temp,1))
+    for i in 1:size(temp,1)
+        temp_domain[:,:,1,i] .= temp[i]
+    end
+    # vertical temperature gradient
+    for j in 2:grid.Nz
+        temp_domain[:,:,j,:] .= temp_domain[:,:,j-1,:] .- (∂T∂z*(grid.zC[j-1]-grid.zC[j]))
+    end
+    return temp_domain
 end
 
 """
@@ -149,6 +191,44 @@ function grid_offline(GridOfflineOpt::Dict)
     VS  =  V[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
     Nx, Ny, Nz = size(VS)
     g = grids(xcS, ycS, zcS, xfS, yfS, zfS, dxS, dyS, drfS, dxcS, dycS, drcS, AxS, AyS, AzS, VS, Nx, Ny, Nz)
+    return g
+end
+
+
+"""
+    grid_Ogrids(Ogrid)
+Read grid information from Oceananigans
+Return a grid 'struc'
+"""
+function read_Ogrids(Ogrid)
+    Nx = Ogrid.Nx
+    Ny = Ogrid.Ny
+    Nz = Ogrid.Nz
+    xC = repeat(collect(Ogrid.xC),1,Ny)
+    yC = rotl90(repeat(collect(Ogrid.yC),1,Nx))
+    zC = reverse(collect(Ogrid.zC))
+    xF = repeat(collect(Ogrid.xF)[1:end-1],1,Ny)
+    yF = rotl90(repeat(collect(Ogrid.yF)[1:end-1],1,Nx))
+    zF = reverse(collect(Ogrid.zF)[1:end-1])
+    Lx =  repeat(collect(Ogrid.Δx),Nx,Ny)
+    Ly =  repeat(collect(Ogrid.Δy),Nx,Ny)
+    Lz =  repeat(collect(Ogrid.Δz),Nz)
+    dxC =  repeat(collect(Ogrid.Δx),Nx,Ny)
+    dyC =  repeat(collect(Ogrid.Δy),Nx,Ny)
+    dzC =  repeat(collect(Ogrid.Δz),Nz)
+    Ax = zeros(Nx, Ny, Nz); Ay = zeros(Nx, Ny, Nz);
+    Az = zeros(Nx, Ny); V = zeros(Nx, Ny, Nz)
+    for i in 1:Nx
+        for j in 1:Ny
+            Az[i,j] = Lx[i,j] * Ly[i,j]
+            for k in 1:Nz
+                Ax[i,j,k] = Lz[k] * Ly[i,j]
+                Ay[i,j,k] = Lz[k] * Lx[i,j]
+                V[i,j,k] = Lz[k] * Az[i,j]
+            end
+        end
+    end
+    g = grids(xC, yC, zC, xF, yF, zF, Lx, Ly, Lz, dxC, dyC, dzC, Ax, Ay, Az, V, Nx, Ny, Nz)
     return g
 end
 
