@@ -2,8 +2,8 @@ module PhytoAgentModel
 
 greet() = print("Hello World!")
 
-using DataFrames, NetCDF, CSV, JLD
-using Random, Distributions
+using DataFrames, NetCDF, JLD, Serialization
+using Random, Distributions, Interpolations
 using Printf, YAML
 
 src=""
@@ -22,8 +22,8 @@ include("$src"*"option_params.jl")
 
 export 
     # model structures    
-    Model, grids, nutrient_fields, velocity,
-    RunOptions, RunParams,
+    PA_Model, grids, nutrient_fields, velocity,
+    RunOptions, RunParams, read_Ogrids,
 
     # read input functions
     read_default_IR_input, read_default_temp_input,
@@ -34,7 +34,7 @@ export
     setup_agents, setup_nutrients,
 
     # Run the model
-    ModelRun, RunParam, RunOption,
+    PA_ModelRun, RunParam, RunOption, PA_Timestep,
 
     # write output functions
     create_output, sort_species, convert_coordinates,
