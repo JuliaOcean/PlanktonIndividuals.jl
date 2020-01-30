@@ -8,7 +8,7 @@ Compute double grid of each time step
 'velᵇ' is required to have extra cols & rows at the head and bottom of each dim
 """
 function double_grid_2D(velᵇ)
-    Nx, Ny, Nx = size(velᵇ.u)
+    Nx, Ny, Nz = size(velᵇ.u)
     ny2h = Ny*2-1; nx2h = Nx*2-1;
     vel_sh = (nx2h, ny2h, Nz);
     u2h = zeros(vel_sh);
@@ -131,6 +131,7 @@ function get_vels(x, y, z, g, vels, grid_type::String)
         end
         wvel = trilinear_itpl(2*x-1, 2*y-1, z, vels.w) # unit: m/s, trilinear interpolation
     elseif grid_type == "1D"
+        uvel = 0.0; vvel = 0.0
         wvel = simple_itpl(x,y,z, vels.w) # unit: m/s, simple interpolation
     else
         return "'grid_type' should be '3D', '2D' or '1D'"
@@ -166,10 +167,13 @@ function agent_advection(phyts_a,vels,g,k_sink,ΔT::Int64,grid_type::String)
         dz = (wvel+k_sink)/g.Lz[zi]*ΔT # vertical movement, plus sinking, unit: grid/h
         phyt.x = phyt.x - dx*(1+rand()/3)
         phyt.y = phyt.y - dy*(1+rand()/3)
-        phyt.z = max(2.0,min(g.Nz-0.1,phyt.z - dz*(1+rand()/3)))
+        phyt.z = max(1.1,min(g.Nz-0.1,phyt.z - dz*(1+rand()/3)))
         # periodic domain
         phyt.x = periodic_domain(g.Nx, phyt.x)
         phyt.y = periodic_domain(g.Ny, phyt.y)
+        if grid_type == "1D"
+            phyt.x = 1; phyt.y = 1;
+        end
     end
 end
 """
@@ -231,7 +235,6 @@ Bilinear interpolation of horizontal velocities
 'x', 'y', 'z' are grid indices, 'a' is the velocity field need to interpolate, e.g. u, v
 """
 function bilinear_itpl(x, y, z, a)
-    x = 2*x-2; y=2*y-2;
     x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
     xᵈ = x - x₀
     yᵈ = y - y₀

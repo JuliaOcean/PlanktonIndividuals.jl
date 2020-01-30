@@ -2,7 +2,7 @@ module PhytoAgentModel
 
 greet() = print("Hello World!")
 
-using DataFrames, NetCDF, JLD, Serialization
+using DataFrames, NetCDF, JLD, Serialization, CSV
 using Random, Distributions, Interpolations
 using Printf, YAML
 

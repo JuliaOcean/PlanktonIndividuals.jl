@@ -7,10 +7,10 @@ RunOption=RunOptions(3, false,  true,      true,       Dict(),  true,      Dict(
 
 g=load(samples*"grid.jld", "grid")
 
-model = Model(g, RunParam;
+model = PA_Model(g, RunParam;
               nutrients = setup_nutrients(g,[2.0, 0.05, 20.0, 0.0, 0.0, 0.0])) #DIC, DIN, DOC, DON, POC, PON, mmol/m3
 
-ModelRun(model, RunParam, RunOption)
+PA_ModelRun(model, RunParam, RunOption)
 
 # ### post-processing steps
 B1 = []; B2 = [];
@@ -43,4 +43,4 @@ for i in 1:size(model.individuals,1)
     push!(VD2,VD_2)
 end
 
-RunOption.SaveTest ? CSV.write(results*"testB1B2_3D.csv",testB1B2(B1,B2)) : nothing
+RunOption.SaveTest ? CSV.write(samples*"testB1B2_3D.csv",testB1B2(B1,B2)) : nothing

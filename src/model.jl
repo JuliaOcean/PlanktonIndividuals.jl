@@ -1,9 +1,9 @@
 function PA_Model(grid, RunParam;
                          t = 1,
                individuals = setup_agents(RunParam,1.0,0.25,grid),
-                 nutrients, 
-                       PAR = read_default_IR_input(RunParam.nTime, RunParam.DelT, grid), 
-                      temp = read_default_temp_input(RunParam.nTime, RunParam.DelT, grid), 
+                 nutrients,
+                       PAR = read_default_IR_input(RunParam.nTime, RunParam.DelT, grid),
+                      temp = read_default_temp_input(RunParam.nTime, RunParam.DelT, grid),
                     params = param_default,
                     output = create_output(individuals)
                    )
@@ -33,17 +33,17 @@ function PA_ModelRun(model::Model_struct, RunParam::RunParams, RunOption::RunOpt
             velᵇ=store_vel[t]
         end
         if (model.grid.Nx > 1) & (model.grid.Ny > 1)
-            velᵈ = double_grid_2D(velᵇ,model.grid)
-            agent_advection(phyts_b,velᵈ,model.grid,model.params["k_sink"],RunParam.DelT)
+            velᵈ = double_grid_2D(velᵇ)
+            agent_advection(phyts_b,velᵈ,model.grid,model.params["k_sink"],RunParam.DelT,"2D")
         elseif (model.grid.Nx == 1) & (model.grid.Ny == 1) & (model.grid.Nz > 1)
-            agent_advection(phyts_b,velᵇ,model.grid,model.params["k_sink"],RunParam.DelT) # for 1D only, use big grid velocities
+            agent_advection(phyts_b,velᵇ,model.grid,model.params["k_sink"],RunParam.DelT,"1D") # for 1D only, use big grid velocities
         elseif (model.grid.Nx == 1) & (model.grid.Ny == 1) & (model.grid.Nz == 1)
             nothing #for 0D only
         end
         push!(model.individuals,phyts_b)
         write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,model.output)
         agent_num = size(phyts_b,1)
-        nutₜ,gtr = nut_update(model, velᵇ, consume, RunParam.DelT, Dim = RunOption.Dim)
+        nutₜ,gtr = nut_update(model, velᵇ, consume, RunParam.DelT)
         if RunOption.OutputChoice
             write_nut_cons(model.grid, gtr, nutₜ, velᵇ, agent_num, t, death_ct, graz_ct, dvid_ct)
             if RunOption.NutOutputChoice
