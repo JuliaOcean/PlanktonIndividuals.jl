@@ -20,21 +20,22 @@ include("$src"*"model.jl")
 include("$src"*"option_params.jl")
 
 
-export 
-    # model structures    
+export
+    # model structures
     PA_Model, grids, nutrient_fields, velocity,
     RunOptions, RunParams, read_Ogrids,
 
     # read input functions
     read_default_IR_input, read_default_temp_input,
     update_params, grid_offline, param_default,
-    PrepRunDir,
+    PrepRunDir, double_grid_2D, double_grid_3D,
 
     # initialize nutrient field and individual sets
     setup_agents, setup_nutrients,
 
     # Run the model
-    PA_ModelRun, RunParam, RunOption, PA_Timestep,
+    PA_ModelRun, RunParam, RunOption, PA_TimeStep!,
+    PA_advectRK4!, PA_advect!,
 
     # write output functions
     create_output, sort_species, convert_coordinates,

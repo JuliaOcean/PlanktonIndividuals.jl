@@ -2,20 +2,17 @@
 # advection  of agents (including 3 ways to interpolate velocity fields)#
 #########################################################################
 """
-    double_grid(velᵇ,grid)
+    double_grid_2D(velᵇ,grid)
 Compute double grid of each time step
 'velᵇ' is the velocitiy fields on big grids of current time step
+'velᵇ' is required to have extra cols & rows at the head and bottom of each dim
 """
-function double_grid(velᵇ,grid)
-    Ny = grid.Ny; Nx = grid.Nx; Nz = grid.Nz;
-    u = zeros(Nx*2-1,Ny*2-1,Nz);
-    v = zeros(Nx*2-1,Ny*2-1,Nz);
-    w = zeros(Nx*2-1,Ny*2-1,Nz);
-    velᵈ = velocity(u, v, w);
+function double_grid_2D(velᵇ)
+    Nx, Ny, Nx = size(velᵇ.u)
     ny2h = Ny*2-1; nx2h = Nx*2-1;
     vel_sh = (nx2h, ny2h, Nz);
-    u2h = zeros(Float32,vel_sh);
-    v2h = zeros(Float32,vel_sh);
+    u2h = zeros(vel_sh);
+    v2h = zeros(vel_sh);
     # Compute values for new grids
     uX = 0.5*(velᵇ.u[1:Nx-1,:,:] + velᵇ.u[2:Nx,:,:]);
     vY = 0.5*(velᵇ.v[:,1:Ny-1,:] + velᵇ.v[:,2:Ny,:]);
@@ -28,21 +25,69 @@ function double_grid(velᵇ,grid)
     u2h[:,2:2:ny2h,:] = uY;
     v2h[2:2:nx2h,:,:] = vX;
     # Delete the boundaries
-    velᵈ.u = u2h[2:nx2h,1:ny2h-1,:]; velᵈ.v = v2h[1:nx2h-1,2:ny2h,:];
+    uvel = u2h[3:end,2:end-1,:];
+    vvel = v2h[2:end-1,3:end,:];
     # Deal with vertical velocities
-    velᵈ.w[1:2:nx2h-1,1:2:ny2h-1,:] = velᵇ.w[1:Nx-1,1:Ny-1,:];
-    velᵈ.w[1:2:nx2h-1,2:2:ny2h,:] = velᵇ.w[1:Nx-1,1:Ny-1,:];
-    velᵈ.w[2:2:nx2h,:,:] = velᵈ.w[1:2:nx2h-1,:,:];
+    if Nz > 1
+        wvel = zeros(vel_sh)
+        wvel[1:2:nx2h-1,1:2:ny2h-1,:] = velᵇ.w[1:Nx-1,1:Ny-1,:];
+        wvel[1:2:nx2h-1,2:2:ny2h,:] = velᵇ.w[1:Nx-1,1:Ny-1,:];
+        wvel[2:2:nx2h,:,:] = wvel[1:2:nx2h-1,:,:];
+    else
+        wvel = zeros(vel_sh)
+    end
+    velᵈ = velocity(uvel, vvel, wvel)
     return velᵈ
 end
 
 """
+    double_grid_3D(velᵇ)
+Compute double grid of each time step from Oceananigans grid (with halo point)
+'velᵇ' is the velocitiy fields on big grids of current time step
+"""
+function double_grid_3D(velᵇ)
+    Nx, Ny, Nz = size(velᵇ.u)
+    ny2h = Ny*2-1; nx2h = Nx*2-1; nz2h = Nz*2-1;
+    vel_sh = (nx2h, ny2h, nz2h);
+    u2h = zeros(vel_sh);
+    v2h = zeros(vel_sh);
+    w2h = zeros(vel_sh);
+    # Compute values for new grids
+    uX = 0.5*(velᵇ.u[1:Nx-1,:,:] + velᵇ.u[2:Nx,:,:]);
+    vY = 0.5*(velᵇ.v[:,1:Ny-1,:] + velᵇ.v[:,2:Ny,:]);
+    wZ = 0.5*(velᵇ.w[:,:,1:Nz-1] + velᵇ.w[:,:,2:Nz]);
+    u2h[2:2:nx2h,1:2:ny2h,1:2:nz2h] = uX;
+    u2h[1:2:nx2h,1:2:ny2h,1:2:nz2h] = velᵇ.u;
+    v2h[1:2:nx2h,2:2:ny2h,1:2:nz2h] = vY;
+    v2h[1:2:nx2h,1:2:ny2h,1:2:nz2h] = velᵇ.v;
+    w2h[1:2:nx2h,1:2:ny2h,2:2:nz2h] = wZ;
+    w2h[1:2:nx2h,1:2:ny2h,1:2:nz2h] = velᵇ.w;
+    uY = 0.5*(u2h[:,1:2:ny2h-1,:] + u2h[:,3:2:ny2h,:]);
+    vX = 0.5*(v2h[1:2:nx2h-1,:,:] + v2h[3:2:nx2h,:,:]);
+    wX = 0.5*(w2h[1:2:nx2h-1,:,:] + w2h[3:2:nx2h,:,:]);
+    u2h[:,2:2:ny2h,:] = uY;
+    v2h[2:2:nx2h,:,:] = vX;
+    w2h[2:2:nx2h,:,:] = wX;
+    uZ = 0.5*(u2h[:,:,1:2:nz2h-1] + u2h[:,:,3:2:nz2h]);
+    vZ = 0.5*(v2h[:,:,1:2:nz2h-1] + v2h[:,:,3:2:nz2h]);
+    wY = 0.5*(w2h[:,1:2:ny2h-1,:] + w2h[:,3:2:ny2h,:]);
+    u2h[:,:,2:2:nz2h] = uZ;
+    v2h[:,:,2:2:nz2h] = vZ;
+    w2h[:,2:2:nz2h,:] = wY;
+    # Delete the boundaries
+    uvel = u2h[3:end,2:end-1,2:end-1];
+    vvel = v2h[2:end-1,3:end,2:end-1];
+    wvel = w2h[2:end-1,2:end-1,3:end];
+    velᵈ = velocity(uvel, vvel, wvel);
+    return velᵈ
+end
+"""
     trilinear_itlp(x, y, z, a)
 Trilinear interpolation of velocities
-'x', 'y', 'z' are grid indices, 'a' is the velocity field need to interpolate, e.g. u, v, w
+'x', 'y', 'z' are doubled grid indices(whether 2D or 3D),
+'a' is the velocity field need to interpolate, e.g. u, v, w
 """
 function trilinear_itpl(x, y, z, a)
-    x = 2*x-2; y=2*y-2;
     x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
     xᵈ = x - x₀
     yᵈ = y - y₀
@@ -66,28 +111,55 @@ function trilinear_itpl(x, y, z, a)
 end
 
 """
-    agent_move(phyts_a,vel,g,ΔT)
+    get_vels(x, y, z, g, velᵈ)
+Read velocities at (x,y,z) from velocity fields
+'x', 'y', 'z' are original grid indices 
+the velocity field passed to the function can be boubled grids or original grids
+"""
+function get_vels(x, y, z, g, vels, grid_type::String)
+    if grid_type == "3D"
+        uvel = trilinear_itpl(2*x-1, 2*y-1, 2*z-1, vels.u)
+        vvel = trilinear_itpl(2*x-1, 2*y-1, 2*z-1, vels.v)
+        wvel = trilinear_itpl(2*x-1, 2*y-1, 2*z-1, vels.w)
+    elseif grid_type == "2D"
+        if g.Nz >1
+            g.Nx == 1 ? uvel = 0.0 : uvel = trilinear_itpl(2*x-1, 2*y-1, z, vels.u) # unit: m/s, trilinear interpolation
+            g.Ny == 1 ? vvel = 0.0 : vvel = trilinear_itpl(2*x-1, 2*y-1, z, vels.v) # unit: m/s, trilinear interpolation
+        else
+            g.Nx == 1 ? uvel = 0.0 : uvel = bilinear_itpl(2*x-1, 2*y-1, z, vels.u) # unit: m/s, bilinear interpolation
+            g.Ny == 1 ? vvel = 0.0 : vvel = bilinear_itpl(2*x-1, 2*y-1, z, vels.v) # unit: m/s, bilinear interpolation
+        end
+        wvel = trilinear_itpl(2*x-1, 2*y-1, z, vels.w) # unit: m/s, trilinear interpolation
+    elseif grid_type == "1D"
+        wvel = simple_itpl(x,y,z, vels.w) # unit: m/s, simple interpolation
+    else
+        return "'grid_type' should be '3D', '2D' or '1D'"
+    end
+    return uvel, vvel, wvel
+end
+
+function periodic_domain(Nx, x)
+    if 1 < x < Nx+1
+        return x
+    elseif x ≥ Nx+1
+        return x - Nx
+    elseif x ≤ 1
+        return x + Nx
+    end
+end
+
+"""
+    agent_advection(phyts_a,vel,g,ΔT)
 Update grid indices of all the individuals according to velocity fields of each time step
 Periodic domain is used
 'phyts_a' is a dataframe contains all the individuals of current time step
 'vel' is the struc contains u, v, w velocites of current time step
 'g' is the grid information and 'ΔT' is time step
 """
-function agent_move(phyts_a,velᵈ,g,k_sink,ΔT::Int64)
+function agent_advection(phyts_a,vels,g,k_sink,ΔT::Int64,grid_type::String)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
-        if grid.Nz >1 
-            grid.Nx == 1 ? uvel = 0.0 : uvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.u) # unit: m/s, trilinear interpolation
-            grid.Ny == 1 ? vvel = 0.0 : vvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.v) # unit: m/s, trilinear interpolation
-        else
-            grid.Nx == 1 ? uvel = 0.0 : uvel = bilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.u) # unit: m/s, bilinear interpolation
-            grid.Ny == 1 ? vvel = 0.0 : vvel = bilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.v) # unit: m/s, bilinear interpolation
-        end
-        if (grid.Nx == 1) & (grid.Ny == 1) & (grid.Nz ≠ 1)
-            wvel = simple_itpl(phyt.x,phyt.y,phyt.z, velᵈ) # unit: m/s, simple interpolation
-        else
-            wvel = trilinear_itpl(phyt.x, phyt.y, phyt.z, velᵈ.w) # unit: m/s, trilinear interpolation
-        end
+        uvel, vvel, wvel = get_vels(phyt.x, phyt.y, phyt.z, g, vels, grid_type)
         xi, yi, zi = trunc(Int,phyt.x), trunc(Int,phyt.y), trunc(Int,phyt.z)
         dx = uvel/g.Lx[xi]*ΔT # unit: grid/h
         dy = vvel/g.Ly[yi]*ΔT # unit: grid/h
@@ -95,32 +167,60 @@ function agent_move(phyts_a,velᵈ,g,k_sink,ΔT::Int64)
         phyt.x = phyt.x - dx*(1+rand()/3)
         phyt.y = phyt.y - dy*(1+rand()/3)
         phyt.z = max(2.0,min(g.Nz-0.1,phyt.z - dz*(1+rand()/3)))
-        # periodic domian
-        if phyt.x ≥ g.Nx - 0.5
-            phyt.x = phyt.x - g.Nx + 2.0
-        end
-        if phyt.x ≤ 1.5
-            phyt.x = phyt.x + g.Nx - 2.0
-        end
-        if phyt.y ≥ g.Ny - 0.5
-            phyt.y = phyt.y - g.Ny + 2.0
-        end
-        if phyt.y ≤ 1.5
-            phyt.y = phyt.y + g.Ny - 2.0
-        end
+        # periodic domain
+        phyt.x = periodic_domain(g.Nx, phyt.x)
+        phyt.y = periodic_domain(g.Ny, phyt.y)
+    end
+end
+"""
+    agent_advectionRK4(phyts_a, vel_field, g, ΔT::Int64)
+Require 3D doubled grids.
+'vel_field' is original velocity field.
+"""
+function agent_advectionRK4(phyts_a, vel_field, g, ΔT::Int64, grid_type::String)
+    for i in 1:size(phyts_a,1)
+        phyt = phyts_a[i,:]
+        u1,v1,w1 = get_vels(phyt.x, phyt.y, phyt.z, g, vel_field[1], grid_type) # velocites at t
+        xi1, yi1, zi1 = trunc(Int,phyt.x),trunc(Int,phyt.y),trunc(Int,phyt.z)
+        gx1 = periodic_domain(g.Nx, phyt.x - u1/g.Lx[xi1]*0.5*ΔT)
+        gy1 = periodic_domain(g.Ny, phyt.y - v1/g.Ly[yi1]*0.5*ΔT)
+        gz1 = phyt.z - w1/g.Lz[zi1]*0.5*ΔT
+        gz1 = max(2.0,min(g.Nz-0.1,gz1))
+        u2,v2,w2 = get_vels(gx1, gy1, gz1, g, vel_field[2], grid_type) # velocites at t+0.5ΔT
+        xi2, yi2, zi2 = trunc(Int,gx1),trunc(Int,gy1),trunc(Int,gz1)
+        gx2 = periodic_domain(g.Nx, phyt.x - u2/g.Lx[xi2]*0.5*ΔT)
+        gy2 = periodic_domain(g.Ny, phyt.y - v2/g.Ly[yi2]*0.5*ΔT)
+        gz2 = phyt.z - w2/g.Lz[zi2]*0.5*ΔT
+        gz2 = max(2.0,min(g.Nz-0.1,gz2))
+        u3,v3,w3 = get_vels(gx2, gy2, gz2, g, vel_field[2], grid_type) # velocites at t+0.5ΔT
+        xi3, yi3, zi3 = trunc(Int,gx2),trunc(Int,gy2),trunc(Int,gz2)
+        gx3 = periodic_domain(g.Nx, phyt.x - u3/g.Lx[xi3]*0.5*ΔT)
+        gy3 = periodic_domain(g.Ny, phyt.y - v3/g.Ly[yi3]*0.5*ΔT)
+        gz3 = phyt.z - w3/g.Lz[zi3]*0.5*ΔT
+        gz3 = max(2.0,min(g.Nz-0.1,gz3))
+        u4,v4,w4 = get_vels(gx3, gy3, gz3, g, vel_field[3], grid_type) # velocites at t+ΔT
+        xi4, yi4, zi4 = trunc(Int,gx3),trunc(Int,gy3),trunc(Int,gz3)
+        dx = (u1/g.Lx[xi1] + 2*u2/g.Lx[xi2] + 2*u3/g.Lx[xi3] + u4/g.Lx[xi4]) / 6 * ΔT
+        dy = (v1/g.Ly[yi1] + 2*v2/g.Ly[yi2] + 2*v3/g.Ly[yi3] + v4/g.Ly[yi4]) / 6 * ΔT
+        dz = (w1/g.Lz[zi1] + 2*w2/g.Lz[zi2] + 2*w3/g.Lz[zi3] + w4/g.Lz[zi4]) / 6 * ΔT
+        phyt.x = periodic_domain(g.Nx, phyt.x - dx*(1+rand()/3))
+        phyt.y = periodic_domain(g.Ny, phyt.y - dy*(1+rand()/3))
+        phyt.z = phyt.z - dz*(1+rand()/3)
+        phyt.z = max(1.1, min(g.Nz-0.1, phyt.z))
     end
 end
 
+
 """
-    simple_itpl(x, y, z, vel)
+    simple_itpl(x, y, z, a)
 Simple interpolation: interpolate according to C grid (velocity on faces), for 1D only
-'x', 'y', 'z' are grid indices, 'vel' is the w velocity field need to interpolate
+'x', 'y', 'z' are grid indices, 'a' is the w velocity field need to interpolate
 """
-function simple_itpl(x, y, z, vel)
+function simple_itpl(x, y, z, a)
     x₀, y₀, z₀ = trunc(Int,x), trunc(Int,y), trunc(Int,z)
     zᵈ = z - z₀
-    w₋ = vel.w[x₀, y₀, z₀]
-    w₊ = vel.w[x₀, y₀, z₀+1]
+    w₋ = a[x₀, y₀, z₀]
+    w₊ = a[x₀, y₀, z₀+1]
     wvel = w₋ * (1 - zᵈ) + w₊ * zᵈ
     return wvel
 end

@@ -26,18 +26,18 @@ function PA_ModelRun(model::Model_struct, RunParam::RunParams, RunOption::RunOpt
     for it in 1:RunParam.nTime
         t = model.t
         phyts_a = copy(model.individuals[t]) # read data from last time step
-        phyts_b,dvid_ct,graz_ct,death_ct,consume=phyt_update(t, RunParam.DelT, phyts_a, model::Model_struct)
+        phyts_b,dvid_ct,graz_ct,death_ct,consume=phyt_update(t, RunParam.DelT, phyts_a, model)
         if RunOption.VelChoice == false
             velᵇ = read_offline_vels(RunOption.VelOfflineOpt,trunc(Int,t*RunParam.DelT/3600))
         else
             velᵇ=store_vel[t]
         end
-        if model.grid.Nx > 1 & model.grid.Ny > 1
-            velᵈ = double_grid(velᵇ,model.grid)
-            agent_move(phyts_b,velᵈ,model.grid,model.params["K_sink"],RunParam.DelT)
-        elseif model.grid.Nx == 1 & model.grid.Ny == 1 & model.grid.Nz > 1
-            agent_move(phyts_b,velᵇ,model.grid,model.params["K_sink"],RunParam.DelT) # for 1D only, use big grid velocities
-        elseif model.grid.Nx == 1 & model.grid.Ny == 1 & model.grid.Nz == 1
+        if (model.grid.Nx > 1) & (model.grid.Ny > 1)
+            velᵈ = double_grid_2D(velᵇ,model.grid)
+            agent_advection(phyts_b,velᵈ,model.grid,model.params["k_sink"],RunParam.DelT)
+        elseif (model.grid.Nx == 1) & (model.grid.Ny == 1) & (model.grid.Nz > 1)
+            agent_advection(phyts_b,velᵇ,model.grid,model.params["k_sink"],RunParam.DelT) # for 1D only, use big grid velocities
+        elseif (model.grid.Nx == 1) & (model.grid.Ny == 1) & (model.grid.Nz == 1)
             nothing #for 0D only
         end
         push!(model.individuals,phyts_b)
@@ -69,20 +69,37 @@ function PA_ModelRun(model::Model_struct, RunParam::RunParams, RunOption::RunOpt
     end
 end
 
-function PA_TimeStep(model::Model_struct, DelT, velᵇ::velocity)
-    t = model.t
-    phyts_a = copy(model.individuals[t]) # read data from last time step
-    phyts_b,dvid_ct,graz_ct,death_ct,consume=phyt_update(t, DelT, phyts_a, model::Model_struct)
-    if model.grid.Nx > 1 & model.grid.Ny > 1
-        velᵈ = double_grid(velᵇ,model.grid)
-        agent_move(phyts_b,velᵈ,model.grid,model.params["K_sink"],DelT)
-    elseif model.grid.Nx == 1 & model.grid.Ny == 1 & model.grid.Nz > 1
-        agent_move(phyts_b,velᵇ,model.grid,model.params["K_sink"],DelT) # for 1D only, use big grid velocities
+function PA_advect!(model::Model_struct, DelT, velᵇ::velocity)
+    phyts_b = model.individuals[end]
+    if (model.grid.Nx > 1) & (model.grid.Ny > 1)
+        velᵈ = double_grid_2D(velᵇ)
+        agent_advection(phyts_b,velᵈ,model.grid,model.params["k_sink"],DelT,"2D")
+    elseif (model.grid.Nx == 1) & (model.grid.Ny == 1) & (model.grid.Nz > 1)
+        agent_advection(phyts_b,velᵇ,model.grid,model.params["k_sink"],DelT,"1D") # for 1D only, use big grid velocities
     end
+end
+
+
+function PA_TimeStep!(model::Model_struct, DelT, velᵇ::velocity)
+    phyts_a = copy(model.individuals[end]) # read data from last time step
+    phyts_b,dvid_ct,graz_ct,death_ct,consume=phyt_update(model.t, DelT, phyts_a, model)
     push!(model.individuals,phyts_b)
-    write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,model.output)
+    write_output(model.t,phyts_b,dvid_ct,graz_ct,death_ct,model.output)
     agent_num = size(phyts_b,1)
     nutₜ,gtr = nut_update(model, velᵇ, consume, DelT)
     model.nutrients = nutₜ
     model.t += 1
+end
+
+function PA_advectRK4!(model::Model_struct, DelT, vel_field)
+    phyts_b = model.individuals[end] # read data from last time step
+    if (model.grid.Nx > 1) & (model.grid.Ny > 1) & (model.grid.Nz > 1)
+        vel_field_d = double_grid_3D.(vel_field)
+        agent_advectionRK4(phyts_b,vel_field_d,model.grid,DelT,"3D")
+    elseif (model.grid.Nx > 1) & (model.grid.Ny > 1) & (model.grid.Nz = 1)
+        vel_field_d = double_grid_2D.(vel_field)
+        agent_advectionRK4(phyts_b,vel_field_d,model.grid,DelT,"2D")
+    elseif (model.grid.Nx == 1) & (model.grid.Ny == 1) & (model.grid.Nz > 1)
+        agent_advectionRK4(phyts_b,vel_field,model.grid,DelT,"1D") # for 1D only, use big grid velocities
+    end
 end

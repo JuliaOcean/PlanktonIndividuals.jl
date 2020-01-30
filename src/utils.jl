@@ -321,8 +321,8 @@ function convert_coordinates(phyts, grid)
     phyt = phyts[i,:]
     z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
     dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
-    phyt.x = grid.xF[x,1] + dx * grid.Δx[x,y];
-    phyt.y = grid.yF[1,y] + dy * grid.Δy[x,y];
+    phyt.x = grid.xF[x,1] + dx * grid.Lx[x,y];
+    phyt.y = grid.yF[1,y] + dy * grid.Ly[x,y];
     phyt.z = grid.zF[z] - dz * grid.Lz[z];
     end
 end
@@ -371,9 +371,9 @@ end
 """
     write_nut_nc_each_step(g, nut, t)
 Write a NetCDF file of nutrient fields at each time step
+Default filepath -> "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
 """
-function write_nut_nc_each_step(g::grids, nut::nutrient_fields, t::Int64)
-    filepath = "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
+function write_nut_nc_each_step(g::grids, nut::nutrient_fields, t::Int64, filepath::String)
     xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
     yC_attr = Dict("longname" => "Locations of the cell centers in the y-direction.", "units" => "m")
     zC_attr = Dict("longname" => "Locations of the cell centers in the z-direction.", "units" => "m")
@@ -389,16 +389,16 @@ function write_nut_nc_each_step(g::grids, nut::nutrient_fields, t::Int64)
     ncwrite(nut.DIC,filepath,"DIC"); ncwrite(nut.DIN,filepath,"DIN");
     ncwrite(nut.DOC,filepath,"DOC"); ncwrite(nut.DON,filepath,"DON");
     ncwrite(nut.POC,filepath,"POC"); ncwrite(nut.PON,filepath,"PON");
-    ncclose(filepath)
-    return nothing
+    nothing
 end
 
 """
     write_nut_nc_alltime(a, DIC, DIN, DOC, DON, POC, PON, nTime)
 Write a NetCDF file of nutrient fields for the whole run, especially for 0D configuration
+Default filepath -> "results/nutrients.nc"
 """
-function write_nut_nc_alltime(g::grids, DIC, DIN, DOC, DON, POC, PON, nTime)
-    filepath = "results/nutrients.nc"
+function write_nut_nc_alltime(g::grids, DIC, DIN, DOC, DON, POC, PON, nTime,
+                              filepath = "./results/nutrients.nc")
     tt = collect(1:nTime);
     xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
     yC_attr = Dict("longname" => "Locations of the cell centers in the y-direction.", "units" => "m")
