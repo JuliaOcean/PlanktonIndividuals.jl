@@ -79,17 +79,18 @@ end
     read_offline_vels(VelOfflineOpt, t)
 Read velocity fields of selected grids at 't' from cluster
 Return a velocity 'struc'
+extra cols & rows are read in for double grids
 """
 function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
     vfroot  = VelOfflineOpt["velpath"]
     itList  = VelOfflineOpt["itList"]
     Grid_sel= VelOfflineOpt["GridSel"]
     tN      = VelOfflineOpt["tN"]
-    Nx⁻ = Grid_sel["Nx"][1]; Nx⁺ = Grid_sel["Nx"][2]
-    Ny⁻ = Grid_sel["Ny"][1]; Ny⁺ = Grid_sel["Ny"][2]
+    Nx⁻ = Grid_sel["Nx"][1]-1; Nx⁺ = Grid_sel["Nx"][2]+1
+    Ny⁻ = Grid_sel["Ny"][1]-1; Ny⁺ = Grid_sel["Ny"][2]+1
     Nz⁻ = Grid_sel["Nz"][1]; Nz⁺ = Grid_sel["Nz"][2]
     Nx = Nx⁺ - Nx⁻ + 1; Ny = Ny⁺ - Ny⁻ + 1; Nz = Nz⁺ - Nz⁻ + 1;
-    if Nx == 1 
+    if Nx == 1
         u = zeros(Nx, Ny, Nz)
     else
         fuvel = open(vfroot*"/UVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
@@ -145,7 +146,7 @@ function grid_offline(GridOfflineOpt::Dict)
     fhfc= open(fieldroot*"hFacC.data","r");
     fhfs= open(fieldroot*"hFacS.data","r");
     fhfw= open(fieldroot*"hFacW.data","r");
-    xf = zeros(Float32,nx,ny); yf = zeros(Float32,nx,ny); 
+    xf = zeros(Float32,nx,ny); yf = zeros(Float32,nx,ny);
     xc = zeros(Float32,nx,ny); yc = zeros(Float32,nx,ny);
     dx = zeros(Float32,nx,ny); dy = zeros(Float32,nx,ny);
     drf= zeros(Float32,nz); drc = zeros(Float32,nz);
@@ -154,11 +155,11 @@ function grid_offline(GridOfflineOpt::Dict)
     hFS= zeros(Float32,nx,ny,nz);hFW= zeros(Float32,nx,ny,nz);
     read!(fxg,xf); read!(fyg,yf); read!(fxc,xc); read!(fyc,yc);
     read!(fdx,dx); read!(fdy,dy); read!(fdrf,drf); read!(fdxc,dxc);
-    read!(fdyc,dyc); read!(fdrc,drc); read!(fAz,Az); 
+    read!(fdyc,dyc); read!(fdrc,drc); read!(fAz,Az);
     read!(fhfc,hFC); read!(fhfs,hFS); read!(fhfw,hFW);
     close(fxg);close(fyg);close(fxc);close(fyc);close(fdx);close(fdy);
     close(fdrf);close(fAz);close(fhfc);close(fhfs);close(fhfw);
-    xf .= ntoh.(xf); yf .= ntoh.(yf); 
+    xf .= ntoh.(xf); yf .= ntoh.(yf);
     xc .= ntoh.(xc); yc .= ntoh.(yc);
     dx .= ntoh.(dx); dy .= ntoh.(dy);
     drf.= ntoh.(drf);drc.= ntoh.(drc);
@@ -181,10 +182,10 @@ function grid_offline(GridOfflineOpt::Dict)
     Ny⁻ = Grid_sel["Ny"][1]; Ny⁺ = Grid_sel["Ny"][2]
     Nz⁻ = Grid_sel["Nz"][1]; Nz⁺ = Grid_sel["Nz"][2]
     xcS = xc[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; ycS = yc[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
-    xfS = xf[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; yfS = yf[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
+    xfS = xf[Nx⁻:Nx⁺+1, Ny⁻:Ny⁺]; yfS = yf[Nx⁻:Nx⁺, Ny⁻:Ny⁺+1];
     dxS = dx[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; dyS = dy[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
     dxcS= dxc[Nx⁻:Nx⁺,Ny⁻:Ny⁺];dycS= dyc[Nx⁻:Nx⁺, Ny⁻:Ny⁺];
-    zcS = zc[Nz⁻:Nz⁺]; zfS = zf[Nz⁻:Nz⁺];
+    zcS = zc[Nz⁻:Nz⁺]; zfS = zf[Nz⁻:Nz⁺+1];
     drfS = drf[Nz⁻:Nz⁺]; drcS = drc[Nz⁻:Nz⁺];
     AzS = Az[Nx⁻:Nx⁺, Ny⁻:Ny⁺]; AxS = Ax[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
     AyS = Ay[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺];
@@ -207,9 +208,9 @@ function read_Ogrids(Ogrid)
     xC = repeat(collect(Ogrid.xC),1,Ny)
     yC = rotl90(repeat(collect(Ogrid.yC),1,Nx))
     zC = reverse(collect(Ogrid.zC))
-    xF = repeat(collect(Ogrid.xF)[1:end-1],1,Ny)
-    yF = rotl90(repeat(collect(Ogrid.yF)[1:end-1],1,Nx))
-    zF = reverse(collect(Ogrid.zF)[1:end-1])
+    xF = repeat(collect(Ogrid.xF),1,Ny)
+    yF = rotl90(repeat(collect(Ogrid.yF),1,Nx))
+    zF = reverse(collect(Ogrid.zF))
     Lx =  repeat(collect(Ogrid.Δx),Nx,Ny)
     Ly =  repeat(collect(Ogrid.Δy),Nx,Ny)
     Lz =  repeat(collect(Ogrid.Δz),Nz)
@@ -321,8 +322,8 @@ function convert_coordinates(phyts, grid)
     phyt = phyts[i,:]
     z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
     dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
-    phyt.x = grid.xF[x,1] + dx * grid.Lx[x,y];
-    phyt.y = grid.yF[1,y] + dy * grid.Ly[x,y];
+    phyt.x = grid.xF[x,y] + dx * (grid.xF[x+1,y] - grid.xF[x,y]);
+    phyt.y = grid.yF[x,y] + dy * (grid.yF[x,y+1] - grid.yF[x,y]);
     phyt.z = grid.zF[z] - dz * grid.Lz[z];
     end
 end
