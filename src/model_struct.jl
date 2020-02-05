@@ -33,9 +33,9 @@ struct grids
     xF::Array{Float32,2}
     yF::Array{Float32,2}
     zF::Array{Float32,1}
-    Lx::Array{Float32,2} # unit: meter
-    Ly::Array{Float32,2} # unit: meter
-    Lz::Array{Float32,1} # unit: meter
+    dxF::Array{Float32,2} # unit: meter
+    dyF::Array{Float32,2} # unit: meter
+    dzF::Array{Float32,1} # unit: meter
     dxC::Array{Float32,2} # unit: meter, distance from center to center
     dyC::Array{Float32,2} # unit: meter, distance from center to center
     dzC::Array{Float32,1} # unit: meter, distance from center to center

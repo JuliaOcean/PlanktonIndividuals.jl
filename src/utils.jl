@@ -200,6 +200,7 @@ end
     grid_Ogrids(Ogrid)
 Read grid information from Oceananigans
 Return a grid 'struc'
+z starts from the bottom
 """
 function read_Ogrids(Ogrid)
     Nx = Ogrid.Nx
@@ -207,13 +208,13 @@ function read_Ogrids(Ogrid)
     Nz = Ogrid.Nz
     xC = repeat(collect(Ogrid.xC),1,Ny)
     yC = rotl90(repeat(collect(Ogrid.yC),1,Nx))
-    zC = reverse(collect(Ogrid.zC))
+    zC = collect(Ogrid.zC)
     xF = repeat(collect(Ogrid.xF),1,Ny)
     yF = rotl90(repeat(collect(Ogrid.yF),1,Nx))
-    zF = reverse(collect(Ogrid.zF))
-    Lx =  repeat(collect(Ogrid.Δx),Nx,Ny)
-    Ly =  repeat(collect(Ogrid.Δy),Nx,Ny)
-    Lz =  repeat(collect(Ogrid.Δz),Nz)
+    zF = collect(Ogrid.zF)
+    dxF =  repeat(collect(Ogrid.Δx),Nx,Ny)
+    dyF =  repeat(collect(Ogrid.Δy),Nx,Ny)
+    dzF =  repeat(collect(Ogrid.Δz),Nz)
     dxC =  repeat(collect(Ogrid.Δx),Nx,Ny)
     dyC =  repeat(collect(Ogrid.Δy),Nx,Ny)
     dzC =  repeat(collect(Ogrid.Δz),Nz)
@@ -221,15 +222,15 @@ function read_Ogrids(Ogrid)
     Az = zeros(Nx, Ny); V = zeros(Nx, Ny, Nz)
     for i in 1:Nx
         for j in 1:Ny
-            Az[i,j] = Lx[i,j] * Ly[i,j]
+            Az[i,j] = dxF[i,j] * dyF[i,j]
             for k in 1:Nz
-                Ax[i,j,k] = Lz[k] * Ly[i,j]
-                Ay[i,j,k] = Lz[k] * Lx[i,j]
-                V[i,j,k] = Lz[k] * Az[i,j]
+                Ax[i,j,k] = dzF[k] * dyF[i,j]
+                Ay[i,j,k] = dzF[k] * dxF[i,j]
+                V[i,j,k] = dzF[k] * Az[i,j]
             end
         end
     end
-    g = grids(xC, yC, zC, xF, yF, zF, Lx, Ly, Lz, dxC, dyC, dzC, Ax, Ay, Az, V, Nx, Ny, Nz)
+    g = grids(xC, yC, zC, xF, yF, zF, dxF, dyF, dzF, dxC, dyC, dzC, Ax, Ay, Az, V, Nx, Ny, Nz)
     return g
 end
 
@@ -316,6 +317,7 @@ end
 """
     convert_coordinates(phyts, grid)
 Convert grid indices of each individual into lat, lon, and depth
+z starts from the bottom
 """
 function convert_coordinates(phyts, grid)
     for i in 1:size(phyts,1)
@@ -324,7 +326,7 @@ function convert_coordinates(phyts, grid)
     dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
     phyt.x = grid.xF[x,y] + dx * (grid.xF[x+1,y] - grid.xF[x,y]);
     phyt.y = grid.yF[x,y] + dy * (grid.yF[x,y+1] - grid.yF[x,y]);
-    phyt.z = grid.zF[z] - dz * grid.Lz[z];
+    phyt.z = grid.zF[z] + dz * grid.dzF[z];
     end
 end
 
