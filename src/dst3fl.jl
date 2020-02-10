@@ -26,9 +26,9 @@ calUCFL(g::grids, ΔT, uFld, i, j, k) = abs(uFld[i, j, k] * ΔT / g.dxC[i, j])
 calVCFL(g::grids, ΔT, vFld, i, j, k) = abs(vFld[i, j, k] * ΔT / g.dyC[i, j])
 calWCFL(g::grids, ΔT, wFld, i, j, k) = abs(wFld[i, j, k] * ΔT / g.dzC[k])
 
-# calculate d₀ and d₁ 
-d0(CFL) = (2.0 - CFL) * (1.0 - CFL) / 6.0 
-d1(CFL) = (1.0 - CFL * CFL) / 6.0 
+# calculate d₀ and d₁
+d0(CFL) = (2.0 - CFL) * (1.0 - CFL) / 6.0
+d1(CFL) = (1.0 - CFL * CFL) / 6.0
 
 # calculate volume transport, unit: m³/s
 calUTrans(g::grids, uFld, i, j, k) = g.Ax[i, j, k] * uFld[i, j, k]
@@ -51,7 +51,7 @@ function adv_x(g::grids, q,  uFld, i, j, k, ΔT)
     d₀ = d0(uCFL); d₁ = d1(uCFL);
     rj⁺= q[incmod1(i, g.Nx), j, k] - q[i, j, k]
     rj = q[i, j, k] - q[decmod1(i, g.Nx), j, k]
-    rj⁻= q[decmod1(i, g.Nx), j, k] - q[decmod2(i, g.Nx), j, k] 
+    rj⁻= q[decmod1(i, g.Nx), j, k] - q[decmod2(i, g.Nx), j, k]
     if abs(rj)*θmax ≤ abs(rj⁻)
         θ⁺ = copysign(θmax, rj⁻*rj)
     else
@@ -77,7 +77,7 @@ function adv_y(g::grids, q,  vFld, i, j, k, ΔT)
     d₀ = d0(vCFL); d₁ = d1(vCFL);
     rj⁺= q[i, incmod1(j, g.Ny), k] - q[i, j, k]
     rj = q[i, j, k] - q[i, decmod1(j, g.Ny), k]
-    rj⁻= q[i, decmod1(j, g.Ny), k] - q[i, decmod2(j, g.Ny), k] 
+    rj⁻= q[i, decmod1(j, g.Ny), k] - q[i, decmod2(j, g.Ny), k]
     if abs(rj)*θmax ≤ abs(rj⁻)
         θ⁺ = copysign(θmax, rj⁻*rj)
     else
@@ -137,7 +137,7 @@ function MultiDim_adv(g::grids, q, vel, ΔT)
     for k in 1:g.Nz
         for j in 1:g.Ny
             for i in 1:g.Nx
-                q₂[i, j, k] = q₁[i, j, k] - ΔT / g.V[i, j, k] * (adv_y(g, q₁, v, i, incmod1(j, g.Ny), k, ΔT) - adv_y(g, q₁, v, i, j, k, ΔT) - q[i, j, k] * δvTrans(g, v, i, j, k)) 
+                q₂[i, j, k] = q₁[i, j, k] - ΔT / g.V[i, j, k] * (adv_y(g, q₁, v, i, incmod1(j, g.Ny), k, ΔT) - adv_y(g, q₁, v, i, j, k, ΔT) - q[i, j, k] * δvTrans(g, v, i, j, k))
             end
         end
     end

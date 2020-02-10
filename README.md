@@ -6,7 +6,7 @@ Pkg.develop(PackageSpec(path="AgentPhytModel_3D"))
 Pkg.test("PhytoAgentModel")
 ```
 
-_Note: this uses `AgentPhytModel_3D/samples/T_IR.csv`, `grid.jld`, & `uvw.jld`, and then compares results to `samples/testB1B2.csv`_
+_Note: this uses `AgentPhytModel_3D/samples/PAR.bin`, `temp.bin`, `grid.jld`, & `uvw.jld`, and then compares results to `samples/testB1B2.csv`_
 
 ### To run the example
 
@@ -17,6 +17,8 @@ include("AgentPhytModel_3D/src/model_update.jl")
 ```
 
 _Note: this runs the same example as `Pkg.test("PhytoAgentModel")` but interactively._
+
+### Example
 
 ### To build and serve the docs
 

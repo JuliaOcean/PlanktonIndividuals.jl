@@ -1,8 +1,8 @@
 """
     read_default_IR_input(nTime, ΔT, grid)
-    nTime -> number of time step
-    ΔT -> length of each time step
-    grid -> grid information
+    'nTime' -> number of time step
+    'ΔT' -> length of each time step
+    'grid' -> grid information
 Read input of irradiance from default binary file
 """
 function read_default_IR_input(nTime::Int64, ΔT::Int64,grid)
@@ -37,10 +37,10 @@ end
 
 """
     read_default_temp_input(nTime, ΔT, grid, ∂T∂z)
-    nTime -> number of time step
-    ΔT -> length of each time step
-    grid -> grid information
-    ∂T∂z -> linear vertical temp gradient
+    'nTime' -> number of time step
+    'ΔT' -> length of each time step
+    'grid' -> grid information
+    '∂T∂z' -> linear vertical temp gradient
 Read input of temperature from default binary file
 """
 function read_default_temp_input(nTime::Int64, ΔT::Int64, grid, ∂T∂z=0.04)
@@ -200,7 +200,7 @@ end
     grid_Ogrids(Ogrid)
 Read grid information from Oceananigans
 Return a grid 'struc'
-z starts from the bottom
+'z' starts from the bottom
 """
 function read_Ogrids(Ogrid)
     Nx = Ogrid.Nx
@@ -317,7 +317,7 @@ end
 """
     convert_coordinates(phyts, grid)
 Convert grid indices of each individual into lat, lon, and depth
-z starts from the bottom
+'z' starts from the bottom
 """
 function convert_coordinates(phyts, grid)
     for i in 1:size(phyts,1)

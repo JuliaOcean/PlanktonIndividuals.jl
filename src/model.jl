@@ -1,3 +1,9 @@
+"""
+    PA_model(grid, RunParam)
+Generate the model structure for time step
+Default distribution of individuals is Normal distribution with 1.0 as mean and 0.25 as SD
+Default PAR and temp are from ../samples
+"""
 function PA_Model(grid, RunParam;
                          t = 1,
                individuals = setup_agents(RunParam,1.0,0.25,grid),
@@ -9,7 +15,12 @@ function PA_Model(grid, RunParam;
                    )
     return Model_struct(t,individuals, nutrients, grid, PAR, temp, params, output)
 end
-
+"""
+    PA_ModelRun(model::Model_struct, Rumparam, RunOption)
+The function to run the model for number of time steps in RunParam
+'model' is generated from 'PA_model'
+The function use 'PA_advect!', a simple advection for individua advection
+"""
 function PA_ModelRun(model::Model_struct, RunParam::RunParams, RunOption::RunOptions)
     if RunOption.NutOutputChoice == false
         DIC = zeros(g.Nx, g.Ny, g.Nz, nTime)
@@ -68,7 +79,12 @@ function PA_ModelRun(model::Model_struct, RunParam::RunParams, RunOption::RunOpt
         return nothing
     end
 end
-
+"""
+    PA_advect!(model, DelT, velᵇ)
+Individual advection using a simple scheme
+Used for 2D and 1D double grids
+Particle sinking included
+"""
 function PA_advect!(model::Model_struct, DelT, velᵇ::velocity)
     phyts_b = model.individuals[end]
     if (model.grid.Nx > 1) & (model.grid.Ny > 1)
@@ -79,7 +95,10 @@ function PA_advect!(model::Model_struct, DelT, velᵇ::velocity)
     end
 end
 
-
+"""
+    PA_TimeStep!(model, DelT, velᵇ)
+Update physiology part and nutrient field of 'model' one time step forward
+"""
 function PA_TimeStep!(model::Model_struct, DelT, velᵇ::velocity)
     phyts_a = copy(model.individuals[end]) # read data from last time step
     phyts_b,dvid_ct,graz_ct,death_ct,consume=phyt_update(model.t, DelT, phyts_a, model)
@@ -91,6 +110,12 @@ function PA_TimeStep!(model::Model_struct, DelT, velᵇ::velocity)
     model.t += 1
 end
 
+"""
+    PA_advectRK4!(model, DelT, vel_field)
+Individual advection using a RK4 method
+Used for 3D double grids
+Particle sinking not included
+"""
 function PA_advectRK4!(model::Model_struct, DelT, vel_field)
     phyts_b = model.individuals[end] # read data from last time step
     if (model.grid.Nx > 1) & (model.grid.Ny > 1) & (model.grid.Nz > 1)

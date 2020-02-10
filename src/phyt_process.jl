@@ -55,13 +55,13 @@ function phyt_update(t::Int64, ΔT::Int64, phyts_a, model)
     Num_phyt = size(phyts_a,1)
     chl_num = count_chl(phyts_a, g)
     cumsum_chl = cumsum(chl_num, dims = 3)
-    
+
     #set up a dataframe to record all updated agents
     phyts_b = DataFrame(x=Float64[], y=Float64[], z=Float64[], 
                         gen=Int64[], size=Float64[], Cq1=Float64[], 
                         Cq2=Float64[], Nq=Float64[], chl=Float64[], 
                         sp=Int64[], age=Float64[])
-    
+
     consume = nutrient_fields(zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), 
                               zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), 
                               zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
@@ -73,7 +73,7 @@ function phyt_update(t::Int64, ΔT::Int64, phyts_a, model)
         temp_t = temp[x,y,z,t]
         IR_t = IR[x,y,t]
         DIN = max(0.0, nutrients.DIN[x, y, z])
-        
+
         # compute probabilities of grazing and division
         reg_num_graz = exp(Num_phyt/RunParam.Nindivi/RunParam.Nsp)
         P_graz = rand(Bernoulli(reg_num_graz*phyt.size/model.params["Grz_P"]))
