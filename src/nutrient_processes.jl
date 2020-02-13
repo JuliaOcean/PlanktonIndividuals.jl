@@ -1,4 +1,19 @@
 """
+    sum_consume(consume_p, consume_z)
+sum up consumptions from zooplankton update function and phytoplankton
+update function
+"""
+function sum_consume(consume_p, consume_z)
+    consume_p.DOC = consume_z.DOC .+ consume_p.DOC
+    consume_p.POC = consume_z.POC .+ consume_p.POC
+    consume_p.DON = consume_z.DON .+ consume_p.DON
+    consume_p.PON = consume_z.PON .+ consume_p.PON
+    consume_p.DIC = consume_z.DIC .+ consume_p.DIC
+    consume_p.DIN = consume_z.DIN .+ consume_p.DIN
+    return consume_p
+end
+
+"""
     function nut_update(model, velᵇ, consume, ΔT, Dim)
 Update nutrient fields to next time step with source term and consumption by phytoplankton ('consume')
 """

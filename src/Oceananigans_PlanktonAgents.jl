@@ -64,8 +64,14 @@ phy_grid = read_Ogrids(model.grid);
 
 #                   Dim output, NutOutput, GridChoice, Gridoff, VelChoice, Veloff, SaveGrid, SaveVel, Test
 RunOption=RunOptions(3, true,   true,      false,      Dict(),  false,     Dict(), false,    false,   false);
-#                 nTime, DelT, Nindivi, Nsp, Nsuper,    Cquota(mmol/cell)
-RunParam=RunParams(25*60,   60,  1000,  2,   Int(1e15), [1.8e-11, 1.8e-10]);
+#                   Nindivi, Nsp, Nsuper,    Cquota(mmol/cell),  mean, var
+PhytoOpt = PlankOpt(1000,    2,   Int(1e0),  [1.8e-11, 1.8e-10], 1.0,  0.25)
+
+#                 Nindivi, Nsp, Nsuper,    Cquota(mmol/cell), mean, var
+ZooOpt = PlankOpt(1000,    1,   Int(1e0),  [1.8e-9],          1.0,  0.25)
+
+#                  nTime,  ΔT, PhytoOpt, Zoo,   ZooOpt
+RunParam=RunParams(25*60,  60, PhytoOpt, true,  ZooOpt)
 
 phy_model = PA_Model(phy_grid, RunParam;                  #DIC, DIN,  DOC,  DON, POC, PON, mmol/m3
                      nutrients = setup_nutrients(phy_grid,[2.0, 0.05, 20.0, 0.0, 0.0, 0.0]));
@@ -81,15 +87,15 @@ for i in 1:220
         push!(vel_field,vel)
         time_step!(model, 6, 5)
     end
-    PA_advectRK4!(phy_model, RunParam.DelT, vel_field)
-    PA_TimeStep!(phy_model, RunParam.DelT, vel_field[end])
+    PA_advectRK4!(phy_model.individuals, RunParam.ΔT, vel_field, phy_model.grid)
+    PA_TimeStep!(phy_model, RunParam.ΔT, vel_field[end])
 end
 
 ### Post-processing ###
 B1 = []; B2 = [];
 for i in 1:size(phy_model.individuals,1)
-    sort_species(phy_model.individuals[i], B1, 1)
-    sort_species(phy_model.individuals[i], B2, 2)
+    sort_species(phy_model.individuals[i,1], B1, 1)
+    sort_species(phy_model.individuals[i,1], B2, 2)
 end
 HD1 = []; HD2 = [];
 for i in 1:size(phy_model.individuals,1)
@@ -99,8 +105,8 @@ for i in 1:size(phy_model.individuals,1)
     push!(HD2,HD_2)
 end
 for i in 1:size(phy_model.individuals,1)
-    convert_coordinates(B1[i],phy_grid) 
-    convert_coordinates(B2[i],phy_grid) 
+    convert_coordinates(B1[i],phy_grid)
+    convert_coordinates(B2[i],phy_grid)
 end
 output1 = compute_mean_species(B1, size(phy_model.individuals,1));
 output2 = compute_mean_species(B2, size(phy_model.individuals,1));

@@ -157,14 +157,14 @@ Periodic domain is used
 'vel' is the struc contains u, v, w velocites of current time step
 'g' is the grid information and 'ΔT' is time step
 """
-function agent_advection(phyts_a,vels,g,k_sink,ΔT::Int64,grid_type::String)
+function agent_advection(phyts_a,vels,g,ΔT::Int64,grid_type::String)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
         uvel, vvel, wvel = get_vels(phyt.x, phyt.y, phyt.z, g, vels, grid_type)
         xi, yi, zi = trunc(Int,phyt.x), trunc(Int,phyt.y), trunc(Int,phyt.z)
         dx = uvel/g.dxF[xi]*ΔT # unit: grid/h
         dy = vvel/g.dyF[yi]*ΔT # unit: grid/h
-        dz = (wvel+k_sink)/g.dzF[zi]*ΔT # vertical movement, plus sinking, unit: grid/h
+        dz = wvel/g.dzF[zi]*ΔT # vertical movement, plus sinking, unit: grid/h
         phyt.x = phyt.x + dx*(1+rand()/3)
         phyt.y = phyt.y + dy*(1+rand()/3)
         phyt.z = max(1.1,min(g.Nz-0.1,phyt.z + dz*(1+rand()/3)))

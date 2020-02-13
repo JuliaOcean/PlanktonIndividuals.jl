@@ -248,10 +248,10 @@ function create_output(B::Array{DataFrame,1})
 end
 
 """
-    write_output(t, phyts_b, dvid_ct, graz_ct, death_ct, output)
+    write_output(t, phyts_b, counts, output)
 Compute the average attributes of individuals at 't' time step and push them into 'output' dataframe
 """
-function write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,output)
+function write_output(t,phyts_b,counts,output)
     # summary of current step
     gen_ave=mean(phyts_b.gen)
     spec_ave=mean(phyts_b.sp)
@@ -264,7 +264,7 @@ function write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,output)
     push!(output,(time=t, gen_ave=gen_ave, spec_ave=spec_ave,
                   Cq1_ave=Cq1_ave, Cq2_ave=Cq2_ave, Nq_ave=Nq_ave,
                   size_ave=size_ave, chl_ave=chl_ave, Population=size(phyts_b,1),
-                  age_ave=age_ave, dvid=dvid_ct, graz=graz_ct, death=death_ct))
+                  age_ave=age_ave, dvid=counts[1], graz=counts[2], death=counts[3]))
     return output
 end
 

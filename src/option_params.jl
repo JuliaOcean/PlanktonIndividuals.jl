@@ -3,8 +3,15 @@ include(dirname(pathof(PhytoAgentModel))*"/param_default.jl")
 # Options & Params
 #                   Dim output, NutOutput, GridChoice, Gridoff, VelChoice, Veloff, SaveGrid, SaveVel, Test
 RunOption=RunOptions(3, false,  true,      false,      Dict(),  false,     Dict(), false,    false,   false)
-#                 nTime, DelT, Nindivi, Nsp, Nsuper,    Cquota(mmol/cell)
-RunParam=RunParams(10,   3600, 100000,  2,   Int(1e15), [1.8e-11, 1.8e-10])
+
+#                   Nindivi, Nsp, Nsuper,    Cquota(mmol/cell),  mean, var
+PhytoOpt = PlankOpt(100000,  2,   Int(1e15), [1.8e-11, 1.8e-10], 1.0,  0.25)
+
+#                 Nindivi, Nsp, Nsuper,    Cquota(mmol/cell), mean, var
+ZooOpt = PlankOpt(10000,   1,   Int(1e15), [1.8e-9],          1.0,  0.25)
+
+#                  nTime, ΔT,   PhytoOpt, Zoo,   ZooOpt
+RunParam=RunParams(10,    3600, PhytoOpt, false, ZooOpt)
 
 """
     update_params(parameters, tmp)

@@ -1,23 +1,24 @@
 """
-    setup_agents(RunParams,mean::Float64,var::Float64,grid)
+    setup_agents(RunParams,grid)
 Set up a series of agents following a normal distribution (mean,var)
 'Nindivi' is agent number for each species, 'sp' is number of species, 'Nsuper' is the number of cells one agent represents,
 'Cquota' is the initial biomass for one cell
 """
-function setup_agents(RunParam::RunParams,mean::Float64,var::Float64,grid)
+function setup_agents(RunParam::RunParams,grid)
+    PhytoOpt = RunParam.PhytoOpt
     phyts0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[], age=[])
-    for i in 1:RunParam.Nsp
-        for j in 1:RunParam.Nindivi
+    for i in 1:PhytoOpt.Nsp
+        for j in 1:PhytoOpt.Nindivi
             # agent location
             grid.Nx == 1 ? x = 1 : x = rand(30*grid.Nx:70*grid.Nx)/100
             grid.Ny == 1 ? y = 1 : y = rand(30*grid.Ny:70*grid.Ny)/100
             grid.Nz == 1 ? z = 1 : z = rand(3.5*10:grid.Nz*8)/10
             # a normal distribution with mean variance
-            radm = max(0.05, rand(Normal(mean,var)))
+            radm = max(0.05, rand(Normal(PhytoOpt.mean,PhytoOpt.var)))
             gen  = 1
             size = radm
-            Cq1  = RunParam.Cquota[i]*RunParam.Nsuper # Nsuper is the number of cells one super agent repersents
-            Cq2  = RunParam.Cquota[i]*RunParam.Nsuper*radm
+            Cq1  = PhytoOpt.Cquota[i]*PhytoOpt.Nsuper # Nsuper is the number of cells one super agent repersents
+            Cq2  = PhytoOpt.Cquota[i]*PhytoOpt.Nsuper*radm
             Nq   = 13/120*Cq2
             chl  = Cq2*0.4 # mgChl(/mmolC)
             sp   = i
@@ -26,13 +27,48 @@ function setup_agents(RunParam::RunParams,mean::Float64,var::Float64,grid)
         end
     end
     B = [phyts0]
-    return B
+    if RunParam.Zoo == false
+        return B
+    else
+        ZP = setup_zooplkt(RunParam.ZooOpt, grid)
+        B = hcat(B,ZP)
+        return B
+    end
 end
+
+"""
+    setup_zooplkt(ZooOpt, grid)
+Set up zooplankton individuals according to 'ZooOpt' from 'RunParam'
+"""
+function setup_zooplkt(ZooOpt, grid)
+    zoo0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[], age=[])
+    for i in 1:ZooOpt.Nsp
+        for j in 1:ZooOpt.Nindivi
+            # agent location
+            grid.Nx == 1 ? x = 1 : x = rand(30*grid.Nx:70*grid.Nx)/100
+            grid.Ny == 1 ? y = 1 : y = rand(30*grid.Ny:70*grid.Ny)/100
+            grid.Nz == 1 ? z = 1 : z = rand(3.5*10:grid.Nz*8)/10
+            # a normal distribution with mean variance
+            radm = max(0.05, rand(Normal(ZooOpt.mean,ZooOpt.var)))
+            gen  = 1
+            size = radm
+            Cq1  = 0.0  # zooplankton has only one C quota
+            Cq2  = ZooOpt.Cquota[i]*ZooOpt.Nsuper*radm
+            Nq   = 13/120*Cq2
+            chl  = 0.0 # no Chl in zooplankton
+            sp   = i
+            age  = 1.0
+            push!(zoo0,(x=x,y=y,z=z,gen=gen,size=size,Cq1=Cq1,Cq2=Cq2,Nq=Nq,chl=chl,sp=sp,age=age))
+        end
+    end
+    return [zoo0]
+end
+
 
 """
     setup_nutrients(g,nut)
 Set up initial nutrient fields according to grid information
-Nut is an array of 6 elements, each element is a kind of nutrient
+'Nut' is an array of 6 elements, each element is a kind of nutrient
 """
 function setup_nutrients(g,nut)
     DIC = zeros(g.Nx, g.Ny, g.Nz)

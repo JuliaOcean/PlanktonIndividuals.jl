@@ -11,6 +11,7 @@ src=""
 include("$src"*"model_struct.jl")
 include("$src"*"model_setup.jl")
 include("$src"*"phyt_process.jl")
+include("$src"*"zooplankton.jl")
 include("$src"*"utils.jl")
 include("$src"*"agent_div.jl")
 include("$src"*"dst3fl.jl")
@@ -23,7 +24,7 @@ include("$src"*"option_params.jl")
 export
     # model structures
     PA_Model, grids, nutrient_fields, velocity,
-    RunOptions, RunParams, read_Ogrids,
+    RunOptions, RunParams, PlankOpt, read_Ogrids,
 
     # read input functions
     read_default_IR_input, read_default_temp_input,

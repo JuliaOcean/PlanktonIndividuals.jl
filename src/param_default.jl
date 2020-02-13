@@ -32,11 +32,15 @@ param_default=Dict(
 "grazFracN"=> 0.7,                # Fraction goes into dissolved organic pool
 "mortFracC"=> 0.5,                # Fraction goes into dissolved organic pool
 "mortFracN"=> 0.5,                # Fraction goes into dissolved organic pool
+"slpyFracC"=> 0.4,                # Fraction goes into zooplankton
+"slpyFracN"=> 0.4,                # Fraction goes into zooplankton
 "k_sink"   => 0.01/86400,         # Sink rates for agents (m/s)
 "kDOC"     => 1/30/86400,         # remineralization rate for DOC, turn over time: a month (per second)
 "kDON"     => 1/30/86400,         # remineralization rate for DON, turn over time: a month (per second)
 "kPOC"     => 1/30/86400,         # remineralization rate for POC, turn over time: a month (per second)
 "kPON"     => 1/30/86400,         # remineralization rate for PON, turn over time: a month (per second)
-"κh"       => 0,
-"κv"       => 0)
+"κh"       => 0,                  # horizontal diffusion
+"κv"       => 0,                  # vertical diffusion
+"v_zoo"    => 1.0e-5              # velocity of zooplankton, m/s
+)
 ####################################### end parameters ##################################

@@ -1,7 +1,7 @@
 ###################################################################################
 # Compute advective flux of tracers using 3rd order DST Scheme with flux limiting #
 # Due to free surface, tracers will not be conserved at each time step.           #
-# Surface flux(τⁿ[:,:,1]*Az*wFld[:,:,1]) need to be recorded to check tracer      # 
+# Surface flux(τⁿ[:,:,1]*Az*wFld[:,:,1]) need to be recorded to check tracer      #
 # conservation.                                                                   #
 # There will still be some tiny negative values in tracer field because of multi- #
 # dimensional advection.                                                          #
@@ -14,7 +14,7 @@ function decmod2(a, n)
     if a == 1
         a = max(1, n - 1)
     elseif a == 2
-        a = n 
+        a = n
     else
         a = a - 2
     end
@@ -104,7 +104,7 @@ function adv_z(g::grids, q,  wFld, i, j, k, ΔT)
     km1 = max(1, k-1); km2 = max(1, k-2); kp1 = min(g.Nz, k+1)
     rj⁺= q[i, j, k] - q[i, j, kp1]
     rj = q[i, j, km1] - q[i, j, k]
-    rj⁻= q[i, j, km2] - q[i, j, km1] 
+    rj⁻= q[i, j, km2] - q[i, j, km1]
     if abs(rj)*θmax ≤ abs(rj⁻)
         θ⁺ = copysign(θmax, rj⁻*rj)
     else
