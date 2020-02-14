@@ -85,13 +85,23 @@ Individual advection using a simple scheme
 Used for 2D and 1D double grids
 Particle sinking included
 """
-function PA_advect!(individuals, ΔT, velᵇ::velocity, grid)
+function PA_advect!(model, ΔT, velᵇ::velocity)
+    individuals = model.individuals
+    grid = model.grid
+    params = model.params
     for i in 1:size(individuals,2)
         if (grid.Nx > 1) & (grid.Ny > 1)
             velᵈ = double_grid_2D(velᵇ)
             agent_advection(individuals[end,i],velᵈ,grid,ΔT,"2D")
+            agent_diffusionH(individuals[end,i],grid,params["κhP"])
+            if grid.Nz > 1
+                agent_diffusionV(individuals[end,i],grid,params["κvP"])
+            else
+                nothing
+            end
         elseif (grid.Nx == 1) & (grid.Ny == 1) & (grid.Nz > 1)
             agent_advection(individuals[end,i],velᵇ,grid,ΔT,"1D") # for 1D only, use big grid velocities
+            agent_diffusionV(individuals[end,i],grid,params["κvP"])
         end
     end
 end
@@ -126,16 +136,23 @@ Individual advection using a RK4 method
 Used for 3D double grids
 Particle sinking not included
 """
-function PA_advectRK4!(individuals, ΔT, vel_field, grid)
+function PA_advectRK4!(model, ΔT, vel_field)
+    individuals = model.individuals
+    grid = model.grid
+    params = model.params
     for i in 1:size(individuals,2)
         if (grid.Nx > 1) & (grid.Ny > 1) & (grid.Nz > 1)
             vel_field_d = double_grid_3D.(vel_field)
             agent_advectionRK4(individuals[end,i],vel_field_d,grid,ΔT,"3D")
+            agent_diffusionH(individuals[end,i],grid,params["κhP"])
+            agent_diffusionV(individuals[end,i],grid,params["κvP"])
         elseif (grid.Nx > 1) & (grid.Ny > 1) & (grid.Nz = 1)
             vel_field_d = double_grid_2D.(vel_field)
             agent_advectionRK4(individuals[end,i],vel_field_d,grid,ΔT,"2D")
+            agent_diffusionH(individuals[end,i],grid,params["κhP"])
         elseif (grid.Nx == 1) & (grid.Ny == 1) & (grid.Nz > 1)
             agent_advectionRK4(individuals[end,i],vel_field,grid,ΔT,"1D") # for 1D only, use big grid velocities
+            agent_diffusionV(individuals[end,i],grid,params["κvP"])
         end
     end
 end

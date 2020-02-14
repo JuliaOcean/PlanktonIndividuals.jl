@@ -87,7 +87,7 @@ for i in 1:220
         push!(vel_field,vel)
         time_step!(model, 6, 5)
     end
-    PA_advectRK4!(phy_model.individuals, RunParam.ΔT, vel_field, phy_model.grid)
+    PA_advectRK4!(phy_model, RunParam.ΔT, vel_field)
     PA_TimeStep!(phy_model, RunParam.ΔT, vel_field[end])
 end
 
