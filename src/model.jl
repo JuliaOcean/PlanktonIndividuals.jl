@@ -19,7 +19,7 @@ end
     PA_ModelRun(model::Model_struct, Rumparam, RunOption)
 The function to run the model for number of time steps in RunParam
 'model' is generated from 'PA_model'
-The function use 'PA_advect!', a simple advection for individua advection
+The function use 'PA_advect!', a simple advection for individuals
 """
 function PA_ModelRun(model::Model_struct, RunParam::RunParams, RunOption::RunOptions)
     if RunOption.NutOutputChoice == false
@@ -36,23 +36,20 @@ function PA_ModelRun(model::Model_struct, RunParam::RunParams, RunOption::RunOpt
 
     for it in 1:RunParam.nTime
         t = model.t
-        phyts_a = copy(model.individuals[t]) # read data from last time step
-        phyts_b,dvid_ct,graz_ct,death_ct,consume=phyt_update(t, RunParam.ΔT, phyts_a, model)
+        phyts_a = copy(model.individuals[end]) # read data from last time step
+        phyts_b,counts,consume=phyt_update(t, RunParam.ΔT, phyts_a, model)
         if RunOption.VelChoice == false
             velᵇ = read_offline_vels(RunOption.VelOfflineOpt,trunc(Int,t*RunParam.ΔT/3600))
         else
-            velᵇ=store_vel[t]
+            velᵇ=store_vel[model.t]
         end
-        if (model.grid.Nx > 1) & (model.grid.Ny > 1)
-            velᵈ = double_grid_2D(velᵇ)
-            agent_advection(phyts_b,velᵈ,model.grid,model.params["k_sink"],RunParam.ΔT,"2D")
-        elseif (model.grid.Nx == 1) & (model.grid.Ny == 1) & (model.grid.Nz > 1)
-            agent_advection(phyts_b,velᵇ,model.grid,model.params["k_sink"],RunParam.ΔT,"1D") # for 1D only, use big grid velocities
-        elseif (model.grid.Nx == 1) & (model.grid.Ny == 1) & (model.grid.Nz == 1)
+        if (model.grid.Nx == 1) & (model.grid.Ny == 1) & (model.grid.Nz == 1)
             nothing #for 0D only
+        else
+            PA_advect!(model, RunParam.ΔT, velᵇ)
         end
         push!(model.individuals,phyts_b)
-        write_output(t,phyts_b,dvid_ct,graz_ct,death_ct,model.output)
+        write_output(t,phyts_b,counts,model.output)
         agent_num = size(phyts_b,1)
         nutₜ,gtr = nut_update(model, velᵇ, consume, RunParam.ΔT)
         if RunOption.OutputChoice
