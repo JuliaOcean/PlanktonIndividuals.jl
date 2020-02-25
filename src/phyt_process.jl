@@ -77,8 +77,12 @@ function phyt_update(t::Int64, ΔT::Int64, phyts_a, model)
 
         # compute probabilities of grazing
         # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
-        reg_num_graz = exp(Num_phyt/RunParam.PhytoOpt.Nindivi/RunParam.PhytoOpt.Nsp)
-        P_graz = rand(Bernoulli(reg_num_graz*phyt.size/params["Grz_P"]))
+        if params["Grz_P"] == 0
+            P_graz = false
+        else
+            reg_num_graz = exp(Num_phyt/RunParam.PhytoOpt.Nindivi/RunParam.PhytoOpt.Nsp)
+            P_graz = rand(Bernoulli(reg_num_graz*phyt.size/params["Grz_P"]))
+        end
 
         # compute death probability after a certain age, may be abandoned
         reg_age = max(0.0, phyt.age - params["death_age"])

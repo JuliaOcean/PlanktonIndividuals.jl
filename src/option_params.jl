@@ -13,6 +13,16 @@ ZooOpt = PlankOpt(10000,   1,   Int(1e15), [1.8e-9],          1.0,  0.25)
 #                  nTime, ΔT,   PhytoOpt, Zoo,   ZooOpt
 RunParam=RunParams(10,    3600, PhytoOpt, false, ZooOpt)
 
+function RunParams(nTime, ΔT, PhytoOpt, Zoo::Bool, ZooOpt)
+    if Zoo == true
+        param_default["Grz_P"] = 0
+    else
+        nothing
+    end
+    return RunParams(nTime, ΔT, PhytoOpt, Zoo, ZooOpt)
+end
+
+
 """
     update_params(parameters, tmp)
 Update parameter values based on .yaml file

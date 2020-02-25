@@ -56,6 +56,21 @@ struct grids
     Nz::Int
 end
 
+mutable struct individuals
+    t::Array
+    x::Array
+    y::Array
+    z::Array
+    gen::Array
+    size::Array
+    Cq1::Array
+    Cq2::Array
+    Nq::Array
+    chl::Array
+    sp::Array
+    age::Array
+end
+
 mutable struct nutrient_fields # for tendencies, forcings and consumptions
     DIC::Array{Float64,3}
     DIN::Array{Float64,3}
