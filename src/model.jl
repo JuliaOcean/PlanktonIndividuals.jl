@@ -13,7 +13,13 @@ function PA_Model(grid, RunParam;
                     params = param_default,
                     output = create_output(individuals[:,1])
                    )
-    return Model_struct(t,individuals, nutrients, grid, PAR, temp, params, output)
+    model = Model_struct(t,individuals, nutrients, grid, PAR, temp, params, output)
+    if RunParam.Zoo == true
+        model.params["Grz_P"] = 0
+    else
+        nothing
+    end
+    return model
 end
 """
     PA_ModelRun(model::Model_struct, Rumparam, RunOption)

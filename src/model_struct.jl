@@ -57,18 +57,18 @@ struct grids
 end
 
 mutable struct individuals
-    t::Array
-    x::Array
-    y::Array
-    z::Array
-    gen::Array
-    size::Array
-    Cq1::Array
-    Cq2::Array
-    Nq::Array
-    chl::Array
-    sp::Array
-    age::Array
+    t::Number
+    x::Number
+    y::Number
+    z::Number
+    gen::Number
+    size::Number
+    Cq1::Number
+    Cq2::Number
+    Nq::Number
+    chl::Number
+    sp::Number
+   age::Number
 end
 
 mutable struct nutrient_fields # for tendencies, forcings and consumptions

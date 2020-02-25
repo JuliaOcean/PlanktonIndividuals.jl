@@ -2,34 +2,31 @@ using Random, Printf, Plots
 using Oceananigans, Oceananigans.Utils
 using PhytoAgentModel
 
-### Oceananigans Setup ###
+### Oceananigans Setup with heat induced convection ###
 Nz = 32       # Number of grid points in x, y, z
 Δz = 1.0      # Grid spacing in x, y, z (meters)
 Qᵀ = 5e-5     # Temperature flux at surface
-Qᵘ = -2e-5    # Velocity flux at surface
 ∂T∂z = 0.005    # Initial vertical temperature gradient
 evaporation = 1e-7     # Mass-specific evaporation rate [m s⁻¹]
 f = 1e-4     # Coriolis parameter
 α = 2e-4     # Thermal expansion coefficient
 β = 8e-4     # Haline contraction coefficient
 
-u_bcs = HorizontallyPeriodicBCs(top = BoundaryCondition(Flux, Qᵘ))
-
-T_bcs = HorizontallyPeriodicBCs(   top = BoundaryCondition(Flux, Qᵀ),
-                                bottom = BoundaryCondition(Gradient, ∂T∂z))
+grid = RegularCartesianGrid(size=(Nz, Nz, Nz), length=(Δz*Nz, Δz*Nz, Δz*Nz))
+T_bcs = TracerBoundaryConditions(grid, top = BoundaryCondition(Flux, Qᵀ), bottom = BoundaryCondition(Gradient, ∂T∂z))
 
 ## Salinity flux: Qˢ = - E * S
 @inline Qˢ(i, j, grid, time, iter, U, C, p) = @inbounds -p.evaporation * C.S[i, j, 1]
 
-S_bcs = HorizontallyPeriodicBCs(top = BoundaryCondition(Flux, Qˢ))
+S_bcs = TracerBoundaryConditions(grid, top = BoundaryCondition(Flux, Qˢ))
 
-model = Model(
+model = IncompressibleModel(
          architecture = CPU(),
                  grid = RegularCartesianGrid(size=(Nz, Nz, Nz), length=(Δz*Nz, Δz*Nz, Δz*Nz)),
              coriolis = FPlane(f=f),
              buoyancy = SeawaterBuoyancy(equation_of_state=LinearEquationOfState(α=α, β=β)),
               closure = AnisotropicMinimumDissipation(),
-  boundary_conditions = HorizontallyPeriodicSolutionBCs(u=u_bcs, T=T_bcs, S=S_bcs),
+  boundary_conditions = (T=T_bcs, S=S_bcs,),
            parameters = (evaporation = evaporation,)
 )
 
@@ -39,25 +36,13 @@ model = Model(
 ## Temperature initial condition: a stable density tradient with random noise superposed.
 T₀(x, y, z) = 20 + ∂T∂z * z + ∂T∂z * model.grid.Lz * 1e-6 * Ξ(z)
 
-## Velocity initial condition: random noise scaled by the friction velocity.
-u₀(x, y, z) = sqrt(abs(Qᵘ)) * 1e-1 * Ξ(z)
-
-set!(model, u=u₀, w=u₀, T=T₀, S=35)
+set!(model, w=u₀, T=T₀, S=35)
 
 wizard = TimeStepWizard(cfl=0.2, Δt=1.0, max_change=1.1, max_Δt=5.0)
 
 ### warm up ###
-for i in 1:20
-    update_Δt!(wizard, model)
-
-    ## Time step the model forward
-    walltime = @elapsed time_step!(model, 20, wizard.Δt)
-
-    ## Print a progress message
-    @printf("i: %04d, t: %s, Δt: %s, wall time: %s\n",
-            model.clock.iteration, prettytime(model.clock.time), prettytime(wizard.Δt),
-            prettytime(walltime))
-end
+simulation = Simulation(model, Δt=wizard, stop_iteration=25*20, progress_frequency=20)
+run!(simulation)
 
 ### PlanktonAgents Setup ###
 phy_grid = read_Ogrids(model.grid);
@@ -77,7 +62,8 @@ phy_model = PA_Model(phy_grid, RunParam;                  #DIC, DIN,  DOC,  DON,
                      nutrients = setup_nutrients(phy_grid,[2.0, 0.05, 20.0, 0.0, 0.0, 0.0]));
 
 ### run PlanktonAgents with velocities from Oceananigans ###
-for i in 1:220
+Nsimulation = Simulation(model, Δt=5.0, stop_iteration=506, progress_frequency=6)
+for i in 1:500
     vel_field =[]
     for j in 1:3
         u = model.velocities.u.data.parent
@@ -85,7 +71,8 @@ for i in 1:220
         w = model.velocities.w.data.parent
         vel = PhytoAgentModel.velocity(u, v, w)
         push!(vel_field,vel)
-        time_step!(model, 6, 5)
+        run!(Nsimulation)
+        Nsimulation.stop_iteration += 6
     end
     PA_advectRK4!(phy_model, RunParam.ΔT, vel_field)
     PA_TimeStep!(phy_model, RunParam.ΔT, vel_field[end])
@@ -120,14 +107,22 @@ for i in 1:size(phy_model.individuals,1)
 end
 
 ### Plots & Animations ###
-anim = @animate for i in 1:220
+anim = @animate for i in 1:500
+    p1 = scatter(B1[i].x,B1[i].y,B1[i].z, zcolor=B1[i].size, m=(:diamond, 3, :algae, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), zlims=(-50,5), clims=(0,3), cbar=true, label = "species1")
+    scatter!(p1,Zoos[i].x,Zoos[i].y,Zoos[i].z, zcolor=Zoos[i].size, m=(:star8, 5, :ice, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), zlims=(-50,5), clims=(0,3), cbar=false, label = "zoo")
+    scatter!(p1,B2[i].x,B2[i].y,B2[i].z, zcolor=B2[i].size, m=(:circle, 3, :amp, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), zlims=(-50,5), clims=(0,3), cbar=false, label = "species2")
+    plt = plot(p1,size=(800,500),dpi=100)
+end
+gif(anim,"tmp_test.gif", fps = 15)
+
+anim = @animate for i in 1:500
     p1 = scatter(B1[i].x,B1[i].y, zcolor=B1[i].size, m=(:diamond, 3, :algae, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), clims=(0,3), cbar=true, label = "sp1")
     p2 = scatter(B2[i].x,B2[i].y, zcolor=B2[i].size, m=(:circle, 3, :amp, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), clims=(0,3), cbar=true, label = "sp2")
     plt = plot(p1,p2,layout=grid(1,2),size=(800,300),dpi=100)
 end
 gif(anim,"tmp_xy2d.gif", fps = 15)
 
-anim = @animate for i in 1:220
+anim = @animate for i in 1:500
     p1 = scatter(B1[i].y, B1[i].z, zcolor=B1[i].size, m=(:diamond, 3, :algae, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-50,5), cbar = true, clims=(0,3), label = "sp1")
     p2 = scatter(B2[i].y, B2[i].z, zcolor=B2[i].size, m=(:circle, 3, :amp, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-50,5), clims=(0,3), cbar = true, label = "sp2")
     plt = plot(p1,p2,layout=grid(1,2),size=(800,300),dpi=100)
