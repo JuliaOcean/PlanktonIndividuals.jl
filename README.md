@@ -8,10 +8,13 @@ This package simulates the behavior of an ensemble of phytoplankton `agents`.
 
 ### Use Example
 
+Here we use [Oceananigans.jl](https://github.com/climate-machine/Oceananigans.jl) to generate velocity fields and then use those to drive the agent-based model.
+
 ```
 Pkg.develop(PackageSpec(path="AgentPhytModel_3D"))
 using PhytoAgentModel
-...
+p = dirname(pathof(PhytoAgentModel))
+include(joinpath(p,"Oceananigans_PlanktonAgents.jl"))
 ```
 
 ### Unit Testing
