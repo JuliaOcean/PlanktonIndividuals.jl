@@ -1,23 +1,17 @@
-## Miscellaneous
 
-To build and serve the docs
+### Function Inventory
 
-```
-julia make.jl
-mkdocs build
-mkdocs serve
-```
+**Use cases:**
 
-### function inventory
-
-`model_update.jl` is the main program. It runs the time stepping loop + pre- + post-processing.
+- `Oceananigans_PlanktonAgents.jl`
+- `model_update.ipynb` / `model_update.jl`
 
 **Infrastructure functions:**
 
-- `model_includes.jl` include other files (will later be in module file)
 - `model_struct.jl` defines `velocity`, `grids`, `nutrient_fields`, and `rem` structs.
+- `model.jl` deals with the model basic functionalities.
 - `model_setup.jl` is `setup_agents` and `setup_nutrients`
-- `parameters.jl` model parameter values
+- `option_params.jl` and `param_defaults.jl` deal with model parameter values
 - `utils.jl` utility functions for IO and operations.
 
 **process functions:**
@@ -28,42 +22,46 @@ mkdocs serve
 - `2nd_adv_diffu.jl` right hand side term functions (?)
 - `agent_div.jl` = is mostly `agent_move `, `agent_move_1D ` + `double_grid `, `trilinear_itpl `, `simple_itpl `
 
-### model variables
+## Model Variables
 
-####1) state variables
+_**The lists and text below likely is out of date**_
+
+#### 1) state variables
 
 ```
 phyts_a
 nutrients
 ```
 
-####2) input variables
+#### 2) input variables
 
 - `g` from `grid_offline()` (grid variables)
 - `temp, IR` from `read_input()` (before loop)
 - `remin` from `rem()` (before loop)
 - `velᵇ` from `read_offline_vels()` (in loop)
 
-Notes:
+_Notes:_
 
 - `IR` and `temp` get cycle through / interpolated inside `phyt_update` (via `IR[trunc(Int,t*ΔT/3600)]`). Not sure about `daynight(t,IR)` in `phyt_update`. 
 - `read_offline_vels` receives `trunc(Int,t*ΔT/3600)` as argument.
 - `remin` is time-invariant; like `g`.
 
-####3) intermediate variables
+#### 3) intermediate variables
 
 - `F` = `compute_nut_biochem(nutrients, remin)`
 - `gtr` = `compute_source_term(nutrients, velᵇ, g, F)`
 - `nutₜ` = `nut_update(nutrients, consume, g, gtr, ΔT)`
 
-####4) diagnostic variables 
+#### 4) diagnostic variables 
 
 - `dvid_ct`, `graz_ct`, `death_ct` from `phyt_update`
 - `gtr`, `nutₜ`, `velᵇ`, `agent_num` from 
 
-### output files 
+## Output Files 
 
-####1) listing
+_**The lists and text below likely is out of date**_
+
+#### 1) listing
 
 ```
 B1.bin		all agents at all time steps for species 1
@@ -82,7 +80,7 @@ VD1.bin		vertical profile of the agents opouplation for species 1
 VD2.bin		... species 2
 ```
 
-####2) netcdf output
+#### 2) netcdf output
 
 ```
 netcdf nut.0001 {
@@ -114,7 +112,9 @@ variables:
                 PON:units = "mmolN/m^3" ;
 ```
 
-### data structures
+## Data Structures
+
+_**The lists and text below likely is out of date**_
 
 ```
  output = DataFrame(time=0, 
@@ -131,7 +131,9 @@ variables:
  death = 0)
 ```
 
-### plotting results
+## Plotting Functions
+
+_**The lists and text below likely is out of date**_
 
 ```
 julia> using DataFrames, Serialization
