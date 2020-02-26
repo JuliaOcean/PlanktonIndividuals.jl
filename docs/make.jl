@@ -4,8 +4,7 @@ using PhytoAgentModel
 
 makedocs(
     sitename = "PhytoAgentModel",
-#    format = Documenter.HTML(),
-    format = Markdown(),
+    format = Documenter.HTML(),
     modules = [PhytoAgentModel],
     pages = [
     "Home" => "index.md",
@@ -13,9 +12,6 @@ makedocs(
             ]
 )
 
-# Documenter can also automatically deploy documentation to gh-pages.
-# See "Hosting Documentation" and deploydocs() in the Documenter manual
-# for more information.
-#=deploydocs(
-    repo = "<repository url>"
-)=#
+deploydocs(;
+    repo="github.com/zhenwu0728/AgentPhytModel_3D/",
+)
