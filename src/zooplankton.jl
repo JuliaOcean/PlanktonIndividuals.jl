@@ -56,7 +56,7 @@ function chase_prey(zplk::DataFrameRow, cord, travel_dist::Float64, grid)
         zplk.y = zplk.y + dy * sqrt(dratio)
         zplk.z = zplk.z + dz * sqrt(dratio)
         # periodic domain
-        zplk.z = max(grid.zF[end],min(grid.zF[1],zplk.z ))
+        zplk.z = max(grid.zF[1],min(grid.zF[end],zplk.z ))
         zplk.x = periodic_domain(grid.xF, zplk.x)
         zplk.y = periodic_domain(grid.yF, zplk.y)
         return travel_dist

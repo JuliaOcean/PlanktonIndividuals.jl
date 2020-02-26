@@ -71,7 +71,7 @@ function agent_advection(phyt,vel_itp,g,ΔT::Int64)
     uvel, vvel, wvel = get_vels(phyt.x, phyt.y, phyt.z, vel_itp)
     phyt.x = phyt.x + uvel*ΔT
     phyt.y = phyt.y + vvel*ΔT
-    phyt.z = max(g.zF[end],min(g.zF[1],phyt.z + wvel*ΔT))
+    phyt.z = max(g.zF[1],min(g.zF[end],phyt.z + wvel*ΔT))
     # periodic domain
     phyt.x = periodic_domain(g.xF, phyt.x)
     phyt.y = periodic_domain(g.xF, phyt.y)
@@ -103,7 +103,7 @@ function agent_advectionRK4(phyt, vel_itps, g, ΔT::Int64)
     phyt.x = periodic_domain(g.xF, phyt.x + dx)
     phyt.y = periodic_domain(g.yF, phyt.y + dy)
     phyt.z = phyt.z + dz
-    phyt.z = max(g.zF[end], min(g.zF[1], phyt.z))
+    phyt.z = max(g.zF[1], min(g.zF[end], phyt.z))
 end
 
 """
@@ -129,7 +129,7 @@ Using a random walk algorithm for vertical diffusion
 """
 function agent_diffusionZ(phyt,g,κv)
     phyt.z += rand(Uniform(-1.0,1.0)) * κv
-    phyt.z = max(g.zF[end], min(g.zF[1], phyt.z))
+    phyt.z = max(g.zF[1], min(g.zF[end], phyt.z))
 end
 
 # """
