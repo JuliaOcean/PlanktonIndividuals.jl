@@ -177,7 +177,7 @@ function grid_offline(GridOfflineOpt::Dict)
             end
         end
     end
-    # seletc grids 
+    # seletc grids
     Nx⁻ = Grid_sel["Nx"][1]; Nx⁺ = Grid_sel["Nx"][2]
     Ny⁻ = Grid_sel["Ny"][1]; Ny⁺ = Grid_sel["Ny"][2]
     Nz⁻ = Grid_sel["Nz"][1]; Nz⁺ = Grid_sel["Nz"][2]
@@ -267,6 +267,20 @@ function write_output(t,phyts_b,counts,output)
                   age_ave=age_ave, dvid=counts[1], graz=counts[2], death=counts[3]))
     return output
 end
+"""
+    which_grid(phyt,g)
+decide which grid an individual is in
+return grid indices
+"""
+function which_grid(phyt, g)
+    x = phyt.x; y = phyt.y; z = phyt.z;
+    xF = g.xF[:,1]; yF = g.yF[1,:]; zF = g.zF;
+    xind = findall(t -> t<x, xF)[end]
+    yind = findall(t -> t<y, yF)[end]
+    zind = findall(t -> t<z, zF)[end]
+    return xind, yind, zind
+end
+
 
 """
     count_chl(phyts_a, grid)
@@ -276,9 +290,7 @@ function count_chl(phyts_a, grid)
     cells = zeros(grid.Nx, grid.Ny, grid.Nz)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
-        x = trunc(Int, phyt.x)
-        y = trunc(Int, phyt.y)
-        z = trunc(Int, phyt.z)
+        x,y,z = which_grid(phyt, grid)
         cells[x, y, z] = cells[x, y, z] + phyt.chl
     end
     cells .= cells ./ grid.V
@@ -307,28 +319,27 @@ function count_horizontal_num(phyts_a,grid)
     HD = zeros(grid.Nx,grid.Ny)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
-        x = trunc(Int, phyt.x)
-        y = trunc(Int, phyt.y)
+        x,y,z = which_grid(phyt, gird)
         HD[x,y] = HD[x,y] + 1.0
     end
     return HD
 end
 
-"""
-    convert_coordinates(phyts, grid)
-Convert grid indices of each individual into lat, lon, and depth
-'z' starts from the bottom
-"""
-function convert_coordinates(phyts, grid)
-    for i in 1:size(phyts,1)
-    phyt = phyts[i,:]
-    z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
-    dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
-    phyt.x = grid.xF[x,y] + dx * (grid.xF[x+1,y] - grid.xF[x,y]);
-    phyt.y = grid.yF[x,y] + dy * (grid.yF[x,y+1] - grid.yF[x,y]);
-    phyt.z = grid.zF[z] + dz * grid.dzF[z];
-    end
-end
+# """
+#     convert_coordinates(phyts, grid)
+# Convert grid indices of each individual into lat, lon, and depth
+# 'z' starts from the bottom
+# """
+# function convert_coordinates(phyts, grid)
+#     for i in 1:size(phyts,1)
+#     phyt = phyts[i,:]
+#     z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
+#     dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
+#     phyt.x = grid.xF[x,y] + dx * (grid.xF[x+1,y] - grid.xF[x,y]);
+#     phyt.y = grid.yF[x,y] + dy * (grid.yF[x,y+1] - grid.yF[x,y]);
+#     phyt.z = grid.zF[z] + dz * grid.dzF[z];
+#     end
+# end
 
 """
     sort_species(Bi, Bsp, sp)
