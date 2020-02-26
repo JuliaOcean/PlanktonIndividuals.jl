@@ -3,16 +3,17 @@
 Set up a series of agents following a normal distribution (mean,var)
 'Nindivi' is agent number for each species, 'sp' is number of species, 'Nsuper' is the number of cells one agent represents,
 'Cquota' is the initial biomass for one cell
+'(x,y,z)' of an individual is the actual location not grid indices
 """
 function setup_agents(RunParam::RunParams,grid)
     PhytoOpt = RunParam.PhytoOpt
     phyts0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[], age=[])
     for i in 1:PhytoOpt.Nsp
         for j in 1:PhytoOpt.Nindivi
-            # agent location
-            grid.Nx == 1 ? x = 1 : x = rand(30*grid.Nx:70*grid.Nx)/100
-            grid.Ny == 1 ? y = 1 : y = rand(30*grid.Ny:70*grid.Ny)/100
-            grid.Nz == 1 ? z = 1 : z = rand(3.5*10:grid.Nz*8)/10
+            # agent location (actual location)
+            x = rand(Uniform(grid.xF[1],grid.xF[end]))
+            y = rand(Uniform(grid.yF[1],grid.yF[end]))
+            z = rand(Uniform(grid.zF[1],grid.zF[end]))
             # a normal distribution with mean variance
             radm = max(0.05, rand(Normal(PhytoOpt.mean,PhytoOpt.var)))
             gen  = 1
@@ -44,10 +45,10 @@ function setup_zooplkt(ZooOpt, grid)
     zoo0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[], age=[])
     for i in 1:ZooOpt.Nsp
         for j in 1:ZooOpt.Nindivi
-            # agent location
-            grid.Nx == 1 ? x = 1 : x = rand(30*grid.Nx:70*grid.Nx)/100
-            grid.Ny == 1 ? y = 1 : y = rand(30*grid.Ny:70*grid.Ny)/100
-            grid.Nz == 1 ? z = 1 : z = rand(3.5*10:grid.Nz*8)/10
+            # agent location (actual location)
+            x = rand(Uniform(grid.xF[1],grid.xF[end]))
+            y = rand(Uniform(grid.yF[1],grid.yF[end]))
+            z = rand(Uniform(grid.zF[1],grid.zF[end]))
             # a normal distribution with mean variance
             radm = max(0.05, rand(Normal(ZooOpt.mean,ZooOpt.var)))
             gen  = 1
