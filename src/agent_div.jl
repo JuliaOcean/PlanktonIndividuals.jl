@@ -59,76 +59,70 @@ Periodic domain is used
 'vel' is the struc contains u, v, w velocites of current time step
 'g' is the grid information and 'ΔT' is time step
 """
-function agent_advection(phyts_a,vels,g,ΔT::Int64)
-    for i in 1:size(phyts_a,1)
-        phyt = phyts_a[i,:]
-        uvel, vvel, wvel = get_vels(phyt.x, phyt.y, phyt.z, g, vels)
-        phyt.x = phyt.x + uvel*ΔT
-        phyt.y = phyt.y + vvel*ΔT
-        phyt.z = max(g.zF[end],min(g.zF[1],phyt.z + wvel*ΔT))
-        # periodic domain
-        phyt.x = periodic_domain(g.xF, phyt.x)
-        phyt.y = periodic_domain(g.xF, phyt.y)
-    end
+function agent_advection(phyt,vels,g,ΔT::Int64)
+    uvel, vvel, wvel = get_vels(phyt.x, phyt.y, phyt.z, g, vels)
+    phyt.x = phyt.x + uvel*ΔT
+    phyt.y = phyt.y + vvel*ΔT
+    phyt.z = max(g.zF[end],min(g.zF[1],phyt.z + wvel*ΔT))
+    # periodic domain
+    phyt.x = periodic_domain(g.xF, phyt.x)
+    phyt.y = periodic_domain(g.xF, phyt.y)
 end
 """
     agent_advectionRK4(phyts_a, vel_field, g, ΔT::Int64)
 Require 3D doubled grids.
 'vel_field' is original velocity field.
 """
-function agent_advectionRK4(phyts_a, vel_field, g, ΔT::Int64)
-    for i in 1:size(phyts_a,1)
-        phyt = phyts_a[i,:]
-        u1,v1,w1 = get_vels(phyt.x, phyt.y, phyt.z, g, vel_field[1], grid_type) # velocites at t
-        gx1 = periodic_domain(g.xF, phyt.x + u1*0.5*ΔT)
-        gy1 = periodic_domain(g.yF, phyt.y + v1*0.5*ΔT)
-        gz1 = phyt.z + w1*0.5*ΔT
-        gz1 = max(g.zF[end],min(g.zF[1],gz1))
-        u2,v2,w2 = get_vels(gx1, gy1, gz1, g, vel_field[2]) # velocites at t+0.5ΔT
-        gx2 = periodic_domain(g.xF, phyt.x + u2*0.5*ΔT)
-        gy2 = periodic_domain(g.yF, phyt.y + v2*0.5*ΔT)
-        gz2 = phyt.z + w2*0.5*ΔT
-        gz2 = max(g.zF[end],min(g.zF[1],gz2))
-        u3,v3,w3 = get_vels(gx2, gy2, gz2, g, vel_field[2]) # velocites at t+0.5ΔT
-        gx3 = periodic_domain(g.xF, phyt.x + u3*0.5*ΔT)
-        gy3 = periodic_domain(g.yF, phyt.y + v3*0.5*ΔT)
-        gz3 = phyt.z + w3*0.5*ΔT
-        gz3 = max(g.zF[end],min(g.zF[1],gz3))
-        u4,v4,w4 = get_vels(gx3, gy3, gz3, g, vel_field[3]) # velocites at t+ΔT
-        dx = (u1 + 2*u2 + 2*u3 + u4) / 6 * ΔT
-        dy = (v1 + 2*v2 + 2*v3 + v4) / 6 * ΔT
-        dz = (w1 + 2*w2 + 2*w3 + w4) / 6 * ΔT
-        phyt.x = periodic_domain(g.xF, phyt.x + dx)
-        phyt.y = periodic_domain(g.yF, phyt.y + dy)
-        phyt.z = phyt.z + dz
-        phyt.z = max(g.zF[end], min(g.zF[1], phyt.z))
-    end
+function agent_advectionRK4(phyt, vel_field, g, ΔT::Int64)
+    u1,v1,w1 = get_vels(phyt.x, phyt.y, phyt.z, g, vel_field[1], grid_type) # velocites at t
+    gx1 = periodic_domain(g.xF, phyt.x + u1*0.5*ΔT)
+    gy1 = periodic_domain(g.yF, phyt.y + v1*0.5*ΔT)
+    gz1 = phyt.z + w1*0.5*ΔT
+    gz1 = max(g.zF[end],min(g.zF[1],gz1))
+    u2,v2,w2 = get_vels(gx1, gy1, gz1, g, vel_field[2]) # velocites at t+0.5ΔT
+    gx2 = periodic_domain(g.xF, phyt.x + u2*0.5*ΔT)
+    gy2 = periodic_domain(g.yF, phyt.y + v2*0.5*ΔT)
+    gz2 = phyt.z + w2*0.5*ΔT
+    gz2 = max(g.zF[end],min(g.zF[1],gz2))
+    u3,v3,w3 = get_vels(gx2, gy2, gz2, g, vel_field[2]) # velocites at t+0.5ΔT
+    gx3 = periodic_domain(g.xF, phyt.x + u3*0.5*ΔT)
+    gy3 = periodic_domain(g.yF, phyt.y + v3*0.5*ΔT)
+    gz3 = phyt.z + w3*0.5*ΔT
+    gz3 = max(g.zF[end],min(g.zF[1],gz3))
+    u4,v4,w4 = get_vels(gx3, gy3, gz3, g, vel_field[3]) # velocites at t+ΔT
+    dx = (u1 + 2*u2 + 2*u3 + u4) / 6 * ΔT
+    dy = (v1 + 2*v2 + 2*v3 + v4) / 6 * ΔT
+    dz = (w1 + 2*w2 + 2*w3 + w4) / 6 * ΔT
+    phyt.x = periodic_domain(g.xF, phyt.x + dx)
+    phyt.y = periodic_domain(g.yF, phyt.y + dy)
+    phyt.z = phyt.z + dz
+    phyt.z = max(g.zF[end], min(g.zF[1], phyt.z))
 end
 
 """
-    agent_diffusionH(phyts,g,κh)
+    agent_diffusionX(phyt,g,κh)
 Using a random walk algorithm for horizontal diffusion
 """
-function agent_diffusionH(phyts,g,κh)
-    for i in 1:size(phyts,1)
-        phyt = phyts[i,:]
-        phyt.x += rand(Uniform(-1.0,1.0)) * κh
-        phyt.y += rand(Uniform(-1.0,1.0)) * κh
-        phyt.x = periodic_domain(g.xF, phyt.x)
-        phyt.y = periodic_domain(g.yF, phyt.y)
-    end
+function agent_diffusionX(phyt,g,κh)
+    phyt.x += rand(Uniform(-1.0,1.0)) * κh
+    phyt.x = periodic_domain(g.xF, phyt.x)
 end
 
 """
-    agent_diffusionV(phyts,g,κv)
+    agent_diffusionX(phyt,g,κh)
+Using a random walk algorithm for horizontal diffusion
+"""
+function agent_diffusionY(phyt,g,κh)
+    phyt.y += rand(Uniform(-1.0,1.0)) * κh
+    phyt.y = periodic_domain(g.yF, phyt.y)
+end
+"""
+    agent_diffusionV(phyt,g,κv)
 Using a random walk algorithm for vertical diffusion
 """
-function agent_diffusionV(phyts,g,κv)
-    for i in 1:size(phyts,1)
-        phyt = phyts[i,:]
-        phyt.z += rand(Uniform(-1.0,1.0)) * κv
-        phyt.z = max(g.zF[end], min(g.zF[1], phyt.z))
-    end
+function agent_diffusionV(phyt,g,κv)
+    phyt.z += rand(Uniform(-1.0,1.0)) * κv
+    phyt.z = max(g.zF[end], min(g.zF[1], phyt.z))
 end
 
 # """
