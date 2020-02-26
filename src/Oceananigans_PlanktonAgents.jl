@@ -74,7 +74,10 @@ for i in 1:500
         run!(Nsimulation)
         Nsimulation.stop_iteration += 6
     end
-    PA_advectRK4!(phy_model, RunParam.ΔT, vel_field)
+    vel_itps = (generate_vel_itp(model.grid, vel_field[1]),
+                generate_vel_itp(model.grid, vel_field[2]),
+                generate_vel_itp(model.grid, vel_field[3]))
+    PA_advectRK4!(phy_model, RunParam.ΔT, vel_itps)
     PA_TimeStep!(phy_model, RunParam.ΔT, vel_field[end])
 end
 

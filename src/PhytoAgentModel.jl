@@ -29,7 +29,7 @@ export
     # read input functions
     read_default_IR_input, read_default_temp_input,
     update_params, grid_offline, param_default,
-    PrepRunDir, double_grid_2D, double_grid_3D,
+    PrepRunDir, generate_vel_itp,
 
     # initialize nutrient field and individual sets
     setup_agents, setup_nutrients,
