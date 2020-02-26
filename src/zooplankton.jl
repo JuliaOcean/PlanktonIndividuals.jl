@@ -56,9 +56,9 @@ function chase_prey(zplk::DataFrameRow, cord, travel_dist::Float64, grid)
         zplk.y = zplk.y + dy * sqrt(dratio)
         zplk.z = zplk.z + dz * sqrt(dratio)
         # periodic domain
-        zplk.z = max(1.1,min(grid.Nz-0.1,zplk.z ))
-        zplk.x = periodic_domain(grid.Nx, zplk.x)
-        zplk.y = periodic_domain(grid.Ny, zplk.y)
+        zplk.z = max(grid.zF[end],min(grid.zF[1],zplk.z ))
+        zplk.x = periodic_domain(grid.xF, zplk.x)
+        zplk.y = periodic_domain(grid.yF, zplk.y)
         return travel_dist
     end
 end
@@ -112,7 +112,7 @@ function zoo_update(zoos::DataFrame, phyts::DataFrame, ΔT::Int64, model)
                               zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
     for i in 1:size(zoos,1)
         zplk = zoos[i,:]
-        z = trunc(Int, zplk.z); x = trunc(Int, zplk.x); y = trunc(Int, zplk.y);
+        x, y, z = which_grid(zplk, g)
 
         # compute death probability after a certain age
         reg_age = max(0.0, zplk.age - params["death_age"])

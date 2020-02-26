@@ -70,7 +70,7 @@ function phyt_update(t::Int64, ΔT::Int64, phyts_a, model)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
         sp = phyt.sp
-        z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
+        x, y, z = which_grid(phyt, g)
         temp_t = temp[x,y,z,t]
         IR_t = IR[x,y,t]
         DIN = max(0.0, nutrients.DIN[x, y, z])
