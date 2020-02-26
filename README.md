@@ -1,32 +1,24 @@
+# PhytoAgentModel.jl
 
-### To test the package
+[![Travis Build Status](https://travis-ci.org/zhenwu0728/AgentPhytModel_3D.svg?branch=master)](https://travis-ci.org/zhenwu0728/AgentPhytModel_3D)
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://zhenwu0728.github.io/AgentPhytModel_3D/stable)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://zhenwu0728.github.io/AgentPhytModel_3D/dev)
 
+This package simulates the behavior of an ensemble of phytoplankton `agents`.
+Here we use [Oceananigans.jl](https://github.com/climate-machine/Oceananigans.jl) to generate velocity fields and then use those to drive the agent-based model.
+
+```
+Pkg.develop(PackageSpec(path="AgentPhytModel_3D"))
+using PhytoAgentModel
+p = dirname(pathof(PhytoAgentModel))
+include(joinpath(p,"Oceananigans_PlanktonAgents.jl"))
+```
+
+### Unit Testing
 ```
 Pkg.develop(PackageSpec(path="AgentPhytModel_3D"))
 Pkg.test("PhytoAgentModel")
 ```
 
-_Note: this uses `AgentPhytModel_3D/samples/PAR.bin`, `temp.bin`, `grid.jld`, & `uvw.jld`, and then compares results to `samples/testB1B2.csv`_
 
-### To run the example
 
-```
-Pkg.develop(PackageSpec(path="AgentPhytModel_3D"))
-using PhytoAgentModel
-include("AgentPhytModel_3D/src/model_update.jl")
-```
-
-_Note: this runs the same example as `Pkg.test("PhytoAgentModel")` but interactively._
-
-### Example
-
-### To build and serve the docs
-
-```
-cd AgentPhytModel_3D/docs
-julia make.jl
-mkdocs build
-mkdocs serve
-```
-
-_Note: this requires mkdocs since `format = Markdown()` is set in `docs/make.jl`_
