@@ -2,14 +2,11 @@
 # advection  of agents (use Interpolations.jl to interpolate velocity fields)#
 #########################################################################
 """
-    get_vels(x, y, z, g, vel)
-Read and interpolate velocity at '(x,y,z)'
-Use Interpolations.jl
-'(x,y,z)' is actual location of an individual
-'Ogrid' is grid information from Oceananigans.jl
-'vel' is velocity field including 'u,v,w'
+    generate_vel_itp(grid, vel)
+Use Interpolations.jl to generate interpolation objects
+'Ogrid' is the grid information of Oceananigans.jl
 """
-function get_vels(x, y, z, Ogrid, vel)
+function generate_vel_itp(Ogrid, vel)
     # deal with halo points
     xF = collect(Ogrid.xF)
     pushfirst!(xF,xF[1]-(xF[2]-xF[1]))
@@ -31,6 +28,17 @@ function get_vels(x, y, z, Ogrid, vel)
     u_itp = interpolate((xF,yC,zC),vel.u,Gridded(Linear()))
     v_itp = interpolate((xC,yF,zC),vel.v,Gridded(Linear()))
     w_itp = interpolate((xC,yC,zF),vel.w,Gridded(Linear()))
+    return (u_itp, v_itp, w_itp)
+end
+
+"""
+    get_vels(x, y, z, vel_itp)
+Read and interpolate velocity at '(x,y,z)'
+'(x,y,z)' is actual location of an individual
+'vel_itp' is interpolation objects
+"""
+function get_vels(x, y, z, vel_itp)
+    u_itp = vel_itp[1]; v_itp = vel_itp[2]; w_itp = vel_itp[3];
     u = u_itp(x, y, z); v = v_itp(x, y, z); w = w_itp(x, y, z);
     return u, v, w
 end
@@ -52,15 +60,15 @@ function periodic_domain(xF, x)
 end
 
 """
-    agent_advection(phyts_a,vel,g,ΔT)
+    agent_advection(phyts_a,vel_itp,g,ΔT)
 Update grid indices of all the individuals according to velocity fields of each time step
 Periodic domain is used
 'phyts_a' is a dataframe contains all the individuals of current time step
-'vel' is the struc contains u, v, w velocites of current time step
+'vel_itp' is the tuple contains interpolations of u, v, w velocites of current time step
 'g' is the grid information and 'ΔT' is time step
 """
-function agent_advection(phyt,vels,g,ΔT::Int64)
-    uvel, vvel, wvel = get_vels(phyt.x, phyt.y, phyt.z, g, vels)
+function agent_advection(phyt,vel_itp,g,ΔT::Int64)
+    uvel, vvel, wvel = get_vels(phyt.x, phyt.y, phyt.z, vel_itp)
     phyt.x = phyt.x + uvel*ΔT
     phyt.y = phyt.y + vvel*ΔT
     phyt.z = max(g.zF[end],min(g.zF[1],phyt.z + wvel*ΔT))
@@ -69,27 +77,26 @@ function agent_advection(phyt,vels,g,ΔT::Int64)
     phyt.y = periodic_domain(g.xF, phyt.y)
 end
 """
-    agent_advectionRK4(phyts_a, vel_field, g, ΔT::Int64)
-Require 3D doubled grids.
-'vel_field' is original velocity field.
+    agent_advectionRK4(phyts_a, vel_itps, g, ΔT::Int64)
+'vel_itps' is an array of tuples containing interpolations of u, v, w velocites of current time step
 """
-function agent_advectionRK4(phyt, vel_field, g, ΔT::Int64)
-    u1,v1,w1 = get_vels(phyt.x, phyt.y, phyt.z, g, vel_field[1], grid_type) # velocites at t
+function agent_advectionRK4(phyt, vel_itps, g, ΔT::Int64)
+    u1,v1,w1 = get_vels(phyt.x, phyt.y, phyt.z, vel_itps[1]) # velocites at t
     gx1 = periodic_domain(g.xF, phyt.x + u1*0.5*ΔT)
     gy1 = periodic_domain(g.yF, phyt.y + v1*0.5*ΔT)
     gz1 = phyt.z + w1*0.5*ΔT
     gz1 = max(g.zF[end],min(g.zF[1],gz1))
-    u2,v2,w2 = get_vels(gx1, gy1, gz1, g, vel_field[2]) # velocites at t+0.5ΔT
+    u2,v2,w2 = get_vels(gx1, gy1, gz1, vel_itps[2]) # velocites at t+0.5ΔT
     gx2 = periodic_domain(g.xF, phyt.x + u2*0.5*ΔT)
     gy2 = periodic_domain(g.yF, phyt.y + v2*0.5*ΔT)
     gz2 = phyt.z + w2*0.5*ΔT
     gz2 = max(g.zF[end],min(g.zF[1],gz2))
-    u3,v3,w3 = get_vels(gx2, gy2, gz2, g, vel_field[2]) # velocites at t+0.5ΔT
+    u3,v3,w3 = get_vels(gx2, gy2, gz2, vel_itps[2]) # velocites at t+0.5ΔT
     gx3 = periodic_domain(g.xF, phyt.x + u3*0.5*ΔT)
     gy3 = periodic_domain(g.yF, phyt.y + v3*0.5*ΔT)
     gz3 = phyt.z + w3*0.5*ΔT
     gz3 = max(g.zF[end],min(g.zF[1],gz3))
-    u4,v4,w4 = get_vels(gx3, gy3, gz3, g, vel_field[3]) # velocites at t+ΔT
+    u4,v4,w4 = get_vels(gx3, gy3, gz3, vel_itps[3]) # velocites at t+ΔT
     dx = (u1 + 2*u2 + 2*u3 + u4) / 6 * ΔT
     dy = (v1 + 2*v2 + 2*v3 + v4) / 6 * ΔT
     dz = (w1 + 2*w2 + 2*w3 + w4) / 6 * ΔT
@@ -117,10 +124,10 @@ function agent_diffusionY(phyt,g,κh)
     phyt.y = periodic_domain(g.yF, phyt.y)
 end
 """
-    agent_diffusionV(phyt,g,κv)
+    agent_diffusionZ(phyt,g,κv)
 Using a random walk algorithm for vertical diffusion
 """
-function agent_diffusionV(phyt,g,κv)
+function agent_diffusionZ(phyt,g,κv)
     phyt.z += rand(Uniform(-1.0,1.0)) * κv
     phyt.z = max(g.zF[end], min(g.zF[1], phyt.z))
 end

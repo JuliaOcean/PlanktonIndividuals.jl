@@ -87,7 +87,7 @@ end
 Individual advection using a simple scheme
 Particle sinking included
 """
-function PA_advect!(model, ΔT, vel::velocity)
+function PA_advect!(model, ΔT, vel_itp)
     individuals = model.individuals
     grid = model.grid
     params = model.params
@@ -95,7 +95,7 @@ function PA_advect!(model, ΔT, vel::velocity)
         planks = individuals[end,i]
         for j in 1:size(planks,1)
             plank = planks[j,:]
-            agent_advection(plank,vel,grid,ΔT)
+            agent_advection(plank,vel_itp,grid,ΔT)
             if grid.Nx > 1
                 agent_diffusionX(plank,grid,params["κhP"])
             end
@@ -139,7 +139,7 @@ Individual advection using a RK4 method
 Used for 3D double grids
 Particle sinking not included
 """
-function PA_advectRK4!(model, ΔT, vel_field)
+function PA_advectRK4!(model, ΔT, vel_itps)
     individuals = model.individuals
     grid = model.grid
     params = model.params
@@ -147,7 +147,7 @@ function PA_advectRK4!(model, ΔT, vel_field)
         planks = individuals[end,i]
         for j in 1:size(planks,1)
             plank = planks[j,:]
-            agent_advectionRK4(plank,vel_field,grid,ΔT)
+            agent_advectionRK4(plank,vel_itps,grid,ΔT)
             if grid.Nx > 1
                 agent_diffusionX(plank,grid,params["κhP"])
             end
