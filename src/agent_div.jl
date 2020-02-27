@@ -74,7 +74,7 @@ function agent_advection(phyt,vel_itp,g,ΔT::Int64)
     phyt.z = max(g.zF[1],min(g.zF[end],phyt.z + wvel*ΔT))
     # periodic domain
     phyt.x = periodic_domain(g.xF, phyt.x)
-    phyt.y = periodic_domain(g.xF, phyt.y)
+    phyt.y = periodic_domain(g.yF, phyt.y)
 end
 """
     agent_advectionRK4(phyts_a, vel_itps, g, ΔT::Int64)
@@ -85,17 +85,17 @@ function agent_advectionRK4(phyt, vel_itps, g, ΔT::Int64)
     gx1 = periodic_domain(g.xF, phyt.x + u1*0.5*ΔT)
     gy1 = periodic_domain(g.yF, phyt.y + v1*0.5*ΔT)
     gz1 = phyt.z + w1*0.5*ΔT
-    gz1 = max(g.zF[end],min(g.zF[1],gz1))
+    gz1 = max(g.zF[1],min(g.zF[end],gz1))
     u2,v2,w2 = get_vels(gx1, gy1, gz1, vel_itps[2]) # velocites at t+0.5ΔT
     gx2 = periodic_domain(g.xF, phyt.x + u2*0.5*ΔT)
     gy2 = periodic_domain(g.yF, phyt.y + v2*0.5*ΔT)
     gz2 = phyt.z + w2*0.5*ΔT
-    gz2 = max(g.zF[end],min(g.zF[1],gz2))
+    gz2 = max(g.zF[1],min(g.zF[end],gz2))
     u3,v3,w3 = get_vels(gx2, gy2, gz2, vel_itps[2]) # velocites at t+0.5ΔT
     gx3 = periodic_domain(g.xF, phyt.x + u3*0.5*ΔT)
     gy3 = periodic_domain(g.yF, phyt.y + v3*0.5*ΔT)
     gz3 = phyt.z + w3*0.5*ΔT
-    gz3 = max(g.zF[end],min(g.zF[1],gz3))
+    gz3 = max(g.zF[1],min(g.zF[end],gz3))
     u4,v4,w4 = get_vels(gx3, gy3, gz3, vel_itps[3]) # velocites at t+ΔT
     dx = (u1 + 2*u2 + 2*u3 + u4) / 6 * ΔT
     dy = (v1 + 2*v2 + 2*v3 + v4) / 6 * ΔT
