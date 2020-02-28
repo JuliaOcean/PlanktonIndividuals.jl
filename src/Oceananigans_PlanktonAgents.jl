@@ -13,12 +13,8 @@ f = 1e-4     # Coriolis parameter
 β = 8e-4     # Haline contraction coefficient
 
 grid = RegularCartesianGrid(size=(Nz, Nz, Nz), length=(Δz*Nz, Δz*Nz, Δz*Nz))
-T_bcs = TracerBoundaryConditions(grid, top = BoundaryCondition(Flux, Qᵀ), bottom = BoundaryCondition(Gradient, ∂T∂z))
-
-## Salinity flux: Qˢ = - E * S
-@inline Qˢ(i, j, grid, time, iter, U, C, p) = @inbounds -p.evaporation * C.S[i, j, 1]
-
-S_bcs = TracerBoundaryConditions(grid, top = BoundaryCondition(Flux, Qˢ))
+T_bcs = TracerBoundaryConditions(grid, top = BoundaryCondition(Flux, Qᵀ),
+                                 bottom = BoundaryCondition(Gradient, ∂T∂z))
 
 model = IncompressibleModel(
          architecture = CPU(),
@@ -26,7 +22,7 @@ model = IncompressibleModel(
              coriolis = FPlane(f=f),
              buoyancy = SeawaterBuoyancy(equation_of_state=LinearEquationOfState(α=α, β=β)),
               closure = AnisotropicMinimumDissipation(),
-  boundary_conditions = (T=T_bcs, S=S_bcs,),
+  boundary_conditions = (T=T_bcs,),
            parameters = (evaporation = evaporation,)
 )
 
@@ -36,7 +32,7 @@ model = IncompressibleModel(
 ## Temperature initial condition: a stable density tradient with random noise superposed.
 T₀(x, y, z) = 20 + ∂T∂z * z + ∂T∂z * model.grid.Lz * 1e-6 * Ξ(z)
 
-set!(model, w=u₀, T=T₀, S=35)
+set!(model, T=T₀)
 
 wizard = TimeStepWizard(cfl=0.2, Δt=1.0, max_change=1.1, max_Δt=5.0)
 
