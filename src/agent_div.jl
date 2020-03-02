@@ -14,6 +14,7 @@ function generate_vel_itp(Ogrid, vel)
     pushfirst!(yF,yF[1]-(yF[2]-yF[1]))
     zF = collect(Ogrid.zF)
     pushfirst!(zF,zF[1]-(zF[2]-zF[1]))
+    pushfirst!(zF,zF[1]-(zF[2]-zF[1]))
 
     xC = collect(Ogrid.xC)
     pushfirst!(xC,xF[2]-(xC[1]-xF[2]))
