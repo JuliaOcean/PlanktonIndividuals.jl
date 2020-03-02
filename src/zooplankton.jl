@@ -20,7 +20,7 @@ function find_feeding_area(zplk::DataFrameRow, phyts::DataFrame, radius::Float64
     dist_df = sort(dist_df,:dist)
     indices = findall(x -> x<radius, dist_df.dist)
     if size(indices,1) == 0
-        if dist_df.dist > (radius * 10)
+        if dist_df.dist[1] > (radius * 10)
             return (false, dist_df[1,:], nothing)
         else
             x = copy(phyts[dist_df.ID[1],:].x)
