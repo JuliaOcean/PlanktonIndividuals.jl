@@ -20,12 +20,16 @@ function find_feeding_area(zplk::DataFrameRow, phyts::DataFrame, radius::Float64
     dist_df = sort(dist_df,:dist)
     indices = findall(x -> x<radius, dist_df.dist)
     if size(indices,1) == 0
-        x = copy(phyts[dist_df.ID[1],:].x)
-        y = copy(phyts[dist_df.ID[1],:].y)
-        z = copy(phyts[dist_df.ID[1],:].z)
-        return (false, dist_df[1,:], (x,y,z))
+        if dist_df.dist > (radius * 10)
+            return (false, dist_df[1,:], nothing)
+        else
+            x = copy(phyts[dist_df.ID[1],:].x)
+            y = copy(phyts[dist_df.ID[1],:].y)
+            z = copy(phyts[dist_df.ID[1],:].z)
+            return (false, dist_df[1,:], (x,y,z))
+        end
     elseif size(indices,1) == size(dist_df,1)
-        return (true, dist_df[indices, :], (0.0,0.0,0.0))
+        return (true, dist_df[indices, :], nothing)
     else
         nearest_ID = dist_df.ID[indices[end]+1]
         x = copy(phyts[nearest_ID,:].x)
@@ -61,6 +65,24 @@ function chase_prey(zplk::DataFrameRow, cord, travel_dist::Float64, grid)
         zplk.y = periodic_domain(grid.yF, zplk.y)
         return travel_dist
     end
+end
+
+"""
+    rand_walk(zplk::DataFrameRow, grid, travel_dist)
+If zooplankton cannot find any prey, it will swim randomly
+"""
+function rand_walk!(zplk::DataFrameRow, grid, travel_dist)
+    dx = rand(Uniform(-1,1))
+    dy = rand(Uniform(-1,1))
+    dz = rand(Uniform(-1,1))
+    zplk.x += dx*travel_dist
+    zplk.y += dy*travel_dist
+    zplk.z += dz*travel_dist
+    # periodic domain
+    zplk.z = max(grid.zF[1],min(grid.zF[end],zplk.z ))
+    zplk.x = periodic_domain(grid.xF, zplk.x)
+    zplk.y = periodic_domain(grid.yF, zplk.y)
+    return nothing
 end
 
 
@@ -127,17 +149,25 @@ function zoo_update(zoos::DataFrame, phyts::DataFrame, ΔT::Int64, model)
 
             # find prey or not
             if feeding[1] == false
-                travel_dist = chase_prey(zplk, feeding[3], travel_dist, g)
+                if feeding[3] == nothing
+                    rand_walk!(zplk, g, travel_dist)
+                else
+                    travel_dist = chase_prey(zplk, feeding[3], travel_dist, g)
+                end
             elseif feeding[1] == true
                 phyts_feed = phyts[feeding[2].ID,:]
                 deleterows!(phyts,sort(feeding[2].ID))
                 Cexport,Nexport = sloppy_feed(zplk, phyts_feed, params)
-                travel_dist = chase_prey(zplk, feeding[3], travel_dist, g)
                 consume.DOC[x, y, z] = consume.DOC[x, y, z] + Cexport * params["grazFracC"]
                 consume.DON[x, y, z] = consume.DON[x, y, z] + Nexport * params["grazFracN"]
                 consume.POC[x, y, z] = consume.POC[x, y, z] + Cexport * (1.0 - params["grazFracC"])
                 consume.PON[x, y, z] = consume.PON[x, y, z] + Nexport * (1.0 - params["grazFracN"])
                 graz_ct = graz_ct + size(phyts_feed,1)
+                if feeding[3] == nothing
+                    rand_walk!(zplk, g, travel_dist)
+                else
+                    travel_dist = chase_prey(zplk, feeding[3], travel_dist, g)
+                end
             end
             zplk.age = zplk.age + 1.0*(ΔT/3600)
 
