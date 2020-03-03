@@ -25,7 +25,7 @@ mutable struct RunParams
     ΔT::Int64             # seconds of each time step
     PhytoOpt::PlankOpt    # phytoplankton configurations
     Zoo::Bool             # Whether include zooplankton
-    ZooOpt::PlankOpt      # Zooplankton configurations
+    ZooOpt                # Zooplankton configurations
 end
 
 mutable struct velocity #for offline only, include time series

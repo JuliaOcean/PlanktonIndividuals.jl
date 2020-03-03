@@ -275,9 +275,9 @@ return grid indices
 function which_grid(phyt, g)
     x = phyt.x; y = phyt.y; z = phyt.z;
     xF = g.xF[:,1]; yF = g.yF[1,:]; zF = g.zF;
-    xind = findall(t -> t<x, xF)[end]
-    yind = findall(t -> t<y, yF)[end]
-    zind = findall(t -> t<z, zF)[end]
+    xind = findall(t -> t≤x, xF[1:end-1])[end]
+    yind = findall(t -> t≤y, yF[1:end-1])[end]
+    zind = findall(t -> t≤z, zF[1:end-1])[end]
     return xind, yind, zind
 end
 

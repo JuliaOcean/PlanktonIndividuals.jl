@@ -49,13 +49,14 @@ RunOption=RunOptions(3, true,   true,      false,      Dict(),  false,     Dict(
 PhytoOpt = PlankOpt(1000,    2,   Int(1e0),  [1.8e-11, 1.8e-10], 1.0,  0.25)
 
 #                 Nindivi, Nsp, Nsuper,    Cquota(mmol/cell), mean, var
-ZooOpt = PlankOpt(1000,    1,   Int(1e0),  [1.8e-9],          1.0,  0.25)
+#ZooOpt = PlankOpt(1000,    1,   Int(1e0),  [1.8e-9],          1.0,  0.25)
 
 #                  nTime,  ΔT, PhytoOpt, Zoo,   ZooOpt
-RunParam=RunParams(25*60,  60, PhytoOpt, true,  ZooOpt)
+RunParam=RunParams(25*60,  60, PhytoOpt, false, nothing)
 
-phy_model = PA_Model(phy_grid, RunParam;                  #DIC, DIN,  DOC,  DON, POC, PON, mmol/m3
-                     nutrients = setup_nutrients(phy_grid,[2.0, 0.05, 20.0, 0.0, 0.0, 0.0]));
+#           DIC, DIN,  DOC,  DON, POC, PON, mmol/m3
+nut_init = [2.0, 0.05, 20.0, 0.0, 0.0, 0.0];
+phy_model = PA_Model(phy_grid, RunParam; nutrients = setup_nutrients(phy_grid, nut_init));
 
 ### run PlanktonAgents with velocities from Oceananigans ###
 Nsimulation = Simulation(model, Δt=5.0, stop_iteration=506, progress_frequency=6)
@@ -89,10 +90,6 @@ for i in 1:size(phy_model.individuals,1)
     push!(HD1,HD_1)
     HD_2 = count_horizontal_num(B2[i],phy_grid);
     push!(HD2,HD_2)
-end
-for i in 1:size(phy_model.individuals,1)
-    convert_coordinates(B1[i],phy_grid)
-    convert_coordinates(B2[i],phy_grid)
 end
 output1 = compute_mean_species(B1, size(phy_model.individuals,1));
 output2 = compute_mean_species(B2, size(phy_model.individuals,1));
