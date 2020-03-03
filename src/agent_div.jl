@@ -4,25 +4,24 @@
 """
     generate_vel_itp(grid, vel)
 Use Interpolations.jl to generate interpolation objects
-'Ogrid' is the grid information of Oceananigans.jl
 """
-function generate_vel_itp(Ogrid, vel)
+function generate_vel_itp(grid, vel)
     # deal with halo points
-    xF = collect(Ogrid.xF)
+    xF = copy(grid.xF[:,1])
     pushfirst!(xF,xF[1]-(xF[2]-xF[1]))
-    yF = collect(Ogrid.yF)
+    yF = copy(grid.yF[1,:])
     pushfirst!(yF,yF[1]-(yF[2]-yF[1]))
-    zF = collect(Ogrid.zF)
+    zF = copy(grid.zF)
     pushfirst!(zF,zF[1]-(zF[2]-zF[1]))
     pushfirst!(zF,zF[1]-(zF[2]-zF[1]))
 
-    xC = collect(Ogrid.xC)
+    xC = copy(grid.xC[:,1])
     pushfirst!(xC,xF[2]-(xC[1]-xF[2]))
     push!(xC,xF[end]+(xF[end]-xC[end]))
-    yC = collect(Ogrid.yC)
+    yC = copy(grid.yC[1,:])
     pushfirst!(yC,yF[2]-(yC[1]-yF[2]))
     push!(yC,yF[end]+(yF[end]-yC[end]))
-    zC = collect(Ogrid.zC)
+    zC = copy(grid.zC)
     pushfirst!(zC,zF[2]-(zC[1]-zF[2]))
     push!(zC,zF[end]+(zF[end]-zC[end]))
 
