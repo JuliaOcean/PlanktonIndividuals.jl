@@ -97,7 +97,8 @@ function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
         uvel = zeros(Float32, 1080, 2700, 90)
         read!(fuvel, uvel); uvel .= ntoh.(uvel)
         close(fuvel);
-        u = uvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
+        u = zeros(Nx, Ny, Nz)
+        u[:,:,2:end] = uvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
     end
 
     if Ny == 1
@@ -107,7 +108,8 @@ function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
         vvel = zeros(Float32, 1080, 2700, 90)
         read!(fvvel, vvel); vvel .= ntoh.(vvel)
         close(fvvel);
-        v = vvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
+        v = zeros(Nx, Ny, Nz)
+        v[:,:,2:end] = vvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
     end
 
     if Nz == 1
