@@ -86,10 +86,10 @@ function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
     itList  = VelOfflineOpt["itList"]
     Grid_sel= VelOfflineOpt["GridSel"]
     tN      = VelOfflineOpt["tN"]
-    Nx⁻ = Grid_sel["Nx"][1]-1; Nx⁺ = Grid_sel["Nx"][2]+1
-    Ny⁻ = Grid_sel["Ny"][1]-1; Ny⁺ = Grid_sel["Ny"][2]+1
-    Nz⁻ = Grid_sel["Nz"][1]; Nz⁺ = Grid_sel["Nz"][2]
-    Nx = Nx⁺ - Nx⁻ + 1; Ny = Ny⁺ - Ny⁻ + 1; Nz = Nz⁺ - Nz⁻ + 1;
+    Nx⁻ = Grid_sel["Nx"][1]-1; Nx⁺ = Grid_sel["Nx"][2]+1;
+    Ny⁻ = Grid_sel["Ny"][1]-1; Ny⁺ = Grid_sel["Ny"][2]+1;
+    Nz⁻ = Grid_sel["Nz"][1]; Nz⁺ = Grid_sel["Nz"][2]+1;
+    Nx = Nx⁺ - Nx⁻ + 1; Ny = Ny⁺ - Ny⁻ + 1; Nz = Nz⁺ - Nz⁻ + 2;
     if Nx == 1
         u = zeros(Nx, Ny, Nz)
     else
@@ -111,13 +111,14 @@ function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
     end
 
     if Nz == 1
-        w = zeros(Nx, Ny, Nz)
+        w = zeros(Nx, Ny, Nz+1)
     else
         fwvel = open(vfroot*"/WVEL/_."*lpad(string(itList[t+tN]),10,"0")*".data")
         wvel = zeros(Float32, 1080, 2700, 90)
         read!(fwvel, wvel); wvel .= ntoh.(wvel)
         close(fwvel);
-        w = wvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
+        w = zeros(Nx, Ny, Nz+1)
+        w[:,:,3:end] = wvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
     end
     vel = velocity(u, v, w)
     return vel

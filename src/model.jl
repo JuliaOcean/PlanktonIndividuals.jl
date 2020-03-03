@@ -47,12 +47,13 @@ function PA_ModelRun(model::Model_struct, RunParam::RunParams, RunOption::RunOpt
         if RunOption.VelChoice == false
             velᵇ = read_offline_vels(RunOption.VelOfflineOpt,trunc(Int,t*RunParam.ΔT/3600))
         else
-            velᵇ=store_vel[model.t]
+            velᵇ=store_vel[t]
         end
         if (model.grid.Nx == 1) & (model.grid.Ny == 1) & (model.grid.Nz == 1)
             nothing #for 0D only
         else
-            PA_advect!(model, RunParam.ΔT, velᵇ)
+            vel_itp = generate_vel_itp(model.grid, velᵇ)
+            PA_advect!(model, RunParam.ΔT, vel_itp)
         end
         push!(model.individuals,phyts_b)
         write_output(t,phyts_b,counts,model.output)
