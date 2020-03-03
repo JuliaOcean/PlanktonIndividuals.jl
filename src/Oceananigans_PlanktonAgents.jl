@@ -105,22 +105,21 @@ end
 ### Plots & Animations ###
 anim = @animate for i in 1:500
     p1 = scatter(B1[i].x,B1[i].y,B1[i].z, zcolor=B1[i].size, m=(:diamond, 3, :algae, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), zlims=(-50,5), clims=(0,3), cbar=true, label = "species1")
-    scatter!(p1,Zoos[i].x,Zoos[i].y,Zoos[i].z, zcolor=Zoos[i].size, m=(:star8, 5, :ice, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), zlims=(-50,5), clims=(0,3), cbar=false, label = "zoo")
     scatter!(p1,B2[i].x,B2[i].y,B2[i].z, zcolor=B2[i].size, m=(:circle, 3, :amp, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), zlims=(-50,5), clims=(0,3), cbar=false, label = "species2")
     plt = plot(p1,size=(800,500),dpi=100)
 end
 gif(anim,"tmp_test.gif", fps = 15)
 
 anim = @animate for i in 1:500
-    p1 = scatter(B1[i].x,B1[i].y, zcolor=B1[i].size, m=(:diamond, 3, :algae, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), clims=(0,3), cbar=true, label = "sp1")
-    p2 = scatter(B2[i].x,B2[i].y, zcolor=B2[i].size, m=(:circle, 3, :amp, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), clims=(0,3), cbar=true, label = "sp2")
+    p1 = scatter(B1[i].x,B1[i].y, zcolor=B1[i].size, m=(:diamond, 3, :algae, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), clims=(0,3), cbar=true, label = "species1")
+    p2 = scatter(B2[i].x,B2[i].y, zcolor=B2[i].size, m=(:circle, 3, :amp, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), clims=(0,3), cbar=true, label = "species2")
     plt = plot(p1,p2,layout=grid(1,2),size=(800,300),dpi=100)
 end
 gif(anim,"tmp_xy2d.gif", fps = 15)
 
 anim = @animate for i in 1:500
-    p1 = scatter(B1[i].y, B1[i].z, zcolor=B1[i].size, m=(:diamond, 3, :algae, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-50,5), cbar = true, clims=(0,3), label = "sp1")
-    p2 = scatter(B2[i].y, B2[i].z, zcolor=B2[i].size, m=(:circle, 3, :amp, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-50,5), clims=(0,3), cbar = true, label = "sp2")
+    p1 = scatter(B1[i].y, B1[i].z, zcolor=B1[i].size, m=(:diamond, 3, :algae, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-50,5), cbar = true, clims=(0,3), label = "species1")
+    p2 = scatter(B2[i].y, B2[i].z, zcolor=B2[i].size, m=(:circle, 3, :amp, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-50,5), clims=(0,3), cbar = true, label = "species2")
     plt = plot(p1,p2,layout=grid(1,2),size=(800,300),dpi=100)
 end
 gif(anim,"tmp_yz2d.gif", fps = 15)
