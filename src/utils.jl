@@ -167,6 +167,7 @@ function grid_offline(GridOfflineOpt::Dict)
     Az .= ntoh.(Az); hFC.= ntoh.(hFC);
     hFS.= ntoh.(hFS);hFW.= ntoh.(hFW);
     zf = -cumsum(drf); pushfirst!(zf,0); zc = 0.5*(zf[1:end-1]+zf[2:end]);
+    zf = reverse(zf); zc = reverse(zc); drf = reverse(drf); drc = reverse(drc);
     Ax = zeros(nx,ny,nz); Ay = zeros(nx,ny,nz); V = zeros(nx,ny,nz);
     for i in 1:nx
         for j in 1:ny
