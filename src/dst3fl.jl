@@ -1,7 +1,7 @@
 ###################################################################################
 # Compute advective flux of tracers using 3rd order DST Scheme with flux limiting #
 # Due to free surface, tracers will not be conserved at each time step.           #
-# Surface flux(τⁿ[:,:,1]*Az*wFld[:,:,1]) need to be recorded to check tracer      # 
+# Surface flux(τⁿ[:,:,1]*Az*wFld[:,:,1]) need to be recorded to check tracer      #
 # conservation.                                                                   #
 # There will still be some tiny negative values in tracer field because of multi- #
 # dimensional advection.                                                          #
@@ -14,7 +14,7 @@ function decmod2(a, n)
     if a == 1
         a = max(1, n - 1)
     elseif a == 2
-        a = n 
+        a = n
     else
         a = a - 2
     end
@@ -102,9 +102,9 @@ function adv_z(g::grids, q,  wFld, i, j, k, ΔT)
     wTrans = calWTrans(g, wFld, i, j, k)
     d₀ = d0(wCFL); d₁ = d1(wCFL);
     km1 = max(1, k-1); km2 = max(1, k-2); kp1 = min(g.Nz, k+1)
-    rj⁺= q[i, j, k] - q[i, j, kp1]
-    rj = q[i, j, km1] - q[i, j, k]
-    rj⁻= q[i, j, km2] - q[i, j, km1] 
+    rj⁺= q[i, j, kp1] - q[i, j, k]
+    rj = q[i, j, k] - q[i, j, km1]
+    rj⁻= q[i, j, km1] - q[i, j, km2]
     if abs(rj)*θmax ≤ abs(rj⁻)
         θ⁺ = copysign(θmax, rj⁻*rj)
     else
@@ -119,7 +119,7 @@ function adv_z(g::grids, q,  wFld, i, j, k, ΔT)
     Ψ⁺ = max(0.0, min(min(1.0, Ψ⁺), θ⁺ * (1.0 - wCFL) / (wCFL + 1.0e-20)))
     Ψ⁻ = d₀ + d₁ * θ⁻
     Ψ⁻ = max(0.0, min(min(1.0, Ψ⁻), θ⁻ * (1.0 - wCFL) / (wCFL + 1.0e-20)))
-    Fᵣ = 0.5 * (wTrans + abs(wTrans))*(q[i, j, k] + Ψ⁻ * rj) + 0.5 * (wTrans - abs(wTrans)) * (q[i, j, km1] - Ψ⁺ * rj)
+    Fᵣ = 0.5 * (wTrans + abs(wTrans))*(q[i, j, km1] + Ψ⁺ * rj) + 0.5 * (wTrans - abs(wTrans)) * (q[i, j, k] - Ψ⁻ * rj)
     return Fᵣ
 end
 
@@ -147,7 +147,7 @@ function MultiDim_adv(g::grids, q, vel, ΔT)
                 if k == g.Nz
                     q₃[i, j, k] = q₂[i, j, k] - ΔT / g.V[i, j, k] * (adv_z(g, q₂, w, i, j, k, ΔT) - q[i, j, k] * δwTrans(g, w, i, j, k))
                 else
-                    q₃[i, j, k] = q₂[i, j, k] - ΔT / g.V[i, j, k] * (adv_z(g, q₂, w, i, j, k, ΔT) - adv_z(g, q₂, w, i, j, min(k+1, g.Nz), ΔT) - q[i, j, k] * δwTrans(g, w, i, j, k))
+                    q₃[i, j, k] = q₂[i, j, k] - ΔT / g.V[i, j, k] * (adv_z(g, q₂, w, i, j, k+1, ΔT) - adv_z(g, q₂, w, i, j, k, ΔT) - q[i, j, k] * δwTrans(g, w, i, j, k))
                 end
             end
         end
