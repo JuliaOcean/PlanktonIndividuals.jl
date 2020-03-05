@@ -56,28 +56,32 @@ struct grids
     Nz::Int
 end
 
-mutable struct individuals
-    t::Number
-    x::Number
-    y::Number
-    z::Number
-    gen::Number
-    size::Number
-    Cq1::Number
-    Cq2::Number
-    Nq::Number
-    chl::Number
-    sp::Number
-   age::Number
-end
+# mutable struct individuals
+#     t::Number
+#     x::Number
+#     y::Number
+#     z::Number
+#     gen::Number
+#     size::Number
+#     Cq1::Number
+#     Cq2::Number
+#     Nq::Number
+#     chl::Number
+#     sp::Number
+#     age::Number
+# end
 
 mutable struct nutrient_fields # for tendencies, forcings and consumptions
     DIC::Array{Float64,3}
-    DIN::Array{Float64,3}
+    NH4::Array{Float64,3}
+    NO3::Array{Float64,3}
+    PO4::Array{Float64,3}
     DOC::Array{Float64,3}
     DON::Array{Float64,3}
+    DOP::Array{Float64,3}
     POC::Array{Float64,3}
     PON::Array{Float64,3}
+    POP::Array{Float64,3}
 end
 
 mutable struct Model_struct

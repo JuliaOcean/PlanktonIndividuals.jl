@@ -94,8 +94,11 @@ return C and N content as exports to environment
 function sloppy_feed(zplk::DataFrameRow, phyts_feed::DataFrame, params)
     TOC = sum(phyts_feed.Cq1) + sum(phyts_feed.Cq2)
     TON = sum(phyts_feed.Nq)
+    TOP = sum(phyts_feed.Pq)
     Feed_CN = (params["slpyFracC"] * TOC) / (params["slpyFracN"] * TON)
+    Feed_CP = (params["slpyFracC"] * TOC) / (params["slpyFracP"] * TOP)
     Zoo_CN = zplk.Cq2 / zplk.Nq
+    Zoo_CP = zplk.Cq2 / zplk.Pq
     if Feed_CN ≥ Zoo_CN
         dCq2 = params["slpyFracN"] * TON * Zoo_CN
         dsize= dCq2 / zplk.Cq2
@@ -103,12 +106,21 @@ function sloppy_feed(zplk::DataFrameRow, phyts_feed::DataFrame, params)
         dCq2 = params["slpyFracC"] * TOC
         dsize= dCq2 / zplk.Cq2
     end
+    if Feed_CP ≥ Zoo_CP
+        dCq2 = params["slpyFracP"] * TOP * Zoo_CP
+        dsize= dCq2 / zplk.Cq2
+    else
+        dCq2 = params["slpyFracC"] * TOC
+        dsize= dCq2 / zplk.Cq2
+    end
     zplk.Cq2 = zplk.Cq2 + dCq2
     zplk.Nq  = zplk.Nq  + dCq2 / Zoo_CN
+    zplk.Pq  = zplk.Pq  + dCq2 / Zoo_CP
     zplk.size= zplk.size+ dsize
     Cexport = TOC - dCq2
     Nexport = TON - dCq2 / Zoo_CN
-    return Cexport, Nexport
+    Pexport = TOP - dCq2 / Zoo_CP
+    return Cexport, Nexport, Pexport
 end
 
 
@@ -125,13 +137,11 @@ function zoo_update(zoos::DataFrame, phyts::DataFrame, ΔT::Int64, model)
     dvid_ct = 0; graz_ct = 0; death_ct = 0
     #set up a dataframe to record all updated agents
     zoos_b = DataFrame(x=Float64[], y=Float64[], z=Float64[],
-                      gen=Int64[], size=Float64[], Cq1=Float64[],
-                      Cq2=Float64[], Nq=Float64[], chl=Float64[],
-                      sp=Int64[], age=Float64[])
+                       gen=Int64[], size=Float64[], Cq1=Float64[],
+                       Cq2=Float64[], Nq=Float64[], Pq=Float64[],
+                       chl=Float64[], sp=Int64[], age=Float64[])
 
-    consume = nutrient_fields(zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz),
-                              zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz),
-                              zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
+    consume = nutrients_init(g)
     for i in 1:size(zoos,1)
         zplk = zoos[i,:]
         x, y, z = which_grid(zplk, g)
@@ -157,11 +167,13 @@ function zoo_update(zoos::DataFrame, phyts::DataFrame, ΔT::Int64, model)
             elseif feeding[1] == true
                 phyts_feed = phyts[feeding[2].ID,:]
                 deleterows!(phyts,sort(feeding[2].ID))
-                Cexport,Nexport = sloppy_feed(zplk, phyts_feed, params)
+                Cexport, Nexport, Pexport = sloppy_feed(zplk, phyts_feed, params)
                 consume.DOC[x, y, z] = consume.DOC[x, y, z] + Cexport * params["grazFracC"]
                 consume.DON[x, y, z] = consume.DON[x, y, z] + Nexport * params["grazFracN"]
+                consume.DOP[x, y, z] = consume.DOP[x, y, z] + Pexport * params["grazFracP"]
                 consume.POC[x, y, z] = consume.POC[x, y, z] + Cexport * (1.0 - params["grazFracC"])
                 consume.PON[x, y, z] = consume.PON[x, y, z] + Nexport * (1.0 - params["grazFracN"])
+                consume.POP[x, y, z] = consume.POP[x, y, z] + Pexport * (1.0 - params["grazFracP"])
                 graz_ct = graz_ct + size(phyts_feed,1)
                 if feeding[3] == nothing
                     rand_walk!(zplk, g, travel_dist)
@@ -182,8 +194,10 @@ function zoo_update(zoos::DataFrame, phyts::DataFrame, ΔT::Int64, model)
             death_ct += 1
             consume.DOC[x, y, z] = consume.DOC[x, y, z] + zplk.Cq2 * params["mortFracC"]
             consume.DON[x, y, z] = consume.DON[x, y, z] + zplk.Nq  * params["mortFracN"]
+            consume.DOP[x, y, z] = consume.DOP[x, y, z] + zplk.Pq  * params["mortFracP"]
             consume.POC[x, y, z] = consume.POC[x, y, z] + zplk.Cq2 * (1.0 - params["mortFracC"])
             consume.PON[x, y, z] = consume.PON[x, y, z] + zplk.Nq  * (1.0 - params["mortFracN"])
+            consume.POP[x, y, z] = consume.POP[x, y, z] + zplk.Pq  * (1.0 - params["mortFracP"])
         end
     end
     return zoos_b, (dvid_ct, graz_ct, death_ct), consume

@@ -7,7 +7,10 @@ Set up a series of agents following a normal distribution (mean,var)
 """
 function setup_agents(RunParam::RunParams,grid)
     PhytoOpt = RunParam.PhytoOpt
-    phyts0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[], age=[])
+    phyts0 = DataFrame(x=Float64[], y=Float64[], z=Float64[],
+                       gen=Int64[], size=Float64[], Cq1=Float64[],
+                       Cq2=Float64[], Nq=Float64[], Pq=Float64[],
+                       chl=Float64[], sp=Int64[], age=[])
     for i in 1:PhytoOpt.Nsp
         for j in 1:PhytoOpt.Nindivi
             # agent location (actual location)
@@ -21,10 +24,13 @@ function setup_agents(RunParam::RunParams,grid)
             Cq1  = PhytoOpt.Cquota[i]*PhytoOpt.Nsuper # Nsuper is the number of cells one super agent repersents
             Cq2  = PhytoOpt.Cquota[i]*PhytoOpt.Nsuper*radm
             Nq   = 13/120*Cq2
+            Pq   = 1/120*Cq2
             chl  = Cq2*0.4 # mgChl(/mmolC)
             sp   = i
             age  = 1.0
-            push!(phyts0,(x=x,y=y,z=z,gen=gen,size=size,Cq1=Cq1,Cq2=Cq2,Nq=Nq,chl=chl,sp=sp,age=age))
+            push!(phyts0,(x=x,y=y,z=z,gen=gen,size=size,
+                          Cq1=Cq1,Cq2=Cq2,Nq=Nq,Pq=Pq,
+                          chl=chl,sp=sp,age=age))
         end
     end
     B = [phyts0]
@@ -42,7 +48,10 @@ end
 Set up zooplankton individuals according to 'ZooOpt' from 'RunParam'
 """
 function setup_zooplkt(ZooOpt, grid)
-    zoo0 = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[], size=Float64[], Cq1=Float64[], Cq2=Float64[], Nq=Float64[], chl=Float64[], sp=Int64[], age=[])
+    zoo0 = DataFrame(x=Float64[], y=Float64[], z=Float64[],
+                     gen=Int64[], size=Float64[], Cq1=Float64[],
+                     Cq2=Float64[], Nq=Float64[], Pq=Float64[],
+                     chl=Float64[], sp=Int64[], age=[])
     for i in 1:ZooOpt.Nsp
         for j in 1:ZooOpt.Nindivi
             # agent location (actual location)
@@ -56,10 +65,13 @@ function setup_zooplkt(ZooOpt, grid)
             Cq1  = 0.0  # zooplankton has only one C quota
             Cq2  = ZooOpt.Cquota[i]*ZooOpt.Nsuper*radm
             Nq   = 13/120*Cq2
+            Pq   = 1/120*Cq2
             chl  = 0.0 # no Chl in zooplankton
             sp   = i
             age  = 1.0
-            push!(zoo0,(x=x,y=y,z=z,gen=gen,size=size,Cq1=Cq1,Cq2=Cq2,Nq=Nq,chl=chl,sp=sp,age=age))
+            push!(zoo0,(x=x,y=y,z=z,gen=gen,size=size,
+                        Cq1=Cq1,Cq2=Cq2,Nq=Nq,Pq=Pq,
+                        chl=chl,sp=sp,age=age))
         end
     end
     return [zoo0]
@@ -67,30 +79,36 @@ end
 
 
 """
+    nutrients_init(g)
+"""
+function nutrients_init(g)
+    nut = nutrient_fields(zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz),
+                          zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz),
+                          zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz),
+                          zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz),
+                          zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
+    return nut
+end
+
+
+"""
     setup_nutrients(g,nut)
 Set up initial nutrient fields according to grid information
-'Nut' is an array of 6 elements, each element is a kind of nutrient
+'Nut' is an array of 10 elements, each element is a kind of nutrient
 """
 function setup_nutrients(g,nut)
-    DIC = zeros(g.Nx, g.Ny, g.Nz)
-    DIN = zeros(g.Nx, g.Ny, g.Nz)
-    DOC = zeros(g.Nx, g.Ny, g.Nz)
-    DON = zeros(g.Nx, g.Ny, g.Nz)
-    POC = zeros(g.Nx, g.Ny, g.Nz)
-    PON = zeros(g.Nx, g.Ny, g.Nz)
-    for i in 1:g.Nx
-        for j in 1:g.Ny
-            for k in 1:g.Nz
-                DIC[i, j, k] = DIC[i, j, k] + nut[1]
-                DIN[i, j, k] = DIN[i, j, k] + nut[2]
-                DOC[i, j, k] = DOC[i, j, k] + nut[3]
-                DON[i, j, k] = DON[i, j, k] + nut[4]
-                POC[i, j, k] = POC[i, j, k] + nut[5]
-                PON[i, j, k] = PON[i, j, k] + nut[6]
-            end
-        end
-    end
-    nutrients = nutrient_fields(DIC, DIN, DOC, DON, POC, PON)
+    DIC = fill(nut[1],(g.Nx, g.Ny, g.Nz))
+    NH4 = fill(nut[2],(g.Nx, g.Ny, g.Nz))
+    NO3 = fill(nut[3],(g.Nx, g.Ny, g.Nz))
+    PO4 = fill(nut[4],(g.Nx, g.Ny, g.Nz))
+    DOC = fill(nut[5],(g.Nx, g.Ny, g.Nz))
+    DON = fill(nut[6],(g.Nx, g.Ny, g.Nz))
+    DOP = fill(nut[7],(g.Nx, g.Ny, g.Nz))
+    POC = fill(nut[8],(g.Nx, g.Ny, g.Nz))
+    PON = fill(nut[9],(g.Nx, g.Ny, g.Nz))
+    POP = fill(nut[10],(g.Nx, g.Ny, g.Nz))
+
+    nutrients = nutrient_fields(DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP)
     return nutrients
 end
 

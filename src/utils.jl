@@ -245,9 +245,9 @@ Creat a dataframe to record the average attributes of indivuduals of each time s
 function create_output(B::Array{DataFrame,1})
     output = DataFrame(time=0, gen_ave=mean(B[1].gen), spec_ave = mean(B[1].sp),
                        Cq1_ave=mean(B[1].Cq1), Cq2_ave=mean(B[1].Cq2),
-                       Nq_ave=mean(B[1].Nq), size_ave=mean(B[1].size),
-                       chl_ave=mean(B[1].chl), Population=size(B[1],1),
-                       age_ave=mean(B[1].age), dvid=0, graz=0,death=0)
+                       Nq_ave=mean(B[1].Nq), Pq_ave=mean(B[1].Pq),
+                       size_ave=mean(B[1].size), chl_ave=mean(B[1].chl),
+                       Population=size(B[1],1), age_ave=mean(B[1].age), dvid=0, graz=0,death=0)
     return output
 end
 
@@ -262,11 +262,12 @@ function write_output(t,phyts_b,counts,output)
     Cq1_ave=mean(phyts_b.Cq1)
     Cq2_ave=mean(phyts_b.Cq2)
     Nq_ave=mean(phyts_b.Nq)
+    Pq_ave=mean(phyts_b.Pq)
     size_ave=mean(phyts_b.size)
     chl_ave=mean(phyts_b.chl)
     age_ave=mean(phyts_b.age)
     push!(output,(time=t, gen_ave=gen_ave, spec_ave=spec_ave,
-                  Cq1_ave=Cq1_ave, Cq2_ave=Cq2_ave, Nq_ave=Nq_ave,
+                  Cq1_ave=Cq1_ave, Cq2_ave=Cq2_ave, Nq_ave=Nq_ave, Pq_ave=Pq_ave,
                   size_ave=size_ave, chl_ave=chl_ave, Population=size(phyts_b,1),
                   age_ave=age_ave, dvid=counts[1], graz=counts[2], death=counts[3]))
     return output
@@ -351,9 +352,10 @@ Sort individuals of different species into different dataframes
 'Bi' is a dataframe row, 'Nsp' is an empty array
 """
 function sort_species(Bi, Bsp, sp::Int64)
-    phyts = DataFrame(x=Float64[], y=Float64[], z=Float64[], gen=Int64[],
-                      size=Float64[], Cq1=Float64[], Cq2=Float64[],
-                      Nq=Float64[], chl=Float64[],sp=Int64[],age=Float64[])
+    phyts = DataFrame(x=Float64[], y=Float64[], z=Float64[],
+                      gen=Int64[], size=Float64[], Cq1=Float64[],
+                      Cq2=Float64[], Nq=Float64[], Pq=Float64[],
+                      chl=Float64[],sp=Int64[],age=Float64[])
     for j in 1:size(Bi,1)
         if Bi[j,:].sp == sp
             push!(phyts,Bi[j,:])
@@ -369,18 +371,20 @@ Compute the average attributes of individuals of different species
 """
 function compute_mean_species(Bsp, nTime)
     output = DataFrame(time=Int64[], gen_ave=Float64[], Cq1_ave=Float64[],
-                       Cq2_ave=Float64[], Nq_ave=Float64[], size_ave=Float64[],
-                       chl_ave=Float64[], Population=Int64[], age_ave=Float64[]);
+                       Cq2_ave=Float64[], Nq_ave=Float64[], Pq_ave=Float64[],
+                       size_ave=Float64[], chl_ave=Float64[],
+                       Population=Int64[], age_ave=Float64[]);
     for i in 1:nTime
         gen_ave1=mean(Bsp[i].gen)
         Cq1_ave1=mean(Bsp[i].Cq1)
         Cq2_ave1=mean(Bsp[i].Cq2)
         Nq_ave1=mean(Bsp[i].Nq)
+        Pq_ave1=mean(Bsp[i].Pq)
         size_ave1=mean(Bsp[i].size)
         chl_ave1=mean(Bsp[i].chl)
         age_ave1=mean(Bsp[i].age)
         push!(output,(time=i, gen_ave=gen_ave1, Cq1_ave=Cq1_ave1,
-                      Cq2_ave=Cq2_ave1, Nq_ave=Nq_ave1, size_ave=size_ave1,
+                      Cq2_ave=Cq2_ave1, Nq_ave=Nq_ave1, Pq_ave=Pq_ave1, size_ave=size_ave1,
                       chl_ave=chl_ave1, Population=size(Bsp[i],1),age_ave=age_ave1))
     end
     return output
@@ -397,25 +401,31 @@ function write_nut_nc_each_step(g::grids, nut::nutrient_fields, t::Int64, filepa
     zC_attr = Dict("longname" => "Locations of the cell centers in the z-direction.", "units" => "m")
     C_attr = Dict("units" => "mmolC/m^3")
     N_attr = Dict("units" => "mmolN/m^3")
+    P_attr = Dict("units" => "mmolP/m^3")
     isfile(filepath) && rm(filepath)
     nccreate(filepath, "DIC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=C_attr);
-    nccreate(filepath, "DIN", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
+    nccreate(filepath, "NH4", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
+    nccreate(filepath, "NO3", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
+    nccreate(filepath, "PO4", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=P_attr);
     nccreate(filepath, "DOC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=C_attr);
     nccreate(filepath, "DON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
+    nccreate(filepath, "DOP", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=P_attr);
     nccreate(filepath, "POC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=C_attr);
     nccreate(filepath, "PON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
-    ncwrite(nut.DIC,filepath,"DIC"); ncwrite(nut.DIN,filepath,"DIN");
-    ncwrite(nut.DOC,filepath,"DOC"); ncwrite(nut.DON,filepath,"DON");
-    ncwrite(nut.POC,filepath,"POC"); ncwrite(nut.PON,filepath,"PON");
+    nccreate(filepath, "POP", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=P_attr);
+    ncwrite(nut.DIC,filepath,"DIC"); ncwrite(nut.NH4,filepath,"NH4");
+    ncwrite(nut.NO3,filepath,"NO3"); ncwrite(nut.PO4,filepath,"PO4");
+    ncwrite(nut.DOC,filepath,"DOC"); ncwrite(nut.DON,filepath,"DON"); ncwrite(nut.DOP,filepath,"DOP");
+    ncwrite(nut.POC,filepath,"POC"); ncwrite(nut.PON,filepath,"PON"); ncwrite(nut.POP,filepath,"POP");
     nothing
 end
 
 """
-    write_nut_nc_alltime(a, DIC, DIN, DOC, DON, POC, PON, nTime)
+    write_nut_nc_alltime(a, DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, nTime)
 Write a NetCDF file of nutrient fields for the whole run, especially for 0D configuration
 Default filepath -> "results/nutrients.nc"
 """
-function write_nut_nc_alltime(g::grids, DIC, DIN, DOC, DON, POC, PON, nTime,
+function write_nut_nc_alltime(g::grids, DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, nTime,
                               filepath = "./results/nutrients.nc")
     tt = collect(1:nTime);
     xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
@@ -424,16 +434,22 @@ function write_nut_nc_alltime(g::grids, DIC, DIN, DOC, DON, POC, PON, nTime,
     T_attr = Dict("longname" => "Time", "units" => "H")
     C_attr = Dict("units" => "mmolC/m^3")
     N_attr = Dict("units" => "mmolN/m^3")
+    P_attr = Dict("units" => "mmolP/m^3")
     isfile(filepath) && rm(filepath)
     nccreate(filepath, "DIC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=C_attr);
-    nccreate(filepath, "DIN", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
+    nccreate(filepath, "NH4", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
+    nccreate(filepath, "NO3", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
+    nccreate(filepath, "PO4", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=P_attr);
     nccreate(filepath, "DOC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=C_attr);
     nccreate(filepath, "DON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
+    nccreate(filepath, "DOP", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=P_attr);
     nccreate(filepath, "POC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=C_attr);
     nccreate(filepath, "PON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
-    ncwrite(nut.DIC,filepath,"DIC"); ncwrite(nut.DIN,filepath,"DIN");
-    ncwrite(nut.DOC,filepath,"DOC"); ncwrite(nut.DON,filepath,"DON");
-    ncwrite(nut.POC,filepath,"POC"); ncwrite(nut.PON,filepath,"PON");
+    nccreate(filepath, "POP", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=P_attr);
+    ncwrite(DIC,filepath,"DIC"); ncwrite(NH4,filepath,"NH4");
+    ncwrite(NO3,filepath,"NO3"); ncwrite(PO4,filepath,"PO4");
+    ncwrite(DOC,filepath,"DOC"); ncwrite(DON,filepath,"DON"); ncwrite(DOP,filepath,"DOP");
+    ncwrite(POC,filepath,"POC"); ncwrite(PON,filepath,"PON"); ncwrite(POP,filepath,"POP");
     ncclose(filepath)
     return nothing
 end
@@ -444,17 +460,20 @@ Compute total gtr (supposed to be 0), and surface vertical tracer flux(supposed 
 Write a brief summary of each time step into a txt file
 """
 function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, vel::velocity, agent_num::Int64, t::Int64, death_ct::Int64, graz_ct::Int64, dvid_ct::Int64)
-    Σgtrⁿ = sum(gtr.DIN .* g.V)+sum(gtr.DON .* g.V)+sum(gtr.PON .* g.V)
+    Σgtrⁿ = sum(gtr.NH4 .* g.V)+sum(gtr.NO3 .* g.V)+sum(gtr.DON .* g.V)+sum(gtr.PON .* g.V)
     Σgtrᶜ = sum(gtr.DIC .* g.V)+sum(gtr.DOC .* g.V)+sum(gtr.POC .* g.V)
-    ΣsurFⁿ= sum((nutₜ.DIN[:,:,1]+nutₜ.DON[:,:,1]+nutₜ.PON[:,:,1]) .* g.Az .* vel.w[:,:,1])
+    Σgtrᵖ = sum(gtr.PO4 .* g.V)+sum(gtr.DOP .* g.V)+sum(gtr.POP .* g.V)
+    ΣsurFⁿ= sum((nutₜ.NH4[:,:,1]+nutₜ.NO3[:,:,1]+nutₜ.DON[:,:,1]+nutₜ.PON[:,:,1]) .* g.Az .* vel.w[:,:,1])
     ΣsurFᶜ= sum((nutₜ.DIC[:,:,1]+nutₜ.DOC[:,:,1]+nutₜ.POC[:,:,1]) .* g.Az .* vel.w[:,:,1])
-    ΣDIN = sum(nutₜ.DIN .* g.V)
+    ΣsurFᵖ= sum((nutₜ.PO4[:,:,1]+nutₜ.DOP[:,:,1]+nutₜ.POP[:,:,1]) .* g.Az .* vel.w[:,:,1])
+    ΣDIN = sum((nutₜ.NH4+nutₜ.NO3) .* g.V)
     Cio = open("results/cons_C.txt","a"); Nio = open("results/cons_N.txt","a");
-    DINio = open("results/cons_DIN.txt","a");
+    Pio = open("results/cons_P.txt","a"); DINio = open("results/cons_DIN.txt","a");
     println(Cio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrᶜ,ΣsurFᶜ,Σgtrᶜ+ΣsurFᶜ))
     println(Nio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrⁿ,ΣsurFⁿ,Σgtrⁿ+ΣsurFⁿ))
+    println(Pio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrᵖ,ΣsurFᵖ,Σgtrᵖ+ΣsurFᵖ))
     println(DINio,@sprintf("%3.0f  %.16E %7.0f %5.0f %5.0f %5.0f",t,ΣDIN,agent_num,death_ct,graz_ct,dvid_ct))
-    close(Cio);close(Nio);close(DINio);
+    close(Cio);close(Nio);close(Pio);close(DINio);
 end
 
 """

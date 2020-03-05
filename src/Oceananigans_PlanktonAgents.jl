@@ -54,8 +54,8 @@ PhytoOpt = PlankOpt(1000,    2,   Int(1e0),  [1.8e-11, 1.8e-10], 1.0,  0.25)
 #                  nTime,  ΔT, PhytoOpt, Zoo,   ZooOpt
 RunParam=RunParams(25*60,  60, PhytoOpt, false, nothing)
 
-#           DIC, DIN,  DOC,  DON, POC, PON, mmol/m3
-nut_init = [2.0, 0.05, 20.0, 0.0, 0.0, 0.0];
+#           DIC, NH4, NO3, PO4, DOC,  DON, PON, POC, PON, POP mmol/m3
+nut_init = [2.0, 0.05,0.05,0.01,20.0, 0.0, 0.0, 0.0, 0.0, 0.0];
 phy_model = PA_Model(phy_grid, RunParam; nutrients = setup_nutrients(phy_grid, nut_init));
 
 ### run PlanktonAgents with velocities from Oceananigans ###

@@ -30,11 +30,15 @@ The function use 'PA_advect!', a simple advection for individuals
 function PA_ModelRun(model::Model_struct, RunParam::RunParams, RunOption::RunOptions)
     if RunOption.NutOutputChoice == false
         DIC = zeros(g.Nx, g.Ny, g.Nz, nTime)
-        DIN = zeros(g.Nx, g.Ny, g.Nz, nTime)
+        NH4 = zeros(g.Nx, g.Ny, g.Nz, nTime)
+        NO3 = zeros(g.Nx, g.Ny, g.Nz, nTime)
+        PO4 = zeros(g.Nx, g.Ny, g.Nz, nTime)
         DOC = zeros(g.Nx, g.Ny, g.Nz, nTime)
         DON = zeros(g.Nx, g.Ny, g.Nz, nTime)
+        DOP = zeros(g.Nx, g.Ny, g.Nz, nTime)
         POC = zeros(g.Nx, g.Ny, g.Nz, nTime)
         PON = zeros(g.Nx, g.Ny, g.Nz, nTime)
+        POP = zeros(g.Nx, g.Ny, g.Nz, nTime)
     end
     if RunOption.VelChoice
         store_vel=load(dirname(pathof(PhytoAgentModel))*"/../samples/uvw.jld", "uvw")
@@ -65,11 +69,15 @@ function PA_ModelRun(model::Model_struct, RunParam::RunParams, RunOption::RunOpt
                 write_nut_nc_each_step(model.grid, nutₜ, t)
             else
                 DIC[:,:,:,t] = nutₜ.DIC
-                DIN[:,:,:,t] = nutₜ.DIN
+                NH4[:,:,:,t] = nutₜ.NH4
+                NO3[:,:,:,t] = nutₜ.NO3
+                PO4[:,:,:,t] = nutₜ.PO4
                 DOC[:,:,:,t] = nutₜ.DOC
                 DON[:,:,:,t] = nutₜ.DON
+                DOP[:,:,:,t] = nutₜ.DOP
                 POC[:,:,:,t] = nutₜ.POC
                 PON[:,:,:,t] = nutₜ.PON
+                POP[:,:,:,t] = nutₜ.POP
             end
         else
             nothing
@@ -78,7 +86,7 @@ function PA_ModelRun(model::Model_struct, RunParam::RunParams, RunOption::RunOpt
         model.t += 1
     end
     if RunOption.NutOutputChoice == false
-        write_nut_nc_alltime(g, DIC, DIN, DOC, DON, POC, PON, RunParam.nTime)
+        write_nut_nc_alltime(g, DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, RunParam.nTime)
     else
         return nothing
     end
