@@ -12,31 +12,31 @@ function divide(phyt::DataFrameRow)
                         Cq2=Float64[0.0,0.0], Nq=Float64[0.0,0.0], Pq=Float64[0.0,0.0],
                         chl=Float64[0.0,0.0], sp=Int64[0,0], age=Float64[0.0,0.0])  # initialize new cell
     # NOT all C and N can turn into new cells
-    phytops[1,:].x = phyt.x
-    phytops[1,:].y = phyt.y
-    phytops[1,:].z = phyt.z
-    phytops[1,:].gen = phyt.gen + 1
-    phytops[1,:].Cq1 = phyt.Cq1 * 0.5
-    phytops[1,:].Cq2 = phyt.Cq2 * 0.45
-    phytops[1,:].Nq  = phyt.Nq  * 0.5
-    phytops[1,:].Pq  = phyt.Pq  * 0.5
-    phytops[1,:].size= phyt.size* 0.45
-    phytops[1,:].chl = phyt.chl * 0.5
-    phytops[1,:].sp = phyt.sp
-    phytops[1,:].age = 1.0
+    phytos[1,:].x = phyt.x
+    phytos[1,:].y = phyt.y
+    phytos[1,:].z = phyt.z
+    phytos[1,:].gen = phyt.gen + 1
+    phytos[1,:].Cq1 = phyt.Cq1 * 0.5
+    phytos[1,:].Cq2 = phyt.Cq2 * 0.45
+    phytos[1,:].Nq  = phyt.Nq  * 0.5
+    phytos[1,:].Pq  = phyt.Pq  * 0.5
+    phytos[1,:].size= phyt.size* 0.45
+    phytos[1,:].chl = phyt.chl * 0.5
+    phytos[1,:].sp = phyt.sp
+    phytos[1,:].age = 1.0
 
-    phytops[2,:].x = phyt.x
-    phytops[2,:].y = phyt.y
-    phytops[2,:].z = phyt.z
-    phytops[2,:].gen = phyt.gen + 1
-    phytops[2,:].Cq1 = phyt.Cq1 * 0.5
-    phytops[2,:].Cq2 = phyt.Cq2 * 0.45
-    phytops[2,:].Nq  = phyt.Nq  * 0.5
-    phytops[2,:].Pq  = phyt.Pq  * 0.5
-    phytops[2,:].size= phyt.size* 0.45
-    phytops[2,:].chl = phyt.chl * 0.5
-    phytops[2,:].sp = phyt.sp
-    phytops[2,:].age = 1.0
+    phytos[2,:].x = phyt.x
+    phytos[2,:].y = phyt.y
+    phytos[2,:].z = phyt.z
+    phytos[2,:].gen = phyt.gen + 1
+    phytos[2,:].Cq1 = phyt.Cq1 * 0.5
+    phytos[2,:].Cq2 = phyt.Cq2 * 0.45
+    phytos[2,:].Nq  = phyt.Nq  * 0.5
+    phytos[2,:].Pq  = phyt.Pq  * 0.5
+    phytos[2,:].size= phyt.size* 0.45
+    phytos[2,:].chl = phyt.chl * 0.5
+    phytos[2,:].sp = phyt.sp
+    phytos[2,:].age = 1.0
 
     return phytos
 end
@@ -65,7 +65,7 @@ function phyt_update(t::Int64, ΔT::Int64, phyts_a, model)
     #set up a dataframe to record all updated agents
     phyts_b = DataFrame(x=Float64[], y=Float64[], z=Float64[],
                         gen=Int64[], size=Float64[], Cq1=Float64[],
-                        Cq2=Float64[], Nq=Float64[], Pq=Float64p[],
+                        Cq2=Float64[], Nq=Float64[], Pq=Float64[],
                         chl=Float64[], sp=Int64[], age=Float64[])
 
     consume = nutrients_init(g)
@@ -142,7 +142,7 @@ function phyt_update(t::Int64, ΔT::Int64, phyts_a, model)
         VPm = VPmax_sp*phyt.size^params["VP_b"][phyt.sp]
         Puptake = VPm*PO4/(PO4+params["KsatP"][phyt.sp])*regQp
         VPcell = Puptake*phyt.Cq2 # unit: mmol P/second/individual
-        VP = min(PO4*g.V[x,y,z]/10.0, VPcell*ΔT) # unit: mmol P/hour/individual
+        VPO4 = min(PO4*g.V[x,y,z]/10.0, VPcell*ΔT) # unit: mmol P/hour/individual
 
         # Compute the ratio of chl synthesis and N uptake
         # ρ equals to ratio of the realised quantum efficiency for photosynthesis divided by the maximum efficiency
