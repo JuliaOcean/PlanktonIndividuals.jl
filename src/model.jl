@@ -8,12 +8,11 @@ function PA_Model(grid, RunParam;
                          t = 1,
                individuals = setup_agents(RunParam,grid),
                  nutrients,
-                       PAR = read_default_IR_input(RunParam.nTime, RunParam.ΔT, grid),
-                      temp = read_default_temp_input(RunParam.nTime, RunParam.ΔT, grid),
+                       PAR = read_IR_input(RunParam.nTime, RunParam.ΔT, grid),
+                      temp = read_temp_input(RunParam.nTime, RunParam.ΔT, grid),
                     params = param_default,
-                    output = create_output(individuals[:,1])
                    )
-    model = Model_struct(t,individuals, nutrients, grid, PAR, temp, params, output)
+    model = Model_struct(t,individuals, nutrients, grid, PAR, temp, params)
     if RunParam.Zoo == true
         model.params["Grz_P"] = 0
     else
@@ -97,13 +96,26 @@ Individual advection using a simple scheme
 Particle sinking included
 """
 function PA_advect!(model, ΔT, vel_itp)
-    individuals = model.individuals
     grid = model.grid
     params = model.params
-    for i in 1:size(individuals,2)
-        planks = individuals[end,i]
-        for j in 1:size(planks,1)
-            plank = planks[j,:]
+    planks = model.individuals.phytos
+    for j in 1:size(planks,1)
+        plank = planks[j,:]
+        agent_advection(plank,vel_itp,grid,ΔT)
+        if grid.Nx > 1
+            agent_diffusionX(plank,grid,params["κhP"])
+        end
+        if grid.Ny > 1
+            agent_diffusionY(plank,grid,params["κhP"])
+        end
+        if grid.Nz > 1
+            agent_diffusionZ(plank,grid,params["κvP"])
+        end
+    end
+    if model.individuals.zoos ≠ nothing
+        zoos = model.individuals.zoos
+        for j in 1:size(zoos,1)
+            plank = zoos[j,:]
             agent_advection(plank,vel_itp,grid,ΔT)
             if grid.Nx > 1
                 agent_diffusionX(plank,grid,params["κhP"])
@@ -122,21 +134,18 @@ end
     PA_TimeStep!(model, RunParam, velᵇ)
 Update physiology part and nutrient field of 'model' one time step forward
 """
-function PA_TimeStep!(model::Model_struct, ΔT, velᵇ::velocity)
-    phyts_a = copy(model.individuals[end,1]) # read data from last time step
-    phyts_b,counts_p,consume_p=phyt_update(model.t, ΔT, phyts_a, model)
-    if size(model.individuals,2) == 2
-        zoos_a  = copy(model.individuals[end,2]) # read data from last time step
-        zoos_b,counts_z,consume_z =zoo_update(zoos_a, phyts_b, ΔT, model)
+function PA_TimeStep!(model::Model_struct, ΔT, velᵇ::velocity, resultspath="results/")
+    phyts_b,counts_p,consume_p=phyt_update(model, ΔT)
+    model.individuals.phytos = phyts_b
+    if model.individuals.zoos ≠ nothing
+        zoos_b,counts_z,consume_z =zoo_update(model, ΔT)
         consume_p = sum_consume(consume_p, consume_z)
-        individualsₜ = hcat([phyts_b],[zoos_b])
-        model.individuals = vcat(model.individuals, individualsₜ)
-    elseif size(model.individuals,2) == 1
-        individualsₜ = [phyts_b]
-        model.individuals = vcat(model.individuals, individualsₜ)
+        model.individuals.zoos = zoos_b
+        counts_p.graze = counts_z.graze
     end
-    write_output(model.t,phyts_b,counts_p,model.output)
+    write_output(model.individuals, resultspath, model.t*ΔT)
     agent_num = size(phyts_b,1)
+    write_pop_dynamics(model.t, agent_num, counts_p, resultspath)
     nutₜ,gtr = nut_update(model, velᵇ, consume_p, ΔT)
     model.nutrients = nutₜ
     model.t += 1
@@ -149,13 +158,26 @@ Used for 3D double grids
 Particle sinking not included
 """
 function PA_advectRK4!(model, ΔT, vel_itps)
-    individuals = model.individuals
     grid = model.grid
     params = model.params
-    for i in 1:size(individuals,2)
-        planks = individuals[end,i]
-        for j in 1:size(planks,1)
-            plank = planks[j,:]
+    planks = model.individuals.phytos
+    for j in 1:size(planks,1)
+        plank = planks[j,:]
+        agent_advectionRK4(plank,vel_itps,grid,ΔT)
+        if grid.Nx > 1
+            agent_diffusionX(plank,grid,params["κhP"])
+        end
+        if grid.Ny > 1
+            agent_diffusionY(plank,grid,params["κhP"])
+        end
+        if grid.Nz > 1
+            agent_diffusionZ(plank,grid,params["κvP"])
+        end
+    end
+    if model.individuals.zoos ≠ nothing
+        zoos = model.individuals.zoos
+        for j in 1:size(zoos,1)
+            plank = zoos[j,:]
             agent_advectionRK4(plank,vel_itps,grid,ΔT)
             if grid.Nx > 1
                 agent_diffusionX(plank,grid,params["κhP"])

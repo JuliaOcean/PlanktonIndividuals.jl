@@ -2,8 +2,8 @@ module PhytoAgentModel
 
 greet() = print("Hello World!")
 
-using DataFrames, NetCDF, JLD, Serialization, CSV
-using Random, Distributions, Interpolations
+using NetCDF, JLD, Serialization, CSV
+using Random, Distributions, Interpolations, Statistics
 using Printf, YAML
 
 src=""
@@ -27,7 +27,7 @@ export
     RunOptions, RunParams, PlankOpt, read_Ogrids,
 
     # read input functions
-    read_default_IR_input, read_default_temp_input,
+    read_IR_input, read_temp_input,
     update_params, grid_offline, param_default,
     PrepRunDir, generate_vel_itp,
 
@@ -39,7 +39,6 @@ export
     PA_advectRK4!, PA_advect!,
 
     # write output functions
-    create_output, sort_species, convert_coordinates,
-    count_vertical_num, count_horizontal_num,
-    compute_mean_species, testB1B2
+    write_nut_nc_alltime, write_nut_nc_each_step,
+    count_vertical_num, count_horizontal_num
 end # module
