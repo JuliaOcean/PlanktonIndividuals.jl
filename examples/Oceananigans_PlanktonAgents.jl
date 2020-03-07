@@ -43,8 +43,8 @@ run!(simulation)
 ### PlanktonAgents Setup ###
 phy_grid = read_Ogrids(model.grid);
 
-#                   Dim output, NutOutput, GridChoice, Gridoff, VelChoice, Veloff, SaveGrid, SaveVel, Test
-RunOption=RunOptions(3, true,   true,      false,      Dict(),  false,     Dict(), false,    false,   false);
+#                   Dim output, NutOutput, GridChoice, Gridoff, VelChoice, Veloff
+RunOption=RunOptions(3, true,   true,      false,      Dict(),  false,     Dict());
 #                   Nindivi, Nsp, Nsuper,    Cquota(mmol/cell),  mean, var
 PhytoOpt = PlankOpt(1000,    2,   Int(1e0),  [1.8e-11, 1.8e-10], 1.0,  0.25)
 
@@ -56,8 +56,9 @@ RunParam=RunParams(25*60,  60, PhytoOpt, false, nothing)
 
 #           DIC, NH4, NO3, PO4, DOC,  DON, PON, POC, PON, POP mmol/m3
 nut_init = [2.0, 0.05,0.05,0.01,20.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-phy_model = PA_Model(phy_grid, RunParam; nutrients = setup_nutrients(phy_grid, nut_init));
-PrepRunDir()
+phy_model = PA_Model(phy_grid, RunParam;
+                     nutrients = setup_nutrients(phy_grid, nut_init));
+resultpath = PrepRunDir()
 
 ### run PlanktonAgents with velocities from Oceananigans ###
 Nsimulation = Simulation(model, Δt=5.0, stop_iteration=506, progress_frequency=6)
@@ -76,5 +77,6 @@ for i in 1:500
                 generate_vel_itp(phy_model.grid, vel_field[2]),
                 generate_vel_itp(phy_model.grid, vel_field[3]))
     PA_advectRK4!(phy_model, RunParam.ΔT, vel_itps)
-    PA_TimeStep!(phy_model, RunParam.ΔT, vel_field[end])
+    PA_TimeStep!(phy_model, RunParam.ΔT, vel_field[end], resultpath)
+    write_output(phy_model.individuals, resultpath, phy_model.t*RunParam.ΔT)
 end
