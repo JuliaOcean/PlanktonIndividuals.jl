@@ -1,14 +1,10 @@
 mutable struct RunOptions
-    Dim::Int64            # Choose model dimensions,e.g. 3 for 3D
     OutputChoice::Bool    # `true` for save output files
     NutOutputChoice::Bool # `true` for save each timestep separately, `false` for save all timesteps in one file
     GridChoice::Bool      # `true` for use default grid
     GridOfflineOpt::Dict  # include path to offline grid information and grid selection
     VelChoice::Bool       # `true` for use default velocity fields
     VelOfflineOpt::Dict   # include path to offline velocity fields, grid selection and vel time step information
-    SaveGrid::Bool        # `true` for save grid information
-    SaveVel::Bool         # `true` for save velocity fields
-    SaveTest::Bool        # `true` for save test results
 end
 
 mutable struct PlankOpt

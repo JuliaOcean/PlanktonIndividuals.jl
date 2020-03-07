@@ -40,7 +40,7 @@ function δwTrans(g::grids, wFld, i, j, k)
     if k == g.Nz
         return calWTrans(g, wFld, i, j, k)
     else
-        return (calWTrans(g, wFld, i, j, k) - calWTrans(g, wFld, i, j, min(k+1, g.Nz)))
+        return (calWTrans(g, wFld, i, j, min(k+1, g.Nz)) - calWTrans(g, wFld, i, j, k))
     end
 end
 
@@ -125,7 +125,10 @@ end
 
 # multi-dimensional advetion
 function MultiDim_adv(g::grids, q, vel, ΔT)
-    u = vel.u; v = vel.v; w = vel.w;
+    # delete halo points
+    u = vel.u[2:end-1,2:end-1,2:end-1];
+    v = vel.v[2:end-1,2:end-1,2:end-1];
+    w = vel.w[2:end-1,2:end-1,2:end-2];
     adv = zeros(size(q)); q₁ = zeros(size(q)); q₂ = zeros(size(q)); q₃ = zeros(size(q));
     for k in 1:g.Nz
         for j in 1:g.Ny

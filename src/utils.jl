@@ -80,6 +80,7 @@ end
 Read velocity fields of selected grids at 't' from cluster
 Return a velocity 'struc'
 extra cols & rows are read in for double grids
+z starts from the bottom
 """
 function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
     vfroot  = VelOfflineOpt["velpath"]
@@ -99,6 +100,7 @@ function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
         close(fuvel);
         u = zeros(Nx, Ny, Nz)
         u[:,:,2:end] = uvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
+        u = reverse(u,dims=3)
     end
 
     if Ny == 1
@@ -110,6 +112,7 @@ function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
         close(fvvel);
         v = zeros(Nx, Ny, Nz)
         v[:,:,2:end] = vvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
+        v = reverse(v,dims=3)
     end
 
     if Nz == 1
@@ -121,6 +124,7 @@ function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
         close(fwvel);
         w = zeros(Nx, Ny, Nz+1)
         w[:,:,3:end] = wvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
+        w = reverse(w,dims=3)
     end
     vel = velocity(u, v, w)
     return vel
@@ -416,12 +420,9 @@ end
     PrepRunDir(res::String="results/")
 Create `res/` folder if needed. Remove old files from it if needed.
 """
-function PrepRunDir(res::String="results/")
+function PrepRunDir(res::String="./results/")
     isdir(res) && rm(res, recursive=true)
     mkdir(res)
     mkdir("$res"*"nutrients/")
-    println("$res"*"nutrients/")
-
-    return "done"
-
+    return res
 end
