@@ -1,24 +1,26 @@
-using PhytoAgentModel, JLD
-#path names
+using PhytoAgentModel, Serialization
 samples=dirname(pathof(PhytoAgentModel))*"/../samples/"
-#                   Dim output, NutOutput, GridChoice, Gridoff, VelChoice, Veloff, SaveGrid, SaveVel, Test
-RunOption=RunOptions(3, false,  true,      true,       Dict(),  true,      Dict(), false,    false,   false)
+RunOption=RunOptions(false, true, true, Dict(), true, Dict())
+PhytoOpt = PlankOpt(1000, 2, Int(1e0), [1.8e-11, 1.8e-10], 1.0, 0.25)
+RunParam=RunParams(10, 600, PhytoOpt, false, nothing)
+g = deserialize(samples*"grid.bin");
+store_vels = deserialize(samples*"uvw.bin");
 
-g=load(samples*"grid.jld", "grid");
+nut_init = [2.0, 0.05,0.05,0.01,20.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+model = PA_Model(g, RunParam; nutrients = setup_nutrients(g,nut_init));
 
-model = PA_Model(g, RunParam;
-              nutrients = setup_nutrients(g,[2.0, 0.05, 20.0, 0.0, 0.0, 0.0])); #DIC, DIN, DOC, DON, POC, PON, mmol/m3
-
-PA_ModelRun(model, RunParam, RunOption)
-
-# ### post-processing steps
-B1 = []; B2 = [];
-for i in 1:size(model.individuals,1)
-    sort_species(model.individuals[i], B1, 1)
-    sort_species(model.individuals[i], B2, 2)
+TP = sum((model.nutrients.PO4 .+ model.nutrients.DOP .+ model.nutrients.POP)
+         .* g.V)
+TP = TP + sum(model.individuals.phytos[:,11])
+for i in 1:10
+    t = model.t
+    vel = store_vels[i]
+    vel_itp = generate_vel_itp(model.grid, vel)
+    PA_advect!(model, RunParam.ΔT, vel_itp)
+    PA_TimeStep!(model, RunParam.ΔT, vel)
+    model.t += 1
 end
 
-output1 = compute_mean_species(B1, RunParam.nTime);
-output2 = compute_mean_species(B2, RunParam.nTime);
-
-RunOption.SaveTest ? CSV.write(samples*"testB1B2_3D.csv",testB1B2(B1,B2)) : nothing
+TPt = sum((model.nutrients.PO4 .+ model.nutrients.DOP .+ model.nutrients.POP)
+          .* g.V)
+TPt = TPt + sum(model.individuals.phytos[:,11])

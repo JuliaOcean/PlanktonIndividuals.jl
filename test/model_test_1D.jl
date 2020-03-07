@@ -1,38 +1,25 @@
-using PhytoAgentModel, JLD
-#path names
+using PhytoAgentModel, Serialization
 samples=dirname(pathof(PhytoAgentModel))*"/../samples/"
-results=dirname(pathof(PhytoAgentModel))*"/../results/"
-#                   Dim output, NutOutput, GridChoice, Gridoff, VelChoice, Veloff, SaveGrid, SaveVel, Test
-RunOption=RunOptions(1, false,  true,      true,       Dict(),  true,      Dict(), false,    false,   false)
+RunOption=RunOptions(false, true, true, Dict(), true, Dict())
+PhytoOpt = PlankOpt(1000, 2, Int(1e0), [1.8e-11, 1.8e-10], 1.0, 0.25)
+RunParam=RunParams(10, 600, PhytoOpt, false, nothing)
+g = deserialize(samples*"grid1D.bin");
+store_vels = deserialize(samples*"uvw1D.bin");
 
-g=load(samples*"grid_1D.jld", "grid")
+nut_init = [2.0, 0.05,0.05,0.01,20.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+model = PA_Model(g, RunParam; nutrients = setup_nutrients(g,nut_init));
 
-model = PA_Model(g, RunParam;
-              nutrients = setup_nutrients(g,[2.0, 0.05, 20.0, 0.0, 0.0, 0.0])) #DIC, DIN, DOC, DON, POC, PON, mmol/m3
-
-PA_ModelRun(model, RunParam, RunOption)
-
-# ### post-processing steps
-B1 = []; B2 = [];
-for i in 1:size(model.individuals,1)
-    sort_species(model.individuals[i], B1, 1)
-    sort_species(model.individuals[i], B2, 2)
+TP = sum((model.nutrients.PO4 .+ model.nutrients.DOP .+ model.nutrients.POP)
+         .* g.V)
+TP = TP + sum(model.individuals.phytos[:,11])
+for i in 1:10
+    vel = store_vels[1]
+    vel_itp = generate_vel_itp(model.grid, vel)
+    PA_advect!(model, RunParam.ΔT, vel_itp)
+    PA_TimeStep!(model, RunParam.ΔT, vel)
+    print(model.t)
 end
 
-for i in 1:size(model.individuals,1)
-    convert_coordinates(B1[i],g) # convert grids to lon, lat and depth
-    convert_coordinates(B2[i],g) # convert grids to lon, lat and depth
-end
-
-output1 = compute_mean_species(B1, RunParam.nTime);
-output2 = compute_mean_species(B2, RunParam.nTime);
-
-VD1 = []; VD2 = [];
-for i in 1:size(model.individuals,1)
-    VD_1 = count_vertical_num(B1[i]);
-    push!(VD1,VD_1)
-    VD_2 = count_vertical_num(B2[i]);
-    push!(VD2,VD_2)
-end
-
-RunOption.SaveTest ? CSV.write(samples*"testB1B2_1D.csv",testB1B2(B1,B2)) : nothing
+TPt = sum((model.nutrients.PO4 .+ model.nutrients.DOP .+ model.nutrients.POP)
+          .* g.V)
+TPt = TPt + sum(model.individuals.phytos[:,11])
