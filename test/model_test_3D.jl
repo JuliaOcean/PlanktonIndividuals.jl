@@ -18,7 +18,6 @@ for i in 1:10
     vel_itp = generate_vel_itp(model.grid, vel)
     PA_advect!(model, RunParam.ΔT, vel_itp)
     PA_TimeStep!(model, RunParam.ΔT, vel)
-    model.t += 1
 end
 
 TPt = sum((model.nutrients.PO4 .+ model.nutrients.DOP .+ model.nutrients.POP)
