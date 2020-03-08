@@ -371,9 +371,9 @@ function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields,
     Σgtrⁿ = sum(gtr.NH4 .* g.V)+sum(gtr.NO3 .* g.V)+sum(gtr.DON .* g.V)+sum(gtr.PON .* g.V)
     Σgtrᶜ = sum(gtr.DIC .* g.V)+sum(gtr.DOC .* g.V)+sum(gtr.POC .* g.V)
     Σgtrᵖ = sum(gtr.PO4 .* g.V)+sum(gtr.DOP .* g.V)+sum(gtr.POP .* g.V)
-    ΣsurFⁿ= sum((nutₜ.NH4[:,:,1]+nutₜ.NO3[:,:,1]+nutₜ.DON[:,:,1]+nutₜ.PON[:,:,1]) .* g.Az .* vel.w[:,:,1])
-    ΣsurFᶜ= sum((nutₜ.DIC[:,:,1]+nutₜ.DOC[:,:,1]+nutₜ.POC[:,:,1]) .* g.Az .* vel.w[:,:,1])
-    ΣsurFᵖ= sum((nutₜ.PO4[:,:,1]+nutₜ.DOP[:,:,1]+nutₜ.POP[:,:,1]) .* g.Az .* vel.w[:,:,1])
+    ΣsurFⁿ= sum((nutₜ.NH4[:,:,1]+nutₜ.NO3[:,:,1]+nutₜ.DON[:,:,1]+nutₜ.PON[:,:,1]) .* g.Az .* vel.w[2:end-1,2:end-1,end-2])
+    ΣsurFᶜ= sum((nutₜ.DIC[:,:,1]+nutₜ.DOC[:,:,1]+nutₜ.POC[:,:,1]) .* g.Az .* vel.w[2:end-1,2:end-1,end-2])
+    ΣsurFᵖ= sum((nutₜ.PO4[:,:,1]+nutₜ.DOP[:,:,1]+nutₜ.POP[:,:,1]) .* g.Az .* vel.w[2:end-1,2:end-1,end-2])
     Cio = open(filepath*"cons_C.txt","a"); Nio = open(filepath*"cons_N.txt","a");
     Pio = open(filepath*"cons_P.txt","a");
     println(Cio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrᶜ,ΣsurFᶜ,Σgtrᶜ+ΣsurFᶜ))
