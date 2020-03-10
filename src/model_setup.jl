@@ -81,16 +81,16 @@ Set up initial nutrient fields according to grid information
 'Nut' is an array of 10 elements, each element is a kind of nutrient
 """
 function setup_nutrients(g,nut)
-    DIC = fill(nut[1],(g.Nx, g.Ny, g.Nz))
-    NH4 = fill(nut[2],(g.Nx, g.Ny, g.Nz))
-    NO3 = fill(nut[3],(g.Nx, g.Ny, g.Nz))
-    PO4 = fill(nut[4],(g.Nx, g.Ny, g.Nz))
-    DOC = fill(nut[5],(g.Nx, g.Ny, g.Nz))
-    DON = fill(nut[6],(g.Nx, g.Ny, g.Nz))
-    DOP = fill(nut[7],(g.Nx, g.Ny, g.Nz))
-    POC = fill(nut[8],(g.Nx, g.Ny, g.Nz))
-    PON = fill(nut[9],(g.Nx, g.Ny, g.Nz))
-    POP = fill(nut[10],(g.Nx, g.Ny, g.Nz))
+    DIC = fill(nut[1],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
+    NH4 = fill(nut[2],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
+    NO3 = fill(nut[3],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
+    PO4 = fill(nut[4],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
+    DOC = fill(nut[5],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
+    DON = fill(nut[6],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
+    DOP = fill(nut[7],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
+    POC = fill(nut[8],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
+    PON = fill(nut[9],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
+    POP = fill(nut[10],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
 
     nutrients = nutrient_fields(DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP)
     return nutrients
