@@ -34,15 +34,6 @@ d1(CFL) = (1.0 - CFL * CFL) / 6.0
 calUTrans(g::grids, uFld, i, j, k) = g.Ax[i, j, k] * uFld[i, j, k]
 calVTrans(g::grids, vFld, i, j, k) = g.Ay[i, j, k] * vFld[i, j, k]
 calWTrans(g::grids, wFld, i, j, k) = g.Az[i, j] * wFld[i, j, k]
-δuTrans(g::grids, uFld, i, j, k) = calUTrans(g, uFld, incmod1(i, g.Nx), j, k) - calUTrans(g, uFld, i, j, k)
-δvTrans(g::grids, vFld, i, j, k) = calVTrans(g, vFld, i, incmod1(j, g.Ny), k) - calVTrans(g, vFld, i, j, k)
-function δwTrans(g::grids, wFld, i, j, k)
-    if k == g.Nz
-        return calWTrans(g, wFld, i, j, k)
-    else
-        return (calWTrans(g, wFld, i, j, min(k+1, g.Nz)) - calWTrans(g, wFld, i, j, k))
-    end
-end
 
 # calculate Zonal advection flux with Sweby limiter, unit: mmolC/s
 function adv_x(g::grids, q,  uFld, i, j, k, ΔT)
@@ -129,32 +120,65 @@ function MultiDim_adv(g::grids, q, vel, ΔT)
     u = vel.u[2:end-1,2:end-1,2:end-1];
     v = vel.v[2:end-1,2:end-1,2:end-1];
     w = vel.w[2:end-1,2:end-1,2:end-2];
-    adv = zeros(size(q)); q₁ = zeros(size(q)); q₂ = zeros(size(q)); q₃ = zeros(size(q));
+    advx = zeros(size(q));
+    advy = zeros(size(q));
+    advz = zeros(size(q));
+    uTrans = zeros(size(q));
+    vTrans = zeros(size(q));
+    wTrans = zeros(size(q));
+    qtemp = zeros(size(q));
     for k in 1:g.Nz
         for j in 1:g.Ny
             for i in 1:g.Nx
-                q₁[i, j, k] =  q[i, j, k] - ΔT / g.V[i, j, k] * (adv_x(g, q, u, incmod1(i, g.Nx), j, k, ΔT) - adv_x(g, q, u, i, j, k, ΔT) - q[i, j, k] * δuTrans(g, u, i, j, k))
+                uTrans[i,j,k] = calUTrans(g,u,i,j,k)
+                vTrans[i,j,k] = calVTrans(g,v,i,j,k)
+                wTrans[i,j,k] = calWTrans(g,w,i,j,k)
+
+                advx[i,j,k] = adv_x(g,q,u,i,j,k,ΔT)
             end
         end
     end
     for k in 1:g.Nz
         for j in 1:g.Ny
             for i in 1:g.Nx
-                q₂[i, j, k] = q₁[i, j, k] - ΔT / g.V[i, j, k] * (adv_y(g, q₁, v, i, incmod1(j, g.Ny), k, ΔT) - adv_y(g, q₁, v, i, j, k, ΔT) - q[i, j, k] * δvTrans(g, v, i, j, k))
+                ip = incmod1(i,g.Nx);
+                qtemp[i,j,k] = q[i,j,k] - ΔT/g.V[i,j,k]*(advx[ip,j,k] - advx[i,j,k])
             end
         end
     end
     for k in 1:g.Nz
         for j in 1:g.Ny
             for i in 1:g.Nx
-                if k == g.Nz
-                    q₃[i, j, k] = q₂[i, j, k] - ΔT / g.V[i, j, k] * (adv_z(g, q₂, w, i, j, k, ΔT) - q[i, j, k] * δwTrans(g, w, i, j, k))
+                advy[i,j,k] = adv_y(g,qtemp,v,i,j,k,ΔT)
+            end
+        end
+    end
+    for k in 1:g.Nz
+        for j in 1:g.Ny
+            for i in 1:g.Nx
+                jp = incmod1(j,g.Ny);
+                qtemp[i,j,k] = qtemp[i,j,k] - ΔT/g.V[i,j,k]*(advy[i,jp,k] - advy[i,j,k])
+            end
+        end
+    end
+    for k in 1:g.Nz
+        for j in 1:g.Ny
+            for i in 1:g.Nx
+                advz[i,j,k] = adv_z(g,qtemp,w,i,j,k,ΔT)
+            end
+        end
+    end
+    for k in 1:g.Nz
+        for j in 1:g.Ny
+            for i in 1:g.Nx
+                kp = min(g.Nz,k+1);
+                if k == g.Nz # surface
+                    qtemp[i,j,k] = qtemp[i,j,k] - ΔT/g.V[i,j,k]*(-advz[i,j,k])
                 else
-                    q₃[i, j, k] = q₂[i, j, k] - ΔT / g.V[i, j, k] * (adv_z(g, q₂, w, i, j, k+1, ΔT) - adv_z(g, q₂, w, i, j, k, ΔT) - q[i, j, k] * δwTrans(g, w, i, j, k))
+                    qtemp[i,j,k] = qtemp[i,j,k] - ΔT/g.V[i,j,k]*(advz[i,j,kp] - advz[i,j,k])
                 end
             end
         end
     end
-    adv .= (q₃ .- q) ./ ΔT
-    return adv
+    return (qtemp .- q) ./ ΔT
 end

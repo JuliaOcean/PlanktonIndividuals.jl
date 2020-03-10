@@ -37,7 +37,7 @@ end
 
 @inline function div_flux(g::grids, u, v, w, Q, i, j, k)
     if k == 1
-        @inbounds return (δx_f2c_ab̄ˣ(g, u, Q, i, j, k) + δy_f2c_ab̄ʸ(g, v, Q, i, j, k) - g.Az[i, j] * w[i, j, 2] * avgz_c2f(g, Q, i, j, 2)) / g.V[i, j, k] 
+        @inbounds return (δx_f2c_ab̄ˣ(g, u, Q, i, j, k) + δy_f2c_ab̄ʸ(g, v, Q, i, j, k) - g.Az[i, j] * w[i, j, 2] * avgz_c2f(g, Q, i, j, 2)) / g.V[i, j, k]
     else
         return (δx_f2c_ab̄ˣ(g, u, Q, i, j, k) + δy_f2c_ab̄ʸ(g, v, Q, i, j, k) + δz_f2c_ab̄ᶻ(g, w, Q, i, j, k)) / g.V[i, j, k]
     end
