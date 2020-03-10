@@ -5,11 +5,12 @@
 # conservation.                                                                   #
 # There will still be some tiny negative values in tracer field because of multi- #
 # dimensional advection.                                                          #
+# velocities should not be too high, otherwise big negative values will occur     #
 ###################################################################################
 const θmax = 1.0e20
 # Increment and decrement integer a with periodic wrapping
-#incmod1(a, n) = ifelse(a==n, 1, a+1)
-#decmod1(a, n) = ifelse(a==1, n, a-1)
+@inline incmod1(a, n) = ifelse(a==n, 1, a + 1)
+@inline decmod1(a, n) = ifelse(a==1, n, a - 1)
 function decmod2(a, n)
     if a == 1
         a = max(1, n - 1)
@@ -57,7 +58,7 @@ function adv_x(g::grids, q,  uFld, i, j, k, ΔT)
     Ψ⁺ = max(0.0, min(min(1.0, Ψ⁺), θ⁺ * (1.0 - uCFL) / (uCFL + 1.0e-20)))
     Ψ⁻ = d₀ + d₁ * θ⁻
     Ψ⁻ = max(0.0, min(min(1.0, Ψ⁻), θ⁻ * (1.0 - uCFL) / (uCFL + 1.0e-20)))
-    Fᵤ  = 0.5 * (uTrans + abs(uTrans))*(q[decmod1(i, g.Nx), j, k] + Ψ⁺ * rj) + 0.5 * (uTrans - abs(uTrans)) * (q[i, j, k] - Ψ⁻ * rj)
+    Fᵤ  = 0.5*(uTrans + abs(uTrans))*(q[decmod1(i, g.Nx), j, k] + Ψ⁺*rj) + 0.5*(uTrans - abs(uTrans))*(q[i, j, k] - Ψ⁻*rj)
     return Fᵤ
 end
 
@@ -83,7 +84,7 @@ function adv_y(g::grids, q,  vFld, i, j, k, ΔT)
     Ψ⁺ = max(0.0, min(min(1.0, Ψ⁺), θ⁺ * (1.0 - vCFL) / (vCFL + 1.0e-20)))
     Ψ⁻ = d₀ + d₁ * θ⁻
     Ψ⁻ = max(0.0, min(min(1.0, Ψ⁻), θ⁻ * (1.0 - vCFL) / (vCFL + 1.0e-20)))
-    Fᵥ = 0.5 * (vTrans + abs(vTrans))*(q[i, decmod1(j, g.Ny), k] + Ψ⁺ * rj) + 0.5 * (vTrans - abs(vTrans)) * (q[i, j, k] - Ψ⁻ * rj)
+    Fᵥ = 0.5*(vTrans + abs(vTrans))*(q[i, decmod1(j, g.Ny), k] + Ψ⁺*rj) + 0.5*(vTrans - abs(vTrans))*(q[i, j, k] - Ψ⁻*rj)
     return Fᵥ
 end
 
@@ -110,7 +111,7 @@ function adv_z(g::grids, q,  wFld, i, j, k, ΔT)
     Ψ⁺ = max(0.0, min(min(1.0, Ψ⁺), θ⁺ * (1.0 - wCFL) / (wCFL + 1.0e-20)))
     Ψ⁻ = d₀ + d₁ * θ⁻
     Ψ⁻ = max(0.0, min(min(1.0, Ψ⁻), θ⁻ * (1.0 - wCFL) / (wCFL + 1.0e-20)))
-    Fᵣ = 0.5 * (wTrans + abs(wTrans))*(q[i, j, km1] + Ψ⁺ * rj) + 0.5 * (wTrans - abs(wTrans)) * (q[i, j, k] - Ψ⁻ * rj)
+    Fᵣ = 0.5*(wTrans + abs(wTrans))*(q[i, j, km1] + Ψ⁺*rj) + 0.5*(wTrans - abs(wTrans))*(q[i, j, k] - Ψ⁻*rj)
     return Fᵣ
 end
 

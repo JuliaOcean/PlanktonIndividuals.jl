@@ -1,6 +1,4 @@
 # Increment and decrement integer a with periodic wrapping.
-@inline incmod1(a, n) = ifelse(a==n, 1, a + 1)
-@inline decmod1(a, n) = ifelse(a==1, n, a - 1)
 @inline avgx_c2f(g::grids, f, i, j, k) = @inbounds 0.5 * (f[i, j, k] + f[decmod1(i, g.Nx), j, k])
 @inline avgy_c2f(g::grids, f, i, j, k) = @inbounds 0.5 * (f[i, j, k] + f[i, decmod1(j, g.Ny), k])
 @inline function avgz_c2f(g::grids, f, i, j, k)
