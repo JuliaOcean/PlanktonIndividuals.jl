@@ -1,5 +1,3 @@
-include(dirname(pathof(PhytoAgentModel))*"/param_default.jl")
-
 # Options & Params
 #                    output, NutOutput, GridChoice, Gridoff, VelChoice, Veloff
 RunOption=RunOptions(false,  true,      false,      Dict(),  false,     Dict())

@@ -20,6 +20,7 @@ include("$src"*"nutrient_processes.jl")
 include("$src"*"2nd_adv_diffu.jl")
 include("$src"*"models.jl")
 include("$src"*"time_step.jl")
+include("$src"*"param_default.jl")
 include("$src"*"option_params.jl")
 
 

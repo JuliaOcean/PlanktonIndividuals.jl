@@ -6,7 +6,7 @@
 Read input of irradiance from default binary file
 """
 function read_IR_input(nTime::Int64, ΔT::Int64,grid,
-                       path = dirname(pathof(PhytoAgentModel))*"/../samples/PAR.bin")
+                       path = dirname(pathof(PlanktonIndividuals))*"/../samples/PAR.bin")
     # irradiance(μmol photons/m^2)
     # start from mid-night
     # will change later to make it able to choose different month
@@ -44,7 +44,7 @@ end
 Read input of temperature from default binary file
 """
 function read_temp_input(nTime::Int64, ΔT::Int64, grid, ∂T∂z=0.04,
-                         path = dirname(pathof(PhytoAgentModel))*"/../samples/temp.bin")
+                         path = dirname(pathof(PlanktonIndividuals))*"/../samples/temp.bin")
     # will change later to make it able to choose different month
     temp_hour = deserialize(path)
     # convert hour to second in a day
