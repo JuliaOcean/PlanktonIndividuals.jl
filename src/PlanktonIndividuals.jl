@@ -1,4 +1,4 @@
-module PhytoAgentModel
+module PlanktonIndividuals
 
 greet() = print("Hello World!")
 
@@ -13,17 +13,19 @@ include("$src"*"model_setup.jl")
 include("$src"*"phyt_process.jl")
 include("$src"*"zooplankton.jl")
 include("$src"*"utils.jl")
+include("$src"*"output_writers.jl")
 include("$src"*"agent_div.jl")
 include("$src"*"dst3fl.jl")
 include("$src"*"nutrient_processes.jl")
 include("$src"*"2nd_adv_diffu.jl")
-include("$src"*"model.jl")
+include("$src"*"models.jl")
+include("$src"*"time_step.jl")
 include("$src"*"option_params.jl")
 
 
 export
     # model structures
-    PA_Model, grids, nutrient_fields, velocity,
+    PI_Model, grids, nutrient_fields, velocity,
     RunOptions, RunParams, PlankOpt, read_Ogrids,
 
     # read input functions
@@ -35,8 +37,8 @@ export
     setup_agents, setup_nutrients,
 
     # Run the model
-    PA_ModelRun, RunParam, RunOption, PA_TimeStep!,
-    PA_advectRK4!, PA_advect!,
+    RunParam, RunOption, PI_TimeStep!,
+    PI_advectRK4!, PI_advect!,
 
     # write output functions
     write_nut_nc_alltime, write_nut_nc_each_step,

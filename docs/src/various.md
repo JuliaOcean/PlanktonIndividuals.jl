@@ -3,8 +3,7 @@
 
 **Use cases:**
 
-- `Oceananigans_PlanktonAgents.jl`
-- `model_update.ipynb` / `model_update.jl`
+- `Oceananigans_Planktonindividuals.jl`
 
 **Infrastructure functions:**
 

@@ -1,6 +1,6 @@
 using Random, Printf, Plots
 using Oceananigans, Oceananigans.Utils
-using PhytoAgentModel
+using PlanktonIndividuals
 
 ### Oceananigans Setup with heat induced convection ###
 Nz = 32       # Number of grid points in x, y, z
@@ -56,7 +56,7 @@ RunParam=RunParams(25*60,  60, PhytoOpt, false, nothing)
 
 #           DIC, NH4, NO3, PO4, DOC,  DON, PON, POC, PON, POP mmol/m3
 nut_init = [2.0, 0.05,0.05,0.01,20.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-phy_model = PA_Model(phy_grid, RunParam;
+phy_model = PI_Model(phy_grid, RunParam;
                      nutrients = setup_nutrients(phy_grid, nut_init));
 resultpath = PrepRunDir()
 
@@ -68,7 +68,7 @@ for i in 1:500
         u = model.velocities.u.data.parent
         v = model.velocities.v.data.parent
         w = model.velocities.w.data.parent
-        vel = PhytoAgentModel.velocity(u, v, w)
+        vel = PlanktonIndividuals.velocity(u, v, w)
         push!(vel_field,vel)
         run!(Nsimulation)
         Nsimulation.stop_iteration += 6
@@ -76,7 +76,7 @@ for i in 1:500
     vel_itps = (generate_vel_itp(phy_model.grid, vel_field[1]),
                 generate_vel_itp(phy_model.grid, vel_field[2]),
                 generate_vel_itp(phy_model.grid, vel_field[3]))
-    PA_advectRK4!(phy_model, RunParam.ΔT, vel_itps)
-    PA_TimeStep!(phy_model, RunParam.ΔT, vel_field[end], resultpath)
+    PI_advectRK4!(phy_model, RunParam.ΔT, vel_itps)
+    PI_TimeStep!(phy_model, RunParam.ΔT, vel_field[end], resultpath)
     write_output(phy_model.individuals, resultpath, phy_model.t*RunParam.ΔT)
 end

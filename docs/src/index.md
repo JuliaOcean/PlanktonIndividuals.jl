@@ -1,25 +1,25 @@
-# PhytoAgentModel.jl
+# PlanktonIndividuals.jl
 
-Documentation for `PhytoAgentModel.jl` which simulates the behavior of an ensemble of phytoplankton `agents`.
+Documentation for `PlanktonIndividuals.jl` which simulates the behavior of an ensemble of phytoplankton `individuals`.
 
 ### Use Example
 
-Here we use [Oceananigans.jl](https://github.com/climate-machine/Oceananigans.jl) to generate velocity fields and then use those to drive the agent-based model.
+Here we use [Oceananigans.jl](https://github.com/climate-machine/Oceananigans.jl) to generate velocity fields and then use those to drive the individual-based model.
 
 ```
-Pkg.develop(PackageSpec(path="AgentPhytModel_3D"))
-using PhytoAgentModel
-p = dirname(pathof(PhytoAgentModel))
-include(joinpath(p,"Oceananigans_PlanktonAgents.jl"))
+Pkg.develop(PackageSpec(path="PlanktonIndividuals.jl"))
+using PlanktonIndividuals
+p = dirname(pathof(PlanktonIndividuals))
+include(joinpath(p,"Oceananigans_PlanktonIndividuals.jl"))
 ```
 
 ### Unit Testing
 
-The tests use input files from `AgentPhytModel_3D/samples/` and then compare the results to `samples/testB1B2*.csv`. The test suite includes zero-, one-, two-, and three-dimensional simulations.
+The tests use input files from `samples/`. The test suite includes zero-, one-, two-, and three-dimensional simulations.
 
 ```
-Pkg.develop(PackageSpec(path="AgentPhytModel_3D"))
-Pkg.test("PhytoAgentModel")
+Pkg.develop(PackageSpec(path="PlanktonIndividuals.jl"))
+Pkg.test("PlanktonIndividuals")
 ```
 
 _Contents:_

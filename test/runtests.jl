@@ -1,22 +1,22 @@
 using Test
-using PhytoAgentModel
+using PlanktonIndividuals
 
-@testset "PhytoAgentModel 3D tests:" begin
-    include(dirname(pathof(PhytoAgentModel))*"/../test/model_test_3D.jl")
+@testset "PlanktonIndividuals 3D tests:" begin
+    include(dirname(pathof(PlanktonIndividuals))*"/../test/model_test_3D.jl")
     @test isapprox(TP,TPt; atol=1e1)
-end #@testset "PhytoAgentModel 3D tests:" begin
+end #@testset "PlanktonIndividuals 3D tests:" begin
 
-@testset "PhytoAgentModel 2D tests:" begin
-    include(dirname(pathof(PhytoAgentModel))*"/../test/model_test_2D.jl")
+@testset "PlanktonIndividuals 2D tests:" begin
+    include(dirname(pathof(PlanktonIndividuals))*"/../test/model_test_2D.jl")
     @test isapprox(TP,TPt; atol=1e1)
-end #@testset "PhytoAgentModel 2D tests:" begin
+end #@testset "PlanktonIndividuals 2D tests:" begin
 
-@testset "PhytoAgentModel 1D tests:" begin
-    include(dirname(pathof(PhytoAgentModel))*"/../test/model_test_1D.jl")
+@testset "PlanktonIndividuals 1D tests:" begin
+    include(dirname(pathof(PlanktonIndividuals))*"/../test/model_test_1D.jl")
     @test isapprox(TP,TPt; atol=1e1)
-end #@testset "PhytoAgentModel 1D tests:" begin
+end #@testset "PlanktonIndividuals 1D tests:" begin
 
-@testset "PhytoAgentModel 0D tests:" begin
-    include(dirname(pathof(PhytoAgentModel))*"/../test/model_test_0D.jl")
+@testset "PlanktonIndividuals 0D tests:" begin
+    include(dirname(pathof(PlanktonIndividuals))*"/../test/model_test_0D.jl")
     @test isapprox(TP,TPt; atol=1e1)
-end #@testset "PhytoAgentModel 0D tests:" begin
+end #@testset "PlanktonIndividuals 0D tests:" begin
