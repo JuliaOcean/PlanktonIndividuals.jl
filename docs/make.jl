@@ -1,11 +1,11 @@
 using Documenter
 using DocumenterMarkdown
-using PhytoAgentModel
+using PlanktonIndividuals
 
 makedocs(
-    sitename = "PhytoAgentModel",
+    sitename = "PlanktonIndividuals",
     format = Documenter.HTML(),
-    modules = [PhytoAgentModel],
+    modules = [PlanktonIndividuals],
     pages = [
     "Home" => "index.md",
     "Various" => "various.md",
@@ -13,5 +13,5 @@ makedocs(
 )
 
 deploydocs(;
-    repo="github.com/zhenwu0728/AgentPhytModel_3D/",
+    repo="github.com/zhenwu0728/PlanktonIndividuals.jl.git/",
 )

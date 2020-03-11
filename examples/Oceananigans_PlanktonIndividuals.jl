@@ -1,6 +1,6 @@
 using Random, Printf, Plots
 using Oceananigans, Oceananigans.Utils
-using PhytoAgentModel
+using PlanktonIndividuals
 
 ### Oceananigans Setup with heat induced convection ###
 Nz = 32       # Number of grid points in x, y, z
@@ -43,8 +43,8 @@ run!(simulation)
 ### PlanktonAgents Setup ###
 phy_grid = read_Ogrids(model.grid);
 
-#                   Dim output, NutOutput, GridChoice, Gridoff, VelChoice, Veloff, SaveGrid, SaveVel, Test
-RunOption=RunOptions(3, true,   true,      false,      Dict(),  false,     Dict(), false,    false,   false);
+#                   Dim output, NutOutput, GridChoice, Gridoff, VelChoice, Veloff
+RunOption=RunOptions(3, true,   true,      false,      Dict(),  false,     Dict());
 #                   Nindivi, Nsp, Nsuper,    Cquota(mmol/cell),  mean, var
 PhytoOpt = PlankOpt(1000,    2,   Int(1e0),  [1.8e-11, 1.8e-10], 1.0,  0.25)
 
@@ -56,7 +56,9 @@ RunParam=RunParams(25*60,  60, PhytoOpt, false, nothing)
 
 #           DIC, NH4, NO3, PO4, DOC,  DON, PON, POC, PON, POP mmol/m3
 nut_init = [2.0, 0.05,0.05,0.01,20.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-phy_model = PA_Model(phy_grid, RunParam; nutrients = setup_nutrients(phy_grid, nut_init));
+phy_model = PI_Model(phy_grid, RunParam;
+                     nutrients = setup_nutrients(phy_grid, nut_init));
+resultpath = PrepRunDir()
 
 ### run PlanktonAgents with velocities from Oceananigans ###
 Nsimulation = Simulation(model, Δt=5.0, stop_iteration=506, progress_frequency=6)
@@ -66,7 +68,7 @@ for i in 1:500
         u = model.velocities.u.data.parent
         v = model.velocities.v.data.parent
         w = model.velocities.w.data.parent
-        vel = PhytoAgentModel.velocity(u, v, w)
+        vel = PlanktonIndividuals.velocity(u, v, w)
         push!(vel_field,vel)
         run!(Nsimulation)
         Nsimulation.stop_iteration += 6
@@ -74,52 +76,7 @@ for i in 1:500
     vel_itps = (generate_vel_itp(phy_model.grid, vel_field[1]),
                 generate_vel_itp(phy_model.grid, vel_field[2]),
                 generate_vel_itp(phy_model.grid, vel_field[3]))
-    PA_advectRK4!(phy_model, RunParam.ΔT, vel_itps)
-    PA_TimeStep!(phy_model, RunParam.ΔT, vel_field[end])
+    PI_advectRK4!(phy_model, RunParam.ΔT, vel_itps)
+    PI_TimeStep!(phy_model, RunParam.ΔT, vel_field[end], resultpath)
+    write_output(phy_model.individuals, resultpath, phy_model.t*RunParam.ΔT)
 end
-
-### Post-processing ###
-B1 = []; B2 = [];
-for i in 1:size(phy_model.individuals,1)
-    sort_species(phy_model.individuals[i,1], B1, 1)
-    sort_species(phy_model.individuals[i,1], B2, 2)
-end
-HD1 = []; HD2 = [];
-for i in 1:size(phy_model.individuals,1)
-    HD_1 = count_horizontal_num(B1[i],phy_grid);
-    push!(HD1,HD_1)
-    HD_2 = count_horizontal_num(B2[i],phy_grid);
-    push!(HD2,HD_2)
-end
-output1 = compute_mean_species(B1, size(phy_model.individuals,1));
-output2 = compute_mean_species(B2, size(phy_model.individuals,1));
-
-VD1 = []; VD2 = [];
-for i in 1:size(phy_model.individuals,1)
-    VD_1 = count_vertical_num(B1[i]);
-    push!(VD1,VD_1)
-    VD_2 = count_vertical_num(B2[i]);
-    push!(VD2,VD_2)
-end
-
-### Plots & Animations ###
-anim = @animate for i in 1:500
-    p1 = scatter(B1[i].x,B1[i].y,B1[i].z, zcolor=B1[i].size, m=(:diamond, 3, :algae, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), zlims=(-50,5), clims=(0,3), cbar=true, label = "species1")
-    scatter!(p1,B2[i].x,B2[i].y,B2[i].z, zcolor=B2[i].size, m=(:circle, 3, :amp, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), zlims=(-50,5), clims=(0,3), cbar=false, label = "species2")
-    plt = plot(p1,size=(800,500),dpi=100)
-end
-gif(anim,"tmp_test.gif", fps = 15)
-
-anim = @animate for i in 1:500
-    p1 = scatter(B1[i].x,B1[i].y, zcolor=B1[i].size, m=(:diamond, 3, :algae, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), clims=(0,3), cbar=true, label = "species1")
-    p2 = scatter(B2[i].x,B2[i].y, zcolor=B2[i].size, m=(:circle, 3, :amp, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-1,33), clims=(0,3), cbar=true, label = "species2")
-    plt = plot(p1,p2,layout=grid(1,2),size=(800,300),dpi=100)
-end
-gif(anim,"tmp_xy2d.gif", fps = 15)
-
-anim = @animate for i in 1:500
-    p1 = scatter(B1[i].y, B1[i].z, zcolor=B1[i].size, m=(:diamond, 3, :algae, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-50,5), cbar = true, clims=(0,3), label = "species1")
-    p2 = scatter(B2[i].y, B2[i].z, zcolor=B2[i].size, m=(:circle, 3, :amp, 0.8, Plots.stroke(0)), xlims=(-1,33), ylims=(-50,5), clims=(0,3), cbar = true, label = "species2")
-    plt = plot(p1,p2,layout=grid(1,2),size=(800,300),dpi=100)
-end
-gif(anim,"tmp_yz2d.gif", fps = 15)

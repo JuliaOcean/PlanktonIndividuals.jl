@@ -5,11 +5,11 @@
     'grid' -> grid information
 Read input of irradiance from default binary file
 """
-function read_default_IR_input(nTime::Int64, ΔT::Int64,grid)
+function read_IR_input(nTime::Int64, ΔT::Int64,grid,
+                       path = dirname(pathof(PlanktonIndividuals))*"/../samples/PAR.bin")
     # irradiance(μmol photons/m^2)
     # start from mid-night
     # will change later to make it able to choose different month
-    path = dirname(pathof(PhytoAgentModel))*"/../samples/PAR.bin"
     PAR_hour = deserialize(path)
     # convert hour to second in a day
     t_htos = collect(0:1:24) .* 3600
@@ -43,9 +43,9 @@ end
     '∂T∂z' -> linear vertical temp gradient
 Read input of temperature from default binary file
 """
-function read_default_temp_input(nTime::Int64, ΔT::Int64, grid, ∂T∂z=0.04)
+function read_temp_input(nTime::Int64, ΔT::Int64, grid, ∂T∂z=0.04,
+                         path = dirname(pathof(PlanktonIndividuals))*"/../samples/temp.bin")
     # will change later to make it able to choose different month
-    path = dirname(pathof(PhytoAgentModel))*"/../samples/temp.bin"
     temp_hour = deserialize(path)
     # convert hour to second in a day
     t_htos = collect(0:1:24) .* 3600
@@ -80,6 +80,7 @@ end
 Read velocity fields of selected grids at 't' from cluster
 Return a velocity 'struc'
 extra cols & rows are read in for double grids
+z starts from the bottom
 """
 function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
     vfroot  = VelOfflineOpt["velpath"]
@@ -99,6 +100,7 @@ function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
         close(fuvel);
         u = zeros(Nx, Ny, Nz)
         u[:,:,2:end] = uvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
+        u = reverse(u,dims=3)
     end
 
     if Ny == 1
@@ -110,6 +112,7 @@ function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
         close(fvvel);
         v = zeros(Nx, Ny, Nz)
         v[:,:,2:end] = vvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
+        v = reverse(v,dims=3)
     end
 
     if Nz == 1
@@ -121,6 +124,7 @@ function read_offline_vels(VelOfflineOpt::Dict,t::Int64)
         close(fwvel);
         w = zeros(Nx, Ny, Nz+1)
         w[:,:,3:end] = wvel[Nx⁻:Nx⁺, Ny⁻:Ny⁺, Nz⁻:Nz⁺]
+        w = reverse(w,dims=3)
     end
     vel = velocity(u, v, w)
     return vel
@@ -199,7 +203,6 @@ function grid_offline(GridOfflineOpt::Dict)
     return g
 end
 
-
 """
     grid_Ogrids(Ogrid)
 Read grid information from Oceananigans
@@ -239,53 +242,18 @@ function read_Ogrids(Ogrid)
 end
 
 """
-    creat_output(B)
-Creat a dataframe to record the average attributes of indivuduals of each time step
-"""
-function create_output(B::Array{DataFrame,1})
-    output = DataFrame(time=0, gen_ave=mean(B[1].gen), spec_ave = mean(B[1].sp),
-                       Cq1_ave=mean(B[1].Cq1), Cq2_ave=mean(B[1].Cq2),
-                       Nq_ave=mean(B[1].Nq), Pq_ave=mean(B[1].Pq),
-                       size_ave=mean(B[1].size), chl_ave=mean(B[1].chl),
-                       Population=size(B[1],1), age_ave=mean(B[1].age), dvid=0, graz=0,death=0)
-    return output
-end
-
-"""
-    write_output(t, phyts_b, counts, output)
-Compute the average attributes of individuals at 't' time step and push them into 'output' dataframe
-"""
-function write_output(t,phyts_b,counts,output)
-    # summary of current step
-    gen_ave=mean(phyts_b.gen)
-    spec_ave=mean(phyts_b.sp)
-    Cq1_ave=mean(phyts_b.Cq1)
-    Cq2_ave=mean(phyts_b.Cq2)
-    Nq_ave=mean(phyts_b.Nq)
-    Pq_ave=mean(phyts_b.Pq)
-    size_ave=mean(phyts_b.size)
-    chl_ave=mean(phyts_b.chl)
-    age_ave=mean(phyts_b.age)
-    push!(output,(time=t, gen_ave=gen_ave, spec_ave=spec_ave,
-                  Cq1_ave=Cq1_ave, Cq2_ave=Cq2_ave, Nq_ave=Nq_ave, Pq_ave=Pq_ave,
-                  size_ave=size_ave, chl_ave=chl_ave, Population=size(phyts_b,1),
-                  age_ave=age_ave, dvid=counts[1], graz=counts[2], death=counts[3]))
-    return output
-end
-"""
     which_grid(phyt,g)
 decide which grid an individual is in
 return grid indices
 """
 function which_grid(phyt, g)
-    x = phyt.x; y = phyt.y; z = phyt.z;
+    x = phyt[1]; y = phyt[2]; z = phyt[3];
     xF = g.xF[:,1]; yF = g.yF[1,:]; zF = g.zF;
     xind = findall(t -> t≤x, xF[1:end-1])[end]
     yind = findall(t -> t≤y, yF[1:end-1])[end]
     zind = findall(t -> t≤z, zF[1:end-1])[end]
     return xind, yind, zind
 end
-
 
 """
     count_chl(phyts_a, grid)
@@ -296,7 +264,7 @@ function count_chl(phyts_a, grid)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
         x,y,z = which_grid(phyt, grid)
-        cells[x, y, z] = cells[x, y, z] + phyt.chl
+        cells[x, y, z] = cells[x, y, z] + phyt[12]
     end
     cells .= cells ./ grid.V
     return cells
@@ -310,7 +278,7 @@ function count_vertical_num(phyts_a)
     VD = zeros(500)
     for i in 1:size(phyts_a,1)
         phyt = phyts_a[i,:]
-        z = -trunc(Int, phyt.z) + 1
+        z = -trunc(Int, phyt[3]) + 1
         VD[z] = VD[z] + 1.0
     end
     return VD
@@ -328,203 +296,4 @@ function count_horizontal_num(phyts_a,grid)
         HD[x,y] = HD[x,y] + 1.0
     end
     return HD
-end
-
-# """
-#     convert_coordinates(phyts, grid)
-# Convert grid indices of each individual into lat, lon, and depth
-# 'z' starts from the bottom
-# """
-# function convert_coordinates(phyts, grid)
-#     for i in 1:size(phyts,1)
-#     phyt = phyts[i,:]
-#     z = trunc(Int, phyt.z); x = trunc(Int, phyt.x); y = trunc(Int, phyt.y);
-#     dz = phyt.z - z; dx = phyt.x - x; dy = phyt.y - y;
-#     phyt.x = grid.xF[x,y] + dx * (grid.xF[x+1,y] - grid.xF[x,y]);
-#     phyt.y = grid.yF[x,y] + dy * (grid.yF[x,y+1] - grid.yF[x,y]);
-#     phyt.z = grid.zF[z] + dz * grid.dzF[z];
-#     end
-# end
-
-"""
-    sort_species(Bi, Bsp, sp)
-Sort individuals of different species into different dataframes
-'Bi' is a dataframe row, 'Nsp' is an empty array
-"""
-function sort_species(Bi, Bsp, sp::Int64)
-    phyts = DataFrame(x=Float64[], y=Float64[], z=Float64[],
-                      gen=Int64[], size=Float64[], Cq1=Float64[],
-                      Cq2=Float64[], Nq=Float64[], Pq=Float64[],
-                      chl=Float64[],sp=Int64[],age=Float64[])
-    for j in 1:size(Bi,1)
-        if Bi[j,:].sp == sp
-            push!(phyts,Bi[j,:])
-        end
-    end
-    push!(Bsp,phyts)
-    return Bsp
-end
-
-"""
-    compute_mean_species(Bsp, nTime)
-Compute the average attributes of individuals of different species
-"""
-function compute_mean_species(Bsp, nTime)
-    output = DataFrame(time=Int64[], gen_ave=Float64[], Cq1_ave=Float64[],
-                       Cq2_ave=Float64[], Nq_ave=Float64[], Pq_ave=Float64[],
-                       size_ave=Float64[], chl_ave=Float64[],
-                       Population=Int64[], age_ave=Float64[]);
-    for i in 1:nTime
-        gen_ave1=mean(Bsp[i].gen)
-        Cq1_ave1=mean(Bsp[i].Cq1)
-        Cq2_ave1=mean(Bsp[i].Cq2)
-        Nq_ave1=mean(Bsp[i].Nq)
-        Pq_ave1=mean(Bsp[i].Pq)
-        size_ave1=mean(Bsp[i].size)
-        chl_ave1=mean(Bsp[i].chl)
-        age_ave1=mean(Bsp[i].age)
-        push!(output,(time=i, gen_ave=gen_ave1, Cq1_ave=Cq1_ave1,
-                      Cq2_ave=Cq2_ave1, Nq_ave=Nq_ave1, Pq_ave=Pq_ave1, size_ave=size_ave1,
-                      chl_ave=chl_ave1, Population=size(Bsp[i],1),age_ave=age_ave1))
-    end
-    return output
-end
-
-"""
-    write_nut_nc_each_step(g, nut, t)
-Write a NetCDF file of nutrient fields at each time step
-Default filepath -> "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
-"""
-function write_nut_nc_each_step(g::grids, nut::nutrient_fields, t::Int64, filepath::String)
-    xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
-    yC_attr = Dict("longname" => "Locations of the cell centers in the y-direction.", "units" => "m")
-    zC_attr = Dict("longname" => "Locations of the cell centers in the z-direction.", "units" => "m")
-    C_attr = Dict("units" => "mmolC/m^3")
-    N_attr = Dict("units" => "mmolN/m^3")
-    P_attr = Dict("units" => "mmolP/m^3")
-    isfile(filepath) && rm(filepath)
-    nccreate(filepath, "DIC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=C_attr);
-    nccreate(filepath, "NH4", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
-    nccreate(filepath, "NO3", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
-    nccreate(filepath, "PO4", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=P_attr);
-    nccreate(filepath, "DOC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=C_attr);
-    nccreate(filepath, "DON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
-    nccreate(filepath, "DOP", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=P_attr);
-    nccreate(filepath, "POC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=C_attr);
-    nccreate(filepath, "PON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
-    nccreate(filepath, "POP", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=P_attr);
-    ncwrite(nut.DIC,filepath,"DIC"); ncwrite(nut.NH4,filepath,"NH4");
-    ncwrite(nut.NO3,filepath,"NO3"); ncwrite(nut.PO4,filepath,"PO4");
-    ncwrite(nut.DOC,filepath,"DOC"); ncwrite(nut.DON,filepath,"DON"); ncwrite(nut.DOP,filepath,"DOP");
-    ncwrite(nut.POC,filepath,"POC"); ncwrite(nut.PON,filepath,"PON"); ncwrite(nut.POP,filepath,"POP");
-    nothing
-end
-
-"""
-    write_nut_nc_alltime(a, DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, nTime)
-Write a NetCDF file of nutrient fields for the whole run, especially for 0D configuration
-Default filepath -> "results/nutrients.nc"
-"""
-function write_nut_nc_alltime(g::grids, DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, nTime,
-                              filepath = "./results/nutrients.nc")
-    tt = collect(1:nTime);
-    xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
-    yC_attr = Dict("longname" => "Locations of the cell centers in the y-direction.", "units" => "m")
-    zC_attr = Dict("longname" => "Locations of the cell centers in the z-direction.", "units" => "m")
-    T_attr = Dict("longname" => "Time", "units" => "H")
-    C_attr = Dict("units" => "mmolC/m^3")
-    N_attr = Dict("units" => "mmolN/m^3")
-    P_attr = Dict("units" => "mmolP/m^3")
-    isfile(filepath) && rm(filepath)
-    nccreate(filepath, "DIC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=C_attr);
-    nccreate(filepath, "NH4", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
-    nccreate(filepath, "NO3", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
-    nccreate(filepath, "PO4", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=P_attr);
-    nccreate(filepath, "DOC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=C_attr);
-    nccreate(filepath, "DON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
-    nccreate(filepath, "DOP", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=P_attr);
-    nccreate(filepath, "POC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=C_attr);
-    nccreate(filepath, "PON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
-    nccreate(filepath, "POP", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=P_attr);
-    ncwrite(DIC,filepath,"DIC"); ncwrite(NH4,filepath,"NH4");
-    ncwrite(NO3,filepath,"NO3"); ncwrite(PO4,filepath,"PO4");
-    ncwrite(DOC,filepath,"DOC"); ncwrite(DON,filepath,"DON"); ncwrite(DOP,filepath,"DOP");
-    ncwrite(POC,filepath,"POC"); ncwrite(PON,filepath,"PON"); ncwrite(POP,filepath,"POP");
-    ncclose(filepath)
-    return nothing
-end
-
-"""
-    write_nut_cons(g, gtr, nutₜ, vel, agent_num, t, death_ct, graz_ct, dvid_ct)
-Compute total gtr (supposed to be 0), and surface vertical tracer flux(supposed to be 0)
-Write a brief summary of each time step into a txt file
-"""
-function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, vel::velocity, agent_num::Int64, t::Int64, death_ct::Int64, graz_ct::Int64, dvid_ct::Int64)
-    Σgtrⁿ = sum(gtr.NH4 .* g.V)+sum(gtr.NO3 .* g.V)+sum(gtr.DON .* g.V)+sum(gtr.PON .* g.V)
-    Σgtrᶜ = sum(gtr.DIC .* g.V)+sum(gtr.DOC .* g.V)+sum(gtr.POC .* g.V)
-    Σgtrᵖ = sum(gtr.PO4 .* g.V)+sum(gtr.DOP .* g.V)+sum(gtr.POP .* g.V)
-    ΣsurFⁿ= sum((nutₜ.NH4[:,:,1]+nutₜ.NO3[:,:,1]+nutₜ.DON[:,:,1]+nutₜ.PON[:,:,1]) .* g.Az .* vel.w[:,:,1])
-    ΣsurFᶜ= sum((nutₜ.DIC[:,:,1]+nutₜ.DOC[:,:,1]+nutₜ.POC[:,:,1]) .* g.Az .* vel.w[:,:,1])
-    ΣsurFᵖ= sum((nutₜ.PO4[:,:,1]+nutₜ.DOP[:,:,1]+nutₜ.POP[:,:,1]) .* g.Az .* vel.w[:,:,1])
-    ΣDIN = sum((nutₜ.NH4+nutₜ.NO3) .* g.V)
-    Cio = open("results/cons_C.txt","a"); Nio = open("results/cons_N.txt","a");
-    Pio = open("results/cons_P.txt","a"); DINio = open("results/cons_DIN.txt","a");
-    println(Cio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrᶜ,ΣsurFᶜ,Σgtrᶜ+ΣsurFᶜ))
-    println(Nio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrⁿ,ΣsurFⁿ,Σgtrⁿ+ΣsurFⁿ))
-    println(Pio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrᵖ,ΣsurFᵖ,Σgtrᵖ+ΣsurFᵖ))
-    println(DINio,@sprintf("%3.0f  %.16E %7.0f %5.0f %5.0f %5.0f",t,ΣDIN,agent_num,death_ct,graz_ct,dvid_ct))
-    close(Cio);close(Nio);close(Pio);close(DINio);
-end
-
-"""
-    PrepRunDir(res::String="results/")
-Create `res/` folder if needed. Remove old files from it if needed.
-"""
-function PrepRunDir(res::String="results/")
-    isdir(res) || mkdir(res)
-    isdir("$res"*"nutrients/") || mkdir("$res"*"nutrients/")
-    println("$res"*"nutrients/")
-
-    isfile("$res"*"cons_C.txt") && rm("$res"*"cons_C.txt");
-    isfile("$res"*"cons_N.txt") && rm("$res"*"cons_N.txt");
-    isfile("$res"*"cons_DIN.txt") && rm("$res"*"cons_DIN.txt");
-    isfile("$res"*"B1.bin") && rm("$res"*"B1.bin");
-    isfile("$res"*"B2.bin") && rm("$res"*"B2.bin");
-    isfile("$res"*"output.bin") && rm("$res"*"output.bin");
-    isfile("$res"*"output1.bin") && rm("$res"*"output1.bin");
-    isfile("$res"*"output2.bin") && rm("$res"*"output2.bin");
-    isfile("$res"*"grid.bin") && rm("$res"*"grid.bin");
-    isfile("$res"*"IR.bin") && rm("$res"*"IR.bin");
-    isfile("$res"*"VD1.bin") && rm("$res"*"VD1.bin");
-    isfile("$res"*"VD2.bin") && rm("$res"*"VD2.bin");
-    isfile("$res"*"HD1.bin") && rm("$res"*"HD1.bin");
-    isfile("$res"*"HD2.bin") && rm("$res"*"HD2.bin");
-
-    return "done"
-
-end
-
-"""
-  testB1B2(B1,B2,fil="")
-Compute mean size for `B1` & `B2`, add `B1ref` & `B2ref` reference result obtained from `fil`, and output all time series in one DataFrame.
-
-```
-tst=testB1B2(B1,B2,"samples/testB1B2.csv")
-tst2=[tst[!,:B1],tst[!,:B1ref],tst[!,:B2],tst[!,:B2ref]]
-isapprox(tst[end,:B1],tst[end,:B1ref]; atol=1e-2)
-isapprox(tst[end,:B2],tst[end,:B2ref]; atol=1e-2)
-using Plots; plot(tst2,lab=["B1" "B1ref" "B2" "B2ref"])
-```
-"""
-function testB1B2(B1,B2,fil="")
-    n=length(B1)
-    tmpB1=map(x -> mean(B1[x][!,:size]), 1:n)
-    tmpB2=map(x -> mean(B2[x][!,:size]), 1:n)
-    df=DataFrame(B1=tmpB1,B2=tmpB2)
-    if ~isempty(fil)
-        tmpB1B2=CSV.read(fil)
-        df[!,:B1ref]=tmpB1B2[!,:B1]
-        df[!,:B2ref]=tmpB1B2[!,:B2]
-    end
-    return df
 end
