@@ -11,9 +11,6 @@ makedocs(;
          repo="https://github.com/zhenwu0728/PlanktonIndividuals.jl/blob/{commit}{path}#L{line}",
          sitename = "PlanktonIndividuals.jl",
          authors="ZhenWu <zhenwu@mit.edu>",
-         assets=String[],
 )
 
-deploydocs(;
-    repo="github.com/zhenwu0728/PlanktonIndividuals.jl.git/",
-)
+deploydocs(repo="github.com/zhenwu0728/PlanktonIndividuals.jl.git")
