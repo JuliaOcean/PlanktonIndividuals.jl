@@ -3,7 +3,7 @@
 
 **Use cases:**
 
-- `Oceananigans_Planktonindividuals.jl`
+- `Oceananigans_PlanktonIndividuals.jl`
 
 **Infrastructure functions:**
 

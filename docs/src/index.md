@@ -35,7 +35,7 @@ Depth = 3
 ```
 
 ```@autodocs
-Modules = [PhytoAgentModel]
+Modules = [PlanktonIndividuals]
 Order   = [:type,:function]
 ```
 
