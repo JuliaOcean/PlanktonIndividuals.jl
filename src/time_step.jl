@@ -31,6 +31,16 @@ function PI_TimeStep!(model::Model_struct, ΔT, velᵇ::velocity)
     nutₜ,gtr = nut_update(model, velᵇ, consume_p, ΔT)
     model.nutrients = nutₜ
 end
+function PI_TimeStep!(model::Model_struct, ΔT, resultspath)
+    model.t += 1
+    phyts_b,counts_p,consume_p=phyt_update(model, ΔT)
+    model.individuals.phytos = phyts_b
+    agent_num = size(phyts_b,1)
+    write_pop_dynamics(model.t, agent_num, counts_p, resultspath)
+    nutₜ,gtr = nut_update(model, consume_p, ΔT)
+    write_nut_cons(model.grid, gtr, nutₜ,model.t,resultspath)
+    model.nutrients = nutₜ
+end
 
 """
     PI_advect!(individuals, ΔT, vel)

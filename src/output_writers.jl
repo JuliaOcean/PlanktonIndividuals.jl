@@ -87,7 +87,7 @@ end
 Write a brief summary of population changes at each time step into a txt file
 """
 function write_pop_dynamics(t::Int64, pop, counts, filepath)
-    POPio = open(filepath*"pop_dynamics.txt","a");
+    POPio = open(filepath*"dynamic_population.txt","a");
     println(POPio,@sprintf("%3.0f  %7.0f  %5.0f  %5.0f  %5.0f",
                            t,pop,counts.divid,counts.graze,counts.death))
     close(POPio);
