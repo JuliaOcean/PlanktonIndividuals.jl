@@ -67,18 +67,18 @@ end
 Compute total gtr (supposed to be 0), and surface vertical tracer flux(supposed to be 0)
 Write a brief summary of each time step into a txt file
 """
-function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, vel::velocity, t::Int64, filepath)
+function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, t::Int64, filepath)
     Σgtrⁿ = sum(gtr.NH4 .* g.V)+sum(gtr.NO3 .* g.V)+sum(gtr.DON .* g.V)+sum(gtr.PON .* g.V)
     Σgtrᶜ = sum(gtr.DIC .* g.V)+sum(gtr.DOC .* g.V)+sum(gtr.POC .* g.V)
     Σgtrᵖ = sum(gtr.PO4 .* g.V)+sum(gtr.DOP .* g.V)+sum(gtr.POP .* g.V)
-    ΣsurFⁿ= sum((nutₜ.NH4[:,:,1]+nutₜ.NO3[:,:,1]+nutₜ.DON[:,:,1]+nutₜ.PON[:,:,1]) .* g.Az .* vel.w[2:end-1,2:end-1,end-2])
-    ΣsurFᶜ= sum((nutₜ.DIC[:,:,1]+nutₜ.DOC[:,:,1]+nutₜ.POC[:,:,1]) .* g.Az .* vel.w[2:end-1,2:end-1,end-2])
-    ΣsurFᵖ= sum((nutₜ.PO4[:,:,1]+nutₜ.DOP[:,:,1]+nutₜ.POP[:,:,1]) .* g.Az .* vel.w[2:end-1,2:end-1,end-2])
+    TC = sum((nutₜ.DIC .+ nutₜ.DOC .+ nutₜ.POC) .* g.V)
+    TN = sum((nutₜ.NH4 .+ nutₜ.NO3 .+ nutₜ.DON .+ nutₜ.PON) .* g.V)
+    TP = sum((nutₜ.PO4 .+ nutₜ.DOP .+ nutₜ.POP) .* g.V)
     Cio = open(filepath*"cons_C.txt","a"); Nio = open(filepath*"cons_N.txt","a");
     Pio = open(filepath*"cons_P.txt","a");
-    println(Cio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrᶜ,ΣsurFᶜ,Σgtrᶜ+ΣsurFᶜ))
-    println(Nio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrⁿ,ΣsurFⁿ,Σgtrⁿ+ΣsurFⁿ))
-    println(Pio,@sprintf("%3.0f  %.16E  %.16E  %.8E",t,Σgtrᵖ,ΣsurFᵖ,Σgtrᵖ+ΣsurFᵖ))
+    println(Cio,@sprintf("%3.0f  %.16E  %.16E",t,Σgtrᶜ,TC))
+    println(Nio,@sprintf("%3.0f  %.16E  %.16E",t,Σgtrⁿ,TN))
+    println(Pio,@sprintf("%3.0f  %.16E  %.16E",t,Σgtrᵖ,TP))
     close(Cio);close(Nio);close(Pio);
 end
 

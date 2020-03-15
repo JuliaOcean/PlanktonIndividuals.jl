@@ -15,7 +15,7 @@ function PI_TimeStep!(model::Model_struct, ΔT, velᵇ::velocity, resultspath)
     agent_num = size(phyts_b,1)
     write_pop_dynamics(model.t, agent_num, counts_p, resultspath)
     nutₜ,gtr = nut_update(model, velᵇ, consume_p, ΔT)
-    write_nut_cons(model.grid, gtr, nutₜ,velᵇ,model.t,resultspath)
+    write_nut_cons(model.grid, gtr, nutₜ,model.t,resultspath)
     model.nutrients = nutₜ
 end
 function PI_TimeStep!(model::Model_struct, ΔT, velᵇ::velocity)
