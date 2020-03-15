@@ -43,5 +43,6 @@ export
 
     # write output functions
     write_nut_nc_alltime, write_nut_nc_each_step,
-    count_vertical_num, count_horizontal_num
+    count_vertical_num, count_horizontal_num,
+    write_output
 end # module

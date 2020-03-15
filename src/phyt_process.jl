@@ -67,8 +67,8 @@ function phyt_update(model, ΔT::Int64)
         if params["Grz_P"] == 0
             P_graz = false
         else
-            reg_num_graz = exp(Num_phyt/RunParam.PhytoOpt.Nindivi/RunParam.PhytoOpt.Nsp)
-            P_graz = rand(Bernoulli(reg_num_graz*phyt[7]/params["Grz_P"]))
+            reg_graz = phyt[7]/params["Grz_P"]
+            P_graz = rand(Bernoulli(reg_graz))
         end
 
         # compute death probability after a certain age, may be abandoned
@@ -164,7 +164,7 @@ function phyt_update(model, ΔT::Int64)
                     phyt = reshape(phyt,1,size(phyt,1))
                     phyts_b = vcat(phyts_b,phyt)
                 else # divide
-                    counts.divid += 2
+                    counts.divid += 1
                     phyts2 = divide(phyt)
                     phyts_b = vcat(phyts_b,phyts2)
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt[9]*0.1 # consume C when cell is divided
