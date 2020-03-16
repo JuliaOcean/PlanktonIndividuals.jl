@@ -27,12 +27,6 @@ git-tree-sha1 = "66158ad56b4bf6cc8413b37d0b7bc52402682764"
 uuid = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
 version = "1.0.0"
 
-[[Codecs]]
-deps = ["Test"]
-git-tree-sha1 = "70885e5e038cba1c4c17a84ad6c40756e10a4fb5"
-uuid = "19ecbf4d-ef7c-5e4b-b54a-0a0ff23c5aed"
-version = "0.5.0"
-
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
 git-tree-sha1 = "ed2c4abadf84c53d9e58510b5fc48912c2336fbb"
@@ -176,9 +170,9 @@ version = "1.1.0"
 
 [[PDMats]]
 deps = ["Arpack", "LinearAlgebra", "SparseArrays", "SuiteSparse", "Test"]
-git-tree-sha1 = "5f303510529486bb02ac4d70da8295da38302194"
+git-tree-sha1 = "2fc6f50ddd959e462f0a2dbc802ddf2a539c6e35"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.9.11"
+version = "0.9.12"
 
 [[Parsers]]
 deps = ["Dates", "Test"]
@@ -308,9 +302,3 @@ deps = ["LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "68f000f67654d07318d734b364a31233e465f49a"
 uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
 version = "0.5.1"
-
-[[YAML]]
-deps = ["Codecs", "Compat"]
-git-tree-sha1 = "3bde77cee95cce0c0b9b18813d85e18e8ed4f415"
-uuid = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
-version = "0.3.2"

@@ -13,12 +13,12 @@ RunParam=RunParams(10,    3600, PhytoOpt, false, ZooOpt)
 
 
 """
-    update_params(parameters, tmp)
+    update_params!(parameters, tmp)
 Update parameter values based on .yaml file
 'parameters' is default parameter set
 'tmp' is the parameters need to update
 """
-function update_params(parameters::Dict, tmp::Dict)
+function update_params!(parameters::Dict, tmp::Dict)
     tmp_keys = collect(keys(tmp))
     for key in tmp_keys
         if length(findall(x->x==key, collect(keys(parameters))))==0

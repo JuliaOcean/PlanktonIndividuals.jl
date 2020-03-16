@@ -1,10 +1,8 @@
 module PlanktonIndividuals
 
-greet() = print("Hello World!")
-
 using NetCDF, Serialization
 using Random, Distributions, Interpolations, Statistics
-using Printf, YAML
+using Printf
 
 src=""
 
@@ -31,7 +29,7 @@ export
 
     # read input functions
     read_IR_input, read_temp_input,
-    update_params, grid_offline, param_default,
+    update_params!, grid_offline, param_default,
     PrepRunDir, generate_vel_itp,
 
     # initialize nutrient field and individual sets
