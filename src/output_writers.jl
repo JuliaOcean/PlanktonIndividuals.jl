@@ -76,20 +76,27 @@ function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields,
     TP = sum((nutₜ.PO4 .+ nutₜ.DOP .+ nutₜ.POP) .* g.V)
     Cio = open(filepath*"cons_C.txt","a"); Nio = open(filepath*"cons_N.txt","a");
     Pio = open(filepath*"cons_P.txt","a");
-    println(Cio,@sprintf("%3.0f  %.16E  %.16E",t,Σgtrᶜ,TC))
-    println(Nio,@sprintf("%3.0f  %.16E  %.16E",t,Σgtrⁿ,TN))
-    println(Pio,@sprintf("%3.0f  %.16E  %.16E",t,Σgtrᵖ,TP))
+    println(Cio,@sprintf("%4.0f  %.16E  %.16E",t,Σgtrᶜ,TC))
+    println(Nio,@sprintf("%4.0f  %.16E  %.16E",t,Σgtrⁿ,TN))
+    println(Pio,@sprintf("%4.0f  %.16E  %.16E",t,Σgtrᵖ,TP))
     close(Cio);close(Nio);close(Pio);
 end
 
 """
-    write_pop_dynamics(t, agent_num, counts, filepath)
+    write_pop_dynamics(t, phyts, counts, filepath)
 Write a brief summary of population changes at each time step into a txt file
 """
-function write_pop_dynamics(t::Int64, pop, counts, filepath)
+function write_pop_dynamics(t::Int64, phyts, counts, filepath)
+    pop = size(phyts,2)
+    gen_ave = mean(phyts[5,:])
+    size_ave= mean(phyts[7,:])
+    Cq1_ave = mean(phyts[8,:])
+    Cq2_ave = mean(phyts[9,:])
+    Nq_ave  = mean(phyts[10,:])
+    Pq_ave  = mean(phyts[11,:])
+    Chl_ave = mean(phyts[12,:])
     POPio = open(filepath*"dynamic_population.txt","a");
-    println(POPio,@sprintf("%3.0f  %7.0f  %5.0f  %5.0f  %5.0f",
-                           t,pop,counts.divid,counts.graze,counts.death))
+    println(POPio,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E  %4.0f  %4.0f  %4.0f",t,pop,gen_ave,size_ave,Cq1_ave,Cq2_ave,Nq_ave,Pq_ave,Chl_ave,counts.divid,counts.graze,counts.death))
     close(POPio);
 end
 
