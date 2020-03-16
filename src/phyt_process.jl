@@ -157,7 +157,8 @@ function phyt_update(model, ΔT::Int64)
             phyt[6]  = phyt[6] + 1.0*(ΔT/3600)
             if P_death == false # not natural death
                 # compute probabilities of division
-                reg_divide = 0.5*(tanh(phyt[7] - params["dvid_size"]) + 1)
+                reg_size = params["dvid_stp"]*(phyt[7] - params["dvid_size"])
+                reg_divide = 0.05*(tanh(reg_size) + 1)
                 P_dvi = rand(Bernoulli(reg_divide))
                 if P_dvi == false # not divide
                     phyts_b = append!(phyts_b,phyt)

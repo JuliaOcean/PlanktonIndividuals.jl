@@ -11,6 +11,7 @@ param_default=Dict(
     "inhibcoef"=> [0.0, 0.0],         # light inhibition
     "Grz_P"    => 4000,               # phyt.size/Grz_P is the probability to be grazed
     "dvid_size"=> 1.0,                # relative cell size a cell can start divide
+    "dvid_stp" => 5.0,                # steepness of sigmoidal function
     "death_age"=> 168.0,              # average life time of a cell (7*24 hours)
     "a_death"  => 0.05,               # shape parameter for natural death
     "b_death"  => 0.5,                # shape parameter for natural death
