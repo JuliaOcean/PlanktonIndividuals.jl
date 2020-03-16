@@ -6,22 +6,23 @@
 An adult cell divides evenly into two daughter cells
 Two daughter cells will be in the same place of the adult cell
 """
-function divide(phyt::Array{Float64,1})
-    phytos = ones(2, size(phyt,1))
+function divide(phyt)
+    phytos = zeros(size(phyt,1)*2)
     # NOT all C and N can turn into new cells
-    phytos[:,1]  .= phyt[1]          # x
-    phytos[:,2]  .= phyt[2]          # y
-    phytos[:,3]  .= phyt[3]          # z
-    phytos[:,4]  .= phyt[4]          # species
-    phytos[:,5]  .= phyt[5] .+ 1.0   # generation
-    phytos[:,6]  .= 1.0              # age
-    phytos[:,7]  .= phyt[7] .* 0.45  # size
-    phytos[:,8]  .= phyt[8] .* 0.5   # Cq1
-    phytos[:,9]  .= phyt[9] .* 0.45  # Cq2
-    phytos[:,10] .= phyt[10] .* 0.5  # Nq
-    phytos[:,11] .= phyt[11] .* 0.5  # Pq
-    phytos[:,12] .= phyt[12] .* 0.5  # chl
-
+    for i in 1:2
+        phytos[1+(i-1)*12]  = phyt[1]          # x
+        phytos[2+(i-1)*12]  = phyt[2]          # y
+        phytos[3+(i-1)*12]  = phyt[3]          # z
+        phytos[4+(i-1)*12]  = phyt[4]          # species
+        phytos[5+(i-1)*12]  = phyt[5] .+ 1.0   # generation
+        phytos[6+(i-1)*12]  = 1.0              # age
+        phytos[7+(i-1)*12]  = phyt[7] .* 0.45  # size
+        phytos[8+(i-1)*12]  = phyt[8] .* 0.5   # Cq1
+        phytos[9+(i-1)*12]  = phyt[9] .* 0.45  # Cq2
+        phytos[10+(i-1)*12] = phyt[10] .* 0.5  # Nq
+        phytos[11+(i-1)*12] = phyt[11] .* 0.5  # Pq
+        phytos[12+(i-1)*12] = phyt[12] .* 0.5  # chl
+    end
     return phytos
 end
 ###################################
@@ -44,16 +45,15 @@ function phyt_update(model, ΔT::Int64)
 
     # load nutrients
     counts = pop_counts()
-    Num_phyt = size(phyts_a,1)
     chl_num = count_chl(phyts_a, g)
     cumsum_chl = cumsum(chl_num, dims = 3)
 
-    #set up a dataframe to record all updated agents
-    phyts_b = zeros(1,size(phyts_a,2))
+    #set up a empty array to record all updated agents
+    phyts_b = []
     consume = nutrients_init(g)
     # iterate phytoplankton agents
-    for i in 1:size(phyts_a,1)
-        phyt = phyts_a[i,:]
+    for i in 1:size(phyts_a,2)
+        phyt = phyts_a[:,i]
         sp = Int(phyt[4])
         x, y, z = which_grid(phyt, g)
         temp_t = temp[x,y,z,t]
@@ -161,12 +161,11 @@ function phyt_update(model, ΔT::Int64)
                 shape_factor_divide = (params["a_dvi"][sp]*reg_size)^params["b_dvi"][sp]
                 P_dvi = rand(Bernoulli(shape_factor_divide/(1+shape_factor_divide)))
                 if P_dvi == false # not divide
-                    phyt = reshape(phyt,1,size(phyt,1))
-                    phyts_b = vcat(phyts_b,phyt)
+                    phyts_b = append!(phyts_b,phyt)
                 else # divide
                     counts.divid += 1
-                    phyts2 = divide(phyt)
-                    phyts_b = vcat(phyts_b,phyts2)
+                    phyts = divide(phyt)
+                    phyts_b = append!(phyts_b,phyts)
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt[9]*0.1 # consume C when cell is divided
                 end # divide
             else # natural death
@@ -192,5 +191,6 @@ function phyt_update(model, ΔT::Int64)
             consume.POP[x, y, z] = consume.POP[x, y, z] + phyt[11]*(1.0 - params["grazFracP"])*0.5
         end # graze
     end # while loop to traverse the array of agents
-    return phyts_b[2:end,:],counts,consume
+    phyts_b = reshape(phyts_b,size(phyts_a,1),Int(length(phyts_b)/size(phyts_a,1)))
+    return phyts_b,counts,consume
 end # for loop of time

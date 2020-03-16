@@ -12,12 +12,11 @@ Return 'true' if there is at least on prey in this sphere along with
 a dataframe containing all preys (temporal ID and rd) and the nearest prey
 """
 function find_feeding_area(zplk::Array, phyts::Array, radius::Float64)
-    if size(phyts,1) == 0
+    if size(phyts,2) == 0
         return (false, nothing, (0.0,0.0,0.0))
     end
-    dist= (phyts[1] .- zplk[1]).^2 .+ (phyts[2] .- zplk[2]).^2 .+ (phyts[3] .- zplk[3]).^2
-    # dist_df = DataFrame(ID=collect(1:1:size(phyts,1)), dist=dist)
-    dist_df = [collect(1:1:size(phyts,1)) dist]
+    dist= (phyts[1,:] .- zplk[1]).^2 .+ (phyts[2,:] .- zplk[2]).^2 .+ (phyts[3,:] .- zplk[3]).^2
+    dist_df = [collect(1:1:size(phyts,2)) dist]
     dist_df = sortslices(dist_df, dims = 1, by = x -> x[2])
     indices = findall(x -> x<radius, dist_df[:,2])
     if size(indices,1) == 0
@@ -93,9 +92,9 @@ zooplankton feed on selected phytoplankton
 return C and N content as exports to environment
 """
 function sloppy_feed(zplk::Array, phyts_feed::Array, params)
-    TOC = sum(phyts_feed[:,8]) + sum(phyts_feed[:,9])
-    TON = sum(phyts_feed[:,10])
-    TOP = sum(phyts_feed[:,11])
+    TOC = sum(phyts_feed[8,:]) + sum(phyts_feed[9,:])
+    TON = sum(phyts_feed[10,:])
+    TOP = sum(phyts_feed[11,:])
     Feed_CN = (params["slpyFracC"] * TOC) / (params["slpyFracN"] * TON)
     Feed_CP = (params["slpyFracC"] * TOC) / (params["slpyFracP"] * TOP)
     Zoo_CN = zplk[9] / zplk[10]
@@ -138,12 +137,12 @@ function zoo_update(model, ΔT::Int64)
     phyts = model.individuals.phytos
     zoos = model.individuals.zoos
     counts = pop_counts()
-    #set up a dataframe to record all updated agents
-    zoos_b = zeros(1,size(zoos,2))
+    #set up a empty array to record all updated agents
+    zoos_b = []
 
     consume = nutrients_init(g)
-    for i in 1:size(zoos,1)
-        zplk = zoos[i,:]
+    for i in 1:size(zoos,2)
+        zplk = zoos[:,i]
         x, y, z = which_grid(zplk, g)
 
         # compute death probability after a certain age
@@ -165,8 +164,8 @@ function zoo_update(model, ΔT::Int64)
                     travel_dist = chase_prey(zplk, feeding[3], travel_dist, g)
                 end
             elseif feeding[1] == true
-                phyts_feed = phyts[feeding[2],:]
-                phyts = phyts[setdiff(1:end,feeding[2]),:]
+                phyts_feed = phyts[:,feeding[2]]
+                phyts = phyts[:,setdiff(1:end,feeding[2])]
                 Cexport, Nexport, Pexport = sloppy_feed(zplk, phyts_feed, params)
                 consume.DOC[x, y, z] = consume.DOC[x, y, z] + Cexport * params["grazFracC"]
                 consume.DON[x, y, z] = consume.DON[x, y, z] + Nexport * params["grazFracN"]
@@ -190,7 +189,7 @@ function zoo_update(model, ΔT::Int64)
 
             # compute probabilities of reproduction
 
-            push!(zoos_b,zplk)
+            append!(zoos_b,zplk)
         else
             consume.DOC[x, y, z] = consume.DOC[x, y, z] + zplk[9] * params["mortFracC"]
             consume.DON[x, y, z] = consume.DON[x, y, z] + zplk[10]  * params["mortFracN"]
@@ -200,5 +199,6 @@ function zoo_update(model, ΔT::Int64)
             consume.POP[x, y, z] = consume.POP[x, y, z] + zplk[11]  * (1.0 - params["mortFracP"])
         end
     end
-    return zoos_b[2:end,:], counts, consume
+    zoos_b = reshape(zoos_b, size(zoos,1), Int(length(zoos_b)/size(zoos,1)))
+    return zoos_b, counts, consume
 end

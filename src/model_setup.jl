@@ -9,23 +9,23 @@ function setup_agents(RunParam::RunParams,grid)
     PhytoOpt = RunParam.PhytoOpt
     Nsp = PhytoOpt.Nsp
     N = PhytoOpt.Nindivi
-    phyts0 = zeros(N*Nsp,12)
-    phyts0[:,1]  = rand(Uniform(grid.xF[1],grid.xF[end]), N*Nsp)              # x
-    phyts0[:,2]  = rand(Uniform(grid.yF[1],grid.yF[end]), N*Nsp)              # y
-    phyts0[:,3]  = rand(Uniform(grid.zF[1],grid.zF[end]), N*Nsp)              # z
-    phyts0[:,4] .= 1.0                                                        # species
-    phyts0[:,5] .= 1.0                                                        # generation
-    phyts0[:,6] .= 1.0                                                        # age
-    phyts0[:,7]  = max.(0.1, rand(Normal(PhytoOpt.mean,PhytoOpt.var), N*Nsp)) # size
+    phyts0 = zeros(12,N*Nsp)
+    phyts0[1,:]  = rand(Uniform(grid.xF[1],grid.xF[end]), N*Nsp)              # x
+    phyts0[2,:]  = rand(Uniform(grid.yF[1],grid.yF[end]), N*Nsp)              # y
+    phyts0[3,:]  = rand(Uniform(grid.zF[1],grid.zF[end]), N*Nsp)              # z
+    phyts0[4,:] .= 1.0                                                        # species
+    phyts0[5,:] .= 1.0                                                        # generation
+    phyts0[6,:] .= 1.0                                                        # age
+    phyts0[7,:]  = max.(0.1, rand(Normal(PhytoOpt.mean,PhytoOpt.var), N*Nsp)) # size
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
         upper = Int(N+(i-1)*N)
-        phyts0[lower:upper,8] .= PhytoOpt.Cquota[i]*PhytoOpt.Nsuper           # Cq1
+        phyts0[8,lower:upper] .= PhytoOpt.Cquota[i]*PhytoOpt.Nsuper           # Cq1
     end
-    phyts0[:,9]  = copy(phyts0[:,8]) .* phyts0[:,7]                           # Cq2
-    phyts0[:,10] = copy(phyts0[:,9]) .* 13 ./120                              # Nq
-    phyts0[:,11] = copy(phyts0[:,9]) .* 1 ./120                               # Pq
-    phyts0[:,12] = copy(phyts0[:,10]) .* 0.4                                  # Chl
+    phyts0[9,:]  = copy(phyts0[8,:]) .* phyts0[7,:]                           # Cq2
+    phyts0[10,:] = copy(phyts0[9,:]) .* 13 ./120                              # Nq
+    phyts0[11,:] = copy(phyts0[9,:]) .* 1 ./120                               # Pq
+    phyts0[12,:] = copy(phyts0[10,:]) .* 0.4                                  # Chl
 
     if RunParam.Zoo == false
         return individuals(phyts0,nothing)
@@ -42,22 +42,22 @@ Set up zooplankton individuals according to 'ZooOpt' from 'RunParam'
 function setup_zooplkt(ZooOpt, grid)
     Nsp = ZooOpt.Nsp
     N = ZooOpt.Nindivi
-    zoos0 = zeros(N*Nsp,12) # Cq1 = 0.0, chl = 0.0
-    zoos0[:,1]  = rand(Uniform(grid.xF[1],grid.xF[end]), N*Nsp)              # x
-    zoos0[:,2]  = rand(Uniform(grid.yF[1],grid.yF[end]), N*Nsp)              # y
-    zoos0[:,3]  = rand(Uniform(grid.zF[1],grid.zF[end]), N*Nsp)              # z
-    zoos0[:,4] .= 1.0                                                        # species
-    zoos0[:,5] .= 1.0                                                        # generation
-    zoos0[:,6] .= 1.0                                                        # age
-    zoos0[:,7]  = max.(0.1, rand(Normal(ZooOpt.mean,ZooOpt.var), N*Nsp))     # size
+    zoos0 = zeros(12,N*Nsp) # Cq1 = 0.0, chl = 0.0
+    zoos0[1,:]  = rand(Uniform(grid.xF[1],grid.xF[end]), N*Nsp)              # x
+    zoos0[2,:]  = rand(Uniform(grid.yF[1],grid.yF[end]), N*Nsp)              # y
+    zoos0[3,:]  = rand(Uniform(grid.zF[1],grid.zF[end]), N*Nsp)              # z
+    zoos0[4,:] .= 1.0                                                        # species
+    zoos0[5,:] .= 1.0                                                        # generation
+    zoos0[6,:] .= 1.0                                                        # age
+    zoos0[7,:]  = max.(0.1, rand(Normal(ZooOpt.mean,ZooOpt.var), N*Nsp))     # size
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
         upper = Int(N+(i-1)*N)
-        zoos0[lower:upper,9] .= ZooOpt.Cquota[i]*ZooOpt.Nsuper               # Cq2
+        zoos0[9,lower:upper] .= ZooOpt.Cquota[i]*ZooOpt.Nsuper               # Cq2
     end
-    zoos0[:,9]  = zoos0[:,9] .* zoos0[:,7]                                   # Cq2
-    zoos0[:,10] = copy(zoos0[:,9]) .* 13 ./120                               # Nq
-    zoos0[:,11] = copy(zoos0[:,9]) .* 1 ./120                                # Pq
+    zoos0[9,:]  = zoos0[9,:] .* zoos0[7,:]                                   # Cq2
+    zoos0[10,:] = copy(zoos0[9,:]) .* 13 ./120                               # Nq
+    zoos0[11,:] = copy(zoos0[9,:]) .* 1 ./120                                # Pq
     return zoos0
 end
 
