@@ -169,6 +169,10 @@ function phyt_update(model, ΔT::Int64)
                     phyts_b = append!(phyts_b,phyts)
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt[9]*0.1 # consume C when cell is divided
                 end # divide
+                consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - SynC
+                consume.NH4[x, y, z] = consume.NH4[x, y, z] - VNH4
+                consume.NO3[x, y, z] = consume.NO3[x, y, z] - VNO3
+                consume.PO4[x, y, z] = consume.PO4[x, y, z] - VPO4
             else # natural death
                 consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt[8]+phyt[9])*params["mortFracC"]
                 consume.DON[x, y, z] = consume.DON[x, y, z] + phyt[10]*params["mortFracN"]
@@ -178,10 +182,6 @@ function phyt_update(model, ΔT::Int64)
                 consume.POP[x, y, z] = consume.POP[x, y, z] + phyt[11]*(1.0 - params["mortFracP"])
                 counts.death += 1
             end # naturan death
-            consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - SynC
-            consume.NH4[x, y, z] = consume.NH4[x, y, z] - VNH4
-            consume.NO3[x, y, z] = consume.NO3[x, y, z] - VNO3
-            consume.PO4[x, y, z] = consume.PO4[x, y, z] - VPO4
         else #grazed
             counts.graze += 1
             consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt[8]+phyt[9])*params["grazFracC"]*0.5
