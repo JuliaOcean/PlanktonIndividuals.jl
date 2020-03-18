@@ -148,11 +148,24 @@ function phyt_update(model, ΔT::Int64)
                 dCq2 = SynC
                 dNq  = VNH4 + VNO3
                 dPq  = VPO4
-                dsize= dCq2/(phyt[9])
                 phyt[8]  = max(0.0, phyt[8] + dCq1)
                 phyt[9]  = phyt[9] + dCq2
                 phyt[10] = phyt[10] + dNq
                 phyt[11] = phyt[11] + dPq
+
+                # keep C:N:P ratio in a reasonable range
+                rNC = phyt[10]/params["Nqmin"]
+                rPC = phyt[11]/params["Pqmin"]
+                Cmax = min(rNC, rPC)
+                if phyt[9] > Cmax
+                    excretC = phyt[9] - Cmax
+                    phyt[9] = Cmax
+                    dCq2 = dCq2 - excret
+                else
+                    excretC = 0.0
+                end
+
+                dsize= dCq2/(phyt[9])
                 phyt[7]  = max(0.0,phyt[7]+dsize)
                 phyt[12] = phyt[12] + ρ_chl*dNq*params["Chl2N"]
                 phyt[6]  = phyt[6] + 1.0*(ΔT/3600)
@@ -170,6 +183,7 @@ function phyt_update(model, ΔT::Int64)
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt[9]*0.1 # consume C when cell is divided
                 end # divide
                 consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - SynC
+                consume.DOC[x, y, z] = consume.DOC[x, y, z] + excretC
                 consume.NH4[x, y, z] = consume.NH4[x, y, z] - VNH4
                 consume.NO3[x, y, z] = consume.NO3[x, y, z] - VNO3
                 consume.PO4[x, y, z] = consume.PO4[x, y, z] - VPO4
