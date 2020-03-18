@@ -17,12 +17,13 @@ function setup_agents(RunParam::RunParams,grid)
     phyts0[5,:] .= 1.0                                                        # generation
     phyts0[6,:] .= 1.0                                                        # age
     phyts0[7,:]  = max.(0.1, rand(Normal(PhytoOpt.mean,PhytoOpt.var), N*Nsp)) # size
+    phyts0[8,:] .= 0.0                                                        # Cq1
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
         upper = Int(N+(i-1)*N)
-        phyts0[8,lower:upper] .= PhytoOpt.Cquota[i]*PhytoOpt.Nsuper           # Cq1
+        phyts0[9,lower:upper] .= PhytoOpt.Cquota[i]*PhytoOpt.Nsuper           # Cq2
     end
-    phyts0[9,:]  = copy(phyts0[8,:]) .* phyts0[7,:]                           # Cq2
+    phyts0[9,:]  = phyts0[9,:] .* phyts0[7,:]                                 # Cq2
     phyts0[10,:] = copy(phyts0[9,:]) .* 13 ./120                              # Nq
     phyts0[11,:] = copy(phyts0[9,:]) .* 1 ./120                               # Pq
     phyts0[12,:] = copy(phyts0[10,:]) .* 0.4                                  # Chl
