@@ -149,29 +149,33 @@ function nut_update(model, consume, ΔT)
     PON[PON .< 0.0] .= 0.0; POP[POP .< 0.0] .= 0.0;
     F = nutrients_init(g)
     # compute remineralization of organic nutrients
-    F.DIC .= F.DIC .+ DOC .* params["kDOC"]
-    F.NH4 .= F.NH4 .+ DON .* params["kDON"] .- NH4 .* params["Nit"]
-    F.NO3 .= F.NO3 .+ NH4 .* params["Nit"]
-    F.PO4 .= F.PO4 .+ DOP .* params["kDOP"]
-    F.DOC .= F.DOC .- DOC .* params["kDOC"] .+ POC .* params["kPOC"]
-    F.DON .= F.DON .- DON .* params["kDON"] .+ PON .* params["kPON"]
-    F.DOP .= F.DOP .- DOP .* params["kDOP"] .+ POP .* params["kPOP"]
-    F.POC .= F.POC .- POC .* params["kPOC"]
-    F.PON .= F.PON .- PON .* params["kPON"]
-    F.POP .= F.POP .- POP .* params["kPOP"]
+    F.DIC .= F.DIC .+ DOC .* params["kDOC"] .* ΔT
+    F.DOC .= F.DOC .- DOC .* params["kDOC"] .* ΔT
+    F.DOC .= F.DOC .+ POC .* params["kPOC"] .* ΔT
+    F.POC .= F.POC .- POC .* params["kPOC"] .* ΔT
 
-    gtr = nutrients_init(g)
+    F.NH4 .= F.NH4 .+ DON .* params["kDON"] .* ΔT
+    F.NH4 .= F.NH4 .- NH4 .* params["Nit"]  .* ΔT
+    F.NO3 .= F.NO3 .+ NH4 .* params["Nit"]  .* ΔT
+    F.DON .= F.DON .- DON .* params["kDON"] .* ΔT
+    F.DON .= F.DON .+ PON .* params["kPON"] .* ΔT
+    F.PON .= F.PON .- PON .* params["kPON"] .* ΔT
+
+    F.PO4 .= F.PO4 .+ DOP .* params["kDOP"] .* ΔT
+    F.DOP .= F.DOP .- DOP .* params["kDOP"] .* ΔT
+    F.DOP .= F.DOP .+ POP .* params["kPOP"] .* ΔT
+    F.POP .= F.POP .- POP .* params["kPOP"] .* ΔT
     # store nutrients of the former time step
     nutₜ = nutrients_init(g)
-    nutₜ.DIC .= nutrients.DIC .+ gtr.DIC .* ΔT .+ consume.DIC ./ g.V
-    nutₜ.NH4 .= nutrients.NH4 .+ gtr.NH4 .* ΔT .+ consume.NH4 ./ g.V
-    nutₜ.NO3 .= nutrients.NO3 .+ gtr.NO3 .* ΔT .+ consume.NO3 ./ g.V
-    nutₜ.PO4 .= nutrients.PO4 .+ gtr.PO4 .* ΔT .+ consume.PO4 ./ g.V
-    nutₜ.DOC .= nutrients.DOC .+ gtr.DOC .* ΔT .+ consume.DOC ./ g.V
-    nutₜ.DON .= nutrients.DON .+ gtr.DON .* ΔT .+ consume.DON ./ g.V
-    nutₜ.DOP .= nutrients.DOP .+ gtr.DOP .* ΔT .+ consume.DOP ./ g.V
-    nutₜ.POC .= nutrients.POC .+ gtr.POC .* ΔT .+ consume.POC ./ g.V
-    nutₜ.PON .= nutrients.PON .+ gtr.PON .* ΔT .+ consume.PON ./ g.V
-    nutₜ.POP .= nutrients.POP .+ gtr.POP .* ΔT .+ consume.POP ./ g.V
-    return nutₜ, gtr
+    nutₜ.DIC .= nutrients.DIC .+ F.DIC .+ consume.DIC ./ g.V
+    nutₜ.NH4 .= nutrients.NH4 .+ F.NH4 .+ consume.NH4 ./ g.V
+    nutₜ.NO3 .= nutrients.NO3 .+ F.NO3 .+ consume.NO3 ./ g.V
+    nutₜ.PO4 .= nutrients.PO4 .+ F.PO4 .+ consume.PO4 ./ g.V
+    nutₜ.DOC .= nutrients.DOC .+ F.DOC .+ consume.DOC ./ g.V
+    nutₜ.DON .= nutrients.DON .+ F.DON .+ consume.DON ./ g.V
+    nutₜ.DOP .= nutrients.DOP .+ F.DOP .+ consume.DOP ./ g.V
+    nutₜ.POC .= nutrients.POC .+ F.POC .+ consume.POC ./ g.V
+    nutₜ.PON .= nutrients.PON .+ F.PON .+ consume.PON ./ g.V
+    nutₜ.POP .= nutrients.POP .+ F.POP .+ consume.POP ./ g.V
+    return nutₜ, F
 end
