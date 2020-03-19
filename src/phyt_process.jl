@@ -160,7 +160,7 @@ function phyt_update(model, ΔT::Int64)
                 if phyt[9] > Cmax
                     excretC = phyt[9] - Cmax
                     phyt[9] = Cmax
-                    dCq2 = dCq2 - excret
+                    dCq2 = dCq2 - excretC
                 else
                     excretC = 0.0
                 end
@@ -196,14 +196,14 @@ function phyt_update(model, ΔT::Int64)
                 consume.POP[x, y, z] = consume.POP[x, y, z] + phyt[11]*(1.0 - params["mortFracP"])
                 counts.death += 1
             end # naturan death
-        else #grazed
+        else #grazed, no sloppy feeding here, all nutrients go back to organic pools
             counts.graze += 1
-            consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt[8]+phyt[9])*params["grazFracC"]*0.5
-            consume.DON[x, y, z] = consume.DON[x, y, z] + phyt[10]*params["grazFracN"]*0.5
-            consume.DOP[x, y, z] = consume.DOP[x, y, z] + phyt[11]*params["grazFracP"]*0.5
-            consume.POC[x, y, z] = consume.POC[x, y, z] + (phyt[8]+phyt[9])*(1.0 - params["grazFracC"])*0.5
-            consume.PON[x, y, z] = consume.PON[x, y, z] + phyt[10]*(1.0 - params["grazFracN"])*0.5
-            consume.POP[x, y, z] = consume.POP[x, y, z] + phyt[11]*(1.0 - params["grazFracP"])*0.5
+            consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt[8]+phyt[9])*params["grazFracC"]
+            consume.DON[x, y, z] = consume.DON[x, y, z] + phyt[10]*params["grazFracN"]
+            consume.DOP[x, y, z] = consume.DOP[x, y, z] + phyt[11]*params["grazFracP"]
+            consume.POC[x, y, z] = consume.POC[x, y, z] + (phyt[8]+phyt[9])*(1.0 - params["grazFracC"])
+            consume.PON[x, y, z] = consume.PON[x, y, z] + phyt[10]*(1.0 - params["grazFracN"])
+            consume.POP[x, y, z] = consume.POP[x, y, z] + phyt[11]*(1.0 - params["grazFracP"])
         end # graze
     end # while loop to traverse the array of agents
     phyts_b = reshape(phyts_b,size(phyts_a,1),Int(length(phyts_b)/size(phyts_a,1)))
