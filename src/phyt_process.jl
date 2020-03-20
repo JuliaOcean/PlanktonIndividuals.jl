@@ -91,9 +91,9 @@ function phyt_update(model, ΔT::Int64)
                 photoTempFunc = params["TempCoeff"]*max(1.0e-10,Tempstd)
                 PCmax_sp = params["PCmax"][sp]/86400
                 PCm = PCmax_sp*photoTempFunc*phyt[7]^params["PC_b"][sp]
-                PC = PCm*(1-exp(-α_I*phyt[12]/(phyt[9]*PCm)))
-                PS = PC*phyt[9] # unit: mmol C/second/individual
-                Eₖ = PCm/(phyt[12]/phyt[9]*params["α"])
+                PC = PCm*(1-exp(-α_I*phyt[12]/(phyt[8]*PCm)))
+                PS = PC*phyt[8] # unit: mmol C/second/individual
+                Eₖ = PCm/(phyt[12]/phyt[8]*params["α"])
                 tmp = α_I/params["α"]
                 if (tmp > Eₖ) & (params["inhibcoef"][sp] == 1.0)
                     PS = PS*Eₖ/tmp*params["inhibcoef"][sp]
@@ -110,8 +110,8 @@ function phyt_update(model, ΔT::Int64)
                 VNO3m = VNO3max_sp*phyt[7]^params["VN_b"][sp]
                 NH4uptake = VNH4m*NH4/(NH4+params["KsatNH4"][sp])*regQn
                 NO3uptake = VNO3m*NO3/(NO3+params["KsatNO3"][sp])*regQn
-                VNH4cell = NH4uptake*phyt[9] # unit: mmol N/second/individual
-                VNO3cell = NO3uptake*phyt[9] # unit: mmol N/second/individual
+                VNH4cell = NH4uptake*phyt[8] # unit: mmol N/second/individual
+                VNO3cell = NO3uptake*phyt[8] # unit: mmol N/second/individual
                 VNH4 = min(NH4*g.V[x,y,z]/10.0, VNH4cell*ΔT) # unit: mmol N/hour/individual
                 VNO3 = min(NO3*g.V[x,y,z]/10.0, VNO3cell*ΔT) # unit: mmol N/hour/individual
 
@@ -122,13 +122,13 @@ function phyt_update(model, ΔT::Int64)
                 VPmax_sp = params["VPmax"][sp]/86400
                 VPm = VPmax_sp*phyt[7]^params["VP_b"][sp]
                 Puptake = VPm*PO4/(PO4+params["KsatP"][sp])*regQp
-                VPcell = Puptake*phyt[9] # unit: mmol P/second/individual
+                VPcell = Puptake*phyt[8] # unit: mmol P/second/individual
                 VPO4 = min(PO4*g.V[x,y,z]/10.0, VPcell*ΔT) # unit: mmol P/hour/individual
 
                 # Compute the ratio of chl synthesis and N uptake
                 # ρ equals to ratio of the realised quantum efficiency for photosynthesis divided by the maximum efficiency
                 if IR_t > 0
-                    ρ_chl = PS/(params["α"]*IR_t*phyt[12]/phyt[9])
+                    ρ_chl = PS/(params["α"]*IR_t*phyt[12]/phyt[8])
                 else
                     ρ_chl = 0.0
                 end
