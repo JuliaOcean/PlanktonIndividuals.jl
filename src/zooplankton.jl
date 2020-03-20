@@ -93,33 +93,33 @@ return C and N content as exports to environment
 """
 function sloppy_feed(zplk::Array, phyts_feed::Array, params)
     TOC = sum(phyts_feed[8,:]) + sum(phyts_feed[9,:])
-    TON = sum(phyts_feed[10,:])
-    TOP = sum(phyts_feed[11,:])
+    TON = sum(phyts_feed[8,:])*params["R_NC"] + sum(phyts_feed[10,:])
+    TOP = sum(phyts_feed[8,:])*params["R_PC"] + sum(phyts_feed[11,:])
     Feed_CN = (params["slpyFracC"] * TOC) / (params["slpyFracN"] * TON)
     Feed_CP = (params["slpyFracC"] * TOC) / (params["slpyFracP"] * TOP)
-    Zoo_CN = zplk[9] / zplk[10]
-    Zoo_CP = zplk[9] / zplk[11]
+    Zoo_CN = zplk[8] / zplk[10]
+    Zoo_CP = zplk[8] / zplk[11]
     if Feed_CN ≥ Zoo_CN
-        dCq2 = params["slpyFracN"] * TON * Zoo_CN
-        dsize= dCq2 / zplk[9]
+        dBm = params["slpyFracN"] * TON * Zoo_CN
+        dsize= dBm / zplk[8]
     else
-        dCq2 = params["slpyFracC"] * TOC
-        dsize= dCq2 / zplk[9]
+        dBm = params["slpyFracC"] * TOC
+        dsize= dBm / zplk[8]
     end
     if Feed_CP ≥ Zoo_CP
-        dCq2 = params["slpyFracP"] * TOP * Zoo_CP
-        dsize= dCq2 / zplk[9]
+        dBm = params["slpyFracP"] * TOP * Zoo_CP
+        dsize= dBm / zplk[8]
     else
-        dCq2 = params["slpyFracC"] * TOC
-        dsize= dCq2 / zplk[9]
+        dBm = params["slpyFracC"] * TOC
+        dsize= dBm / zplk[8]
     end
-    zplk[9]  = zplk[9] + dCq2
-    zplk[10] = zplk[10]  + dCq2 / Zoo_CN
-    zplk[11] = zplk[11]  + dCq2 / Zoo_CP
+    zplk[8]  = zplk[8] + dBm
+    zplk[10] = zplk[10]  + dBm / Zoo_CN
+    zplk[11] = zplk[11]  + dBm / Zoo_CP
     zplk[7]  = zplk[7]+ dsize
-    Cexport = TOC - dCq2
-    Nexport = TON - dCq2 / Zoo_CN
-    Pexport = TOP - dCq2 / Zoo_CP
+    Cexport = TOC - dBm
+    Nexport = TON - dBm / Zoo_CN
+    Pexport = TOP - dBm / Zoo_CP
     return Cexport, Nexport, Pexport
 end
 
@@ -184,17 +184,17 @@ function zoo_update(model, ΔT::Int64)
             zplk[6] = zplk[6] + 1.0*(ΔT/3600)
 
             # metabolic cost, respiration & swim cost
-            mtcost = travel_dist * 0.01 * zplk[9]
-            zplk[9] = zplk[9] - mtcost
+            mtcost = travel_dist * 0.01 * zplk[8]
+            zplk[8] = zplk[8] - mtcost
 
             # compute probabilities of reproduction
 
             append!(zoos_b,zplk)
         else
-            consume.DOC[x, y, z] = consume.DOC[x, y, z] + zplk[9] * params["mortFracC"]
+            consume.DOC[x, y, z] = consume.DOC[x, y, z] + zplk[8] * params["mortFracC"]
             consume.DON[x, y, z] = consume.DON[x, y, z] + zplk[10]  * params["mortFracN"]
             consume.DOP[x, y, z] = consume.DOP[x, y, z] + zplk[11]  * params["mortFracP"]
-            consume.POC[x, y, z] = consume.POC[x, y, z] + zplk[9] * (1.0 - params["mortFracC"])
+            consume.POC[x, y, z] = consume.POC[x, y, z] + zplk[8] * (1.0 - params["mortFracC"])
             consume.PON[x, y, z] = consume.PON[x, y, z] + zplk[10]  * (1.0 - params["mortFracN"])
             consume.POP[x, y, z] = consume.POP[x, y, z] + zplk[11]  * (1.0 - params["mortFracP"])
         end
