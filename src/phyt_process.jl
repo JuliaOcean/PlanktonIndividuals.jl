@@ -101,7 +101,7 @@ function phyt_update(model, ΔT::Int64)
                 PP = PS*ΔT # unit: mmol C/hour/individual
 
                 # Compute cell-based N uptake rate according Droop limitation
-                Qn = phyt[10]/(phyt[8]+phyt[9])
+                Qn = (phyt[10]+phyt[8]*params["R_NC"])/(phyt[8]+phyt[9])
                 #In-Cell N uptake limitation
                 regQn = max(0.0,min(1.0,(params["Nqmax"]-Qn)/(params["Nqmax"]-params["Nqmin"])))
                 VNH4max_sp = params["VNH4max"][sp]/86400
@@ -116,7 +116,7 @@ function phyt_update(model, ΔT::Int64)
                 VNO3 = min(NO3*g.V[x,y,z]/10.0, VNO3cell*ΔT) # unit: mmol N/hour/individual
 
                 # Compute cell-based P uptake rate according Droop limitation
-                Qp = phyt[11]/(phyt[8]+phyt[9])
+                Qp = (phyt[11]+phyt[8]*params["R_PC"])/(phyt[8]+phyt[9])
                 #In-Cell P uptake limitation
                 regQp = max(0.0,min(1.0,(params["Pqmax"]-Qp)/(params["Pqmax"]-params["Pqmin"])))
                 VPmax_sp = params["VPmax"][sp]/86400
@@ -140,34 +140,38 @@ function phyt_update(model, ΔT::Int64)
                 # Compute extra cost for biosynthesis, return a rate (per hour)
                 respir_extra = params["respir_ex"]*phyt[7]^params["respir_b"]
 
-                # Stoichiometric allocation
-                SynC = β*params["k_mtb"]*phyt[8]/(1+respir_extra)
-                CostC = SynC*(1+respir_extra)
-                MaintenC = (1-β)*params["k_mtb"]*phyt[8]
-                dCq1 = PP - CostC - MaintenC
-                dCq2 = SynC
-                dNq  = VNH4 + VNO3
-                dPq  = VPO4
-                phyt[8]  = max(0.0, phyt[8] + dCq1)
-                phyt[9]  = phyt[9] + dCq2
-                phyt[10] = phyt[10] + dNq
-                phyt[11] = phyt[11] + dPq
+                # C, N, P storages update
+                phyt[9] = phyt[9] + PP
+                phyt[10]= phyt[10]+ VNH4 + VNO3
+                phyt[11]= phyt[11]+ VPO4
 
-                # keep C:N:P ratio in a reasonable range
-                rNC = phyt[10]/params["Nqmin"]
-                rPC = phyt[11]/params["Pqmin"]
-                Cmax = min(rNC, rPC)
-                if phyt[9] > Cmax
-                    excretC = phyt[9] - Cmax
-                    phyt[9] = Cmax
-                    dCq2 = dCq2 - excretC
+                # maximum biosynthesis rate
+                SynC = β*params["k_mtb"]*phyt[9]/(1+respir_extra)
+
+                # maximum allowed biosynthesis rate by Nq and Pq
+                BrNC = phyt[10]/params["R_NC"]
+                BrPC = phyt[11]/params["R_PC"]
+                Bmax = min(BrNC, BrPC)
+
+                # excretion
+                if SynC > Bmax
+                    excretC = SynC - Bmax
+                    SynC = Bmax
                 else
                     excretC = 0.0
                 end
 
-                dsize= dCq2/(phyt[9])
+                # update quotas and biomass
+                CostC = SynC*(1+respir_extra)
+                MaintenC = (1-β)*SynC/β
+                phyt[8] = phyt[8] + SynC
+                phyt[9] = phyt[9] - CostC -MaintenC
+                phyt[10]= phyt[10]- SynC*params["R_NC"]
+                phyt[11]= phyt[11]- SynC*params["R_PC"]
+
+                dsize= SynC/(phyt[8])
                 phyt[7]  = max(0.0,phyt[7]+dsize)
-                phyt[12] = phyt[12] + ρ_chl*dNq*params["Chl2N"]
+                phyt[12] = phyt[12] + ρ_chl*(VNH4+VNO3)*params["Chl2N"]
                 phyt[6]  = phyt[6] + 1.0*(ΔT/3600)
 
                 # compute probabilities of division

@@ -17,16 +17,16 @@ function setup_agents(RunParam::RunParams,grid)
     phyts0[5,:] .= 1.0                                                        # generation
     phyts0[6,:] .= 1.0                                                        # age
     phyts0[7,:]  = max.(0.1, rand(Normal(PhytoOpt.mean,PhytoOpt.var), N*Nsp)) # size
-    phyts0[8,:] .= 0.0                                                        # Cq1
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
         upper = Int(N+(i-1)*N)
-        phyts0[9,lower:upper] .= PhytoOpt.Cquota[i]*PhytoOpt.Nsuper           # Cq2
+        phyts0[8,lower:upper] .= PhytoOpt.Cquota[i]*PhytoOpt.Nsuper           # Bm
     end
-    phyts0[9,:]  = phyts0[9,:] .* phyts0[7,:]                                 # Cq2
-    phyts0[10,:] = copy(phyts0[9,:]) .* 13 ./120                              # Nq
-    phyts0[11,:] = copy(phyts0[9,:]) .* 1 ./120                               # Pq
-    phyts0[12,:] = copy(phyts0[10,:]) .* 0.4                                  # Chl
+    phyts0[8,:]  = phyts0[8,:] .* phyts0[7,:]                                 # Bm
+    phyts0[9,:] .= 0.0                                                        # Cq
+    phyts0[10,:] .= 0.0                                                       # Nq
+    phyts0[11,:] .= 0.0                                                       # Pq
+    phyts0[12,:] = copy(phyts0[8,:]) .* 0.05                                  # Chl
 
     if RunParam.Zoo == false
         return individuals(phyts0,nothing)
@@ -43,7 +43,7 @@ Set up zooplankton individuals according to 'ZooOpt' from 'RunParam'
 function setup_zooplkt(ZooOpt, grid)
     Nsp = ZooOpt.Nsp
     N = ZooOpt.Nindivi
-    zoos0 = zeros(12,N*Nsp) # Cq1 = 0.0, chl = 0.0
+    zoos0 = zeros(12,N*Nsp) # Cq = 0.0, chl = 0.0
     zoos0[1,:]  = rand(Uniform(grid.xF[1],grid.xF[end]), N*Nsp)              # x
     zoos0[2,:]  = rand(Uniform(grid.yF[1],grid.yF[end]), N*Nsp)              # y
     zoos0[3,:]  = rand(Uniform(grid.zF[1],grid.zF[end]), N*Nsp)              # z
@@ -54,11 +54,11 @@ function setup_zooplkt(ZooOpt, grid)
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
         upper = Int(N+(i-1)*N)
-        zoos0[9,lower:upper] .= ZooOpt.Cquota[i]*ZooOpt.Nsuper               # Cq2
+        zoos0[8,lower:upper] .= ZooOpt.Cquota[i]*ZooOpt.Nsuper               # Bm
     end
-    zoos0[9,:]  = zoos0[9,:] .* zoos0[7,:]                                   # Cq2
-    zoos0[10,:] = copy(zoos0[9,:]) .* 13 ./120                               # Nq
-    zoos0[11,:] = copy(zoos0[9,:]) .* 1 ./120                                # Pq
+    zoos0[8,:]  = zoos0[8,:] .* zoos0[7,:]                                   # Bm
+    zoos0[10,:] = 0.0                                                        # Nq
+    zoos0[11,:] = 0.0                                                        # Pq
     return zoos0
 end
 
