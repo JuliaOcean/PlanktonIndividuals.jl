@@ -1,7 +1,7 @@
 name = "PlanktonIndividuals"
 uuid = "dfeb4ede-c75e-11e9-050d-41ab7a730e9e"
 authors = ["zhenwu0728 <zhenwu@mit.edu>", "gaelforget <gforget@mit.edu>"]
-version = "0.1.0"
+version = "0.1.2"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
