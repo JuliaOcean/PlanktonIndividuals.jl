@@ -7,7 +7,7 @@ Read input of irradiance from default binary file
 """
 function read_IR_input(nTime::Int64, ΔT::Int64,grid,
                        path = dirname(pathof(PlanktonIndividuals))*"/../samples/PAR.bin")
-    # irradiance(μmol photons/m^2)
+    # irradiance(μmol photons/s/m^2)
     # start from mid-night
     # will change later to make it able to choose different month
     PAR_hour = deserialize(path)
