@@ -9,7 +9,7 @@ function setup_agents(RunParam::RunParams,grid)
     PhytoOpt = RunParam.PhytoOpt
     Nsp = PhytoOpt.Nsp
     N = PhytoOpt.Nindivi
-    phyts0 = zeros(12,N*Nsp)
+    phyts0 = zeros(Real,12,N*Nsp)
     phyts0[1,:]  = rand(Uniform(grid.xF[1],grid.xF[end]), N*Nsp)              # x
     phyts0[2,:]  = rand(Uniform(grid.yF[1],grid.yF[end]), N*Nsp)              # y
     phyts0[3,:]  = rand(Uniform(grid.zF[1],grid.zF[end]), N*Nsp)              # z
@@ -43,7 +43,7 @@ Set up zooplankton individuals according to 'ZooOpt' from 'RunParam'
 function setup_zooplkt(ZooOpt, grid)
     Nsp = ZooOpt.Nsp
     N = ZooOpt.Nindivi
-    zoos0 = zeros(12,N*Nsp) # Cq = 0.0, chl = 0.0
+    zoos0 = zeros(Real,12,N*Nsp) # Cq = 0.0, chl = 0.0
     zoos0[1,:]  = rand(Uniform(grid.xF[1],grid.xF[end]), N*Nsp)              # x
     zoos0[2,:]  = rand(Uniform(grid.yF[1],grid.yF[end]), N*Nsp)              # y
     zoos0[3,:]  = rand(Uniform(grid.zF[1],grid.zF[end]), N*Nsp)              # z

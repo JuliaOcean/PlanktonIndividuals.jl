@@ -1,4 +1,4 @@
-using Random, Printf, Plots
+using Random, Printf
 using Oceananigans, Oceananigans.Utils
 using PlanktonIndividuals
 
@@ -18,12 +18,11 @@ T_bcs = TracerBoundaryConditions(grid, top = BoundaryCondition(Flux, Qᵀ),
 
 model = IncompressibleModel(
          architecture = CPU(),
-                 grid = RegularCartesianGrid(size=(Nz, Nz, Nz), length=(Δz*Nz, Δz*Nz, Δz*Nz)),
+                 grid = grid,
              coriolis = FPlane(f=f),
              buoyancy = SeawaterBuoyancy(equation_of_state=LinearEquationOfState(α=α, β=β)),
               closure = AnisotropicMinimumDissipation(),
-  boundary_conditions = (T=T_bcs,),
-           parameters = (evaporation = evaporation,)
+  boundary_conditions = (T=T_bcs,)
 )
 
 ## Random noise damped at top and bottom
@@ -43,10 +42,8 @@ run!(simulation)
 ### PlanktonAgents Setup ###
 phy_grid = read_Ogrids(model.grid);
 
-#                   Dim output, NutOutput, GridChoice, Gridoff, VelChoice, Veloff
-RunOption=RunOptions(3, true,   true,      false,      Dict(),  false,     Dict());
 #                   Nindivi, Nsp, Nsuper,    Cquota(mmol/cell),  mean, var
-PhytoOpt = PlankOpt(1000,    2,   Int(1e0),  [1.8e-11, 1.8e-10], 1.0,  0.25)
+PhytoOpt = PlankOpt(3,    2,   Int(1e0),  [1.8e-11, 1.8e-10], 1.0,  0.25)
 
 #                 Nindivi, Nsp, Nsuper,    Cquota(mmol/cell), mean, var
 #ZooOpt = PlankOpt(1000,    1,   Int(1e0),  [1.8e-9],          1.0,  0.25)

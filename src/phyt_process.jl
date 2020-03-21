@@ -7,7 +7,7 @@ An adult cell divides evenly into two daughter cells
 Two daughter cells will be in the same place of the adult cell
 """
 function divide(phyt)
-    phytos = zeros(size(phyt,1)*2)
+    phytos = zeros(Real,size(phyt,1)*2)
     # NOT all C and N can turn into new cells
     for i in 1:2
         phytos[1+(i-1)*12]  = phyt[1]          # x
@@ -49,7 +49,7 @@ function phyt_update(model, ΔT::Int64)
     cumsum_chl = cumsum(chl_num, dims = 3)
 
     #set up a empty array to record all updated agents
-    phyts_b = []
+    phyts_b = Real[]
     consume = nutrients_init(g)
     # iterate phytoplankton agents
     for i in 1:size(phyts_a,2)
@@ -179,11 +179,11 @@ function phyt_update(model, ΔT::Int64)
                 reg_divide = 0.05*(tanh(reg_size) + 1)
                 P_dvi = rand(Bernoulli(reg_divide))
                 if P_dvi == false # not divide
-                    phyts_b = append!(phyts_b,phyt)
+                    append!(phyts_b,phyt)
                 else # divide
                     counts.divid += 1
                     phyts = divide(phyt)
-                    phyts_b = append!(phyts_b,phyts)
+                    append!(phyts_b,phyts)
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt[9]*0.1 # consume C when cell is divided
                 end # divide
                 consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - SynC

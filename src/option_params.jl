@@ -1,6 +1,6 @@
 # Options & Params
-#                    output, NutOutput, GridChoice, Gridoff, VelChoice, Veloff
-RunOption=RunOptions(false,  true,      false,      Dict(),  false,     Dict())
+#                    GridChoice, Gridoff, VelChoice, Veloff
+RunOption=RunOptions(false,      Dict(),  false,     Dict())
 
 #                   Nindivi, Nsp, Nsuper,    Cquota(mmol/cell),  mean, var
 PhytoOpt = PlankOpt(1000,    2,   Int(1e0),  [1.8e-11, 1.8e-10], 1.0,  0.25)

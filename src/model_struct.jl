@@ -1,6 +1,4 @@
 mutable struct RunOptions
-    OutputChoice::Bool    # `true` for save output files
-    NutOutputChoice::Bool # `true` for save each timestep separately, `false` for save all timesteps in one file
     GridChoice::Bool      # `true` for use default grid
     GridOfflineOpt::Dict  # include path to offline grid information and grid selection
     VelChoice::Bool       # `true` for use default velocity fields
