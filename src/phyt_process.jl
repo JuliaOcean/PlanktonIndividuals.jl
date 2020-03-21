@@ -165,7 +165,7 @@ function phyt_update(model, ΔT::Int64)
                 CostC = SynC*(1+respir_extra)
                 MaintenC = (1-β)*SynC/β
                 phyt[8] = phyt[8] + SynC
-                phyt[9] = phyt[9] - CostC -MaintenC
+                phyt[9] = phyt[9] - CostC -MaintenC - excretC
                 phyt[10]= phyt[10]- SynC*params["R_NC"]
                 phyt[11]= phyt[11]- SynC*params["R_PC"]
 
