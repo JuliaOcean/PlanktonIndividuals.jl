@@ -128,7 +128,7 @@ function phyt_update(model, ΔT::Int64)
                 # Compute the ratio of chl synthesis and N uptake
                 # ρ equals to ratio of the realised quantum efficiency for photosynthesis divided by the maximum efficiency
                 if IR_t > 0
-                    ρ_chl = PS/(params["α"]*IR_t*phyt[12]/phyt[8])
+                    ρ_chl = PS*params["Chl2N"]/(params["α"]*IR_t*phyt[12]/phyt[8])
                 else
                     ρ_chl = 0.0
                 end
@@ -171,7 +171,7 @@ function phyt_update(model, ΔT::Int64)
 
                 dsize= SynC/(phyt[8])
                 phyt[7]  = max(0.0,phyt[7]+dsize)
-                phyt[12] = phyt[12] + ρ_chl*(VNH4+VNO3)*params["Chl2N"]
+                phyt[12] = phyt[12] + ρ_chl*SynC*params["R_NC"]
                 phyt[6]  = phyt[6] + 1.0*(ΔT/3600)
 
                 # compute probabilities of division
