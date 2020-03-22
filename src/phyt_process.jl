@@ -17,8 +17,8 @@ function divide(phyt)
         phytos[5+(i-1)*12]  = phyt[5] .+ 1.0   # generation
         phytos[6+(i-1)*12]  = 1.0              # age
         phytos[7+(i-1)*12]  = phyt[7] .* 0.45  # size
-        phytos[8+(i-1)*12]  = phyt[8] .* 0.5   # Cq1
-        phytos[9+(i-1)*12]  = phyt[9] .* 0.45  # Cq2
+        phytos[8+(i-1)*12]  = phyt[8] .* 0.45  # Bm
+        phytos[9+(i-1)*12]  = phyt[9] .* 0.5   # Cq
         phytos[10+(i-1)*12] = phyt[10] .* 0.5  # Nq
         phytos[11+(i-1)*12] = phyt[11] .* 0.5  # Pq
         phytos[12+(i-1)*12] = phyt[12] .* 0.5  # chl
@@ -184,7 +184,7 @@ function phyt_update(model, ΔT::Int64)
                     counts.divid += 1
                     phyts = divide(phyt)
                     append!(phyts_b,phyts)
-                    consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt[9]*0.1 # consume C when cell is divided
+                    consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt[8]*0.1 # consume C when cell is divided
                 end # divide
                 consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - SynC
                 consume.DOC[x, y, z] = consume.DOC[x, y, z] + excretC
