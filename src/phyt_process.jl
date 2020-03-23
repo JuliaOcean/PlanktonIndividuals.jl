@@ -187,7 +187,7 @@ function phyt_update(model, ΔT::Int64)
                     phyt[10]= phyt[10]- SynC*params["R_NC"]
                     phyt[11]= phyt[11]- SynC*params["R_PC"]
 
-                    dsize= SynC/(params["P_Cquota"][sp])
+                    dsize= SynC/(params["P_Cquota"][sp]*params["P_Nsuper"]) # normalized by standard C quota
                     phyt[7]  = max(0.0,phyt[7]+dsize)
                     phyt[12] = phyt[12] + ρ_chl*SynC*params["R_NC"]
                     phyt[6]  = phyt[6] + 1.0*(ΔT/3600)
