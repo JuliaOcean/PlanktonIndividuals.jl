@@ -82,111 +82,121 @@ function phyt_update(model, ΔT::Int64)
             P_death = rand(Bernoulli(shape_factor_death/(1+shape_factor_death)))
 
             if P_death == false # not natural death
-                # Compute light attenuation
-                atten = (params["katten_w"] + params["katten_c"] * cumsum_chl[x, y, z])*(-g.zF[z])
-                if atten == 0.0
-                    α_I = params["α"]*IR_t
-                else
-                    α_I = params["α"]*IR_t*(1.0 - exp(-atten))/atten
-                end
-
-                # Compute photosynthesis rate
-                Tempstd = exp(params["TempAe"]*(1.0/(temp_t+273.15)-1.0/params["Tempref"]))
-                photoTempFunc = params["TempCoeff"]*max(1.0e-10,Tempstd)
-                PCmax_sp = params["PCmax"][sp]/86400
-                PCm = PCmax_sp*photoTempFunc*phyt[7]^params["PC_b"][sp]
-                PC = PCm*(1-exp(-α_I*phyt[12]/(phyt[8]*PCm)))
-                PS = PC*phyt[8] # unit: mmol C/second/individual
-                Eₖ = PCm/(phyt[12]/phyt[8]*params["α"])
-                tmp = α_I/params["α"]
-                if (tmp > Eₖ) & (params["inhibcoef"][sp] == 1.0)
-                    PS = PS*Eₖ/tmp*params["inhibcoef"][sp]
-                end
-                PP = PS*ΔT # unit: mmol C/hour/individual
-
-                # Compute cell-based N uptake rate according Droop limitation
-                Qn = (phyt[10]+phyt[8]*params["R_NC"])/(phyt[8]+phyt[9])
-                #In-Cell N uptake limitation
-                regQn = max(0.0,min(1.0,(params["Nqmax"]-Qn)/(params["Nqmax"]-params["Nqmin"])))
-                VNH4max_sp = params["VNH4max"][sp]/86400
-                VNO3max_sp = params["VNO3max"][sp]/86400
-                VNH4m = VNH4max_sp*phyt[7]^params["VN_b"][sp]
-                VNO3m = VNO3max_sp*phyt[7]^params["VN_b"][sp]
-                NH4uptake = VNH4m*NH4/(NH4+params["KsatNH4"][sp])*regQn
-                NO3uptake = VNO3m*NO3/(NO3+params["KsatNO3"][sp])*regQn
-                VNH4cell = NH4uptake*phyt[8] # unit: mmol N/second/individual
-                VNO3cell = NO3uptake*phyt[8] # unit: mmol N/second/individual
-                VNH4 = min(NH4*g.V[x,y,z]/10.0, VNH4cell*ΔT) # unit: mmol N/hour/individual
-                VNO3 = min(NO3*g.V[x,y,z]/10.0, VNO3cell*ΔT) # unit: mmol N/hour/individual
-
-                # Compute cell-based P uptake rate according Droop limitation
-                Qp = (phyt[11]+phyt[8]*params["R_PC"])/(phyt[8]+phyt[9])
-                #In-Cell P uptake limitation
-                regQp = max(0.0,min(1.0,(params["Pqmax"]-Qp)/(params["Pqmax"]-params["Pqmin"])))
-                VPmax_sp = params["VPmax"][sp]/86400
-                VPm = VPmax_sp*phyt[7]^params["VP_b"][sp]
-                Puptake = VPm*PO4/(PO4+params["KsatP"][sp])*regQp
-                VPcell = Puptake*phyt[8] # unit: mmol P/second/individual
-                VPO4 = min(PO4*g.V[x,y,z]/10.0, VPcell*ΔT) # unit: mmol P/hour/individual
-
-                # Compute the ratio of chl synthesis and N uptake
-                # ρ equals to ratio of the realised quantum efficiency for photosynthesis divided by the maximum efficiency
-                if IR_t > 0
-                    ρ_chl = PC*params["Chl2N"]/(α_I*phyt[12]/phyt[8])
-                else
-                    ρ_chl = 0.0
-                end
-
-                # Metabolic partitioning for biosynthesis, decrease with size
-                shape_factor_β = params["a_β"]*phyt[7]^params["b_β"]
-                β = shape_factor_β/(1+shape_factor_β)
-
-                # Compute extra cost for biosynthesis, return a rate (per hour)
-                respir_extra = params["respir_ex"]*phyt[7]^params["respir_b"]
-
-                # C, N, P storages update
-                phyt[9] = phyt[9] + PP
-                phyt[10]= phyt[10]+ VNH4 + VNO3
-                phyt[11]= phyt[11]+ VPO4
-
-                # maximum biosynthesis rate
-                SynC = β*params["k_mtb"]*phyt[9]/(1+respir_extra)
-
-                # maximum allowed biosynthesis rate by Nq and Pq
-                BrNC = phyt[10]/params["R_NC"]
-                BrPC = phyt[11]/params["R_PC"]
-                Bmax = min(BrNC, BrPC)
-
-                # excretion
-                if SynC > Bmax
-                    excretC = SynC - Bmax
-                    SynC = Bmax
-                else
-                    excretC = 0.0
-                end
-
-                # update quotas and biomass
-                CostC = SynC*(1+respir_extra)
-                MaintenC = (1-β)*SynC/β
-                phyt[8] = phyt[8] + SynC
-                phyt[9] = phyt[9] - CostC -MaintenC - excretC
-                phyt[10]= phyt[10]- SynC*params["R_NC"]
-                phyt[11]= phyt[11]- SynC*params["R_PC"]
-
-                dsize= SynC/(phyt[8])
-                phyt[7]  = max(0.0,phyt[7]+dsize)
-                phyt[12] = phyt[12] + ρ_chl*SynC*params["R_NC"]
-                phyt[6]  = phyt[6] + 1.0*(ΔT/3600)
-
                 # compute probabilities of division
                 if (t*ΔT)%3600 ≠ 0 # check hourly
                     P_dvi = false
                 else
-                    reg_size = params["dvid_stp"]*(phyt[7] - params["dvid_size"])
-                    reg_divide = 0.2*(tanh(reg_size) + 1)
-                    P_dvi = rand(Bernoulli(reg_divide))
+                    if phyt[7] < 2.0
+                        P_dvi = false
+                    else
+                        reg_size = params["dvid_stp"]*(phyt[7] - params["dvid_size"])
+                        reg_divide = 0.2*(tanh(reg_size) + 1)
+                        P_dvi = rand(Bernoulli(reg_divide))
+                    end
                 end
+
                 if P_dvi == false # not divide
+                    # Compute light attenuation
+                    atten = (params["katten_w"] + params["katten_c"] * cumsum_chl[x, y, z])*(-g.zF[z])
+                    if atten == 0.0
+                        α_I = params["α"]*IR_t
+                    else
+                        α_I = params["α"]*IR_t*(1.0 - exp(-atten))/atten
+                    end
+
+                    # Compute photosynthesis rate
+                    Tempstd = exp(params["TempAe"]*(1.0/(temp_t+273.15)-1.0/params["Tempref"]))
+                    photoTempFunc = params["TempCoeff"]*max(1.0e-10,Tempstd)
+                    PCmax_sp = params["PCmax"][sp]/86400
+                    PCm = PCmax_sp*photoTempFunc*phyt[7]^params["PC_b"][sp]
+                    PC = PCm*(1-exp(-α_I*phyt[12]/(phyt[8]*PCm)))
+                    PS = PC*phyt[8] # unit: mmol C/second/individual
+                    Eₖ = PCm/(phyt[12]/phyt[8]*params["α"])
+                    tmp = α_I/params["α"]
+                    if (tmp > Eₖ) & (params["inhibcoef"][sp] == 1.0)
+                        PS = PS*Eₖ/tmp*params["inhibcoef"][sp]
+                    end
+                    PP = PS*ΔT # unit: mmol C/hour/individual
+
+                    # Compute cell-based N uptake rate according Droop limitation
+                    Qn = (phyt[10]+phyt[8]*params["R_NC"])/(phyt[8]+phyt[9])
+                    #In-Cell N uptake limitation
+                    regQn = max(0.0,min(1.0,(params["Nqmax"]-Qn)/(params["Nqmax"]-params["Nqmin"])))
+                    VNH4max_sp = params["VNH4max"][sp]/86400
+                    VNO3max_sp = params["VNO3max"][sp]/86400
+                    VNH4m = VNH4max_sp*phyt[7]^params["VN_b"][sp]
+                    VNO3m = VNO3max_sp*phyt[7]^params["VN_b"][sp]
+                    NH4uptake = VNH4m*NH4/(NH4+params["KsatNH4"][sp])*regQn
+                    NO3uptake = VNO3m*NO3/(NO3+params["KsatNO3"][sp])*regQn
+                    VNH4cell = NH4uptake*phyt[8] # unit: mmol N/second/individual
+                    VNO3cell = NO3uptake*phyt[8] # unit: mmol N/second/individual
+                    VNH4 = min(NH4*g.V[x,y,z]/10.0, VNH4cell*ΔT) # unit: mmol N/hour/individual
+                    VNO3 = min(NO3*g.V[x,y,z]/10.0, VNO3cell*ΔT) # unit: mmol N/hour/individual
+
+                    # Compute cell-based P uptake rate according Droop limitation
+                    Qp = (phyt[11]+phyt[8]*params["R_PC"])/(phyt[8]+phyt[9])
+                    #In-Cell P uptake limitation
+                    regQp = max(0.0,min(1.0,(params["Pqmax"]-Qp)/(params["Pqmax"]-params["Pqmin"])))
+                    VPmax_sp = params["VPmax"][sp]/86400
+                    VPm = VPmax_sp*phyt[7]^params["VP_b"][sp]
+                    Puptake = VPm*PO4/(PO4+params["KsatP"][sp])*regQp
+                    VPcell = Puptake*phyt[8] # unit: mmol P/second/individual
+                    VPO4 = min(PO4*g.V[x,y,z]/10.0, VPcell*ΔT) # unit: mmol P/hour/individual
+
+                    # Compute the ratio of chl synthesis and N uptake
+                    # ρ equals to ratio of the realised quantum efficiency for photosynthesis divided by the maximum efficiency
+                    if IR_t > 0
+                        ρ_chl = PC*params["Chl2N"]/(α_I*phyt[12]/phyt[8])
+                    else
+                        ρ_chl = 0.0
+                    end
+
+                    # Metabolic partitioning for biosynthesis, decrease with size
+                    shape_factor_β = params["a_β"]*phyt[7]^params["b_β"]
+                    β = shape_factor_β/(1+shape_factor_β)
+
+                    # Compute extra cost for biosynthesis, return a rate (per hour)
+                    respir_extra = params["respir_ex"]*phyt[7]^params["respir_b"]
+
+                    # C, N, P storages update
+                    phyt[9] = phyt[9] + PP
+                    phyt[10]= phyt[10]+ VNH4 + VNO3
+                    phyt[11]= phyt[11]+ VPO4
+
+                    # maximum biosynthesis rate
+                    SynC = β*params["k_mtb"]*phyt[9]/(1+respir_extra)
+
+                    # maximum allowed biosynthesis rate by Nq and Pq
+                    BrNC = phyt[10]/params["R_NC"]
+                    BrPC = phyt[11]/params["R_PC"]
+                    Bmax = min(BrNC, BrPC)
+
+                    # excretion
+                    if SynC > Bmax
+                        excretC = SynC - Bmax
+                        SynC = Bmax
+                    else
+                        excretC = 0.0
+                    end
+
+                    # update quotas and biomass
+                    CostC = SynC*(1+respir_extra)
+                    MaintenC = (1-β)*SynC/β
+                    phyt[8] = phyt[8] + SynC
+                    phyt[9] = phyt[9] - CostC -MaintenC - excretC
+                    phyt[10]= phyt[10]- SynC*params["R_NC"]
+                    phyt[11]= phyt[11]- SynC*params["R_PC"]
+
+                    dsize= SynC/(phyt[8])
+                    phyt[7]  = max(0.0,phyt[7]+dsize)
+                    phyt[12] = phyt[12] + ρ_chl*SynC*params["R_NC"]
+                    phyt[6]  = phyt[6] + 1.0*(ΔT/3600)
+
+                    consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - SynC
+                    consume.DOC[x, y, z] = consume.DOC[x, y, z] + excretC
+                    consume.NH4[x, y, z] = consume.NH4[x, y, z] - VNH4
+                    consume.NO3[x, y, z] = consume.NO3[x, y, z] - VNO3
+                    consume.PO4[x, y, z] = consume.PO4[x, y, z] - VPO4
                     append!(phyts_b,phyt)
                 else # divide
                     counts.divid += 1
@@ -194,11 +204,6 @@ function phyt_update(model, ΔT::Int64)
                     append!(phyts_b,phyts)
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt[8]*0.1 # consume C when cell is divided
                 end # divide
-                consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - SynC
-                consume.DOC[x, y, z] = consume.DOC[x, y, z] + excretC
-                consume.NH4[x, y, z] = consume.NH4[x, y, z] - VNH4
-                consume.NO3[x, y, z] = consume.NO3[x, y, z] - VNO3
-                consume.PO4[x, y, z] = consume.PO4[x, y, z] - VPO4
             else # natural death
                 consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt[8]+phyt[9])*params["mortFracC"]
                 consume.DON[x, y, z] = consume.DON[x, y, z] + phyt[10]*params["mortFracN"]

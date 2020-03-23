@@ -16,7 +16,7 @@ function setup_agents(RunParam::RunParams,grid)
     phyts0[4,:] .= 1.0                                                        # species
     phyts0[5,:] .= 1.0                                                        # generation
     phyts0[6,:] .= 1.0                                                        # age
-    phyts0[7,:]  = max.(0.1, rand(Normal(PhytoOpt.mean,PhytoOpt.var), N*Nsp)) # size
+    phyts0[7,:]  = max.(1.0, rand(Normal(PhytoOpt.mean,PhytoOpt.var), N*Nsp)) # size
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
         upper = Int(N+(i-1)*N)
@@ -50,7 +50,7 @@ function setup_zooplkt(ZooOpt, grid)
     zoos0[4,:] .= 1.0                                                        # species
     zoos0[5,:] .= 1.0                                                        # generation
     zoos0[6,:] .= 1.0                                                        # age
-    zoos0[7,:]  = max.(0.1, rand(Normal(ZooOpt.mean,ZooOpt.var), N*Nsp))     # size
+    zoos0[7,:]  = max.(1.0, rand(Normal(ZooOpt.mean,ZooOpt.var), N*Nsp))     # size
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
         upper = Int(N+(i-1)*N)
