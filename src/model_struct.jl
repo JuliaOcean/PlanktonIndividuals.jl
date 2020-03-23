@@ -5,21 +5,11 @@ mutable struct RunOptions
     VelOfflineOpt::Dict   # include path to offline velocity fields, grid selection and vel time step information
 end
 
-mutable struct PlankOpt
-    Nindivi::Int64        # number of individuals in each species
-    Nsp::Int64            # number of species
-    Nsuper::Int64         # number of cells each super individual represents
-    Cquota::Array         # Average C quota in cell (mmolC/cell)
-    mean::Float64         # Mean of a normal distribution for plankton agents
-    var::Float64          # Variance of a normal distribution for plankton agents
-end
-
 mutable struct RunParams
     nTime::Int64                     # number of time steps
     ΔT::Int64                        # seconds of each time step
-    PhytoOpt::PlankOpt               # phytoplankton configurations
+    params::Dict                     # model parameters
     Zoo::Bool                        # Whether include zooplankton
-    ZooOpt::Union{Nothing,PlankOpt}  # Zooplankton configurations
 end
 
 mutable struct velocity #for offline only, include time series

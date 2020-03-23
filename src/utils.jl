@@ -204,6 +204,24 @@ function grid_offline(GridOfflineOpt::Dict)
 end
 
 """
+    update_params!(parameters, tmp)
+Update parameter values based on .yaml file
+'parameters' is default parameter set
+'tmp' is the parameters need to update
+"""
+function update_params!(parameters::Dict, tmp::Dict)
+    tmp_keys = collect(keys(tmp))
+    for key in tmp_keys
+        if length(findall(x->x==key, collect(keys(parameters))))==0
+            print("parameter not found")
+        else
+            parameters[key] = tmp[key]
+        end
+    end
+    return parameters
+end
+
+"""
     grid_Ogrids(Ogrid)
 Read grid information from Oceananigans
 Return a grid 'struc'

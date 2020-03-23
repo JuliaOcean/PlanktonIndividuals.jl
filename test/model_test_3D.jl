@@ -1,8 +1,6 @@
 using PlanktonIndividuals, Serialization
 samples=dirname(pathof(PlanktonIndividuals))*"/../samples/"
 RunOption=RunOptions(true, Dict(), true, Dict())
-PhytoOpt = PlankOpt(1000, 2, Int(1e0), [1.8e-11, 1.8e-10], 1.0, 0.25)
-RunParam=RunParams(10, 600, PhytoOpt, false, nothing)
 g = deserialize(samples*"grid.bin");
 store_vels = deserialize(samples*"uvw.bin");
 

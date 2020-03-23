@@ -1,5 +1,17 @@
-## Parameters
+# Parameters
 param_default=Dict(
+    "P_Nind"   => 1000,               # number of phyto individuals of each species
+    "P_Nsp"    => 1,                  # number of phyto species
+    "P_Nsuper" => 1e10,               # number of phyto cells each super individual represents
+    "P_Cquota" => [1.8e-11, 1.8e-10], # C quota of phyto cells at size = 1.0
+    "P_mean"   => 1.5,                # mean of the normal distribution of initial phyto individuals
+    "P_var"    => 0.3,                # variance of the normal distribution of initial phyto individuals
+    "Z_Nind"   => 0,                  # number of zoo individuals of each species
+    "Z_Nsp"    => 1,                  # number of zoo species
+    "Z_Nsuper" => 1e0,                # number of zoo cells each super individual represents
+    "Z_Cquota" => 0.0,                # C quota of zoo cells at size = 1.0
+    "Z_mean"   => 0.0,                # mean of the normal distribution of initial zoo individuals
+    "Z_var"    => 0.0,                # variance of the normal distribution of initial zoo individuals
     "PCmax"    => [1.8, 1.8],         # Maximum primary production rate (per day)
     "PC_b"     => [0.6, 0.6],         # Shape parameter for size
     "Chl2N"    => 3.0,                # Maximum Chla:N ratio in phytoplankton
@@ -58,3 +70,10 @@ param_default=Dict(
     "κvP"      => 0,                  # vertical diffusion for individuals
     "v_zoo"    => 1.0e-5              # velocity of zooplankton, m/s
 )
+
+# Options 
+#                    GridChoice, Gridoff, VelChoice, Veloff
+RunOption=RunOptions(false,      Dict(),  false,     Dict())
+
+#                  nTime, ΔT,   params,        Zoo
+RunParam=RunParams(10,    600,  param_default, false)

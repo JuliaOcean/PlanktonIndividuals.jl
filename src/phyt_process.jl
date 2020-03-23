@@ -111,11 +111,11 @@ function phyt_update(model, ΔT::Int64)
                     PCm = PCmax_sp*photoTempFunc*phyt[7]^params["PC_b"][sp]
                     PC = PCm*(1-exp(-α_I*phyt[12]/(phyt[8]*PCm)))
                     PS = PC*phyt[8] # unit: mmol C/second/individual
-                    Eₖ = PCm/(phyt[12]/phyt[8]*params["α"])
-                    tmp = α_I/params["α"]
-                    if (tmp > Eₖ) & (params["inhibcoef"][sp] == 1.0)
-                        PS = PS*Eₖ/tmp*params["inhibcoef"][sp]
-                    end
+                    # Eₖ = PCm/(phyt[12]/phyt[8]*params["α"])
+                    # tmp = α_I/params["α"]
+                    # if (tmp > Eₖ) & (params["inhibcoef"][sp] == 1.0)
+                    #     PS = PS*Eₖ/tmp*params["inhibcoef"][sp]
+                    # end
                     PP = PS*ΔT # unit: mmol C/hour/individual
 
                     # Compute cell-based N uptake rate according Droop limitation
@@ -146,7 +146,7 @@ function phyt_update(model, ΔT::Int64)
                     # Compute the ratio of chl synthesis and N uptake
                     # ρ equals to ratio of the realised quantum efficiency for photosynthesis divided by the maximum efficiency
                     if IR_t > 0
-                        ρ_chl = PC*params["Chl2N"]/(α_I*phyt[12]/phyt[8])
+                        ρ_chl = PC*params["Chl2N"]/(α_I*phyt[12]/(phyt[8]+phyt[9]))
                     else
                         ρ_chl = 0.0
                     end
@@ -187,7 +187,7 @@ function phyt_update(model, ΔT::Int64)
                     phyt[10]= phyt[10]- SynC*params["R_NC"]
                     phyt[11]= phyt[11]- SynC*params["R_PC"]
 
-                    dsize= SynC/(phyt[8])
+                    dsize= SynC/(params["P_Cquota"][sp])
                     phyt[7]  = max(0.0,phyt[7]+dsize)
                     phyt[12] = phyt[12] + ρ_chl*SynC*params["R_NC"]
                     phyt[6]  = phyt[6] + 1.0*(ΔT/3600)

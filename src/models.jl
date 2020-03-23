@@ -10,7 +10,7 @@ function PI_Model(grid, RunParam;
                   nutrients,
                   PAR = read_IR_input(RunParam.nTime, RunParam.ΔT, grid),
                   temp = read_temp_input(RunParam.nTime, RunParam.ΔT, grid),
-                  params = param_default,
+                  params = RunParam.params,
                   )
     model = Model_struct(t,individuals, nutrients, grid, PAR, temp, params)
     if RunParam.Zoo == true

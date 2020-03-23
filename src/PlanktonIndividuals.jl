@@ -19,13 +19,12 @@ include("$src"*"2nd_adv_diffu.jl")
 include("$src"*"models.jl")
 include("$src"*"time_step.jl")
 include("$src"*"param_default.jl")
-include("$src"*"option_params.jl")
 
 
 export
     # model structures
     PI_Model, grids, nutrient_fields, velocity,
-    RunOptions, RunParams, PlankOpt, read_Ogrids,
+    RunOptions, RunParams, read_Ogrids,
 
     # read input functions
     read_IR_input, read_temp_input,
