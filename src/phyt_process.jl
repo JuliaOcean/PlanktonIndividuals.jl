@@ -67,8 +67,12 @@ function phyt_update(model, ΔT::Int64)
         if params["Grz_P"] == 0
             P_graz = false
         else
-            reg_graz = phyt[7]/params["Grz_P"]
-            P_graz = rand(Bernoulli(reg_graz))
+            if (t*ΔT)%3600 ≠ 0 # check hourly
+                P_graz = false
+            else
+                reg_graz = phyt[7]/params["Grz_P"]
+                P_graz = rand(Bernoulli(reg_graz))
+            end
         end
 
         if P_graz == false #not grazed
@@ -175,9 +179,13 @@ function phyt_update(model, ΔT::Int64)
                 phyt[6]  = phyt[6] + 1.0*(ΔT/3600)
 
                 # compute probabilities of division
-                reg_size = params["dvid_stp"]*(phyt[7] - params["dvid_size"])
-                reg_divide = 0.05*(tanh(reg_size) + 1)
-                P_dvi = rand(Bernoulli(reg_divide))
+                if (t*ΔT)%3600 ≠ 0 # check hourly
+                    P_dvi = false
+                else
+                    reg_size = params["dvid_stp"]*(phyt[7] - params["dvid_size"])
+                    reg_divide = 0.2*(tanh(reg_size) + 1)
+                    P_dvi = rand(Bernoulli(reg_divide))
+                end
                 if P_dvi == false # not divide
                     append!(phyts_b,phyt)
                 else # divide
