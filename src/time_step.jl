@@ -50,31 +50,29 @@ function PI_advect!(model, ΔT, vel_itp)
     params = model.params
     planks = model.individuals.phytos
     for j in 1:size(planks,2)
-        plank = planks[:,j]
-        agent_advection(plank,vel_itp,grid,ΔT)
+        planks[1:3,j] = agent_advection(planks[1:3,j],vel_itp,grid,ΔT)
         if grid.Nx > 1
-            agent_diffusionX(plank,grid,params["κhP"])
+            planks[1,j] = agent_diffusionX(planks[1,j],grid,params["κhP"])
         end
         if grid.Ny > 1
-            agent_diffusionY(plank,grid,params["κhP"])
+            planks[2,j] = agent_diffusionY(planks[2,j],grid,params["κhP"])
         end
         if grid.Nz > 1
-            agent_diffusionZ(plank,grid,params["κvP"])
+            planks[3,j] = agent_diffusionZ(planks[3,j],grid,params["κvP"])
         end
     end
     if model.individuals.zoos ≠ nothing
         zoos = model.individuals.zoos
         for j in 1:size(zoos,2)
-            plank = zoos[:,j]
-            agent_advection(plank,vel_itp,grid,ΔT)
+            zoos[1:3,j] = agent_advection(zoos[1:3,j],vel_itp,grid,ΔT)
             if grid.Nx > 1
-                agent_diffusionX(plank,grid,params["κhP"])
+                zoos[1,j] = agent_diffusionX(zoos[1,j],grid,params["κhP"])
             end
             if grid.Ny > 1
-                agent_diffusionY(plank,grid,params["κhP"])
+                zoos[2,j] = agent_diffusionY(zoos[2,j],grid,params["κhP"])
             end
             if grid.Nz > 1
-                agent_diffusionZ(plank,grid,params["κvP"])
+                zoos[3,j] = agent_diffusionZ(zoos[3,j],grid,params["κvP"])
             end
         end
     end
@@ -91,31 +89,29 @@ function PI_advectRK4!(model, ΔT, vel_itps)
     params = model.params
     planks = model.individuals.phytos
     for j in 1:size(planks,2)
-        plank = planks[:,j]
-        agent_advectionRK4(plank,vel_itps,grid,ΔT)
+        planks[1:3,j] = agent_advectionRK4(planks[1:3,j],vel_itps,grid,ΔT)
         if grid.Nx > 1
-            agent_diffusionX(plank,grid,params["κhP"])
+            planks[1,j] = agent_diffusionX(planks[1,j],grid,params["κhP"])
         end
         if grid.Ny > 1
-            agent_diffusionY(plank,grid,params["κhP"])
+            planks[2,j] = agent_diffusionY(planks[2,j],grid,params["κhP"])
         end
         if grid.Nz > 1
-            agent_diffusionZ(plank,grid,params["κvP"])
+            planks[3,j] = agent_diffusionZ(planks[3,j],grid,params["κvP"])
         end
     end
     if model.individuals.zoos ≠ nothing
         zoos = model.individuals.zoos
         for j in 1:size(zoos,2)
-            plank = zoos[:,j]
-            agent_advectionRK4(plank,vel_itps,grid,ΔT)
+            zoos[1:3,j] = agent_advectionRK4(zoos[1:3,j],vel_itps,grid,ΔT)
             if grid.Nx > 1
-                agent_diffusionX(plank,grid,params["κhP"])
+                zoos[1,j] = agent_diffusionX(zoos[1,j],grid,params["κhP"])
             end
             if grid.Ny > 1
-                agent_diffusionY(plank,grid,params["κhP"])
+                zoos[2,j] = agent_diffusionY(zoos[2,j],grid,params["κhP"])
             end
             if grid.Nz > 1
-                agent_diffusionZ(plank,grid,params["κvP"])
+                zoos[3,j] = agent_diffusionZ(zoos[3,j],grid,params["κvP"])
             end
         end
     end
