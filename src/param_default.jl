@@ -15,6 +15,7 @@ param_default=Dict(
     "PCmax"    => [1.8, 1.8],         # Maximum primary production rate (per day)
     "PC_b"     => [0.6, 0.6],         # Shape parameter for size
     "Chl2N"    => 3.0,                # Maximum Chla:N ratio in phytoplankton
+    "Chl2Cint" => 0.16,               # Initial Chla:C ratio in phytoplankton (gChl/molC)
     "R_NC"     => 16/106,             # N:C ratio in cell biomass
     "R_PC"     => 1/106,              # N:C ratio in cell biomass
     "α"        => 8.0e-7,             # Irradiance absorption coeff (m^2/gChl)

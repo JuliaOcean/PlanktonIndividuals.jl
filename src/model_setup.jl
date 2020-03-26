@@ -30,7 +30,7 @@ function setup_agents(RunParam::RunParams,grid)
     phyts0[9,:] .= 0.0                                             # Cq
     phyts0[10,:] .= 0.0                                            # Nq
     phyts0[11,:] .= 0.0                                            # Pq
-    phyts0[12,:] = copy(phyts0[8,:]) .* 0.12 # Chl:C=0.12gChl/molC # Chl
+    phyts0[12,:] = copy(phyts0[8,:]) .* params["Chl2Cint"]         # Chl
 
     if RunParam.Zoo == false
         return individuals(phyts0,nothing)
