@@ -1,6 +1,3 @@
-###########################################
-# define functions of pysiology processes #
-###########################################
 """
     divide(phyt)
 An adult cell divides evenly into two daughter cells
@@ -25,9 +22,26 @@ function divide(phyt)
     end
     return phytos
 end
-###################################
-# model update for phytoplanktons #
-###################################
+
+"""
+    calc_PAR(surfPAR,grid,Chl,katten_c, katten_w)
+Compute PAR for each grid according to depth and Chla concentration
+"""
+function calc_PAR(surfPAR, grid, Chl, katten_c, katten_w)
+    PAR = zeros(grid.Nx, grid.Ny, grid.Nz)
+    for k in grid.Nz:-1:1
+        atten = zeros(grid.Nx, grid.Ny)
+        for i in 1:grid.Nx
+            for j in 1:grid.Ny
+                atten[i,j] = (Chl[i,j,k] * katten_c + katten_w) * grid.dzF[k]
+                PAR[i,j,k] = surfPAR[i,j] * ((1.0 - exp(-atten[i,j])) / atten[i,j])
+                surfPAR[i,j] = surfPAR[i,j] * exp(-atten[i,j])
+            end
+        end
+    end
+    return PAR
+end
+
 """
     phyt_update(t, ΔT, g, phyts_a, nutrients, IR, temp)
 Update the individuals of current time step into next time step
@@ -38,15 +52,16 @@ function phyt_update(model, ΔT::Int64)
     t = model.t
     g = model.grid
     nutrients = model.nutrients
-    IR = model.PAR
-    temp = model.temp
     params = model.params
     phyts_a = copy(model.individuals.phytos)
 
     # load nutrients
     counts = pop_counts()
     chl_num = count_chl(phyts_a, g)
-    cumsum_chl = cumsum(chl_num, dims = 3)
+
+    # Compute light attenuation, compute from surface
+    surfPAR = model.PAR[:,:,end,t]
+    model.PAR[:,:,:,t] = calc_PAR(surfPAR, g, chl_num, params["katten_c"], params["katten_w"])
 
     #set up a empty array to record all updated agents
     phyts_b = Real[]
@@ -56,8 +71,8 @@ function phyt_update(model, ΔT::Int64)
         phyt = phyts_a[:,i]
         sp = Int(phyt[4])
         x, y, z = which_grid(phyt, g)
-        temp_t = temp[x,y,z,t]
-        IR_t = IR[x,y,t]
+        temp_t = model.temp[x,y,z,t]
+        IR_t = model.PAR[x,y,z,t]
         NH4 = max(0.0, nutrients.NH4[x, y, z])
         NO3 = max(0.0, nutrients.NO3[x, y, z])
         PO4 = max(0.0, nutrients.PO4[x, y, z])
@@ -96,15 +111,8 @@ function phyt_update(model, ΔT::Int64)
                 end
 
                 if P_dvi == false # not divide
-                    # Compute light attenuation
-                    atten = (params["katten_w"] + params["katten_c"] * cumsum_chl[x, y, z])*(-g.zF[z])
-                    if atten == 0.0
-                        α_I = params["α"]*IR_t
-                    else
-                        α_I = params["α"]*IR_t*(1.0 - exp(-atten))/atten
-                    end
-
                     # Compute photosynthesis rate
+                    α_I = params["α"]*IR_t
                     Tempstd = exp(params["TempAe"]*(1.0/(temp_t+273.15)-1.0/params["Tempref"]))
                     photoTempFunc = params["TempCoeff"]*max(1.0e-10,Tempstd)
                     PCmax_sp = params["PCmax"][sp]/86400
