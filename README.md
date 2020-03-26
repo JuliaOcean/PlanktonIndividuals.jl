@@ -15,7 +15,7 @@ Here we use [Oceananigans.jl](https://github.com/climate-machine/Oceananigans.jl
 Pkg.develop(PackageSpec(path="PlanktonIndividuals.jl"))
 using PlanktonIndividuals
 p = dirname(pathof(PlanktonIndividuals))
-include(joinpath(p,"Oceananigans_PlanktonIndividuals.jl"))
+include(joinpath(p,"examples/Oceananigans_PlanktonIndividuals.jl"))
 ```
 
 ### Unit Testing

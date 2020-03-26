@@ -22,8 +22,8 @@ phy_model = PI_Model(phy_grid, RunParam;
 resultpath = PrepRunDir()
 
 # generate an empty array to store cell size density
-size_dens = zeros(25,RunParam.nTime)
-xInd = collect(0.1:0.1:2.5)
+size_dens = zeros(35,RunParam.nTime)
+xInd = collect(0.8:0.05:2.5)
 
 # run the model for nTime time steps
 for i in 1:RunParam.nTime
@@ -37,3 +37,14 @@ end
 open(resultpath*"size_dens.bin", "w") do io
     serialize(io, size_dens)
 end
+
+using PyPlot
+fig,ax = plt.subplots(figsize=(10,4))
+p1 = ax.pcolormesh(collect(1:1:RunParam.nTime),collect(0.8:0.05:2.5),size_dens)
+ax.set_ylim(0.9,2.5)
+ax.set_xticks(tcks)
+ax.set_xticklabels(lbs);
+ax.set_ylabel("Cell Size")
+ax.set_xlabel("Time(day)")
+p1b = fig.colorbar(p1,ax=ax, pad = 0.01)
+p1b.set_label("Kernel Density")
