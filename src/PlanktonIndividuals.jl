@@ -32,7 +32,7 @@ export
     PrepRunDir, generate_vel_itp,
 
     # initialize nutrient field and individual sets
-    setup_agents, setup_nutrients,
+    setup_agents, setup_nutrients, load_nut_initials,
 
     # Run the model
     RunParam, RunOption, PI_TimeStep!,

@@ -87,7 +87,7 @@ end
 """
     setup_nutrients(g,nut)
 Set up initial nutrient fields according to grid information
-'Nut' is an array of 10 elements, each element is a kind of nutrient
+'nut' is an array of 10 elements, each element is a kind of nutrient
 """
 function setup_nutrients(g,nut)
     DIC = fill(nut[1],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
@@ -103,6 +103,30 @@ function setup_nutrients(g,nut)
 
     nutrients = nutrient_fields(DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP)
     return nutrients
+end
+
+"""
+    load_nut_initials(paths,g)
+Load nutrient initial conditions from files
+"""
+function load_nut_initials(paths,g)
+    indices = ["DIC", "NH4", "NO3", "PO4", "DOC", "DON", "DOP", "POC", "PON", "POP"]
+    pathkeys = collect(keys(paths))
+    tmps = []
+    for index in indices
+        if length(findall(x->x==index, pathkeys)) == 0
+            print("NUT_INIT: nutrient not found \n")
+        else
+            tmp = deserialize(paths[index])
+            if size(tmp) == (g.Nx, g.Ny, g.Nz)
+                push!(tmps,tmp)
+            else
+                print("NUT_INIT: grid mismatch \n")
+            end
+        end
+    end
+    nut = nutrient_fields(tmps[1],tmps[2],tmps[3],tmps[4],tmps[5],tmps[6],tmps[7],tmps[8],tmps[9],tmps[10])
+    return nut
 end
 
 function pop_counts()
