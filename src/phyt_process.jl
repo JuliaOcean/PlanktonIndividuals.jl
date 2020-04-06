@@ -195,7 +195,7 @@ function phyt_update(model, ΔT::Int64)
 
                     # excretion, if any
                     excretC = phyt[9] * params["kexcC"] * ΔT
-                    phyt[9] phyt[9] - excretC
+                    phyt[9] = phyt[9] - excretC
 
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - SynC
                     consume.DOC[x, y, z] = consume.DOC[x, y, z] + excretC
