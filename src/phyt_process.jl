@@ -124,7 +124,7 @@ function phyt_update(model, ΔT::Int64)
                     # if (tmp > Eₖ) & (params["inhibcoef"][sp] == 1.0)
                     #     PS = PS*Eₖ/tmp*params["inhibcoef"][sp]
                     # end
-                    PP = PS*ΔT # unit: mmol C/hour/individual
+                    PP = PS*ΔT # unit: mmol C/time step/individual
 
                     # Compute cell-based N uptake rate according Droop limitation
                     Qn = (phyt[10]+phyt[8]*params["R_NC"])/(phyt[8]+phyt[9])
@@ -138,8 +138,8 @@ function phyt_update(model, ΔT::Int64)
                     NO3uptake = VNO3m*NO3/(NO3+params["KsatNO3"][sp])*regQn
                     VNH4cell = NH4uptake*phyt[8] # unit: mmol N/second/individual
                     VNO3cell = NO3uptake*phyt[8] # unit: mmol N/second/individual
-                    VNH4 = min(NH4*g.V[x,y,z]/10.0, VNH4cell*ΔT) # unit: mmol N/hour/individual
-                    VNO3 = min(NO3*g.V[x,y,z]/10.0, VNO3cell*ΔT) # unit: mmol N/hour/individual
+                    VNH4 = min(NH4*g.V[x,y,z]/10.0, VNH4cell*ΔT) # unit: mmol N/time step/individual
+                    VNO3 = min(NO3*g.V[x,y,z]/10.0, VNO3cell*ΔT) # unit: mmol N/time step/individual
 
                     # Compute cell-based P uptake rate according Droop limitation
                     Qp = (phyt[11]+phyt[8]*params["R_PC"])/(phyt[8]+phyt[9])
@@ -149,7 +149,7 @@ function phyt_update(model, ΔT::Int64)
                     VPm = VPmax_sp*phyt[7]^params["VP_b"][sp]
                     Puptake = VPm*PO4/(PO4+params["KsatP"][sp])*regQp
                     VPcell = Puptake*phyt[8] # unit: mmol P/second/individual
-                    VPO4 = min(PO4*g.V[x,y,z]/10.0, VPcell*ΔT) # unit: mmol P/hour/individual
+                    VPO4 = min(PO4*g.V[x,y,z]/10.0, VPcell*ΔT) # unit: mmol P/time step/individual
 
                     # Compute the ratio of chl synthesis and N uptake
                     # ρ equals to ratio of the realised quantum efficiency for photosynthesis divided by the maximum efficiency
@@ -171,34 +171,31 @@ function phyt_update(model, ΔT::Int64)
                     phyt[10]= phyt[10]+ VNH4 + VNO3
                     phyt[11]= phyt[11]+ VPO4
 
-                    # maximum biosynthesis rate
-                    SynC = β*phyt[9]/(1+respir_extra)
+                    # maximum biosynthesis rate based on carbon availability
+                    Syn_Cmax = β*phyt[9]/(1+respir_extra)
 
                     # maximum allowed biosynthesis rate by Nq and Pq
                     BrNC = phyt[10]/params["R_NC"]
                     BrPC = phyt[11]/params["R_PC"]
-                    Bmax = min(BrNC, BrPC)
 
-                    # excretion
-                    if SynC > Bmax
-                        excretC = SynC - Bmax
-                        SynC = Bmax
-                    else
-                        excretC = 0.0
-                    end
+                    # acutall biosynthesis rate
+                    SynC = min(Syn_Cmax, BrNC, BrPC)
 
-                    # update quotas and biomass
+                    # update quotas, biomass, Chla and cell size etc.
                     CostC = SynC*(1+respir_extra)
                     MaintenC = (1-β)*SynC/β
                     phyt[8] = phyt[8] + SynC
-                    phyt[9] = phyt[9] - CostC -MaintenC - excretC
+                    phyt[9] = phyt[9] - CostC -MaintenC
                     phyt[10]= phyt[10]- SynC*params["R_NC"]
                     phyt[11]= phyt[11]- SynC*params["R_PC"]
-
                     dsize= SynC/(params["P_Cquota"][sp]*params["P_Nsuper"]) # normalized by standard C quota
                     phyt[7]  = max(0.0,phyt[7]+dsize)
                     phyt[12] = phyt[12] + ρ_chl*SynC*params["R_NC"]
                     phyt[6]  = phyt[6] + 1.0*(ΔT/3600)
+
+                    # excretion, if any
+                    excretC = phyt[9] * params["kexcC"] * ΔT
+                    phyt[9] phyt[9] - excretC
 
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - SynC
                     consume.DOC[x, y, z] = consume.DOC[x, y, z] + excretC
