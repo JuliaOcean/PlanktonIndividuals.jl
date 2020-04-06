@@ -172,7 +172,7 @@ function phyt_update(model, ΔT::Int64)
                     phyt[11]= phyt[11]+ VPO4
 
                     # maximum biosynthesis rate
-                    SynC = β*params["k_mtb"]*ΔT*phyt[9]/(1+respir_extra)
+                    SynC = β*phyt[9]/(1+respir_extra)
 
                     # maximum allowed biosynthesis rate by Nq and Pq
                     BrNC = phyt[10]/params["R_NC"]
