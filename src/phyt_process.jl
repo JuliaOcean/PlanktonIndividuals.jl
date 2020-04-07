@@ -172,32 +172,29 @@ function phyt_update(model, ΔT::Int64)
                     phyt[11]= phyt[11]+ VPO4
 
                     # maximum biosynthesis rate based on carbon availability
-                    Syn_Cmax = β*phyt[9]/(1+respir_extra)
+                    BS_Cmax = β*params["k_mtb"]*ΔT*phyt[9]/(1+respir_extra)
 
                     # maximum allowed biosynthesis rate by Nq and Pq
-                    BrNC = phyt[10]/params["R_NC"]
-                    BrPC = phyt[11]/params["R_PC"]
+                    BS_Nmax = params["k_mtb"]*ΔT*phyt[10]/params["R_NC"]
+                    BS_Pmax = params["k_mtb"]*ΔT*phyt[11]/params["R_PC"]
 
-                    # acutall biosynthesis rate
-                    SynC = min(Syn_Cmax, BrNC, BrPC)
+                    # acutall biosynthesis rate & excretion
+                    BS_C = min(BS_Cmax, BS_Nmax, BS_Pmax)
+                    excretC = max(0.0, BS_Cmax-BS_C)
 
                     # update quotas, biomass, Chla and cell size etc.
-                    CostC = SynC*(1+respir_extra)
-                    MaintenC = (1-β)*SynC/β
-                    phyt[8] = phyt[8] + SynC
-                    phyt[9] = phyt[9] - CostC -MaintenC
-                    phyt[10]= phyt[10]- SynC*params["R_NC"]
-                    phyt[11]= phyt[11]- SynC*params["R_PC"]
-                    dsize= SynC/(params["P_Cquota"][sp]*params["P_Nsuper"]) # normalized by standard C quota
+                    CostC = BS_C*(1+respir_extra)
+                    MaintenC = (1-β)*BS_C/β
+                    phyt[8] = phyt[8] + BS_C
+                    phyt[9] = phyt[9] - CostC -MaintenC - excretC
+                    phyt[10]= phyt[10]- BS_C*params["R_NC"]
+                    phyt[11]= phyt[11]- BS_C*params["R_PC"]
+                    dsize= BS_C/(params["P_Cquota"][sp]*params["P_Nsuper"]) # normalized by standard C quota
                     phyt[7]  = max(0.0,phyt[7]+dsize)
-                    phyt[12] = phyt[12] + ρ_chl*SynC*params["R_NC"]
+                    phyt[12] = phyt[12] + ρ_chl*BS_C*params["R_NC"]
                     phyt[6]  = phyt[6] + 1.0*(ΔT/3600)
 
-                    # excretion, if any
-                    excretC = phyt[9] * params["kexcC"] * ΔT
-                    phyt[9] = phyt[9] - excretC
-
-                    consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - SynC
+                    consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - BS_C
                     consume.DOC[x, y, z] = consume.DOC[x, y, z] + excretC
                     consume.NH4[x, y, z] = consume.NH4[x, y, z] - VNH4
                     consume.NO3[x, y, z] = consume.NO3[x, y, z] - VNO3
