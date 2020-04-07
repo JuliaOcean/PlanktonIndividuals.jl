@@ -172,11 +172,12 @@ function phyt_update(model, ΔT::Int64)
                     phyt[11]= phyt[11]+ VPO4
 
                     # maximum biosynthesis rate based on carbon availability
-                    BS_Cmax = β*params["k_mtb"]*ΔT*phyt[9]/(1+respir_extra)
+                    k_mtb = params["k_mtb"]*phyt[7]^params["b_k_mtb"]
+                    BS_Cmax = β*k_mtb*ΔT*phyt[9]/(1+respir_extra)
 
                     # maximum allowed biosynthesis rate by Nq and Pq
-                    BS_Nmax = params["k_mtb"]*ΔT*phyt[10]/params["R_NC"]
-                    BS_Pmax = params["k_mtb"]*ΔT*phyt[11]/params["R_PC"]
+                    BS_Nmax = k_mtb*ΔT*phyt[10]/params["R_NC"]
+                    BS_Pmax = k_mtb*ΔT*phyt[11]/params["R_PC"]
 
                     # acutall biosynthesis rate & excretion
                     BS_C = min(BS_Cmax, BS_Nmax, BS_Pmax)

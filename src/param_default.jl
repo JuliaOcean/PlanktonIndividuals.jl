@@ -46,6 +46,7 @@ param_default=Dict(
     "a_β"      => 3.1,                # scale parameter for metabolic partitioning of biosynthesis
     "b_β"      => -3.8,               # shape parameter for metabolic pratitioning of biosynthesis
     "k_mtb"    => 1.0/86400,          # metabolic rate (per second)
+    "b_k_mtb"  => 0.5,                # metabolic rate (per second)
     "respir_ex"=> 0.0,                # Extra cost of C for biosynthesis
     "respir_b" => 0.13,               # Shape parameter for size
     "grazFracC"=> 0.7,                # Fraction goes into dissolved organic pool
