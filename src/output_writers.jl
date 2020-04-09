@@ -90,6 +90,7 @@ Write a brief summary of population changes at each time step into a txt file
 function write_pop_dynamics(t::Int64, phyts, counts, filepath)
     pop = size(phyts,2)
     gen_ave = mean(phyts[5,:])
+    age_ave = mean(phyts[6,:])
     size_ave= mean(phyts[7,:])
     Bm_ave  = mean(phyts[8,:])
     Cq_ave  = mean(phyts[9,:])
@@ -97,7 +98,7 @@ function write_pop_dynamics(t::Int64, phyts, counts, filepath)
     Pq_ave  = mean(phyts[11,:])
     Chl_ave = mean(phyts[12,:])
     POPio = open(filepath*"dynamic_population.txt","a");
-    println(POPio,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E  %4.0f  %4.0f  %4.0f",t,pop,gen_ave,size_ave,Bm_ave,Cq_ave,Nq_ave,Pq_ave,Chl_ave,counts.divid,counts.graze,counts.death))
+    println(POPio,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E  %4.0f  %4.0f  %4.0f",t,pop,gen_ave,age_ave,size_ave,Bm_ave,Cq_ave,Nq_ave,Pq_ave,Chl_ave,counts.divid,counts.graze,counts.death))
     close(POPio);
 end
 
