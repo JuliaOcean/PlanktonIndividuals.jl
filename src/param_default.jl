@@ -4,6 +4,8 @@ param_default=Dict(
     "P_Nsp"    => 1,                  # number of phyto species
     "P_Nsuper" => 1e10,               # number of phyto cells each super individual represents
     "P_Cquota" => [1.8e-11, 1.8e-10], # C quota of phyto cells at size = 1.0
+    "useDOC"   => [0,0],              # C quota of phyto cells at size = 1.0
+    "isDiaz"   => [0,0],              # C quota of phyto cells at size = 1.0
     "P_mean"   => 1.5,                # mean of the normal distribution of initial phyto individuals
     "P_var"    => 0.3,                # variance of the normal distribution of initial phyto individuals
     "Z_Nind"   => 0,                  # number of zoo individuals of each species
@@ -33,16 +35,21 @@ param_default=Dict(
     "TempCoeff"=> 0.8,                # Arrenhius equation
     "VNH4max"  => [0.6, 0.6],         # Maximum N uptake rate (mmol N/mmol C/day)
     "VNO3max"  => [0.6, 0.6],         # Maximum N uptake rate (mmol N/mmol C/day)
-    "VPmax"    => [0.1, 0.1],         # Maximum N uptake rate (mmol N/mmol C/day)
+    "VPmax"    => [0.1, 0.1],         # Maximum P uptake rate (mmol P/mmol C/day)
+    "VDOCmax"  => [0.0, 1.0],         # Maximum DOC uptake rate (mmol C/mmol C/day)
     "Nqmax"    => 0.17,               # Maximum N quota in cell (mmol N/mmol C)
     "Nqmin"    => 0.05,               # Minimum N quota in cell (mmol N/mmol C)
-    "Pqmax"    => 0.02,               # Maximum N quota in cell (mmol N/mmol C)
-    "Pqmin"    => 0.004,              # Minimum N quota in cell (mmol N/mmol C)
+    "Pqmax"    => 0.02,               # Maximum P quota in cell (mmol P/mmol C)
+    "Pqmin"    => 0.004,              # Minimum P quota in cell (mmol P/mmol C)
+    "Cqmax"    => 0.1,                # Maximum C quota in cell (mmol C/mmol C)
+    "Cqmin"    => 0.4,                # Minimum C quota in cell (mmol C/mmol C)
     "KsatNH4"  => [0.005, 0.005],     # Half-saturation coeff
     "KsatNO3"  => [0.010, 0.010],     # Half-saturation coeff
     "KsatP"    => [0.003, 0.003],     # Half-saturation coeff
+    "KsatDOC"  => [0.0, 0.3],         # Half-saturation coeff
     "VN_b"     => [0.6, 0.6],         # Shape parameter for size
     "VP_b"     => [0.6, 0.6],         # Shape parameter for size
+    "VDOC_b"   => [0.6, 0.6],         # Shape parameter for size
     "a_β"      => 3.1,                # scale parameter for metabolic partitioning of biosynthesis
     "b_β"      => -3.8,               # shape parameter for metabolic pratitioning of biosynthesis
     "k_mtb"    => 1.0/86400,          # metabolic rate (per second)

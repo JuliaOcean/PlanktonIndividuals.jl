@@ -92,31 +92,31 @@ zooplankton feed on selected phytoplankton
 return C and N content as exports to environment
 """
 function sloppy_feed(zplk::Array, phyts_feed::Array, params)
-    TOC = sum(phyts_feed[8,:]) + sum(phyts_feed[9,:])
-    TON = sum(phyts_feed[8,:])*params["R_NC"] + sum(phyts_feed[10,:])
-    TOP = sum(phyts_feed[8,:])*params["R_PC"] + sum(phyts_feed[11,:])
+    TOC = sum(phyts_feed[5,:]) + sum(phyts_feed[6,:])
+    TON = sum(phyts_feed[5,:])*params["R_NC"] + sum(phyts_feed[7,:])
+    TOP = sum(phyts_feed[5,:])*params["R_PC"] + sum(phyts_feed[8,:])
     Feed_CN = (params["slpyFracC"] * TOC) / (params["slpyFracN"] * TON)
     Feed_CP = (params["slpyFracC"] * TOC) / (params["slpyFracP"] * TOP)
-    Zoo_CN = zplk[8] / zplk[10]
-    Zoo_CP = zplk[8] / zplk[11]
+    Zoo_CN = zplk[5] / zplk[7]
+    Zoo_CP = zplk[5] / zplk[8]
     if Feed_CN ≥ Zoo_CN
         dBm = params["slpyFracN"] * TON * Zoo_CN
-        dsize= dBm / zplk[8]
+        dsize= dBm / zplk[5]
     else
         dBm = params["slpyFracC"] * TOC
-        dsize= dBm / zplk[8]
+        dsize= dBm / zplk[5]
     end
     if Feed_CP ≥ Zoo_CP
         dBm = params["slpyFracP"] * TOP * Zoo_CP
-        dsize= dBm / zplk[8]
+        dsize= dBm / zplk[5]
     else
         dBm = params["slpyFracC"] * TOC
-        dsize= dBm / zplk[8]
+        dsize= dBm / zplk[5]
     end
-    zplk[8]  = zplk[8] + dBm
-    zplk[10] = zplk[10]  + dBm / Zoo_CN
-    zplk[11] = zplk[11]  + dBm / Zoo_CP
-    zplk[7]  = zplk[7]+ dsize
+    zplk[5]  = zplk[5] + dBm
+    zplk[7]  = zplk[7]  + dBm / Zoo_CN
+    zplk[8]  = zplk[8]  + dBm / Zoo_CP
+    zplk[4]  = zplk[4]+ dsize
     Cexport = TOC - dBm
     Nexport = TON - dBm / Zoo_CN
     Pexport = TOP - dBm / Zoo_CP
@@ -146,12 +146,12 @@ function zoo_update(model, ΔT::Int64)
         x, y, z = which_grid(zplk, g)
 
         # compute death probability after a certain age
-        reg_age = max(0.0, zplk[6] - params["death_age"])
+        reg_age = max(0.0, zplk[14] - params["death_age"])
         shape_factor_death = params["a_death"]*reg_age^params["b_death"]
         P_death = rand(Bernoulli(shape_factor_death/(1+shape_factor_death)))
 
         if P_death == false
-            radius = zplk[7] * 1.5 * 5.0e-5
+            radius = zplk[4] * 1.5 * 5.0e-5
             feeding = find_feeding_area(zplk, phyts, radius)
             # the longest distance predator can swim
             travel_dist = params["v_zoo"] * ΔT
@@ -181,22 +181,22 @@ function zoo_update(model, ΔT::Int64)
                     travel_dist = chase_prey(zplk, feeding[3], travel_dist, g)
                 end
             end
-            zplk[6] = zplk[6] + 1.0*(ΔT/3600)
+            zplk[14] = zplk[14] + 1.0*(ΔT/3600)
 
             # metabolic cost, respiration & swim cost
-            mtcost = travel_dist * 0.01 * zplk[8]
-            zplk[8] = zplk[8] - mtcost
+            mtcost = travel_dist * 0.01 * zplk[5]
+            zplk[5] = zplk[5] - mtcost
 
             # compute probabilities of reproduction
 
             append!(zoos_b,zplk)
         else
-            consume.DOC[x, y, z] = consume.DOC[x, y, z] + zplk[8] * params["mortFracC"]
-            consume.DON[x, y, z] = consume.DON[x, y, z] + zplk[10]  * params["mortFracN"]
-            consume.DOP[x, y, z] = consume.DOP[x, y, z] + zplk[11]  * params["mortFracP"]
-            consume.POC[x, y, z] = consume.POC[x, y, z] + zplk[8] * (1.0 - params["mortFracC"])
-            consume.PON[x, y, z] = consume.PON[x, y, z] + zplk[10]  * (1.0 - params["mortFracN"])
-            consume.POP[x, y, z] = consume.POP[x, y, z] + zplk[11]  * (1.0 - params["mortFracP"])
+            consume.DOC[x, y, z] = consume.DOC[x, y, z] + zplk[5] * params["mortFracC"]
+            consume.DON[x, y, z] = consume.DON[x, y, z] + zplk[7] * params["mortFracN"]
+            consume.DOP[x, y, z] = consume.DOP[x, y, z] + zplk[8] * params["mortFracP"]
+            consume.POC[x, y, z] = consume.POC[x, y, z] + zplk[5] * (1.0 - params["mortFracC"])
+            consume.PON[x, y, z] = consume.PON[x, y, z] + zplk[7] * (1.0 - params["mortFracN"])
+            consume.POP[x, y, z] = consume.POP[x, y, z] + zplk[8] * (1.0 - params["mortFracP"])
         end
     end
     zoos_b = reshape(zoos_b, size(zoos,1), Int(length(zoos_b)/size(zoos,1)))
