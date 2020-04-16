@@ -9,7 +9,7 @@ model = PI_Model(g, RunParam; nutrients = setup_nutrients(g,nut_init));
 
 TP = sum((model.nutrients.PO4 .+ model.nutrients.DOP .+ model.nutrients.POP)
          .* g.V)
-TP = TP + sum(model.individuals.phytos[11,:])
+TP = TP + sum(model.individuals.phytos[8,:] + model.individuals.phytos[5,:]*model.params["R_PC"])
 for i in 1:10
     t = model.t
     vel = store_vels[i]
@@ -20,4 +20,4 @@ end
 
 TPt = sum((model.nutrients.PO4 .+ model.nutrients.DOP .+ model.nutrients.POP)
           .* g.V)
-TPt = TPt + sum(model.individuals.phytos[11,:])
+TPt = TPt + sum(model.individuals.phytos[8,:] + model.individuals.phytos[5,:]*model.params["R_PC"])
