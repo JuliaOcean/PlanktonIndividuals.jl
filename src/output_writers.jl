@@ -64,8 +64,7 @@ end
 
 """
     write_nut_cons(g, gtr, nutₜ, vel, t, filepath)
-Compute total gtr (supposed to be 0), and surface vertical tracer flux(supposed to be 0)
-Write a brief summary of each time step into a txt file
+Write a brief summary of nutrients at each time step into a txt file
 """
 function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, t::Int64, filepath)
     Σgtrⁿ = sum(gtr.NH4 .* g.V)+sum(gtr.NO3 .* g.V)+sum(gtr.DON .* g.V)+sum(gtr.PON .* g.V)
@@ -82,6 +81,17 @@ function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields,
     println(Pio,@sprintf("%4.0f  %.16E  %.16E  %.4f",t,Σgtrᵖ,TP,mean(nutₜ.PO4)))
     close(Cio);close(Nio);close(Pio);
 end
+function write_nut_cons(g::grids, nutₜ::nutrient_fields, t::Int64, filepath)
+    TC = sum((nutₜ.DIC .+ nutₜ.DOC .+ nutₜ.POC) .* g.V)
+    TN = sum((nutₜ.NH4 .+ nutₜ.NO3 .+ nutₜ.DON .+ nutₜ.PON) .* g.V)
+    TP = sum((nutₜ.PO4 .+ nutₜ.DOP .+ nutₜ.POP) .* g.V)
+    Cio = open(filepath*"cons_C.txt","a"); Nio = open(filepath*"cons_N.txt","a");
+    Pio = open(filepath*"cons_P.txt","a");
+    println(Cio,@sprintf("%4.0f  %.16E  %.4f",t,TC,mean(nutₜ.DOC)))
+    println(Nio,@sprintf("%4.0f  %.16E  %.4f  %.4f",t,TN,mean(nutₜ.NH4),mean(nutₜ.NO3)))
+    println(Pio,@sprintf("%4.0f  %.16E  %.4f",t,TP,mean(nutₜ.PO4)))
+    close(Cio);close(Nio);close(Pio);
+end
 
 """
     write_pop_dynamics(t, phyts, counts, filepath)
@@ -90,18 +100,16 @@ Write a brief summary of population changes at each time step into a txt file
 function write_pop_dynamics(t::Int64, phyts, counts, filepath)
     pop = size(phyts,2)
     gen_ave = mean(phyts[11,:])
-    age_ave = mean(phyts[12,:])
-    size_ave= mean(phyts[4,:])
     POPio = open(filepath*"dynamic_population.txt","a");
-    println(POPio,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %1.2f  %4.0f  %4.0f  %4.0f",t,pop,gen_ave,age_ave,size_ave,counts.divid,counts.graze,counts.death))
+    println(POPio,@sprintf("%4.0f  %6.0f  %1.2f  %4.0f  %4.0f  %4.0f",t,pop,gen_ave,counts.divid,counts.graze,counts.death))
     close(POPio);
 end
 
 """
-    write_species_dynamics(t, phyts, filepath)
-Write a brief summary of each species at each time step into a txt file
+    sort_species(phyts, Nsp)
+separate different species in different arrays
 """
-function write_species_dynamics(t::Int64, phyts, filepath, Nsp)
+function sort_species(phyts,Nsp)
     phyt_sp=[]
     for i in 1:Nsp
         push!(phyt_sp,Real[])
@@ -112,6 +120,17 @@ function write_species_dynamics(t::Int64, phyts, filepath, Nsp)
         append!(phyt_sp[sp],phyt)
     end
     for i in 1:Nsp
+        phyt_sp[i] = reshape(phyt_sp[i],size(phyts,1),Int(length(phyt_sp[i])/size(phyts,1)))
+    end
+    return phyt_sp
+end
+
+"""
+    write_species_dynamics(t, phyts, filepath)
+Write a brief summary of each species at each time step into a txt file
+"""
+function write_species_dynamics(t::Int64, phyt_sp, filepath)
+    for i in 1:size(phyt_sp,1)
         phyt_sp[i] = reshape(phyt_sp[i],size(phyts,1),Int(length(phyt_sp[i])/size(phyts,1)))
         pop = size(phyt_sp[i],2)
         gen_ave = mean(phyt_sp[i][11,:])
