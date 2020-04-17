@@ -131,7 +131,6 @@ Write a brief summary of each species at each time step into a txt file
 """
 function write_species_dynamics(t::Int64, phyt_sp, filepath)
     for i in 1:size(phyt_sp,1)
-        phyt_sp[i] = reshape(phyt_sp[i],size(phyts,1),Int(length(phyt_sp[i])/size(phyts,1)))
         pop = size(phyt_sp[i],2)
         gen_ave = mean(phyt_sp[i][11,:])
         age_ave = mean(phyt_sp[i][12,:])
