@@ -28,7 +28,7 @@ function setup_agents(RunParam::RunParams,grid)
     phyts0[6,:] .= 0.0                                             # Cq
     phyts0[7,:] .= 0.0                                             # Nq
     phyts0[8,:] .= 0.0                                             # Pq
-    phyts0[9,:] = copy(phyts0[8,:]) .* params["Chl2Cint"]          # Chl
+    phyts0[9,:] = copy(phyts0[5,:]) .* params["Chl2Cint"]          # Chl
     phyts0[11,:] .= 1.0                                            # generation
     phyts0[12,:] .= 1.0                                            # age
 
