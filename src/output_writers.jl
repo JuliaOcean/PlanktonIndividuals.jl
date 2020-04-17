@@ -92,14 +92,40 @@ function write_pop_dynamics(t::Int64, phyts, counts, filepath)
     gen_ave = mean(phyts[11,:])
     age_ave = mean(phyts[12,:])
     size_ave= mean(phyts[4,:])
-    Bm_ave  = mean(phyts[5,:])
-    Cq_ave  = mean(phyts[6,:])
-    Nq_ave  = mean(phyts[7,:])
-    Pq_ave  = mean(phyts[8,:])
-    Chl_ave = mean(phyts[9,:])
     POPio = open(filepath*"dynamic_population.txt","a");
-    println(POPio,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E  %4.0f  %4.0f  %4.0f",t,pop,gen_ave,age_ave,size_ave,Bm_ave,Cq_ave,Nq_ave,Pq_ave,Chl_ave,counts.divid,counts.graze,counts.death))
+    println(POPio,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %1.2f  %4.0f  %4.0f  %4.0f",t,pop,gen_ave,age_ave,size_ave,counts.divid,counts.graze,counts.death))
     close(POPio);
+end
+
+"""
+    write_species_dynamics(t, phyts, filepath)
+Write a brief summary of each species at each time step into a txt file
+"""
+function write_species_dynamics(t::Int64, phyts, filepath, Nsp)
+    phyt_sp=[]
+    for i in 1:Nsp
+        push!(phyt_sp,Real[])
+    end
+    for i in 1:size(phyts,2)
+        phyt = phyts[:,i]
+        sp = Int(phyt[10])
+        append!(phyt_sp[sp],phyt)
+    end
+    for i in 1:Nsp
+        phyt_sp[i] = reshape(phyt_sp[i],size(phyts,1),Int(length(phyt_sp[i])/size(phyts,1)))
+        pop = size(phyt_sp[i],2)
+        gen_ave = mean(phyt_sp[i][11,:])
+        age_ave = mean(phyt_sp[i][12,:])
+        size_ave= mean(phyt_sp[i][4,:])
+        Bm_ave= mean(phyt_sp[i][5,:])
+        Cq_ave= mean(phyt_sp[i][6,:])
+        Nq_ave= mean(phyt_sp[i][7,:])
+        Pq_ave= mean(phyt_sp[i][8,:])
+        Chl_ave= mean(phyt_sp[i][9,:])
+        io = open(filepath*"dynamic_species"*lpad(i,3,"0")*".txt","a");
+        println(io,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E",t,pop,gen_ave,age_ave,size_ave,Bm_ave,Cq_ave,Nq_ave,Pq_ave,Chl_ave))
+        close(io);
+    end
 end
 
 """

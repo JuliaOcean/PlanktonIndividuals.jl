@@ -21,8 +21,8 @@ function setup_agents(RunParam::RunParams,grid)
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
         upper = Int(N+(i-1)*N)
-        phyts0[5,lower:upper] .= Cquota[i]*Nsuper                  # Bm
-        phyts0[10,:] .= i                                          # species
+        phyts0[5,lower:upper]  .= Cquota[i]*Nsuper                 # Bm
+        phyts0[10,lower:upper] .= i                                # species
     end
     phyts0[5,:]  = phyts0[5,:] .* phyts0[4,:]                      # Bm
     phyts0[6,:] .= 0.0                                             # Cq

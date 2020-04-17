@@ -13,6 +13,7 @@ function PI_TimeStep!(model::Model_struct, ΔT, velᵇ::velocity, resultspath)
         counts_p.graze = counts_z.graze
     end
     write_pop_dynamics(model.t, model.individuals.phytos, counts_p, resultspath)
+    write_species_dynamics(model.t, model.individuals.phytos, resultspath, model.params["P_Nsp"])
     nutₜ,gtr = nut_update(model, velᵇ, consume_p, ΔT)
     write_nut_cons(model.grid, gtr, nutₜ,model.t,resultspath)
     model.nutrients = nutₜ
@@ -34,6 +35,7 @@ function PI_TimeStep!(model::Model_struct, ΔT, resultspath)
     model.t += 1
     phyts_b,counts_p,consume_p=phyt_update(model, ΔT)
     write_pop_dynamics(model.t, phyts_b, counts_p, resultspath)
+    write_species_dynamics(model.t, phyts_b, resultspath, model.params["P_Nsp"])
     nutₜ,gtr = nut_update(model, consume_p, ΔT)
     write_nut_cons(model.grid, gtr, nutₜ,model.t,resultspath)
     model.individuals.phytos = phyts_b
