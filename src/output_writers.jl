@@ -151,7 +151,7 @@ end
 write model output of individuals at each time step in a binary file
 time = model.t*ΔT
 """
-function write_output(individuals, filepath, time)
+function write_output(individuals::individuals, filepath, time)
     phytos = individuals.phytos
     path = filepath*"phy_"*lpad(time, 10, "0")*".bin"
     if individuals.zoos == nothing
@@ -165,6 +165,14 @@ function write_output(individuals, filepath, time)
         path_zoo = filepath*"zoo_"*lpad(time, 10, "0")*".bin"
         open(path_zoo, "w") do io
             serialize(io, individuals.zoos)
+        end
+    end
+end
+function write_output(phyts_sp::Array, filepath, time)
+    for i in 1:size(phyts_sp)
+        path = filepath*"phy"*lpad(time, 10, "0")*"_"*lpad(i,2,"0")".bin"
+        open(path, "w") do io
+            serialize(io, phyts_sp[i])
         end
     end
 end
