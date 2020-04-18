@@ -170,7 +170,7 @@ function write_output(individuals::individuals, filepath, time)
 end
 function write_output(phyts_sp::Array, filepath, time)
     for i in 1:size(phyts_sp)
-        path = filepath*"phy"*lpad(time, 10, "0")*"_"*lpad(i,2,"0")".bin"
+        path = filepath*"phy"*lpad(time, 10, "0")*"_"*lpad(i,2,"0")*".bin"
         open(path, "w") do io
             serialize(io, phyts_sp[i])
         end
