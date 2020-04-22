@@ -120,12 +120,12 @@ function phyt_update(model, ΔT::Int64)
                     PCmax_sp = params["PCmax"][sp]/86400
                     PCm = PCmax_sp*photoTempFunc*phyt[4]^params["PC_b"][sp]
                     PC = PCm*(1-exp(-α_I*phyt[9]/(phyt[5]*PCm)))
+                    Eₖ = PCm/(phyt[9]/phyt[5]*params["α"])
+                    tmp = α_I/params["α"]
+                    if (tmp > Eₖ) & (params["inhibcoef"][sp] > 0.0)
+                        PC = PC*Eₖ/tmp*params["inhibcoef"][sp]
+                    end
                     PS = PC*phyt[5] # unit: mmol C/second/individual
-                    # Eₖ = PCm/(phyt[9]/phyt[5]*params["α"])
-                    # tmp = α_I/params["α"]
-                    # if (tmp > Eₖ) & (params["inhibcoef"][sp] == 1.0)
-                    #     PS = PS*Eₖ/tmp*params["inhibcoef"][sp]
-                    # end
                     PP = PS*ΔT # unit: mmol C/time step/individual
 
                     # Compute cell-based N uptake rate according Droop limitation
@@ -190,6 +190,8 @@ function phyt_update(model, ΔT::Int64)
                         phyt[6] = phyt[6] + VDOC
                         # add up consume of DOC by DOC uptake
                         consume.DOC[x, y, z] = consume.DOC[x, y, z] - VDOC
+                        # compute percentage of C that is from DOC uptake
+                        phyt[13] = VDOC/(VDOC+PP)
                     end
 
                     # maximum biosynthesis rate based on carbon availability
