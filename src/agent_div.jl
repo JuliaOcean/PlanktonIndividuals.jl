@@ -8,22 +8,12 @@ Use Interpolations.jl to generate interpolation objects
 function generate_vel_itp(grid, vel)
     # deal with halo points
     xF = copy(grid.xF[:,1])
-    pushfirst!(xF,xF[1]-(xF[2]-xF[1]))
     yF = copy(grid.yF[1,:])
-    pushfirst!(yF,yF[1]-(yF[2]-yF[1]))
     zF = copy(grid.zF)
-    pushfirst!(zF,zF[1]-(zF[2]-zF[1]))
-    push!(zF,zF[end]-(zF[end-1]-zF[end]))
 
     xC = copy(grid.xC[:,1])
-    pushfirst!(xC,xF[2]-(xC[1]-xF[2]))
-    push!(xC,xF[end]+(xF[end]-xC[end]))
     yC = copy(grid.yC[1,:])
-    pushfirst!(yC,yF[2]-(yC[1]-yF[2]))
-    push!(yC,yF[end]+(yF[end]-yC[end]))
     zC = copy(grid.zC)
-    pushfirst!(zC,zF[2]-(zC[1]-zF[2]))
-    push!(zC,zF[end]+(zF[end]-zC[end]))
 
     u_itp = interpolate((xF,yC,zC),vel.u,Gridded(Linear()))
     v_itp = interpolate((xC,yF,zC),vel.v,Gridded(Linear()))
