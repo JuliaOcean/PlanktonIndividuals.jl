@@ -6,18 +6,9 @@
 Use Interpolations.jl to generate interpolation objects
 """
 function generate_vel_itp(grid, vel)
-    # deal with halo points
-    xF = copy(grid.xF[:,1])
-    yF = copy(grid.yF[1,:])
-    zF = copy(grid.zF)
-
-    xC = copy(grid.xC[:,1])
-    yC = copy(grid.yC[1,:])
-    zC = copy(grid.zC)
-
-    u_itp = interpolate((xF,yC,zC),vel.u,Gridded(Linear()))
-    v_itp = interpolate((xC,yF,zC),vel.v,Gridded(Linear()))
-    w_itp = interpolate((xC,yC,zF),vel.w,Gridded(Linear()))
+    u_itp = interpolate((grid.xF,grid.yC,grid.zC),vel.u,Gridded(Linear()))
+    v_itp = interpolate((grid.xC,grid.yF,grid.zC),vel.v,Gridded(Linear()))
+    w_itp = interpolate((grid.xC,grid.yC,grid.zF),vel.w,Gridded(Linear()))
     return (u_itp, v_itp, w_itp)
 end
 

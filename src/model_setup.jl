@@ -14,9 +14,9 @@ function setup_agents(RunParam::RunParams,grid)
     Cquota = params["P_Cquota"]
     Nsuper = params["P_Nsuper"]
     phyts0 = zeros(Real,13,N*Nsp)
-    phyts0[1,:]  = rand(Uniform(grid.xF[1],grid.xF[end]), N*Nsp)   # x
-    phyts0[2,:]  = rand(Uniform(grid.yF[1],grid.yF[end]), N*Nsp)   # y
-    phyts0[3,:]  = rand(Uniform(grid.zF[1],grid.zF[end]), N*Nsp)   # z
+    phyts0[1,:]  = rand(Uniform(grid.xF[2],grid.xF[end]), N*Nsp)   # x
+    phyts0[2,:]  = rand(Uniform(grid.yF[2],grid.yF[end]), N*Nsp)   # y
+    phyts0[3,:]  = rand(Uniform(grid.zF[2],grid.zF[end-1]), N*Nsp) # z
     phyts0[4,:]  = max.(1.0, rand(Normal(mean,var), N*Nsp))        # size
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
@@ -53,9 +53,9 @@ function setup_zooplkt(params, grid)
     Cquota = params["Z_Cquota"]
     Nsuper = params["Z_Nsuper"]
     zoos0 = zeros(Real,10,N*Nsp)
-    zoos0[1,:]  = rand(Uniform(grid.xF[1],grid.xF[end]), N*Nsp)  # x
-    zoos0[2,:]  = rand(Uniform(grid.yF[1],grid.yF[end]), N*Nsp)  # y
-    zoos0[3,:]  = rand(Uniform(grid.zF[1],grid.zF[end]), N*Nsp)  # z
+    zoos0[1,:]  = rand(Uniform(grid.xF[2],grid.xF[end]), N*Nsp)  # x
+    zoos0[2,:]  = rand(Uniform(grid.yF[2],grid.yF[end]), N*Nsp)  # y
+    zoos0[3,:]  = rand(Uniform(grid.zF[2],grid.zF[end-1]), N*Nsp)# z
     zoos0[4,:]  = max.(1.0, rand(Normal(mean,var), N*Nsp))       # size
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
