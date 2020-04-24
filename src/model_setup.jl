@@ -130,6 +130,9 @@ function load_nut_initials(paths,g)
     return nut
 end
 
-function pop_counts()
-    return pop_counts(0,0,0)
+function pop_counts(nsp::Int64)
+    divid = zeros(nsp)
+    death = zeros(nsp)
+    graze = zeros(nsp)
+    return pop_counts(divid, death, graze)
 end

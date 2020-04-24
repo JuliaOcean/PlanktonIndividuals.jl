@@ -69,8 +69,8 @@ mutable struct Model_struct
 end
 
 mutable struct pop_counts
-    divid::Int64
-    death::Int64
-    graze::Int64
+    divid::Array{Int64,1}
+    death::Array{Int64,1}
+    graze::Array{Int64,1}
 end
 

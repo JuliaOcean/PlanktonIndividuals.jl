@@ -57,7 +57,7 @@ function phyt_update(model, ΔT::Int64)
     phyts_a = copy(model.individuals.phytos)
 
     # load nutrients
-    counts = pop_counts()
+    counts = pop_counts(params["P_Nsp"])
     chl_num = count_chl(phyts_a, g)
 
     # Compute light attenuation, compute from surface
@@ -225,7 +225,7 @@ function phyt_update(model, ΔT::Int64)
                     consume.PO4[x, y, z] = consume.PO4[x, y, z] - VPO4
                     append!(phyts_b,phyt)
                 else # divide
-                    counts.divid += 1
+                    counts.divid[sp] += 1
                     phyts = divide(phyt)
                     append!(phyts_b,phyts)
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt[5]*0.1 # consume C when cell is divided
@@ -237,10 +237,10 @@ function phyt_update(model, ΔT::Int64)
                 consume.POC[x, y, z] = consume.POC[x, y, z] + (phyt[5]+phyt[6])*(1.0 - params["mortFracC"])
                 consume.PON[x, y, z] = consume.PON[x, y, z] + (phyt[7]+phyt[5]*params["R_NC"])*(1.0 - params["mortFracN"])
                 consume.POP[x, y, z] = consume.POP[x, y, z] + (phyt[8]+phyt[5]*params["R_PC"])*(1.0 - params["mortFracP"])
-                counts.death += 1
+                counts.death[sp] += 1
             end # naturan death
         else #grazed, no sloppy feeding here, all nutrients go back to organic pools
-            counts.graze += 1
+            counts.graze[sp] += 1
             consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt[5]+phyt[6])*params["grazFracC"]
             consume.DON[x, y, z] = consume.DON[x, y, z] + (phyt[7]+phyt[5]*params["R_NC"])*params["grazFracN"]
             consume.DOP[x, y, z] = consume.DOP[x, y, z] + (phyt[8]+phyt[5]*params["R_PC"])*params["grazFracP"]
