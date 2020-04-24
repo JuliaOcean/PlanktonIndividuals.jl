@@ -60,7 +60,7 @@ function chase_prey(zplk::Array, cord, travel_dist::Float64, grid)
         zplk[2] = zplk[2] + dy * sqrt(dratio)
         zplk[3] = zplk[3] + dz * sqrt(dratio)
         # periodic domain
-        zplk[3] = max(grid.zF[1],min(grid.zF[end],zplk[3] ))
+        zplk[3] = max(grid.zF[2],min(grid.zF[end-1],zplk[3] ))
         zplk[1] = periodic_domain(grid.xF, zplk[1])
         zplk[2] = periodic_domain(grid.yF, zplk[2])
         return travel_dist
@@ -79,7 +79,7 @@ function rand_walk!(zplk::Array, grid, travel_dist)
     zplk[2] += dy*travel_dist
     zplk[3] += dz*travel_dist
     # periodic domain
-    zplk[3] = max(grid.zF[1],min(grid.zF[end],zplk[3] ))
+    zplk[3] = max(grid.zF[2],min(grid.zF[end-1],zplk[3] ))
     zplk[1] = periodic_domain(grid.xF, zplk[1])
     zplk[2] = periodic_domain(grid.yF, zplk[2])
     return nothing
