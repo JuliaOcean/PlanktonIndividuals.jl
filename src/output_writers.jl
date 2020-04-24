@@ -11,7 +11,7 @@ function write_nut_nc_each_step(g::grids, nut::nutrient_fields, t::Int64, filepa
     N_attr = Dict("units" => "mmolN/m^3")
     P_attr = Dict("units" => "mmolP/m^3")
     isfile(filepath) && rm(filepath)
-    xC = g.xC[2:end-1]; yC = g.yC[2:end-1]; zC - g.zC[2:end-1]
+    xC = g.xC[2:end-1]; yC = g.yC[2:end-1]; zC = g.zC[2:end-1]
     nccreate(filepath, "DIC", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, atts=C_attr);
     nccreate(filepath, "NH4", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, atts=N_attr);
     nccreate(filepath, "NO3", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, atts=N_attr);
@@ -45,7 +45,7 @@ function write_nut_nc_alltime(g::grids, DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, 
     N_attr = Dict("units" => "mmolN/m^3")
     P_attr = Dict("units" => "mmolP/m^3")
     isfile(filepath) && rm(filepath)
-    xC = g.xC[2:end-1]; yC = g.yC[2:end-1]; zC - g.zC[2:end-1]
+    xC = g.xC[2:end-1]; yC = g.yC[2:end-1]; zC = g.zC[2:end-1]
     nccreate(filepath, "DIC", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, "T", tt, T_attr, atts=C_attr);
     nccreate(filepath, "NH4", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, "T", tt, T_attr, atts=N_attr);
     nccreate(filepath, "NO3", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, "T", tt, T_attr, atts=N_attr);
