@@ -4,29 +4,31 @@ Write a NetCDF file of nutrient fields at each time step
 Default filepath -> "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
 """
 function write_nut_nc_each_step(g::grids, nut::nutrient_fields, t::Int64, filepath::String)
-    xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
-    yC_attr = Dict("longname" => "Locations of the cell centers in the y-direction.", "units" => "m")
-    zC_attr = Dict("longname" => "Locations of the cell centers in the z-direction.", "units" => "m")
+    xC = g.xC[2:end-1]; yC = g.yC[2:end-1]; zC = g.zC[2:end-1]
     C_attr = Dict("units" => "mmolC/m^3")
     N_attr = Dict("units" => "mmolN/m^3")
     P_attr = Dict("units" => "mmolP/m^3")
     isfile(filepath) && rm(filepath)
-    xC = g.xC[2:end-1]; yC = g.yC[2:end-1]; zC = g.zC[2:end-1]
-    nccreate(filepath, "DIC", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, atts=C_attr);
-    nccreate(filepath, "NH4", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, atts=N_attr);
-    nccreate(filepath, "NO3", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, atts=N_attr);
-    nccreate(filepath, "PO4", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, atts=P_attr);
-    nccreate(filepath, "DOC", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, atts=C_attr);
-    nccreate(filepath, "DON", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, atts=N_attr);
-    nccreate(filepath, "DOP", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, atts=P_attr);
-    nccreate(filepath, "POC", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, atts=C_attr);
-    nccreate(filepath, "PON", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, atts=N_attr);
-    nccreate(filepath, "POP", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, atts=P_attr);
-    ncwrite(nut.DIC,filepath,"DIC"); ncwrite(nut.NH4,filepath,"NH4");
-    ncwrite(nut.NO3,filepath,"NO3"); ncwrite(nut.PO4,filepath,"PO4");
-    ncwrite(nut.DOC,filepath,"DOC"); ncwrite(nut.DON,filepath,"DON"); ncwrite(nut.DOP,filepath,"DOP");
-    ncwrite(nut.POC,filepath,"POC"); ncwrite(nut.PON,filepath,"PON"); ncwrite(nut.POP,filepath,"POP");
-    nothing
+    ds = NCDataset(filepath, "c")
+    defDim(ds, "xC", size(xC,1))
+    defDim(ds, "yC", size(yC,1))
+    defDim(ds, "zC", size(zC,1))
+    v1 = defVar(ds, "DIC", Float64, ("xC", "yC", "zC"), attrib = C_attr)
+    v2 = defVar(ds, "DOC", Float64, ("xC", "yC", "zC"), attrib = C_attr)
+    v3 = defVar(ds, "POC", Float64, ("xC", "yC", "zC"), attrib = C_attr)
+    v4 = defVar(ds, "NH4", Float64, ("xC", "yC", "zC"), attrib = N_attr)
+    v5 = defVar(ds, "NO3", Float64, ("xC", "yC", "zC"), attrib = N_attr)
+    v6 = defVar(ds, "DON", Float64, ("xC", "yC", "zC"), attrib = N_attr)
+    v7 = defVar(ds, "PON", Float64, ("xC", "yC", "zC"), attrib = N_attr)
+    v8 = defVar(ds, "PO4", Float64, ("xC", "yC", "zC"), attrib = P_attr)
+    v9 = defVar(ds, "DOP", Float64, ("xC", "yC", "zC"), attrib = P_attr)
+    v10= defVar(ds, "POP", Float64, ("xC", "yC", "zC"), attrib = P_attr)
+
+    v1[:,:,:] = nut.DIC; v2[:,:,:] = nut.DOC; v3[:,:,:] = nut.POC;
+    v4[:,:,:] = nut.NH4; v5[:,:,:] = nut.NO3; v6[:,:,:] = nut.DON; v7[:,:,:] = nut.PON;
+    v8[:,:,:] = nut.PO4; v9[:,:,:] = nut.DOP; v10[:,:,:] = nut.POP;
+
+    close(ds)
 end
 
 """
@@ -36,32 +38,33 @@ Default filepath -> "results/nutrients.nc"
 """
 function write_nut_nc_alltime(g::grids, DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, nTime,
                               filepath = "./results/nutrients.nc")
+    xC = g.xC[2:end-1]; yC = g.yC[2:end-1]; zC = g.zC[2:end-1]
     tt = collect(1:nTime);
-    xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
-    yC_attr = Dict("longname" => "Locations of the cell centers in the y-direction.", "units" => "m")
-    zC_attr = Dict("longname" => "Locations of the cell centers in the z-direction.", "units" => "m")
-    T_attr = Dict("longname" => "Time", "units" => "H")
     C_attr = Dict("units" => "mmolC/m^3")
     N_attr = Dict("units" => "mmolN/m^3")
     P_attr = Dict("units" => "mmolP/m^3")
     isfile(filepath) && rm(filepath)
-    xC = g.xC[2:end-1]; yC = g.yC[2:end-1]; zC = g.zC[2:end-1]
-    nccreate(filepath, "DIC", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, "T", tt, T_attr, atts=C_attr);
-    nccreate(filepath, "NH4", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, "T", tt, T_attr, atts=N_attr);
-    nccreate(filepath, "NO3", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, "T", tt, T_attr, atts=N_attr);
-    nccreate(filepath, "PO4", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, "T", tt, T_attr, atts=P_attr);
-    nccreate(filepath, "DOC", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, "T", tt, T_attr, atts=C_attr);
-    nccreate(filepath, "DON", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, "T", tt, T_attr, atts=N_attr);
-    nccreate(filepath, "DOP", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, "T", tt, T_attr, atts=P_attr);
-    nccreate(filepath, "POC", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, "T", tt, T_attr, atts=C_attr);
-    nccreate(filepath, "PON", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, "T", tt, T_attr, atts=N_attr);
-    nccreate(filepath, "POP", "xC", xC, xC_attr, "yC", yC, yC_attr, "zC", zC, zC_attr, "T", tt, T_attr, atts=P_attr);
-    ncwrite(DIC,filepath,"DIC"); ncwrite(NH4,filepath,"NH4");
-    ncwrite(NO3,filepath,"NO3"); ncwrite(PO4,filepath,"PO4");
-    ncwrite(DOC,filepath,"DOC"); ncwrite(DON,filepath,"DON"); ncwrite(DOP,filepath,"DOP");
-    ncwrite(POC,filepath,"POC"); ncwrite(PON,filepath,"PON"); ncwrite(POP,filepath,"POP");
-    ncclose(filepath)
-    return nothing
+    ds = NCDataset(filepath, "c")
+    defDim(ds, "xC", size(xC,1))
+    defDim(ds, "yC", size(yC,1))
+    defDim(ds, "zC", size(zC,1))
+    defDim(ds, "T", size(tt,1))
+    v1 = defVar(ds, "DIC", Float64, ("xC", "yC", "zC", "T"), attrib = C_attr)
+    v2 = defVar(ds, "DOC", Float64, ("xC", "yC", "zC", "T"), attrib = C_attr)
+    v3 = defVar(ds, "POC", Float64, ("xC", "yC", "zC", "T"), attrib = C_attr)
+    v4 = defVar(ds, "NH4", Float64, ("xC", "yC", "zC", "T"), attrib = N_attr)
+    v5 = defVar(ds, "NO3", Float64, ("xC", "yC", "zC", "T"), attrib = N_attr)
+    v6 = defVar(ds, "DON", Float64, ("xC", "yC", "zC", "T"), attrib = N_attr)
+    v7 = defVar(ds, "PON", Float64, ("xC", "yC", "zC", "T"), attrib = N_attr)
+    v8 = defVar(ds, "PO4", Float64, ("xC", "yC", "zC", "T"), attrib = P_attr)
+    v9 = defVar(ds, "DOP", Float64, ("xC", "yC", "zC", "T"), attrib = P_attr)
+    v10= defVar(ds, "POP", Float64, ("xC", "yC", "zC", "T"), attrib = P_attr)
+
+    v1[:,:,:,:] = nut.DIC; v2[:,:,:,:] = nut.DOC; v3[:,:,:,:] = nut.POC;
+    v4[:,:,:,:] = nut.NH4; v5[:,:,:,:] = nut.NO3; v6[:,:,:,:] = nut.DON; v7[:,:,:,:] = nut.PON;
+    v8[:,:,:,:] = nut.PO4; v9[:,:,:,:] = nut.DOP; v10[:,:,:,:] = nut.POP;
+
+    close(ds)
 end
 
 """
