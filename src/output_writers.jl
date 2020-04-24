@@ -102,11 +102,11 @@ end
     write_pop_dynamics(t, phyts, counts, filepath)
 Write a brief summary of population changes at each time step into a txt file
 """
-function write_pop_dynamics(t::Int64, phyts, counts, filepath)
-    pop = size(phyts,2)
-    gen_ave = mean(phyts[11,:])
+function write_pop_dynamics(t::Int64, counts, filepath)
     POPio = open(filepath*"dynamic_population.txt","a");
-    println(POPio,@sprintf("%4.0f  %6.0f  %1.2f  %4.0f  %4.0f  %4.0f",t,pop,gen_ave,counts.divid,counts.graze,counts.death))
+    for i in 1:length(counts.divid)
+        println(POPio,@sprintf("%4.0f  %4.0f  %4.0f  %4.0f",t,counts.divid[i],counts.graze[i],counts.death[i]))
+    end
     close(POPio);
 end
 
