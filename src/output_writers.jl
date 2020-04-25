@@ -3,16 +3,12 @@
 Write a NetCDF file of nutrient fields at each time step
 Default filepath -> "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
 """
-function write_nut_nc_each_step(g::grids, nut::nutrient_fields, t::Int64, filepath::String)
-    xC = g.xC[2:end-1]; yC = g.yC[2:end-1]; zC = g.zC[2:end-1]
+function write_nut_nc_each_step(nut::nutrient_fields, t::Int64, filepath::String)
     C_attr = Dict("units" => "mmolC/m^3")
     N_attr = Dict("units" => "mmolN/m^3")
     P_attr = Dict("units" => "mmolP/m^3")
     isfile(filepath) && rm(filepath)
     ds = NCDataset(filepath, "c")
-    defDim(ds, "xC", size(xC,1))
-    defDim(ds, "yC", size(yC,1))
-    defDim(ds, "zC", size(zC,1))
     v1 = defVar(ds, "DIC", Float64, ("xC", "yC", "zC"), attrib = C_attr)
     v2 = defVar(ds, "DOC", Float64, ("xC", "yC", "zC"), attrib = C_attr)
     v3 = defVar(ds, "POC", Float64, ("xC", "yC", "zC"), attrib = C_attr)
@@ -36,19 +32,13 @@ end
 Write a NetCDF file of nutrient fields for the whole run, especially for 0D configuration
 Default filepath -> "results/nutrients.nc"
 """
-function write_nut_nc_alltime(g::grids, DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, nTime,
+function write_nut_nc_alltime(DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, nTime,
                               filepath = "./results/nutrients.nc")
-    xC = g.xC[2:end-1]; yC = g.yC[2:end-1]; zC = g.zC[2:end-1]
-    tt = collect(1:nTime);
     C_attr = Dict("units" => "mmolC/m^3")
     N_attr = Dict("units" => "mmolN/m^3")
     P_attr = Dict("units" => "mmolP/m^3")
     isfile(filepath) && rm(filepath)
     ds = NCDataset(filepath, "c")
-    defDim(ds, "xC", size(xC,1))
-    defDim(ds, "yC", size(yC,1))
-    defDim(ds, "zC", size(zC,1))
-    defDim(ds, "T", size(tt,1))
     v1 = defVar(ds, "DIC", Float64, ("xC", "yC", "zC", "T"), attrib = C_attr)
     v2 = defVar(ds, "DOC", Float64, ("xC", "yC", "zC", "T"), attrib = C_attr)
     v3 = defVar(ds, "POC", Float64, ("xC", "yC", "zC", "T"), attrib = C_attr)
@@ -60,9 +50,9 @@ function write_nut_nc_alltime(g::grids, DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, 
     v9 = defVar(ds, "DOP", Float64, ("xC", "yC", "zC", "T"), attrib = P_attr)
     v10= defVar(ds, "POP", Float64, ("xC", "yC", "zC", "T"), attrib = P_attr)
 
-    v1[:,:,:,:] = nut.DIC; v2[:,:,:,:] = nut.DOC; v3[:,:,:,:] = nut.POC;
-    v4[:,:,:,:] = nut.NH4; v5[:,:,:,:] = nut.NO3; v6[:,:,:,:] = nut.DON; v7[:,:,:,:] = nut.PON;
-    v8[:,:,:,:] = nut.PO4; v9[:,:,:,:] = nut.DOP; v10[:,:,:,:] = nut.POP;
+    v1[:,:,:,:] = DIC; v2[:,:,:,:] = DOC; v3[:,:,:,:] = POC;
+    v4[:,:,:,:] = NH4; v5[:,:,:,:] = NO3; v6[:,:,:,:] = DON; v7[:,:,:,:] = PON;
+    v8[:,:,:,:] = PO4; v9[:,:,:,:] = DOP; v10[:,:,:,:] =POP;
 
     close(ds)
 end
