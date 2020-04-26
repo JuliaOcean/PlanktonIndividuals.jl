@@ -9,21 +9,16 @@ function write_nut_nc_each_step(nut::nutrient_fields, t::Int64, filepath::String
     P_attr = Dict("units" => "mmolP/m^3")
     isfile(filepath) && rm(filepath)
     ds = NCDataset(filepath, "c")
-    v1 = defVar(ds, "DIC", Float64, ("xC", "yC", "zC"), attrib = C_attr)
-    v2 = defVar(ds, "DOC", Float64, ("xC", "yC", "zC"), attrib = C_attr)
-    v3 = defVar(ds, "POC", Float64, ("xC", "yC", "zC"), attrib = C_attr)
-    v4 = defVar(ds, "NH4", Float64, ("xC", "yC", "zC"), attrib = N_attr)
-    v5 = defVar(ds, "NO3", Float64, ("xC", "yC", "zC"), attrib = N_attr)
-    v6 = defVar(ds, "DON", Float64, ("xC", "yC", "zC"), attrib = N_attr)
-    v7 = defVar(ds, "PON", Float64, ("xC", "yC", "zC"), attrib = N_attr)
-    v8 = defVar(ds, "PO4", Float64, ("xC", "yC", "zC"), attrib = P_attr)
-    v9 = defVar(ds, "DOP", Float64, ("xC", "yC", "zC"), attrib = P_attr)
-    v10= defVar(ds, "POP", Float64, ("xC", "yC", "zC"), attrib = P_attr)
-
-    v1[:,:,:] = nut.DIC; v2[:,:,:] = nut.DOC; v3[:,:,:] = nut.POC;
-    v4[:,:,:] = nut.NH4; v5[:,:,:] = nut.NO3; v6[:,:,:] = nut.DON; v7[:,:,:] = nut.PON;
-    v8[:,:,:] = nut.PO4; v9[:,:,:] = nut.DOP; v10[:,:,:] = nut.POP;
-
+    v1 = defVar(ds, "DIC", nut.DIC, ("xC", "yC", "zC"), attrib = C_attr)
+    v2 = defVar(ds, "DOC", nut.DOC, ("xC", "yC", "zC"), attrib = C_attr)
+    v3 = defVar(ds, "POC", nut.POC, ("xC", "yC", "zC"), attrib = C_attr)
+    v4 = defVar(ds, "NH4", nut.NH4, ("xC", "yC", "zC"), attrib = N_attr)
+    v5 = defVar(ds, "NO3", nut.NO3, ("xC", "yC", "zC"), attrib = N_attr)
+    v6 = defVar(ds, "DON", nut.DON, ("xC", "yC", "zC"), attrib = N_attr)
+    v7 = defVar(ds, "PON", nut.PON, ("xC", "yC", "zC"), attrib = N_attr)
+    v8 = defVar(ds, "PO4", nut.PO4, ("xC", "yC", "zC"), attrib = P_attr)
+    v9 = defVar(ds, "DOP", nut.DOP, ("xC", "yC", "zC"), attrib = P_attr)
+    v10= defVar(ds, "POP", nut.POP, ("xC", "yC", "zC"), attrib = P_attr)
     close(ds)
 end
 
@@ -39,21 +34,16 @@ function write_nut_nc_alltime(DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, 
     P_attr = Dict("units" => "mmolP/m^3")
     isfile(filepath) && rm(filepath)
     ds = NCDataset(filepath, "c")
-    v1 = defVar(ds, "DIC", Float64, ("xC", "yC", "zC", "T"), attrib = C_attr)
-    v2 = defVar(ds, "DOC", Float64, ("xC", "yC", "zC", "T"), attrib = C_attr)
-    v3 = defVar(ds, "POC", Float64, ("xC", "yC", "zC", "T"), attrib = C_attr)
-    v4 = defVar(ds, "NH4", Float64, ("xC", "yC", "zC", "T"), attrib = N_attr)
-    v5 = defVar(ds, "NO3", Float64, ("xC", "yC", "zC", "T"), attrib = N_attr)
-    v6 = defVar(ds, "DON", Float64, ("xC", "yC", "zC", "T"), attrib = N_attr)
-    v7 = defVar(ds, "PON", Float64, ("xC", "yC", "zC", "T"), attrib = N_attr)
-    v8 = defVar(ds, "PO4", Float64, ("xC", "yC", "zC", "T"), attrib = P_attr)
-    v9 = defVar(ds, "DOP", Float64, ("xC", "yC", "zC", "T"), attrib = P_attr)
-    v10= defVar(ds, "POP", Float64, ("xC", "yC", "zC", "T"), attrib = P_attr)
-
-    v1[:,:,:,:] = DIC; v2[:,:,:,:] = DOC; v3[:,:,:,:] = POC;
-    v4[:,:,:,:] = NH4; v5[:,:,:,:] = NO3; v6[:,:,:,:] = DON; v7[:,:,:,:] = PON;
-    v8[:,:,:,:] = PO4; v9[:,:,:,:] = DOP; v10[:,:,:,:] =POP;
-
+    v1 = defVar(ds, "DIC", DIC, ("xC", "yC", "zC", "T"), attrib = C_attr)
+    v2 = defVar(ds, "DOC", DOC, ("xC", "yC", "zC", "T"), attrib = C_attr)
+    v3 = defVar(ds, "POC", POC, ("xC", "yC", "zC", "T"), attrib = C_attr)
+    v4 = defVar(ds, "NH4", NH4, ("xC", "yC", "zC", "T"), attrib = N_attr)
+    v5 = defVar(ds, "NO3", NO3, ("xC", "yC", "zC", "T"), attrib = N_attr)
+    v6 = defVar(ds, "DON", DON, ("xC", "yC", "zC", "T"), attrib = N_attr)
+    v7 = defVar(ds, "PON", PON, ("xC", "yC", "zC", "T"), attrib = N_attr)
+    v8 = defVar(ds, "PO4", PO4, ("xC", "yC", "zC", "T"), attrib = P_attr)
+    v9 = defVar(ds, "DOP", DOP, ("xC", "yC", "zC", "T"), attrib = P_attr)
+    v10= defVar(ds, "POP", POP, ("xC", "yC", "zC", "T"), attrib = P_attr)
     close(ds)
 end
 
