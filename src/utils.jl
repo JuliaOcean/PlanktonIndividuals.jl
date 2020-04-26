@@ -131,12 +131,12 @@ function read_Ogrids(Ogrid, filepath)
     ds.attrib["Nx"] = Nx
     ds.attrib["Ny"] = Ny
     ds.attrib["Nz"] = Nz
-    defVar(ds,"xC",xC,("xC"), attrib = Dict("units" => "m"))
-    defVar(ds,"yC",yC,("yC"), attrib = Dict("units" => "m"))
-    defVar(ds,"zC",zC,("zC"), attrib = Dict("units" => "m"))
-    defVar(ds,"xF",xF,("xF"), attrib = Dict("units" => "m"))
-    defVar(ds,"yF",yF,("yF"), attrib = Dict("units" => "m"))
-    defVar(ds,"zF",zF,("zF"), attrib = Dict("units" => "m"))
+    defVar(ds,"xC",xC,("xC",), attrib = Dict("units" => "m"))
+    defVar(ds,"yC",yC,("yC",), attrib = Dict("units" => "m"))
+    defVar(ds,"zC",zC,("zC",), attrib = Dict("units" => "m"))
+    defVar(ds,"xF",xF,("xF",), attrib = Dict("units" => "m"))
+    defVar(ds,"yF",yF,("yF",), attrib = Dict("units" => "m"))
+    defVar(ds,"zF",zF,("zF",), attrib = Dict("units" => "m"))
     close(ds)
     g = grids(xC, yC, zC, xF, yF, zF, dxF, dyF, dzF, dxC, dyC, dzC, Ax, Ay, Az, V, Nx, Ny, Nz)
     return g
