@@ -1,6 +1,5 @@
 # parameterization of phytoplankton physiology
-
-<img src="PI_Quota.jpeg" width="550px"/>
+![skematic](PI_Quota.jpeg)
 
 ## Photosynthesis
 
