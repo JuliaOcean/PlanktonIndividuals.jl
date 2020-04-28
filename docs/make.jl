@@ -7,6 +7,7 @@ makedocs(;
          pages = [
              "Home" => "index.md",
              "Various" => "various.md",
+             "Equations" => "equations.md",
          ],
          repo="https://github.com/zhenwu0728/PlanktonIndividuals.jl/blob/{commit}{path}#L{line}",
          sitename = "PlanktonIndividuals.jl",
