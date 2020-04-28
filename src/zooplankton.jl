@@ -60,7 +60,7 @@ function chase_prey(zplk::Array, cord, travel_dist::Float64, grid)
         zplk[2] = zplk[2] + dy * sqrt(dratio)
         zplk[3] = zplk[3] + dz * sqrt(dratio)
         # periodic domain
-        zplk[3] = max(grid.zF[1],min(grid.zF[end],zplk[3] ))
+        zplk[3] = max(grid.zF[2],min(grid.zF[end-1],zplk[3] ))
         zplk[1] = periodic_domain(grid.xF, zplk[1])
         zplk[2] = periodic_domain(grid.yF, zplk[2])
         return travel_dist
@@ -79,7 +79,7 @@ function rand_walk!(zplk::Array, grid, travel_dist)
     zplk[2] += dy*travel_dist
     zplk[3] += dz*travel_dist
     # periodic domain
-    zplk[3] = max(grid.zF[1],min(grid.zF[end],zplk[3] ))
+    zplk[3] = max(grid.zF[2],min(grid.zF[end-1],zplk[3] ))
     zplk[1] = periodic_domain(grid.xF, zplk[1])
     zplk[2] = periodic_domain(grid.yF, zplk[2])
     return nothing
@@ -136,7 +136,7 @@ function zoo_update(model, ΔT::Int64)
     temp = model.temp
     phyts = model.individuals.phytos
     zoos = model.individuals.zoos
-    counts = pop_counts()
+    counts = pop_counts(params["P_Nsp"])
     #set up a empty array to record all updated agents
     zoos_b = []
 
@@ -173,8 +173,10 @@ function zoo_update(model, ΔT::Int64)
                 consume.POC[x, y, z] = consume.POC[x, y, z] + Cexport * (1.0 - params["grazFracC"])
                 consume.PON[x, y, z] = consume.PON[x, y, z] + Nexport * (1.0 - params["grazFracN"])
                 consume.POP[x, y, z] = consume.POP[x, y, z] + Pexport * (1.0 - params["grazFracP"])
-                counts.graze = counts.graze + size(phyts_feed,1)
-                graz_ct = graz_ct + size(phyts_feed,1)
+                for i in 1:params["P_Nsp"]
+                    nums = length(findall(x -> x == i, phyts_feed[10,:]))
+                    counts.graze[i] = counts.graze[i] + nums
+                end
                 if feeding[3] == nothing
                     rand_walk!(zplk, g, travel_dist)
                 else

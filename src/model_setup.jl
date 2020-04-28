@@ -13,10 +13,10 @@ function setup_agents(RunParam::RunParams,grid)
     var = params["P_var"]
     Cquota = params["P_Cquota"]
     Nsuper = params["P_Nsuper"]
-    phyts0 = zeros(Real,12,N*Nsp)
-    phyts0[1,:]  = rand(Uniform(grid.xF[1],grid.xF[end]), N*Nsp)   # x
-    phyts0[2,:]  = rand(Uniform(grid.yF[1],grid.yF[end]), N*Nsp)   # y
-    phyts0[3,:]  = rand(Uniform(grid.zF[1],grid.zF[end]), N*Nsp)   # z
+    phyts0 = zeros(Real,13,N*Nsp)
+    phyts0[1,:]  = rand(Uniform(grid.xF[2],grid.xF[end]), N*Nsp)   # x
+    phyts0[2,:]  = rand(Uniform(grid.yF[2],grid.yF[end]), N*Nsp)   # y
+    phyts0[3,:]  = rand(Uniform(grid.zF[2],grid.zF[end-1]), N*Nsp) # z
     phyts0[4,:]  = max.(1.0, rand(Normal(mean,var), N*Nsp))        # size
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
@@ -31,6 +31,7 @@ function setup_agents(RunParam::RunParams,grid)
     phyts0[9,:] = copy(phyts0[5,:]) .* params["Chl2Cint"]          # Chl
     phyts0[11,:] .= 1.0                                            # generation
     phyts0[12,:] .= 1.0                                            # age
+    phyts0[13,:] .= 0.0                                            # %fromDOC
 
     if RunParam.Zoo == false
         return individuals(phyts0,nothing)
@@ -51,22 +52,22 @@ function setup_zooplkt(params, grid)
     var = params["Z_var"]
     Cquota = params["Z_Cquota"]
     Nsuper = params["Z_Nsuper"]
-    zoos0 = zeros(Real,12,N*Nsp) # Cq = 0.0, chl = 0.0
-    zoos0[1,:]  = rand(Uniform(grid.xF[1],grid.xF[end]), N*Nsp)  # x
-    zoos0[2,:]  = rand(Uniform(grid.yF[1],grid.yF[end]), N*Nsp)  # y
-    zoos0[3,:]  = rand(Uniform(grid.zF[1],grid.zF[end]), N*Nsp)  # z
+    zoos0 = zeros(Real,10,N*Nsp)
+    zoos0[1,:]  = rand(Uniform(grid.xF[2],grid.xF[end]), N*Nsp)  # x
+    zoos0[2,:]  = rand(Uniform(grid.yF[2],grid.yF[end]), N*Nsp)  # y
+    zoos0[3,:]  = rand(Uniform(grid.zF[2],grid.zF[end-1]), N*Nsp)# z
     zoos0[4,:]  = max.(1.0, rand(Normal(mean,var), N*Nsp))       # size
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
         upper = Int(N+(i-1)*N)
         zoos0[5,lower:upper] .= Cquota[i]*Nsuper                 # Bm
-        zoos0[4,:] .= i                                          # species
+        zoos0[8,:] .= i                                          # species
     end
     zoos0[5,:]  = zoos0[5,:] .* zoos0[4,:]                       # Bm
-    zoos0[7,:] = 0.0                                             # Nq
-    zoos0[8,:] = 0.0                                             # Pq
-    zoos0[11,:] .= 1.0                                           # generation
-    zoos0[12,:] .= 1.0                                           # age
+    zoos0[6,:] = 0.0                                             # Nq
+    zoos0[7,:] = 0.0                                             # Pq
+    zoos0[9,:] .= 1.0                                            # generation
+    zoos0[10,:] .= 1.0                                           # age
     return zoos0
 end
 
@@ -129,6 +130,9 @@ function load_nut_initials(paths,g)
     return nut
 end
 
-function pop_counts()
-    return pop_counts(0,0,0)
+function pop_counts(nsp::Int64)
+    divid = zeros(nsp)
+    death = zeros(nsp)
+    graze = zeros(nsp)
+    return pop_counts(divid, death, graze)
 end

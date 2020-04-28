@@ -23,8 +23,8 @@ function decmod2(a, n)
 end
 
 # calculate CFL number: c=uΔt/Lx
-calUCFL(g::grids, ΔT, uFld, i, j, k) = abs(uFld[i, j, k] * ΔT / g.dxC[i, j])
-calVCFL(g::grids, ΔT, vFld, i, j, k) = abs(vFld[i, j, k] * ΔT / g.dyC[i, j])
+calUCFL(g::grids, ΔT, uFld, i, j, k) = abs(uFld[i, j, k] * ΔT / g.dxC[i])
+calVCFL(g::grids, ΔT, vFld, i, j, k) = abs(vFld[i, j, k] * ΔT / g.dyC[j])
 calWCFL(g::grids, ΔT, wFld, i, j, k) = abs(wFld[i, j, k] * ΔT / g.dzC[k])
 
 # calculate d₀ and d₁

@@ -3,29 +3,23 @@
 Write a NetCDF file of nutrient fields at each time step
 Default filepath -> "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
 """
-function write_nut_nc_each_step(g::grids, nut::nutrient_fields, t::Int64, filepath::String)
-    xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
-    yC_attr = Dict("longname" => "Locations of the cell centers in the y-direction.", "units" => "m")
-    zC_attr = Dict("longname" => "Locations of the cell centers in the z-direction.", "units" => "m")
+function write_nut_nc_each_step(nut::nutrient_fields, t::Int64, filepath::String)
     C_attr = Dict("units" => "mmolC/m^3")
     N_attr = Dict("units" => "mmolN/m^3")
     P_attr = Dict("units" => "mmolP/m^3")
     isfile(filepath) && rm(filepath)
-    nccreate(filepath, "DIC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=C_attr);
-    nccreate(filepath, "NH4", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
-    nccreate(filepath, "NO3", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
-    nccreate(filepath, "PO4", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=P_attr);
-    nccreate(filepath, "DOC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=C_attr);
-    nccreate(filepath, "DON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
-    nccreate(filepath, "DOP", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=P_attr);
-    nccreate(filepath, "POC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=C_attr);
-    nccreate(filepath, "PON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=N_attr);
-    nccreate(filepath, "POP", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, atts=P_attr);
-    ncwrite(nut.DIC,filepath,"DIC"); ncwrite(nut.NH4,filepath,"NH4");
-    ncwrite(nut.NO3,filepath,"NO3"); ncwrite(nut.PO4,filepath,"PO4");
-    ncwrite(nut.DOC,filepath,"DOC"); ncwrite(nut.DON,filepath,"DON"); ncwrite(nut.DOP,filepath,"DOP");
-    ncwrite(nut.POC,filepath,"POC"); ncwrite(nut.PON,filepath,"PON"); ncwrite(nut.POP,filepath,"POP");
-    nothing
+    ds = NCDataset(filepath, "c")
+    v1 = defVar(ds, "DIC", nut.DIC, ("xC", "yC", "zC"), attrib = C_attr)
+    v2 = defVar(ds, "DOC", nut.DOC, ("xC", "yC", "zC"), attrib = C_attr)
+    v3 = defVar(ds, "POC", nut.POC, ("xC", "yC", "zC"), attrib = C_attr)
+    v4 = defVar(ds, "NH4", nut.NH4, ("xC", "yC", "zC"), attrib = N_attr)
+    v5 = defVar(ds, "NO3", nut.NO3, ("xC", "yC", "zC"), attrib = N_attr)
+    v6 = defVar(ds, "DON", nut.DON, ("xC", "yC", "zC"), attrib = N_attr)
+    v7 = defVar(ds, "PON", nut.PON, ("xC", "yC", "zC"), attrib = N_attr)
+    v8 = defVar(ds, "PO4", nut.PO4, ("xC", "yC", "zC"), attrib = P_attr)
+    v9 = defVar(ds, "DOP", nut.DOP, ("xC", "yC", "zC"), attrib = P_attr)
+    v10= defVar(ds, "POP", nut.POP, ("xC", "yC", "zC"), attrib = P_attr)
+    close(ds)
 end
 
 """
@@ -33,33 +27,24 @@ end
 Write a NetCDF file of nutrient fields for the whole run, especially for 0D configuration
 Default filepath -> "results/nutrients.nc"
 """
-function write_nut_nc_alltime(g::grids, DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, nTime,
+function write_nut_nc_alltime(DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, nTime,
                               filepath = "./results/nutrients.nc")
-    tt = collect(1:nTime);
-    xC_attr = Dict("longname" => "Locations of the cell centers in the x-direction.", "units" => "m")
-    yC_attr = Dict("longname" => "Locations of the cell centers in the y-direction.", "units" => "m")
-    zC_attr = Dict("longname" => "Locations of the cell centers in the z-direction.", "units" => "m")
-    T_attr = Dict("longname" => "Time", "units" => "H")
     C_attr = Dict("units" => "mmolC/m^3")
     N_attr = Dict("units" => "mmolN/m^3")
     P_attr = Dict("units" => "mmolP/m^3")
     isfile(filepath) && rm(filepath)
-    nccreate(filepath, "DIC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=C_attr);
-    nccreate(filepath, "NH4", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
-    nccreate(filepath, "NO3", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
-    nccreate(filepath, "PO4", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=P_attr);
-    nccreate(filepath, "DOC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=C_attr);
-    nccreate(filepath, "DON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
-    nccreate(filepath, "DOP", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=P_attr);
-    nccreate(filepath, "POC", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=C_attr);
-    nccreate(filepath, "PON", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=N_attr);
-    nccreate(filepath, "POP", "xC", g.xC[:,1], xC_attr, "yC", g.yC[1,:], yC_attr, "zC", g.zC, zC_attr, "T", tt, T_attr, atts=P_attr);
-    ncwrite(DIC,filepath,"DIC"); ncwrite(NH4,filepath,"NH4");
-    ncwrite(NO3,filepath,"NO3"); ncwrite(PO4,filepath,"PO4");
-    ncwrite(DOC,filepath,"DOC"); ncwrite(DON,filepath,"DON"); ncwrite(DOP,filepath,"DOP");
-    ncwrite(POC,filepath,"POC"); ncwrite(PON,filepath,"PON"); ncwrite(POP,filepath,"POP");
-    ncclose(filepath)
-    return nothing
+    ds = NCDataset(filepath, "c")
+    v1 = defVar(ds, "DIC", DIC, ("xC", "yC", "zC", "T"), attrib = C_attr)
+    v2 = defVar(ds, "DOC", DOC, ("xC", "yC", "zC", "T"), attrib = C_attr)
+    v3 = defVar(ds, "POC", POC, ("xC", "yC", "zC", "T"), attrib = C_attr)
+    v4 = defVar(ds, "NH4", NH4, ("xC", "yC", "zC", "T"), attrib = N_attr)
+    v5 = defVar(ds, "NO3", NO3, ("xC", "yC", "zC", "T"), attrib = N_attr)
+    v6 = defVar(ds, "DON", DON, ("xC", "yC", "zC", "T"), attrib = N_attr)
+    v7 = defVar(ds, "PON", PON, ("xC", "yC", "zC", "T"), attrib = N_attr)
+    v8 = defVar(ds, "PO4", PO4, ("xC", "yC", "zC", "T"), attrib = P_attr)
+    v9 = defVar(ds, "DOP", DOP, ("xC", "yC", "zC", "T"), attrib = P_attr)
+    v10= defVar(ds, "POP", POP, ("xC", "yC", "zC", "T"), attrib = P_attr)
+    close(ds)
 end
 
 """
@@ -97,11 +82,11 @@ end
     write_pop_dynamics(t, phyts, counts, filepath)
 Write a brief summary of population changes at each time step into a txt file
 """
-function write_pop_dynamics(t::Int64, phyts, counts, filepath)
-    pop = size(phyts,2)
-    gen_ave = mean(phyts[11,:])
+function write_pop_dynamics(t::Int64, counts, filepath)
     POPio = open(filepath*"dynamic_population.txt","a");
-    println(POPio,@sprintf("%4.0f  %6.0f  %1.2f  %4.0f  %4.0f  %4.0f",t,pop,gen_ave,counts.divid,counts.graze,counts.death))
+    for i in 1:length(counts.divid)
+        println(POPio,@sprintf("%4.0f  %4.0f  %4.0f  %4.0f",t,counts.divid[i],counts.graze[i],counts.death[i]))
+    end
     close(POPio);
 end
 

@@ -19,22 +19,22 @@ mutable struct velocity #for offline only, include time series
 end
 
 struct grids
-    xC::Array{Float32,2}
-    yC::Array{Float32,2}
-    zC::Array{Float32,1}
-    xF::Array{Float32,2}
-    yF::Array{Float32,2}
-    zF::Array{Float32,1}
-    dxF::Array{Float32,2} # unit: meter
-    dyF::Array{Float32,2} # unit: meter
-    dzF::Array{Float32,1} # unit: meter
-    dxC::Array{Float32,2} # unit: meter, distance from center to center
-    dyC::Array{Float32,2} # unit: meter, distance from center to center
-    dzC::Array{Float32,1} # unit: meter, distance from center to center
-    Ax::Array{Float32,3} # unit: m²
-    Ay::Array{Float32,3} # unit: m²
-    Az::Array{Float32,2} # unit: m²
-    V ::Array{Float32,3} # unit: m³
+    xC::Array{Real,1}
+    yC::Array{Real,1}
+    zC::Array{Real,1}
+    xF::Array{Real,1}
+    yF::Array{Real,1}
+    zF::Array{Real,1}
+    dxF::Array{Real,1} # unit: meter
+    dyF::Array{Real,1} # unit: meter
+    dzF::Array{Real,1} # unit: meter
+    dxC::Array{Real,1} # unit: meter, distance from center to center
+    dyC::Array{Real,1} # unit: meter, distance from center to center
+    dzC::Array{Real,1} # unit: meter, distance from center to center
+    Ax::Array{Real,3} # unit: m²
+    Ay::Array{Real,3} # unit: m²
+    Az::Array{Real,2} # unit: m²
+    V ::Array{Real,3} # unit: m³
     Nx::Int
     Ny::Int
     Nz::Int
@@ -69,8 +69,8 @@ mutable struct Model_struct
 end
 
 mutable struct pop_counts
-    divid::Int64
-    death::Int64
-    graze::Int64
+    divid::Array{Int64,1}
+    death::Array{Int64,1}
+    graze::Array{Int64,1}
 end
 

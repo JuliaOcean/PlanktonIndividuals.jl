@@ -57,7 +57,7 @@ function phyt_update(model, ΔT::Int64)
     phyts_a = copy(model.individuals.phytos)
 
     # load nutrients
-    counts = pop_counts()
+    counts = pop_counts(params["P_Nsp"])
     chl_num = count_chl(phyts_a, g)
 
     # Compute light attenuation, compute from surface
@@ -120,12 +120,12 @@ function phyt_update(model, ΔT::Int64)
                     PCmax_sp = params["PCmax"][sp]/86400
                     PCm = PCmax_sp*photoTempFunc*phyt[4]^params["PC_b"][sp]
                     PC = PCm*(1-exp(-α_I*phyt[9]/(phyt[5]*PCm)))
+                    Eₖ = PCm/(phyt[9]/phyt[5]*params["α"])
+                    tmp = α_I/params["α"]
+                    if (tmp > Eₖ) & (params["inhibcoef"][sp] > 0.0)
+                        PC = PC*Eₖ/tmp*params["inhibcoef"][sp]
+                    end
                     PS = PC*phyt[5] # unit: mmol C/second/individual
-                    # Eₖ = PCm/(phyt[9]/phyt[5]*params["α"])
-                    # tmp = α_I/params["α"]
-                    # if (tmp > Eₖ) & (params["inhibcoef"][sp] == 1.0)
-                    #     PS = PS*Eₖ/tmp*params["inhibcoef"][sp]
-                    # end
                     PP = PS*ΔT # unit: mmol C/time step/individual
 
                     # Compute cell-based N uptake rate according Droop limitation
@@ -190,6 +190,8 @@ function phyt_update(model, ΔT::Int64)
                         phyt[6] = phyt[6] + VDOC
                         # add up consume of DOC by DOC uptake
                         consume.DOC[x, y, z] = consume.DOC[x, y, z] - VDOC
+                        # compute percentage of C that is from DOC uptake
+                        phyt[13] = VDOC/(VDOC+PP)
                     end
 
                     # maximum biosynthesis rate based on carbon availability
@@ -223,7 +225,7 @@ function phyt_update(model, ΔT::Int64)
                     consume.PO4[x, y, z] = consume.PO4[x, y, z] - VPO4
                     append!(phyts_b,phyt)
                 else # divide
-                    counts.divid += 1
+                    counts.divid[sp] += 1
                     phyts = divide(phyt)
                     append!(phyts_b,phyts)
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt[5]*0.1 # consume C when cell is divided
@@ -235,10 +237,10 @@ function phyt_update(model, ΔT::Int64)
                 consume.POC[x, y, z] = consume.POC[x, y, z] + (phyt[5]+phyt[6])*(1.0 - params["mortFracC"])
                 consume.PON[x, y, z] = consume.PON[x, y, z] + (phyt[7]+phyt[5]*params["R_NC"])*(1.0 - params["mortFracN"])
                 consume.POP[x, y, z] = consume.POP[x, y, z] + (phyt[8]+phyt[5]*params["R_PC"])*(1.0 - params["mortFracP"])
-                counts.death += 1
+                counts.death[sp] += 1
             end # naturan death
         else #grazed, no sloppy feeding here, all nutrients go back to organic pools
-            counts.graze += 1
+            counts.graze[sp] += 1
             consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt[5]+phyt[6])*params["grazFracC"]
             consume.DON[x, y, z] = consume.DON[x, y, z] + (phyt[7]+phyt[5]*params["R_NC"])*params["grazFracN"]
             consume.DOP[x, y, z] = consume.DOP[x, y, z] + (phyt[8]+phyt[5]*params["R_PC"])*params["grazFracP"]

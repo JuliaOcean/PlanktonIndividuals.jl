@@ -1,6 +1,6 @@
 module PlanktonIndividuals
 
-using NetCDF, Serialization
+using NCDatasets, Serialization
 using Random, Distributions, Interpolations, Statistics
 using Printf
 

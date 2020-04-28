@@ -6,28 +6,9 @@
 Use Interpolations.jl to generate interpolation objects
 """
 function generate_vel_itp(grid, vel)
-    # deal with halo points
-    xF = copy(grid.xF[:,1])
-    pushfirst!(xF,xF[1]-(xF[2]-xF[1]))
-    yF = copy(grid.yF[1,:])
-    pushfirst!(yF,yF[1]-(yF[2]-yF[1]))
-    zF = copy(grid.zF)
-    pushfirst!(zF,zF[1]-(zF[2]-zF[1]))
-    push!(zF,zF[end]-(zF[end-1]-zF[end]))
-
-    xC = copy(grid.xC[:,1])
-    pushfirst!(xC,xF[2]-(xC[1]-xF[2]))
-    push!(xC,xF[end]+(xF[end]-xC[end]))
-    yC = copy(grid.yC[1,:])
-    pushfirst!(yC,yF[2]-(yC[1]-yF[2]))
-    push!(yC,yF[end]+(yF[end]-yC[end]))
-    zC = copy(grid.zC)
-    pushfirst!(zC,zF[2]-(zC[1]-zF[2]))
-    push!(zC,zF[end]+(zF[end]-zC[end]))
-
-    u_itp = interpolate((xF,yC,zC),vel.u,Gridded(Linear()))
-    v_itp = interpolate((xC,yF,zC),vel.v,Gridded(Linear()))
-    w_itp = interpolate((xC,yC,zF),vel.w,Gridded(Linear()))
+    u_itp = interpolate((grid.xF,grid.yC,grid.zC),vel.u,Gridded(Linear()))
+    v_itp = interpolate((grid.xC,grid.yF,grid.zC),vel.v,Gridded(Linear()))
+    w_itp = interpolate((grid.xC,grid.yC,grid.zF),vel.w,Gridded(Linear()))
     return (u_itp, v_itp, w_itp)
 end
 
@@ -49,7 +30,7 @@ end
 'x' is the coordinate of an individual
 """
 function periodic_domain(xF, x)
-    xF₀ = xF[1]; xFₜ= xF[end]
+    xF₀ = xF[2]; xFₜ= xF[end]
     if xF₀ < x < xFₜ
         return x
     elseif x ≥ xFₜ
@@ -71,7 +52,7 @@ function agent_advection(p_xyz,vel_itp,g,ΔT::Int64)
     uvel, vvel, wvel = get_vels(p_xyz[1], p_xyz[2], p_xyz[3], vel_itp)
     p_xyz[1] = p_xyz[1] + uvel*ΔT
     p_xyz[2] = p_xyz[2] + vvel*ΔT
-    p_xyz[3] = max(g.zF[1],min(g.zF[end],p_xyz[3] + wvel*ΔT))
+    p_xyz[3] = max(g.zF[2],min(g.zF[end-1],p_xyz[3] + wvel*ΔT))
     # periodic domain
     p_xyz[1] = periodic_domain(g.xF, p_xyz[1])
     p_xyz[2] = periodic_domain(g.yF, p_xyz[2])
@@ -86,17 +67,17 @@ function agent_advectionRK4(p_xyz, vel_itps, g, ΔT::Int64)
     gx1 = periodic_domain(g.xF, p_xyz[1] + u1*0.5*ΔT)
     gy1 = periodic_domain(g.yF, p_xyz[2] + v1*0.5*ΔT)
     gz1 = p_xyz[3] + w1*0.5*ΔT
-    gz1 = max(g.zF[1],min(g.zF[end],gz1))
+    gz1 = max(g.zF[2],min(g.zF[end-1],gz1))
     u2,v2,w2 = get_vels(gx1, gy1, gz1, vel_itps[2]) # velocites at t+0.5ΔT
     gx2 = periodic_domain(g.xF, p_xyz[1] + u2*0.5*ΔT)
     gy2 = periodic_domain(g.yF, p_xyz[2] + v2*0.5*ΔT)
     gz2 = p_xyz[3] + w2*0.5*ΔT
-    gz2 = max(g.zF[1],min(g.zF[end],gz2))
+    gz2 = max(g.zF[2],min(g.zF[end-1],gz2))
     u3,v3,w3 = get_vels(gx2, gy2, gz2, vel_itps[2]) # velocites at t+0.5ΔT
     gx3 = periodic_domain(g.xF, p_xyz[1] + u3*0.5*ΔT)
     gy3 = periodic_domain(g.yF, p_xyz[2] + v3*0.5*ΔT)
     gz3 = p_xyz[3] + w3*0.5*ΔT
-    gz3 = max(g.zF[1],min(g.zF[end],gz3))
+    gz3 = max(g.zF[2],min(g.zF[end-1],gz3))
     u4,v4,w4 = get_vels(gx3, gy3, gz3, vel_itps[3]) # velocites at t+ΔT
     dx = (u1 + 2*u2 + 2*u3 + u4) / 6 * ΔT
     dy = (v1 + 2*v2 + 2*v3 + v4) / 6 * ΔT
@@ -104,7 +85,7 @@ function agent_advectionRK4(p_xyz, vel_itps, g, ΔT::Int64)
     p_xyz[1] = periodic_domain(g.xF, p_xyz[1] + dx)
     p_xyz[2] = periodic_domain(g.yF, p_xyz[2] + dy)
     p_xyz[3] = p_xyz[3] + dz
-    p_xyz[3] = max(g.zF[1], min(g.zF[end], p_xyz[3]))
+    p_xyz[3] = max(g.zF[2], min(g.zF[end-1], p_xyz[3]))
     return p_xyz
 end
 
@@ -133,6 +114,6 @@ Using a random walk algorithm for vertical diffusion
 """
 function agent_diffusionZ(p_z,g,κv)
     p_z += rand(Uniform(-1.0,1.0)) * κv
-    p_z = max(g.zF[1], min(g.zF[end], p_z))
+    p_z = max(g.zF[2], min(g.zF[end-1], p_z))
     return p_z
 end
