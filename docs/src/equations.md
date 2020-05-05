@@ -61,11 +61,11 @@ Q_P^R = Q_N^R - BioSyn*R_{PC}\\
 ```
 ### Cell division
 We use relative cell size ``RCS`` to indicate cell division.
-``RCS`` of the smallest cell is 1.0. ``Q_C^B`` of the smallest cell is ``Cquata``.
+``RCS`` of the smallest cell is 1.0. ``Q_C^B`` of the smallest cell is ``Cquota``.
 Cells start to divide at ``RCS=2.0``. The probability of individual cell division is a sigmoidal function of ``RCS``.
 
 ```math
-RCS = Q_C^B / Cquota
+RCS = Q_C^B / Cquota\\
 P_{divide} = rand(Bernoulli(0.2*(tanh(a*(RCS-b))+1)))
 ```
 

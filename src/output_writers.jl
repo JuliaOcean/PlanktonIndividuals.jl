@@ -155,7 +155,7 @@ function write_output(individuals::individuals, filepath, time)
 end
 function write_output(phyts_sp::Array, filepath, time)
     for i in 1:size(phyts_sp,1)
-        path = filepath*"phy"*lpad(time, 10, "0")*"_"*lpad(i,2,"0")*".bin"
+        path = filepath*"planks/phy"*lpad(time, 10, "0")*"_"*lpad(i,2,"0")*".bin"
         open(path, "w") do io
             serialize(io, phyts_sp[i])
         end
@@ -170,5 +170,6 @@ function PrepRunDir(res::String="./results/")
     isdir(res) && rm(res, recursive=true)
     mkdir(res)
     mkdir("$res"*"nutrients/")
+    mkdir("$res"*"planks/")
     return res
 end
