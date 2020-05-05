@@ -9,6 +9,7 @@ Basically, we follow Geider et al. 1998 for the parameterization of photosynthes
 PP=PP_{max}\cdot (1-e^{\frac{-\alpha \cdot I\cdot Chl}{PP_{max}\cdot C}})
 ```
 **Unit: mmolC/cell/s**
+
 ``PP_{max}`` is scaled by a power-law relationship of cell size
 
 
@@ -20,6 +21,7 @@ RegQ_i=\bigg[\frac{R_{iC}^{max}-Q_i}{R_{iC}^{max}-R_{iC}^{min}}\bigg]_0^1\\
 V_i=V_i^{max}\cdot regQ_i\cdot\frac{[i]}{[i]+K_i^{sat}}
 ```
 ``i`` denotes ``NH_4``, ``NO_3``, ``PO_4``.
+
 **Unit: mmolN/cell/s**
 
 
@@ -57,3 +59,14 @@ Q_C^R = Q_C^R - BioSyn - MaintenC\\
 Q_N^R = Q_N^R - BioSyn*R_{NC}\\
 Q_P^R = Q_N^R - BioSyn*R_{PC}\\
 ```
+### Cell division
+We use relative cell size ``RCS`` to indicate cell division.
+``RCS`` of the smallest cell is 1.0. ``Q_C^B`` of the smallest cell is ``Cquata``.
+Cells start to divide at ``RCS=2.0``. The probability of individual cell division is a sigmoidal function of ``RCS``.
+
+```math
+RCS = Q_C^B / Cquota
+P_{divide} = rand(Bernoulli(0.2*(tanh(a*(RCS-b))+1)))
+```
+
+``P_{divide}`` is computed every hour no matter what time step the model is.

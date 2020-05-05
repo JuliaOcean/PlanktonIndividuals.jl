@@ -18,8 +18,10 @@ function divide(phyt)
         phytos[8+(i-1)*its]  = phyt[8] .* 0.5   # Pq
         phytos[9+(i-1)*its]  = phyt[9] .* 0.5   # chl
         phytos[10+(i-1)*its] = phyt[10]         # species
-        phytos[11+(i-1)*its] = phyt[11].+ 1.0  # generation
+        phytos[11+(i-1)*its] = phyt[11].+ 1.0   # generation
         phytos[12+(i-1)*its] = 1.0              # age
+        phytos[13+(i-1)*its] = 0.0              # %CfromDOC
+        phytos[14+(i-1)*its] = phyt[4] .* 0.45  # age
     end
     return phytos
 end
@@ -100,15 +102,14 @@ function phyt_update(model, ΔT::Int64)
 
             if P_death == false # not natural death
                 # compute probabilities of division
-                if (t*ΔT)%3600 ≠ 0 # check hourly
-                    P_dvi = false
-                else
-                    if phyt[4] < 2.0
-                        P_dvi = false
-                    else
+                P_dvi = false
+                if (t*ΔT)%3600 == 0 # check hourly
+                    if (params["dvid_type"] == 1) & (phyt[4] ≥ 2.0)
                         reg_size = params["dvid_stp"]*(phyt[4] - params["dvid_size"])
                         reg_divide = 0.2*(tanh(reg_size) + 1)
                         P_dvi = rand(Bernoulli(reg_divide))
+                    elseif (params["dvid_type"] == 2) & (phyt[4]-phyt[14]>params["dvid_add"])
+                        P_dvi = true
                     end
                 end
 
