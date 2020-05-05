@@ -104,11 +104,11 @@ function phyt_update(model, ΔT::Int64)
                 # compute probabilities of division
                 P_dvi = false
                 if (t*ΔT)%3600 == 0 # check hourly
-                    if (params["dvid_type"] == 1) & (phyt[4] ≥ 2.0)
+                    if (params["dvid_type"][sp] == 1) & (phyt[4] ≥ 2.0)
                         reg_size = params["dvid_stp"]*(phyt[4] - params["dvid_size"])
                         reg_divide = 0.2*(tanh(reg_size) + 1)
                         P_dvi = rand(Bernoulli(reg_divide))
-                    elseif (params["dvid_type"] == 2) & (phyt[4]-phyt[14]>params["dvid_add"])
+                    elseif (params["dvid_type"][sp] == 2) & (phyt[4]-phyt[14]>params["dvid_add"])
                         P_dvi = true
                     end
                 end
