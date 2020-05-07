@@ -14,6 +14,8 @@ param_default=Dict(
     "Z_Cquota" => 0.0,                # C quota of zoo cells at size = 1.0
     "Z_mean"   => 0.0,                # mean of the normal distribution of initial zoo individuals
     "Z_var"    => 0.0,                # variance of the normal distribution of initial zoo individuals
+    "diag_inds"=> zeros(Int,17),      # diagnostic indices, refer to diagnostics.jl
+    "diag_freq"=> 3600,               # frequency of diagnostics (second)
     "PCmax"    => [1.8, 1.8],         # Maximum primary production rate (per day)
     "PC_b"     => [0.6, 0.6],         # Shape parameter for size
     "Chl2N"    => 3.0,                # Maximum Chla:N ratio in phytoplankton
@@ -82,7 +84,7 @@ param_default=Dict(
     "v_zoo"    => 1.0e-5              # velocity of zooplankton, m/s
 )
 
-# Options 
+# Options
 #                    GridChoice, Gridoff, VelChoice, Veloff
 RunOption=RunOptions(false,      Dict(),  false,     Dict())
 

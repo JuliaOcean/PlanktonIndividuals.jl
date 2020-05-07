@@ -8,11 +8,12 @@ function PI_Model(grid, RunParam;
                   t = 0,
                   individuals = setup_agents(RunParam,grid),
                   nutrients,
-                  PAR = read_IR_input(RunParam.nTime, RunParam.ΔT, grid),
-                  temp = read_temp_input(RunParam.nTime, RunParam.ΔT, grid),
+                  PAR = read_IR_input(RunParam.ΔT, grid),
+                  temp = read_temp_input(RunParam.ΔT, grid),
                   params = RunParam.params,
+                  diags = diags_setup(RunParam.nTime, RunParam.ΔT, grid, RunParam.params["diag_freq"], RunParam.params["diag_inds"])
                   )
-    model = Model_struct(t,individuals, nutrients, grid, PAR, temp, params)
+    model = Model_struct(t,individuals, nutrients, grid, PAR, temp, params, diags)
     if RunParam.Zoo == true
         model.params["Grz_P"] = 0
     else

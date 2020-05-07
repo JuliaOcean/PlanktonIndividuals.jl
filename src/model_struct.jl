@@ -66,6 +66,7 @@ mutable struct Model_struct
     PAR::Array{Float64,4}       # PAR
     temp::Array{Float64,4}      # temperature
     params::Dict                # biogeochemical parameter set
+    diags::Array{Real,5}        # diagnostics
 end
 
 mutable struct pop_counts
