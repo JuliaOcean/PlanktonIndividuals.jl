@@ -53,7 +53,7 @@ Return a dataframe of next time step individuals, graze number, divide number, d
 """
 function phyt_update(model, ΔT::Int64)
     t = model.t
-    clock = t*ΔT%86400÷3600+1 # time of the day, 24-hour
+    clock = t%86400÷3600+1 # time of the day, 24-hour
     g = model.grid
     nutrients = model.nutrients
     params = model.params
@@ -72,7 +72,7 @@ function phyt_update(model, ΔT::Int64)
     consume = nutrients_init(g)
 
     # compute the time index of diagnostics
-    diag_t = t*ΔT÷params["diag_freq"]+1
+    diag_t = t÷params["diag_freq"]+1
 
     # iterate phytoplankton agents
     for i in 1:size(phyts_a,2)

@@ -1,5 +1,5 @@
 """
-    write_nut_nc_each_step(g, nut, t)
+    write_nut_nc_each_step(nut, filepath)
 Write a NetCDF file of nutrient fields at each time step
 Default filepath -> "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
 """
@@ -7,8 +7,9 @@ function write_nut_nc_each_step(nut::nutrient_fields, t::Int64, filepath::String
     C_attr = Dict("units" => "mmolC/m^3")
     N_attr = Dict("units" => "mmolN/m^3")
     P_attr = Dict("units" => "mmolP/m^3")
-    isfile(filepath) && rm(filepath)
-    ds = NCDataset(filepath, "c")
+    path = filepath*"nutrients/nut."*lpad(t,10,"0")*".nc"
+    isfile(path) && rm(path)
+    ds = NCDataset(path, "c")
     v1 = defVar(ds, "DIC", nut.DIC, ("xC", "yC", "zC"), attrib = C_attr)
     v2 = defVar(ds, "DOC", nut.DOC, ("xC", "yC", "zC"), attrib = C_attr)
     v3 = defVar(ds, "POC", nut.POC, ("xC", "yC", "zC"), attrib = C_attr)
