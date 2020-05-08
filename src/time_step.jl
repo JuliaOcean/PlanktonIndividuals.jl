@@ -3,7 +3,7 @@
 Update physiology part and nutrient field of 'model' one time step forward
 """
 function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::velocity, resultspath)
-    model.t = ΔT+1
+    model.t = model.t+ΔT+1
     phyts_b,counts_p,consume_p=phyt_update(model, ΔT)
     model.individuals.phytos = phyts_b
     if model.individuals.zoos ≠ nothing
@@ -18,7 +18,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::velocity, resultspath)
     model.nutrients = nutₜ
 end
 function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::velocity)
-    model.t = ΔT+1
+    model.t = model.t+ΔT+1
     phyts_b,counts_p,consume_p=phyt_update(model, ΔT)
     model.individuals.phytos = phyts_b
     if model.individuals.zoos ≠ nothing
@@ -31,7 +31,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::velocity)
     model.nutrients = nutₜ
 end
 function PI_TimeStep!(model::Model_Struct, ΔT, resultspath)
-    model.t = ΔT+1
+    model.t = model.t+ΔT+1
     phyts_b,counts_p,consume_p=phyt_update(model, ΔT)
     write_pop_dynamics(model.t, counts_p, resultspath)
     nutₜ,gtr = nut_update(model, consume_p, ΔT)

@@ -135,7 +135,7 @@ end
 """
     write_output(individuals,filepath,time)
 write model output of individuals at each time step in a binary file
-time = model.t*ΔT
+time = model.t
 """
 function write_output(individuals::individuals, filepath, time)
     phytos = individuals.phytos
