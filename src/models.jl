@@ -5,7 +5,7 @@ Default distribution of individuals is Normal distribution with 1.0 as mean and 
 Default PAR and temp are from ../samples
 """
 function PI_Model(grid, RunParam;
-                  t = 0,
+                  t = 1,
                   individuals = setup_agents(RunParam,grid),
                   nutrients,
                   PAR = read_IR_input(RunParam.ΔT, grid),
