@@ -53,7 +53,7 @@ Return a dataframe of next time step individuals, graze number, divide number, d
 """
 function phyt_update(model, ΔT::Int64)
     t = model.t
-    clock = t%86400÷3600+1 # time of the day, 24-hour
+    clock = t%86400÷ΔT+1 # time of the day, in number of time steps
     g = model.grid
     nutrients = model.nutrients
     params = model.params
