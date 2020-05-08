@@ -58,7 +58,6 @@ function phyt_update(model, ΔT::Int64)
     nutrients = model.nutrients
     params = model.params
     phyts_a = copy(model.individuals.phytos)
-    idiag = 0
 
     # load nutrients
     counts = pop_counts(params["P_Nsp"])
@@ -284,6 +283,7 @@ function phyt_update(model, ΔT::Int64)
             consume.POP[x, y, z] = consume.POP[x, y, z] + (phyt[8]+phyt[5]*params["R_PC"])*(1.0 - params["grazFracP"])
         end # graze
         # diagnostics
+        idiag = 0
         for it in size(params["diag_inds"],1)
             if params["diag_inds"][it] == 1
                 idiag += 1
