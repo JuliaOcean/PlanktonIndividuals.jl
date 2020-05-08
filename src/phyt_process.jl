@@ -94,7 +94,7 @@ function phyt_update(model, ΔT::Int64)
         if params["Grz_P"] == 0
             P_graz = false
         else
-            if (t*ΔT)%3600 ≠ 0 # check hourly
+            if t%3600 ≠ 1 # check hourly
                 P_graz = false
             else
                 # reg_graz = phyt[4]/params["Grz_P"]
@@ -112,7 +112,7 @@ function phyt_update(model, ΔT::Int64)
             if P_death == false # not natural death
                 # compute probabilities of division
                 P_dvi = false
-                if (t*ΔT)%3600 == 0 # check hourly
+                if t%3600 == 1 # check hourly
                     if (params["dvid_type"][sp] == 1) & (phyt[4] ≥ 2.0)
                         reg_size = params["dvid_stp"]*(phyt[4] - params["dvid_size"])
                         reg_divide = 0.2*(tanh(reg_size) + 1)
