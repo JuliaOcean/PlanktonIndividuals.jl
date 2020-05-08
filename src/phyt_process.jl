@@ -58,7 +58,7 @@ function phyt_update(model, ΔT::Int64)
     nutrients = model.nutrients
     params = model.params
     phyts_a = copy(model.individuals.phytos)
-    idiags = 0
+    idiag = 0
 
     # load nutrients
     counts = pop_counts(params["P_Nsp"])
