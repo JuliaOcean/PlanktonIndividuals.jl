@@ -17,9 +17,9 @@ function read_IR_input(ΔT::Int64,grid,
     itp_PAR = interpolate((t_htos,), PAR_hour, Gridded(Linear()));
     PAR = itp_PAR.(t_ΔT)
     # expand to the whole domain surface
-    PAR_domain = zeros(grid.Nx, grid.Ny, grid.Nz, size(PAR,1))
+    PAR_domain = zeros(grid.Nx, grid.Ny, size(PAR,1))
     for i in 1:size(PAR,1)
-        PAR_domain[:,:,end,i] .= PAR[i]
+        PAR_domain[:,:,i] .= PAR[i]
     end
     return PAR_domain
 end

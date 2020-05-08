@@ -89,4 +89,4 @@ param_default=Dict(
 RunOption=RunOptions(false,      Dict(),  false,     Dict())
 
 #                  nTime, ΔT,   params,        Zoo
-RunParam=RunParams(10,    600,  param_default, false)
+RunParam=RunParams(12,    600,  param_default, false)
