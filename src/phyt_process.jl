@@ -287,7 +287,7 @@ function phyt_update(model, ΔT::Int64)
         for it in size(params["diag_inds"],1)
             if params["diag_inds"][it] == 1
                 idiag += 1
-                model.diags.spcs[x,y,z,diat_t,sp,idiag] += diag_tmp[it,sp]
+                model.diags.spcs[x,y,z,diag_t,sp,idiag] += diag_tmp[it,sp]
             end
         end
     end # for loop to traverse the array of agents
