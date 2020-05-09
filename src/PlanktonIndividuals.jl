@@ -42,6 +42,6 @@ export
     # write output functions
     write_nut_nc_alltime, write_nut_nc_each_step,
     count_vertical_num, count_horizontal_num,
-    write_pop_dynamics, write_species_dynamics,
-    write_nut_cons, sort_species, write_output
+    write_species_dynamics, write_nut_cons,
+    sort_species, write_output
 end # module

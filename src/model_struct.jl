@@ -65,6 +65,7 @@ end
 
 mutable struct Diagnostics
     spcs::Array{Float64,6}       # for each species
+    pop::Array{Float64,6}        # for each species, population dynamics
     tr::Array{Float64,5}         # for tracers
 end
 

@@ -80,18 +80,6 @@ function write_nut_cons(g::grids, nutₜ::nutrient_fields, t::Int64, filepath)
 end
 
 """
-    write_pop_dynamics(t, phyts, counts, filepath)
-Write a brief summary of population changes at each time step into a txt file
-"""
-function write_pop_dynamics(t::Int64, counts, filepath)
-    POPio = open(filepath*"dynamic_population.txt","a");
-    for i in 1:length(counts.divid)
-        println(POPio,@sprintf("%4.0f  %4.0f  %4.0f  %4.0f",t,counts.divid[i],counts.graze[i],counts.death[i]))
-    end
-    close(POPio);
-end
-
-"""
     sort_species(phyts, Nsp)
 separate different species in different arrays
 """

@@ -10,14 +10,11 @@ Indices:
 7:  BS
 8:  Mainten
 9:  Exudation
-10: Division
-11: Grazing
-12: Death
-13: Bm
-14: Cq
-15: Nq
-16: Pq
-17: Chl
+10: Bm
+11: Cq
+12: Nq
+13: Pq
+14: Chl
 =#
 """
 """
@@ -27,8 +24,9 @@ function diags_setup(nTime::Int64, ΔT::Int64, grids, freq::Int64, diag_inds::Ar
     if nTime*ΔT%freq ≠ 0
         nt += 1
     end
-    diags = zeros(grids.Nx, grids.Ny, grids.Nz, nt, Nsp, ndiags)
-    return diags
+    diags_sp = zeros(grids.Nx, grids.Ny, grids.Nz, nt, Nsp, ndiags)
+    diags_pop = zeros(grids.Nx, grids.Ny, grids.Nz, nt, Nsp, 3)
+    return diags_sp, diags_pop
 end
 
 function diags_setup(nTime::Int64, ΔT::Int64, grids, freq::Int64, nTr::Int64)

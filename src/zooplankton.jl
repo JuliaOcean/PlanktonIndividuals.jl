@@ -136,9 +136,11 @@ function zoo_update(model, ΔT::Int64)
     temp = model.temp
     phyts = model.individuals.phytos
     zoos = model.individuals.zoos
-    counts = pop_counts(params["P_Nsp"])
     #set up a empty array to record all updated agents
-    zoos_b = []
+    zoos_b = Real[]
+
+    # compute the time index of diagnostics
+    diag_t = model.t÷params["diag_freq"]+1
 
     consume = nutrients_init(g)
     for i in 1:size(zoos,2)
@@ -175,7 +177,7 @@ function zoo_update(model, ΔT::Int64)
                 consume.POP[x, y, z] = consume.POP[x, y, z] + Pexport * (1.0 - params["grazFracP"])
                 for i in 1:params["P_Nsp"]
                     nums = length(findall(x -> x == i, phyts_feed[10,:]))
-                    counts.graze[i] = counts.graze[i] + nums
+                    model.diags.pop[x,y,z,diag_t,i,3] += nums
                 end
                 if feeding[3] == nothing
                     rand_walk!(zplk, g, travel_dist)
@@ -202,5 +204,5 @@ function zoo_update(model, ΔT::Int64)
         end
     end
     zoos_b = reshape(zoos_b, size(zoos,1), Int(length(zoos_b)/size(zoos,1)))
-    return zoos_b, counts, consume
+    return zoos_b, consume
 end

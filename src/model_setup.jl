@@ -130,10 +130,3 @@ function load_nut_initials(paths,g)
     nut = nutrient_fields(tmps[1],tmps[2],tmps[3],tmps[4],tmps[5],tmps[6],tmps[7],tmps[8],tmps[9],tmps[10])
     return nut
 end
-
-function pop_counts(nsp::Int64)
-    divid = zeros(nsp)
-    death = zeros(nsp)
-    graze = zeros(nsp)
-    return pop_counts(divid, death, graze)
-end
