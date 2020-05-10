@@ -20,8 +20,7 @@ function divide(phyt)
         phytos[10+(i-1)*its] = phyt[10]         # species
         phytos[11+(i-1)*its] = phyt[11].+ 1.0   # generation
         phytos[12+(i-1)*its] = 1.0              # age
-        phytos[13+(i-1)*its] = 0.0              # %CfromDOC
-        phytos[14+(i-1)*its] = phyt[4] .* 0.45  # age
+        phytos[13+(i-1)*its] = phyt[4] .* 0.45  # init size
     end
     return phytos
 end
