@@ -111,12 +111,18 @@ function phyt_update(model, ΔT::Int64)
                 # compute probabilities of division
                 P_dvi = false
                 if t%3600 == 1 # check hourly
-                    if (params["dvid_type"][sp] == 1) & (phyt[4] ≥ 2.0)
-                        reg_size = params["dvid_stp"]*(phyt[4] - params["dvid_size"])
-                        reg_divide = 0.2*(tanh(reg_size) + 1)
-                        P_dvi = rand(Bernoulli(reg_divide))
-                    elseif (params["dvid_type"][sp] == 2) & (phyt[4]-phyt[14]>params["dvid_add"])
-                        P_dvi = true
+                    if params["dvid_type"][sp] == 1
+                        if phyt[4] ≥ 2.0
+                            reg_size = params["dvid_stp"]*(phyt[4] - params["dvid_size"])
+                            reg_divide = 0.2*(tanh(reg_size) + 1)
+                            P_dvi = rand(Bernoulli(reg_divide))
+                        end
+                    elseif params["dvid_type"][sp] == 2
+                        if (phyt[4]-phyt[13]) > params["dvid_add"]
+                            P_dvi = true
+                        end
+                    else
+                        print("wrong division type! \n")
                     end
                 end
 
@@ -227,8 +233,6 @@ function phyt_update(model, ΔT::Int64)
                         phyt[6] = phyt[6] + VDOC
                         # add up consume of DOC by DOC uptake
                         consume.DOC[x, y, z] = consume.DOC[x, y, z] - VDOC
-                        # compute percentage of C that is from DOC uptake
-                        phyt[13] = VDOC/(VDOC+PP)
                     end
 
                     # maximum biosynthesis rate based on carbon availability

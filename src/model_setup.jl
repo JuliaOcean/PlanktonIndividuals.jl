@@ -13,7 +13,7 @@ function setup_agents(RunParam::RunParams,grid)
     var = params["P_var"]
     Cquota = params["P_Cquota"]
     Nsuper = params["P_Nsuper"]
-    phyts0 = zeros(Real,14,N*Nsp)
+    phyts0 = zeros(Real,13,N*Nsp)
     phyts0[1,:]  = rand(Uniform(grid.xF[2],grid.xF[end]), N*Nsp)   # x
     phyts0[2,:]  = rand(Uniform(grid.yF[2],grid.yF[end]), N*Nsp)   # y
     phyts0[3,:]  = rand(Uniform(grid.zF[2],grid.zF[end-1]), N*Nsp) # z
@@ -31,8 +31,7 @@ function setup_agents(RunParam::RunParams,grid)
     phyts0[9,:] = copy(phyts0[5,:]) .* params["Chl2Cint"]          # Chl
     phyts0[11,:] .= 1.0                                            # generation
     phyts0[12,:] .= 1.0                                            # age
-    phyts0[13,:] .= 0.0                                            # %fromDOC
-    phyts0[14,:] .= copy(phyts0[4,:])                              # init_size
+    phyts0[13,:] .= copy(phyts0[4,:])                              # init_size
 
     if RunParam.Zoo == false
         return individuals(phyts0,nothing)
