@@ -223,15 +223,17 @@ function phyt_update(model, ΔT::Int64)
                         DOCuptake = VDOCm*DOC/(DOC+params["KsatDOC"][sp])*regQc
                         VDOCcell = DOCuptake*phyt[5] # unit: mmol C/second/individual
                         VDOC = min(DOC*g.V[x,y,z]/10.0, VDOCcell*ΔT) # unit: mmol C/time step/individual
-                        #diagnostics
-                        if params["diag_inds"][6] == 1
-                            idiag += 1
-                            model.diags.spcs[x,y,z,diag_t,sp,idiag] += VDOC
-                        end
                         # update C reserve of the individual
                         phyt[6] = phyt[6] + VDOC
                         # add up consume of DOC by DOC uptake
                         consume.DOC[x, y, z] = consume.DOC[x, y, z] - VDOC
+                    else
+                        VDOC = 0.0
+                    end
+                    #diagnostics
+                    if params["diag_inds"][6] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += VDOC
                     end
 
                     # maximum biosynthesis rate based on carbon availability
