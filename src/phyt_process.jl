@@ -207,11 +207,6 @@ function phyt_update(model, ΔT::Int64)
                     # Compute extra cost for biosynthesis, return a rate (per hour)
                     respir_extra = params["respir_ex"]*phyt[4]^params["respir_b"]
 
-                    # C, N, P storages update
-                    phyt[6] = phyt[6] + PP
-                    phyt[7] = phyt[7]+ VNH4 + VNO3
-                    phyt[8] = phyt[8]+ VPO4
-
                     # DOC uptake if allowed
                     if params["useDOC"][sp] == 1
                         # read in DOC value at the grid of the individual
@@ -236,8 +231,8 @@ function phyt_update(model, ΔT::Int64)
 
                     # C, N, P storages update
                     phyt[6] = phyt[6] + PP + VDOC
-                    phyt[7] = phyt[7]+ VNH4 + VNO3
-                    phyt[8] = phyt[8]+ VPO4
+                    phyt[7] = phyt[7] + VNH4 + VNO3
+                    phyt[8] = phyt[8] + VPO4
 
                     # maximum biosynthesis rate based on carbon availability
                     k_mtb = params["k_mtb"]*phyt[4]^params["b_k_mtb"]
@@ -276,8 +271,9 @@ function phyt_update(model, ΔT::Int64)
                     phyt[12]= phyt[12] + 1.0*(ΔT/3600)
 
                     # normalized by standard C quota
-                    dsize= (PP + VDOC - MaintenC - excretC)/(params["P_Cquota"][sp]*params["P_Nsuper"]) 
-                    phyt[4] = max(0.0,phyt[4]+dsize)
+                    # dsize= (PP + VDOC - MaintenC - excretC)/(params["P_Cquota"][sp]*params["P_Nsuper"])
+                    # phyt[4] = max(0.0,phyt[4]+dsize)
+                    phyt[4] = (phyt[5] + phyt[6])/(params["P_Cquota"][sp]*params["P_Nsuper"])
 
                     #diagnostics
                     if params["diag_inds"][10] == 1
