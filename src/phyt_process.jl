@@ -71,6 +71,7 @@ function phyt_update(model, ΔT::Int64)
 
     # compute the time index of diagnostics
     diag_t = t÷params["diag_freq"]+1
+    npop = zeros(Int, g.Nx, g.Ny, g.Nz, 2)
 
     # iterate phytoplankton agents
     for i in 1:size(phyts_a,2)
@@ -85,6 +86,7 @@ function phyt_update(model, ΔT::Int64)
 
         #diagnostics
         idiag = 0
+        npop[x, y, z, sp] += 1
 
         # compute probabilities of grazing
         # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
@@ -328,7 +330,9 @@ function phyt_update(model, ΔT::Int64)
         end # graze
     end # for loop to traverse the array of agents
     # diagnostics
-    model.diags.tr[:,:,:,diag_t,1] = PAR
+    model.diags.tr[:,:,:,diag_t,1] += PAR
+    model.diags.tr[:,:,:,diag_t,2] += npop[:,:,1]
+    model.diags.tr[:,:,:,diag_t,3] += npop[:,:,2]
     phyts_b = reshape(phyts_b,size(phyts_a,1),Int(length(phyts_b)/size(phyts_a,1)))
     return phyts_b,consume
 end # for loop of time
