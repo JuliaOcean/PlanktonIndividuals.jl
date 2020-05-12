@@ -331,8 +331,8 @@ function phyt_update(model, ΔT::Int64)
     end # for loop to traverse the array of agents
     # diagnostics
     model.diags.tr[:,:,:,diag_t,1] += PAR
-    model.diags.tr[:,:,:,diag_t,2] += npop[:,:,1]
-    model.diags.tr[:,:,:,diag_t,3] += npop[:,:,2]
+    model.diags.tr[:,:,:,diag_t,2] += npop[:,:,:,1]
+    model.diags.tr[:,:,:,diag_t,3] += npop[:,:,:,2]
     phyts_b = reshape(phyts_b,size(phyts_a,1),Int(length(phyts_b)/size(phyts_a,1)))
     return phyts_b,consume
 end # for loop of time
