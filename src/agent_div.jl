@@ -93,8 +93,8 @@ end
     agent_diffusionX(phyt,g,κh)
 Using a random walk algorithm for horizontal diffusion
 """
-function agent_diffusionX(p_x,g,κh)
-    p_x += rand(Uniform(-1.0,1.0)) * κh
+function agent_diffusionX(p_x, g, κh, ΔT::Int64)
+    p_x += rand(Uniform(-1.0,1.0)) * κh * ΔT
     p_x = periodic_domain(g.xF, p_x)
     return p_x
 end
@@ -103,8 +103,8 @@ end
     agent_diffusionY(phyt,g,κh)
 Using a random walk algorithm for horizontal diffusion
 """
-function agent_diffusionY(p_y,g,κh)
-    p_y += rand(Uniform(-1.0,1.0)) * κh
+function agent_diffusionY(p_y, g, κh, ΔT::Int64)
+    p_y += rand(Uniform(-1.0,1.0)) * κh * ΔT
     p_y = periodic_domain(g.yF, p_y)
     return p_y
 end
@@ -112,8 +112,8 @@ end
     agent_diffusionZ(phyt,g,κv)
 Using a random walk algorithm for vertical diffusion
 """
-function agent_diffusionZ(p_z,g,κv)
-    p_z += rand(Uniform(-1.0,1.0)) * κv
+function agent_diffusionZ(p_z, g, κv, ΔT::Int64)
+    p_z += rand(Uniform(-1.0,1.0)) * κv * ΔT
     p_z = max(g.zF[2], min(g.zF[end-1], p_z))
     return p_z
 end

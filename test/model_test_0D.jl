@@ -9,9 +9,8 @@ TP = sum((model.nutrients.PO4 .+ model.nutrients.DOP .+ model.nutrients.POP)
          .* g.V)
 TP = TP + sum(model.individuals.phytos[8,:] + model.individuals.phytos[5,:]*model.params["R_PC"])
 for i in 1:10
-    model.t += 1
-    t = model.t
-    phyts_b,counts_p,consume_p=PlanktonIndividuals.phyt_update(model, RunParam.ΔT)
+    model.t = model.t+RunParam.ΔT
+    phyts_b,consume_p=PlanktonIndividuals.phyt_update(model, RunParam.ΔT)
     model.individuals.phytos = phyts_b
     nutₜ,gtr = PlanktonIndividuals.nut_update(model, consume_p, RunParam.ΔT)
     model.nutrients = nutₜ

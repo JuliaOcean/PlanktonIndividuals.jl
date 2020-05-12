@@ -1,5 +1,5 @@
 """
-    write_nut_nc_each_step(g, nut, t)
+    write_nut_nc_each_step(nut, filepath)
 Write a NetCDF file of nutrient fields at each time step
 Default filepath -> "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
 """
@@ -7,8 +7,9 @@ function write_nut_nc_each_step(nut::nutrient_fields, t::Int64, filepath::String
     C_attr = Dict("units" => "mmolC/m^3")
     N_attr = Dict("units" => "mmolN/m^3")
     P_attr = Dict("units" => "mmolP/m^3")
-    isfile(filepath) && rm(filepath)
-    ds = NCDataset(filepath, "c")
+    path = filepath*"nutrients/nut."*lpad(t,10,"0")*".nc"
+    isfile(path) && rm(path)
+    ds = NCDataset(path, "c")
     v1 = defVar(ds, "DIC", nut.DIC, ("xC", "yC", "zC"), attrib = C_attr)
     v2 = defVar(ds, "DOC", nut.DOC, ("xC", "yC", "zC"), attrib = C_attr)
     v3 = defVar(ds, "POC", nut.POC, ("xC", "yC", "zC"), attrib = C_attr)
@@ -79,18 +80,6 @@ function write_nut_cons(g::grids, nutₜ::nutrient_fields, t::Int64, filepath)
 end
 
 """
-    write_pop_dynamics(t, phyts, counts, filepath)
-Write a brief summary of population changes at each time step into a txt file
-"""
-function write_pop_dynamics(t::Int64, counts, filepath)
-    POPio = open(filepath*"dynamic_population.txt","a");
-    for i in 1:length(counts.divid)
-        println(POPio,@sprintf("%4.0f  %4.0f  %4.0f  %4.0f",t,counts.divid[i],counts.graze[i],counts.death[i]))
-    end
-    close(POPio);
-end
-
-"""
     sort_species(phyts, Nsp)
 separate different species in different arrays
 """
@@ -134,7 +123,7 @@ end
 """
     write_output(individuals,filepath,time)
 write model output of individuals at each time step in a binary file
-time = model.t*ΔT
+time = model.t
 """
 function write_output(individuals::individuals, filepath, time)
     phytos = individuals.phytos

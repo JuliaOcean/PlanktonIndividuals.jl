@@ -1,11 +1,10 @@
 """
     read_default_IR_input(nTime, ΔT, grid)
-    'nTime' -> number of time step
     'ΔT' -> length of each time step
     'grid' -> grid information
 Read input of irradiance from default binary file
 """
-function read_IR_input(nTime::Int64, ΔT::Int64,grid,
+function read_IR_input(ΔT::Int64,grid,
                        path = dirname(pathof(PlanktonIndividuals))*"/../samples/PAR.bin")
     # irradiance(μmol photons/s/m^2)
     # start from mid-night
@@ -16,33 +15,23 @@ function read_IR_input(nTime::Int64, ΔT::Int64,grid,
     t_ΔT = collect(1:ΔT:86400)
     # interpolation of PAR time series
     itp_PAR = interpolate((t_htos,), PAR_hour, Gridded(Linear()));
-    PAR_itped = itp_PAR.(t_ΔT)
-    # deal with nTime
-    if nTime*ΔT < 86400
-        PAR = PAR_itped[1:nTime]
-    else
-        nday = (nTime*ΔT)÷86400
-        res = (nTime*ΔT)%86400÷ΔT
-        PAR = repeat(PAR_itped,nday)
-        PAR = vcat(PAR,PAR_itped[1:res])
-    end
+    PAR = itp_PAR.(t_ΔT)
     # expand to the whole domain surface
-    PAR_domain = zeros(grid.Nx, grid.Ny, grid.Nz, size(PAR,1))
+    PAR_domain = zeros(grid.Nx, grid.Ny, size(PAR,1))
     for i in 1:size(PAR,1)
-        PAR_domain[:,:,end,i] .= PAR[i]
+        PAR_domain[:,:,i] .= PAR[i]
     end
     return PAR_domain
 end
 
 """
     read_default_temp_input(nTime, ΔT, grid, ∂T∂z)
-    'nTime' -> number of time step
     'ΔT' -> length of each time step
     'grid' -> grid information
     '∂T∂z' -> linear vertical temp gradient
 Read input of temperature from default binary file
 """
-function read_temp_input(nTime::Int64, ΔT::Int64, grid, ∂T∂z=0.04,
+function read_temp_input(ΔT::Int64, grid, ∂T∂z=0.04,
                          path = dirname(pathof(PlanktonIndividuals))*"/../samples/temp.bin")
     temp_hour = deserialize(path)
     # convert hour to second in a day
@@ -51,16 +40,7 @@ function read_temp_input(nTime::Int64, ΔT::Int64, grid, ∂T∂z=0.04,
     t_ΔT = collect(1:ΔT:86400)
     # interpolation of PAR time series
     itp_temp = interpolate((t_htos,), temp_hour, Gridded(Linear()));
-    temp_itped = itp_temp.(t_ΔT)
-    # deal with nTime
-    if nTime*ΔT < 86400
-        temp = temp_itped[1:nTime]
-    else
-        nday = (nTime*ΔT)÷86400
-        res = (nTime*ΔT)%86400÷ΔT
-        temp = repeat(temp_itped,nday)
-        temp = vcat(temp,temp_itped[1:res])
-    end
+    temp = itp_temp.(t_ΔT)
     # espand to the whole domain
     temp_domain = zeros(grid.Nx, grid.Ny, grid.Nz, size(temp,1))
     for i in 1:size(temp,1)
@@ -151,7 +131,7 @@ function which_grid(phyt, g)
     x = phyt[1]; y = phyt[2]; z = phyt[3];
     xind = findall(t -> t≤x, g.xF[2:end-1])[end]
     yind = findall(t -> t≤y, g.yF[2:end-1])[end]
-    zind = findall(t -> t≤z, g.zF[2:end-1])[end]
+    zind = findall(t -> t≤z, g.zF[2:end-2])[end]
     return xind, yind, zind
 end
 

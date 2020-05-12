@@ -20,8 +20,7 @@ function divide(phyt)
         phytos[10+(i-1)*its] = phyt[10]         # species
         phytos[11+(i-1)*its] = phyt[11].+ 1.0   # generation
         phytos[12+(i-1)*its] = 1.0              # age
-        phytos[13+(i-1)*its] = 0.0              # %CfromDOC
-        phytos[14+(i-1)*its] = phyt[4] .* 0.45  # age
+        phytos[13+(i-1)*its] = phyt[4] .* 0.45  # init size
     end
     return phytos
 end
@@ -53,39 +52,46 @@ Return a dataframe of next time step individuals, graze number, divide number, d
 """
 function phyt_update(model, ΔT::Int64)
     t = model.t
+    clock = t%86400÷ΔT+1 # time of the day, in number of time steps
     g = model.grid
     nutrients = model.nutrients
     params = model.params
     phyts_a = copy(model.individuals.phytos)
 
     # load nutrients
-    counts = pop_counts(params["P_Nsp"])
     chl_num = count_chl(phyts_a, g)
 
     # Compute light attenuation, compute from surface
-    surfPAR = model.PAR[:,:,end,t]
-    model.PAR[:,:,:,t] = calc_PAR(surfPAR, g, chl_num, params["katten_c"], params["katten_w"])
+    surfPAR = model.input.PAR[:,:,clock]
+    PAR = calc_PAR(surfPAR, g, chl_num, params["katten_c"], params["katten_w"])
 
-    #set up a empty array to record all updated agents
+    # set up a empty array to record all updated agents
     phyts_b = Real[]
     consume = nutrients_init(g)
+
+    # compute the time index of diagnostics
+    diag_t = t÷params["diag_freq"]+1
+
     # iterate phytoplankton agents
     for i in 1:size(phyts_a,2)
         phyt = phyts_a[:,i]
         sp = Int(phyt[10])
         x, y, z = which_grid(phyt, g)
-        temp_t = model.temp[x,y,z,t]
-        IR_t = model.PAR[x,y,z,t]
+        temp_t = model.input.temp[x,y,z,clock]
+        IR_t = PAR[x,y,z]
         NH4 = max(0.0, nutrients.NH4[x, y, z])
         NO3 = max(0.0, nutrients.NO3[x, y, z])
         PO4 = max(0.0, nutrients.PO4[x, y, z])
+
+        #diagnostics
+        idiag = 0
 
         # compute probabilities of grazing
         # Hypothesis: the population of grazers is large enough to graze on phytoplanktons
         if params["Grz_P"] == 0
             P_graz = false
         else
-            if (t*ΔT)%3600 ≠ 0 # check hourly
+            if t%3600 ≠ 1 # check hourly
                 P_graz = false
             else
                 # reg_graz = phyt[4]/params["Grz_P"]
@@ -103,17 +109,28 @@ function phyt_update(model, ΔT::Int64)
             if P_death == false # not natural death
                 # compute probabilities of division
                 P_dvi = false
-                if (t*ΔT)%3600 == 0 # check hourly
-                    if (params["dvid_type"][sp] == 1) & (phyt[4] ≥ 2.0)
-                        reg_size = params["dvid_stp"]*(phyt[4] - params["dvid_size"])
-                        reg_divide = 0.2*(tanh(reg_size) + 1)
-                        P_dvi = rand(Bernoulli(reg_divide))
-                    elseif (params["dvid_type"][sp] == 2) & (phyt[4]-phyt[14]>params["dvid_add"])
-                        P_dvi = true
+                if t%3600 == 1 # check hourly
+                    if params["dvid_type"][sp] == 1
+                        if phyt[4] ≥ 2.0
+                            reg_size = params["dvid_stp"]*(phyt[4] - params["dvid_size"])
+                            reg_divide = 0.2*(tanh(reg_size) + 1)
+                            P_dvi = rand(Bernoulli(reg_divide))
+                        end
+                    elseif params["dvid_type"][sp] == 2
+                        if (phyt[4]-phyt[13]) > params["dvid_add"]
+                            P_dvi = true
+                        end
+                    else
+                        print("wrong division type! \n")
                     end
                 end
 
                 if P_dvi == false # not divide
+                    # diagnostics
+                    if params["diag_inds"][1] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += 1
+                    end
                     # Compute photosynthesis rate
                     α_I = params["α"]*IR_t
                     Tempstd = exp(params["TempAe"]*(1.0/(temp_t+273.15)-1.0/params["Tempref"]))
@@ -128,6 +145,11 @@ function phyt_update(model, ΔT::Int64)
                     end
                     PS = PC*phyt[5] # unit: mmol C/second/individual
                     PP = PS*ΔT # unit: mmol C/time step/individual
+                    #diagnostics
+                    if params["diag_inds"][2] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += PP
+                    end
 
                     # Compute cell-based N uptake rate according Droop limitation
                     Qn = (phyt[7]+phyt[5]*params["R_NC"])/(phyt[5]+phyt[6])
@@ -143,6 +165,15 @@ function phyt_update(model, ΔT::Int64)
                     VNO3cell = NO3uptake*phyt[5] # unit: mmol N/second/individual
                     VNH4 = min(NH4*g.V[x,y,z]/10.0, VNH4cell*ΔT) # unit: mmol N/time step/individual
                     VNO3 = min(NO3*g.V[x,y,z]/10.0, VNO3cell*ΔT) # unit: mmol N/time step/individual
+                    #diagnostics
+                    if params["diag_inds"][3] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += VNO3
+                    end
+                    if params["diag_inds"][4] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += VNH4
+                    end
 
                     # Compute cell-based P uptake rate according Droop limitation
                     Qp = (phyt[8]+phyt[5]*params["R_PC"])/(phyt[5]+phyt[6])
@@ -153,6 +184,11 @@ function phyt_update(model, ΔT::Int64)
                     Puptake = VPm*PO4/(PO4+params["KsatP"][sp])*regQp
                     VPcell = Puptake*phyt[5] # unit: mmol P/second/individual
                     VPO4 = min(PO4*g.V[x,y,z]/10.0, VPcell*ΔT) # unit: mmol P/time step/individual
+                    #diagnostics
+                    if params["diag_inds"][5] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += VPO4
+                    end
 
                     # Compute the ratio of chl synthesis and N uptake
                     # ρ equals to ratio of the realised quantum efficiency for photosynthesis divided by the maximum efficiency
@@ -191,13 +227,19 @@ function phyt_update(model, ΔT::Int64)
                         phyt[6] = phyt[6] + VDOC
                         # add up consume of DOC by DOC uptake
                         consume.DOC[x, y, z] = consume.DOC[x, y, z] - VDOC
-                        # compute percentage of C that is from DOC uptake
-                        phyt[13] = VDOC/(VDOC+PP)
+                    else
+                        VDOC = 0.0
+                    end
+                    #diagnostics
+                    if params["diag_inds"][6] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += VDOC
                     end
 
                     # maximum biosynthesis rate based on carbon availability
                     k_mtb = params["k_mtb"]*phyt[4]^params["b_k_mtb"]
                     BS_Cmax = β*k_mtb*ΔT*phyt[6]/(1+respir_extra)
+                    MaintenC = (1-β)*BS_Cmax/β
 
                     # maximum allowed biosynthesis rate by Nq and Pq
                     BS_Nmax = k_mtb*ΔT*phyt[7]/params["R_NC"]
@@ -207,9 +249,22 @@ function phyt_update(model, ΔT::Int64)
                     BS_C = min(BS_Cmax, BS_Nmax, BS_Pmax)
                     excretC = max(0.0, BS_Cmax-BS_C)
 
+                    #diagnostics
+                    if params["diag_inds"][7] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += BS_C
+                    end
+                    if params["diag_inds"][8] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += MaintenC
+                    end
+                    if params["diag_inds"][9] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += excretC
+                    end
+
                     # update quotas, biomass, Chla and cell size etc.
                     CostC = BS_C*(1+respir_extra)
-                    MaintenC = (1-β)*BS_C/β
                     phyt[5] = phyt[5] + BS_C
                     phyt[6] = phyt[6] - CostC -MaintenC - excretC
                     phyt[7] = phyt[7]- BS_C*params["R_NC"]
@@ -219,6 +274,28 @@ function phyt_update(model, ΔT::Int64)
                     phyt[9] = phyt[9] + ρ_chl*BS_C*params["R_NC"]
                     phyt[12]= phyt[12] + 1.0*(ΔT/3600)
 
+                    #diagnostics
+                    if params["diag_inds"][10] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += phyt[5]
+                    end
+                    if params["diag_inds"][11] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += phyt[6]
+                    end
+                    if params["diag_inds"][12] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += phyt[7]
+                    end
+                    if params["diag_inds"][13] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += phyt[8]
+                    end
+                    if params["diag_inds"][14] == 1
+                        idiag += 1
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += phyt[9]
+                    end
+
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - BS_C
                     consume.DOC[x, y, z] = consume.DOC[x, y, z] + excretC
                     consume.NH4[x, y, z] = consume.NH4[x, y, z] - VNH4
@@ -226,7 +303,7 @@ function phyt_update(model, ΔT::Int64)
                     consume.PO4[x, y, z] = consume.PO4[x, y, z] - VPO4
                     append!(phyts_b,phyt)
                 else # divide
-                    counts.divid[sp] += 1
+                    model.diags.pop[x,y,z,diag_t,sp,1] += 1
                     phyts = divide(phyt)
                     append!(phyts_b,phyts)
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + phyt[5]*0.1 # consume C when cell is divided
@@ -238,10 +315,10 @@ function phyt_update(model, ΔT::Int64)
                 consume.POC[x, y, z] = consume.POC[x, y, z] + (phyt[5]+phyt[6])*(1.0 - params["mortFracC"])
                 consume.PON[x, y, z] = consume.PON[x, y, z] + (phyt[7]+phyt[5]*params["R_NC"])*(1.0 - params["mortFracN"])
                 consume.POP[x, y, z] = consume.POP[x, y, z] + (phyt[8]+phyt[5]*params["R_PC"])*(1.0 - params["mortFracP"])
-                counts.death[sp] += 1
+                model.diags.pop[x,y,z,diag_t,sp,2] += 1
             end # naturan death
         else #grazed, no sloppy feeding here, all nutrients go back to organic pools
-            counts.graze[sp] += 1
+            model.diags.pop[x,y,z,diag_t,sp,3] += 1
             consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt[5]+phyt[6])*params["grazFracC"]
             consume.DON[x, y, z] = consume.DON[x, y, z] + (phyt[7]+phyt[5]*params["R_NC"])*params["grazFracN"]
             consume.DOP[x, y, z] = consume.DOP[x, y, z] + (phyt[8]+phyt[5]*params["R_PC"])*params["grazFracP"]
@@ -249,7 +326,9 @@ function phyt_update(model, ΔT::Int64)
             consume.PON[x, y, z] = consume.PON[x, y, z] + (phyt[7]+phyt[5]*params["R_NC"])*(1.0 - params["grazFracN"])
             consume.POP[x, y, z] = consume.POP[x, y, z] + (phyt[8]+phyt[5]*params["R_PC"])*(1.0 - params["grazFracP"])
         end # graze
-    end # while loop to traverse the array of agents
+    end # for loop to traverse the array of agents
+    # diagnostics
+    model.diags.tr[:,:,:,diag_t,1] = PAR
     phyts_b = reshape(phyts_b,size(phyts_a,1),Int(length(phyts_b)/size(phyts_a,1)))
-    return phyts_b,counts,consume
+    return phyts_b,consume
 end # for loop of time
