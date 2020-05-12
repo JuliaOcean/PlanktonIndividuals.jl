@@ -113,7 +113,7 @@ function phyt_update(model, ΔT::Int64)
                 P_dvi = false
                 if t%3600 == 1 # check hourly
                     if params["dvid_type"][sp] == 1
-                        if phyt[4] ≥ 2.0
+                        if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             reg_size = params["dvid_stp"]*(phyt[4] - params["dvid_size"])
                             reg_divide = 0.2*(tanh(reg_size) + 1)
                             P_dvi = rand(Bernoulli(reg_divide))
@@ -225,10 +225,6 @@ function phyt_update(model, ΔT::Int64)
                         DOCuptake = VDOCm*DOC/(DOC+params["KsatDOC"][sp])*regQc
                         VDOCcell = DOCuptake*phyt[5] # unit: mmol C/second/individual
                         VDOC = min(DOC*g.V[x,y,z]/10.0, VDOCcell*ΔT) # unit: mmol C/time step/individual
-                        # update C reserve of the individual
-                        phyt[6] = phyt[6] + VDOC
-                        # add up consume of DOC by DOC uptake
-                        consume.DOC[x, y, z] = consume.DOC[x, y, z] - VDOC
                     else
                         VDOC = 0.0
                     end
@@ -237,6 +233,11 @@ function phyt_update(model, ΔT::Int64)
                         idiag += 1
                         model.diags.spcs[x,y,z,diag_t,sp,idiag] += VDOC
                     end
+
+                    # C, N, P storages update
+                    phyt[6] = phyt[6] + PP + VDOC
+                    phyt[7] = phyt[7]+ VNH4 + VNO3
+                    phyt[8] = phyt[8]+ VPO4
 
                     # maximum biosynthesis rate based on carbon availability
                     k_mtb = params["k_mtb"]*phyt[4]^params["b_k_mtb"]
@@ -271,10 +272,12 @@ function phyt_update(model, ΔT::Int64)
                     phyt[6] = phyt[6] - CostC -MaintenC - excretC
                     phyt[7] = phyt[7]- BS_C*params["R_NC"]
                     phyt[8] = phyt[8]- BS_C*params["R_PC"]
-                    dsize= BS_C/(params["P_Cquota"][sp]*params["P_Nsuper"]) # normalized by standard C quota
-                    phyt[4] = max(0.0,phyt[4]+dsize)
                     phyt[9] = phyt[9] + ρ_chl*BS_C*params["R_NC"]
                     phyt[12]= phyt[12] + 1.0*(ΔT/3600)
+
+                    # normalized by standard C quota
+                    dsize= (PP + VDOC - MaintenC - excretC)/(params["P_Cquota"][sp]*params["P_Nsuper"]) 
+                    phyt[4] = max(0.0,phyt[4]+dsize)
 
                     #diagnostics
                     if params["diag_inds"][10] == 1
@@ -299,7 +302,7 @@ function phyt_update(model, ΔT::Int64)
                     end
 
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - BS_C
-                    consume.DOC[x, y, z] = consume.DOC[x, y, z] + excretC
+                    consume.DOC[x, y, z] = consume.DOC[x, y, z] + excretC - VDOC
                     consume.NH4[x, y, z] = consume.NH4[x, y, z] - VNH4
                     consume.NO3[x, y, z] = consume.NO3[x, y, z] - VNO3
                     consume.PO4[x, y, z] = consume.PO4[x, y, z] - VPO4
