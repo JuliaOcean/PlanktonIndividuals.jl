@@ -119,8 +119,11 @@ function phyt_update(model, ΔT::Int64)
                             P_dvi = rand(Bernoulli(reg_divide))
                         end
                     elseif params["dvid_type"][sp] == 2
-                        if (phyt[4]-phyt[13]) > params["dvid_add"]
-                            P_dvi = true
+                        add_size = phyt[4] - phyt[13]
+                        if add_size > params["dvid_add"]
+                            reg_size = params["dvid_stp"]*(add_size - params["dvid_add"])
+                            reg_divide = 0.2*(tanh(reg_size) + 1)
+                            P_dvi = rand(Bernoulli(reg_divide))
                         end
                     else
                         print("wrong division type! \n")
