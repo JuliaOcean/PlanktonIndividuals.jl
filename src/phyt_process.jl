@@ -125,6 +125,12 @@ function phyt_update(model, ΔT::Int64)
                             reg_divide = 0.2*(tanh(reg_size) + 1)
                             P_dvi = rand(Bernoulli(reg_divide))
                         end
+                    elseif params["dvid_type"][sp] == 3
+                        if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
+                            reg_age = params["dvid_stp"]*(phyt[12] - params["dvid_age"])
+                            reg_divide = 0.2*(tanh(reg_age) + 1)
+                            P_dvi = rand(Bernoulli(reg_divide))
+                        end
                     else
                         print("wrong division type! \n")
                     end
