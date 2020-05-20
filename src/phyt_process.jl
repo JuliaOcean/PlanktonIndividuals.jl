@@ -120,7 +120,7 @@ function phyt_update(model, ΔT::Int64)
                         end
                     elseif params["dvid_type"][sp] == 2
                         add_size = phyt[4] - phyt[13]
-                        if add_size > params["dvid_add"]
+                        if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             reg_size = params["dvid_stp"]*(add_size - params["dvid_add"])
                             reg_divide = 0.2*(tanh(reg_size) + 1)
                             P_dvi = rand(Bernoulli(reg_divide))
