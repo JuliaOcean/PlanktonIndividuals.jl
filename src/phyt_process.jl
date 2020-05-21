@@ -71,7 +71,7 @@ function phyt_update(model, ΔT::Int64)
 
     # compute the time index of diagnostics
     diag_t = t÷params["diag_freq"]+1
-    npop = zeros(Int, g.Nx, g.Ny, g.Nz, 2)
+    npop = zeros(Int, g.Nx, g.Ny, g.Nz, params["P_Nsp"])
 
     # iterate phytoplankton agents
     for i in 1:size(phyts_a,2)
@@ -112,15 +112,31 @@ function phyt_update(model, ΔT::Int64)
                 # compute probabilities of division
                 P_dvi = false
                 if t%3600 == 1 # check hourly
-                    if params["dvid_type"][sp] == 1
-                        if phyt[4] ≥ 2.0
+                    if params["dvid_type"][sp] == 1 # sizer-like cell division
+                        if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             reg_size = params["dvid_stp"]*(phyt[4] - params["dvid_size"])
                             reg_divide = 0.2*(tanh(reg_size) + 1)
                             P_dvi = rand(Bernoulli(reg_divide))
                         end
-                    elseif params["dvid_type"][sp] == 2
-                        if (phyt[4]-phyt[13]) > params["dvid_add"]
-                            P_dvi = true
+                    elseif params["dvid_type"][sp] == 2 # adder-like cell division
+                        add_size = phyt[4] - phyt[13]
+                        if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
+                            reg_size = params["dvid_stp"]*(add_size - params["dvid_add"])
+                            reg_divide = 0.2*(tanh(reg_size) + 1)
+                            P_dvi = rand(Bernoulli(reg_divide))
+                        end
+                    elseif params["dvid_type"][sp] == 3 # timer-like (age) cell division
+                        if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
+                            reg_age = params["dvid_stp"]*(phyt[12] - params["dvid_age"])
+                            reg_divide = 0.2*(tanh(reg_age) + 1)
+                            P_dvi = rand(Bernoulli(reg_divide))
+                        end
+                    elseif params["dvid_type"][sp] == 4 # timer-like (circadian clock) cell division
+                        if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
+                            # use light intensity to indicate circadian clock in the cell
+                            reg_par = max(0.0, params["dvid_PAR"] - IR_t)
+                            reg_divide = 0.2*(tanh(reg_par) + 1)
+                            P_dvi = rand(Bernoulli(reg_divide))
                         end
                     else
                         print("wrong division type! \n")
@@ -207,11 +223,6 @@ function phyt_update(model, ΔT::Int64)
                     # Compute extra cost for biosynthesis, return a rate (per hour)
                     respir_extra = params["respir_ex"]*phyt[4]^params["respir_b"]
 
-                    # C, N, P storages update
-                    phyt[6] = phyt[6] + PP
-                    phyt[7] = phyt[7]+ VNH4 + VNO3
-                    phyt[8] = phyt[8]+ VPO4
-
                     # DOC uptake if allowed
                     if params["useDOC"][sp] == 1
                         # read in DOC value at the grid of the individual
@@ -225,10 +236,6 @@ function phyt_update(model, ΔT::Int64)
                         DOCuptake = VDOCm*DOC/(DOC+params["KsatDOC"][sp])*regQc
                         VDOCcell = DOCuptake*phyt[5] # unit: mmol C/second/individual
                         VDOC = min(DOC*g.V[x,y,z]/10.0, VDOCcell*ΔT) # unit: mmol C/time step/individual
-                        # update C reserve of the individual
-                        phyt[6] = phyt[6] + VDOC
-                        # add up consume of DOC by DOC uptake
-                        consume.DOC[x, y, z] = consume.DOC[x, y, z] - VDOC
                     else
                         VDOC = 0.0
                     end
@@ -237,6 +244,11 @@ function phyt_update(model, ΔT::Int64)
                         idiag += 1
                         model.diags.spcs[x,y,z,diag_t,sp,idiag] += VDOC
                     end
+
+                    # C, N, P storages update
+                    phyt[6] = phyt[6] + PP + VDOC
+                    phyt[7] = phyt[7] + VNH4 + VNO3
+                    phyt[8] = phyt[8] + VPO4
 
                     # maximum biosynthesis rate based on carbon availability
                     k_mtb = params["k_mtb"]*phyt[4]^params["b_k_mtb"]
@@ -271,10 +283,13 @@ function phyt_update(model, ΔT::Int64)
                     phyt[6] = phyt[6] - CostC -MaintenC - excretC
                     phyt[7] = phyt[7]- BS_C*params["R_NC"]
                     phyt[8] = phyt[8]- BS_C*params["R_PC"]
-                    dsize= BS_C/(params["P_Cquota"][sp]*params["P_Nsuper"]) # normalized by standard C quota
-                    phyt[4] = max(0.0,phyt[4]+dsize)
                     phyt[9] = phyt[9] + ρ_chl*BS_C*params["R_NC"]
                     phyt[12]= phyt[12] + 1.0*(ΔT/3600)
+
+                    # normalized by standard C quota
+                    # dsize= (PP + VDOC - MaintenC - excretC)/(params["P_Cquota"][sp]*params["P_Nsuper"])
+                    # phyt[4] = max(0.0,phyt[4]+dsize)
+                    phyt[4] = (phyt[5] + phyt[6])/(params["P_Cquota"][sp]*params["P_Nsuper"])
 
                     #diagnostics
                     if params["diag_inds"][10] == 1
@@ -299,7 +314,7 @@ function phyt_update(model, ΔT::Int64)
                     end
 
                     consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - BS_C
-                    consume.DOC[x, y, z] = consume.DOC[x, y, z] + excretC
+                    consume.DOC[x, y, z] = consume.DOC[x, y, z] + excretC - VDOC
                     consume.NH4[x, y, z] = consume.NH4[x, y, z] - VNH4
                     consume.NO3[x, y, z] = consume.NO3[x, y, z] - VNO3
                     consume.PO4[x, y, z] = consume.PO4[x, y, z] - VPO4
@@ -331,8 +346,9 @@ function phyt_update(model, ΔT::Int64)
     end # for loop to traverse the array of agents
     # diagnostics
     model.diags.tr[:,:,:,diag_t,1] += PAR
-    model.diags.tr[:,:,:,diag_t,2] += npop[:,:,:,1]
-    model.diags.tr[:,:,:,diag_t,3] += npop[:,:,:,2]
+    for k in 1:params["P_Nsp"]
+        model.diags.tr[:,:,:,diag_t,k+1] += npop[:,:,:,k]
+    end
     phyts_b = reshape(phyts_b,size(phyts_a,1),Int(length(phyts_b)/size(phyts_a,1)))
     return phyts_b,consume
 end # for loop of time

@@ -12,7 +12,7 @@ function PI_Model(grid, RunParam;
                   temp = read_temp_input(RunParam.ΔT, grid),
                   params = RunParam.params,
                   diag = diags_setup(RunParam.nTime, RunParam.ΔT, grid, RunParam.params["diag_freq"], RunParam.params["diag_inds"], RunParam.params["P_Nsp"]),
-                  diag_tr = diags_setup(RunParam.nTime, RunParam.ΔT, grid, RunParam.params["diag_freq"], 3)
+                  diag_tr = diags_setup(RunParam.nTime, RunParam.ΔT, grid, RunParam.params["diag_freq"], 1+params["P_Nsp"])
                   )
     input = Model_Input(temp,PAR)
     diags = Diagnostics(diag[1],diag[2],diag_tr)
