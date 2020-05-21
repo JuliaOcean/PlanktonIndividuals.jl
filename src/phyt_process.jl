@@ -112,22 +112,29 @@ function phyt_update(model, ΔT::Int64)
                 # compute probabilities of division
                 P_dvi = false
                 if t%3600 == 1 # check hourly
-                    if params["dvid_type"][sp] == 1
+                    if params["dvid_type"][sp] == 1 # sizer-like cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             reg_size = params["dvid_stp"]*(phyt[4] - params["dvid_size"])
                             reg_divide = 0.2*(tanh(reg_size) + 1)
                             P_dvi = rand(Bernoulli(reg_divide))
                         end
-                    elseif params["dvid_type"][sp] == 2
+                    elseif params["dvid_type"][sp] == 2 # adder-like cell division
                         add_size = phyt[4] - phyt[13]
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             reg_size = params["dvid_stp"]*(add_size - params["dvid_add"])
                             reg_divide = 0.2*(tanh(reg_size) + 1)
                             P_dvi = rand(Bernoulli(reg_divide))
                         end
-                    elseif params["dvid_type"][sp] == 3
+                    elseif params["dvid_type"][sp] == 3 # timer-like (age) cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             reg_age = params["dvid_stp"]*(phyt[12] - params["dvid_age"])
+                            reg_divide = 0.2*(tanh(reg_age) + 1)
+                            P_dvi = rand(Bernoulli(reg_divide))
+                        end
+                    elseif params["dvid_type"][sp] == 4 # timer-like (circadian clock) cell division
+                        if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
+                            circT = t%86400÷3600 + t%86400%3600/3600
+                            reg_age = params["dvid_stp"]*(circT - params["dvid_T"])
                             reg_divide = 0.2*(tanh(reg_age) + 1)
                             P_dvi = rand(Bernoulli(reg_divide))
                         end
