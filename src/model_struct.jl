@@ -56,6 +56,7 @@ mutable struct nutrient_fields # for tendencies, forcings and consumptions
     POC::Array{Float64,3}
     PON::Array{Float64,3}
     POP::Array{Float64,3}
+    ZOO::Array{Float64,3}
 end
 
 mutable struct Model_Input

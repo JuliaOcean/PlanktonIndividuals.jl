@@ -83,6 +83,7 @@ function phyt_update(model, ΔT::Int64)
         NH4 = max(0.0, nutrients.NH4[x, y, z])
         NO3 = max(0.0, nutrients.NO3[x, y, z])
         PO4 = max(0.0, nutrients.PO4[x, y, z])
+        ZOO = max(0.0, nutrients.ZOO[x, y, z])
 
         #diagnostics
         idiag = 0
@@ -97,7 +98,8 @@ function phyt_update(model, ΔT::Int64)
                 P_graz = false
             else
                 # reg_graz = phyt[4]/params["Grz_P"]
-                reg_graz = 1.0/params["Grz_P"]
+                # reg_graz = 1.0/params["Grz_P"]
+                reg_graz = max(0.2,ZOO)/params["Grz_P"]
                 P_graz = rand(Bernoulli(reg_graz))
             end
         end
@@ -336,12 +338,13 @@ function phyt_update(model, ΔT::Int64)
             end # naturan death
         else #grazed, no sloppy feeding here, all nutrients go back to organic pools
             model.diags.pop[x,y,z,diag_t,sp,3] += 1
-            consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt[5]+phyt[6])*params["grazFracC"]
-            consume.DON[x, y, z] = consume.DON[x, y, z] + (phyt[7]+phyt[5]*params["R_NC"])*params["grazFracN"]
-            consume.DOP[x, y, z] = consume.DOP[x, y, z] + (phyt[8]+phyt[5]*params["R_PC"])*params["grazFracP"]
-            consume.POC[x, y, z] = consume.POC[x, y, z] + (phyt[6]+phyt[6])*(1.0 - params["grazFracC"])
-            consume.PON[x, y, z] = consume.PON[x, y, z] + (phyt[7]+phyt[5]*params["R_NC"])*(1.0 - params["grazFracN"])
-            consume.POP[x, y, z] = consume.POP[x, y, z] + (phyt[8]+phyt[5]*params["R_PC"])*(1.0 - params["grazFracP"])
+            consume.DOC[x, y, z] = consume.DOC[x, y, z] + phyt[6]*params["grazFracC"]
+            consume.DON[x, y, z] = consume.DON[x, y, z] + phyt[7]*params["grazFracN"]
+            consume.DOP[x, y, z] = consume.DOP[x, y, z] + phyt[8]*params["grazFracP"]
+            consume.POC[x, y, z] = consume.POC[x, y, z] + phyt[6]*(1.0 - params["grazFracC"])
+            consume.PON[x, y, z] = consume.PON[x, y, z] + phyt[7]*(1.0 - params["grazFracN"])
+            consume.POP[x, y, z] = consume.POP[x, y, z] + phyt[8]*(1.0 - params["grazFracP"])
+            consume.ZOO[x, y, z] = consume.ZOO[x, y, z] + phyt[5]
         end # graze
     end # for loop to traverse the array of agents
     # diagnostics

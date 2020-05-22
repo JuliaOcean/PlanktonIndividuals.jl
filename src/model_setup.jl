@@ -64,8 +64,8 @@ function setup_zooplkt(params, grid)
         zoos0[8,:] .= i                                          # species
     end
     zoos0[5,:]  = zoos0[5,:] .* zoos0[4,:]                       # Bm
-    zoos0[6,:] = 0.0                                             # Nq
-    zoos0[7,:] = 0.0                                             # Pq
+    zoos0[6,:] .= 0.0                                            # Nq
+    zoos0[7,:] .= 0.0                                            # Pq
     zoos0[9,:] .= 1.0                                            # generation
     zoos0[10,:] .= 1.0                                           # age
     return zoos0
@@ -80,7 +80,7 @@ function nutrients_init(g)
                           zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz),
                           zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz),
                           zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz),
-                          zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
+                          zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
     return nut
 end
 
@@ -101,8 +101,9 @@ function setup_nutrients(g,nut)
     POC = fill(nut[8],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
     PON = fill(nut[9],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
     POP = fill(nut[10],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
+    ZOO = fill(nut[11],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
 
-    nutrients = nutrient_fields(DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP)
+    nutrients = nutrient_fields(DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, ZOO)
     return nutrients
 end
 
@@ -111,7 +112,7 @@ end
 Load nutrient initial conditions from files
 """
 function load_nut_initials(paths,g)
-    indices = ["DIC", "NH4", "NO3", "PO4", "DOC", "DON", "DOP", "POC", "PON", "POP"]
+    indices = ["DIC", "NH4", "NO3", "PO4", "DOC", "DON", "DOP", "POC", "PON", "POP", "ZOO"]
     pathkeys = collect(keys(paths))
     tmps = []
     for index in indices
@@ -126,6 +127,6 @@ function load_nut_initials(paths,g)
             end
         end
     end
-    nut = nutrient_fields(tmps[1],tmps[2],tmps[3],tmps[4],tmps[5],tmps[6],tmps[7],tmps[8],tmps[9],tmps[10])
+    nut = nutrient_fields(tmps[1],tmps[2],tmps[3],tmps[4],tmps[5],tmps[6],tmps[7],tmps[8],tmps[9],tmps[10],tmps[11])
     return nut
 end
