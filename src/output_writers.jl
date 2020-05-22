@@ -63,9 +63,9 @@ function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields,
     TP = mean((nutₜ.PO4 .+ nutₜ.DOP .+ nutₜ.POP) .* g.V)
     Cio = open(filepath*"cons_C.txt","a"); Nio = open(filepath*"cons_N.txt","a");
     Pio = open(filepath*"cons_P.txt","a");
-    println(Cio,@sprintf("%4.0f  %.16E  %.4f  %.4f",t,TC,mean(nutₜ.DOC),mean(nutₜ.ZOO)))
-    println(Nio,@sprintf("%4.0f  %.16E  %.4f  %.4f",t,TN,mean(nutₜ.NH4),mean(nutₜ.NO3)))
-    println(Pio,@sprintf("%4.0f  %.16E  %.4f",t,TP,mean(nutₜ.PO4)))
+    println(Cio,@sprintf("%4.0f  %.16E  %.16E  %.4f  %.4f",t,Σgtrᶜ,TC,mean(nutₜ.DOC),mean(nutₜ.ZOO)))
+    println(Nio,@sprintf("%4.0f  %.16E  %.16E  %.4f  %.4f",t,Σgtrⁿ,TN,mean(nutₜ.NH4),mean(nutₜ.NO3)))
+    println(Pio,@sprintf("%4.0f  %.16E  %.16E  %.4f",t,Σgtrᵖ,TP,mean(nutₜ.PO4)))
     close(Cio);close(Nio);close(Pio);
 end
 function write_nut_cons(g::grids, nutₜ::nutrient_fields, t::Int64, filepath)
