@@ -75,7 +75,7 @@ for i in 1:RunParam.nTime
 end
 
 ## Plots
-using PyPlots, DelimitedFiles
+using PyPlot, DelimitedFiles
 
 ## temporal variations of population and nutrient pools of individuals
 Ndata = readdlm("results/cons_N.txt")
