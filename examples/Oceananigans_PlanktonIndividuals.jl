@@ -75,7 +75,7 @@ for i in 1:RunParam.nTime
 end
 
 ## Plots
-using PyPlot, DelimitedFiles
+using PyPlot, DelimitedFiles, Statistics
 
 ## temporal variations of population and nutrient pools of individuals
 Ndata = readdlm("results/cons_N.txt")
@@ -93,8 +93,13 @@ axs[6].plot(sp1_data[:,9],label ="P Reserve")
 axs[7].plot(Ndata[:,4],label ="NH4")
 axs[7].plot(Ndata[:,5],label ="NO3")
 axs[8].plot(Ndata[:,4],label ="PO4")
+for ax in axs
+    ax.tick_params("both",direction="in")
+    ax.legend(loc=4, fontsize=7)
+end
 
 ## vertical and temporal variations of division rate
+pops = zeros(Nz,Int(RunParam.nTime*RunParam.ΔT/3600),2)
 pops[:,:,1]= sum(sum(phy_model.diags.pop[:,:,:,:,1,1],dims=1),dims=2)[1,1,:,:]
 pops[:,:,2]= sum(sum(phy_model.diags.tr[:,:,:,:,2] ./ 60,dims=1),dims=2)[1,1,:,:]
 dvi_ver = mean(pops[:,:,1],dims=2)[:,1]
@@ -111,7 +116,7 @@ ax.set_ylabel("Depth (m)");
 
 ## temporal variations of division rate
 fig,ax = plt.subplots(figsize=(7,4))
-ax.plot(collect(1:1:240),dvi_t ./ pop_t .* 24,label = "Species 1")
+ax.plot(collect(1:1:RunParam.nTime*RunParam.ΔT/3600),dvi_t ./ pop_t .* 24,label = "Species 1")
 ax.legend(loc=2, fontsize=10)
 ax.set_ylabel("Division (per day)")
 ax.set_xlabel("Time (Day)");
