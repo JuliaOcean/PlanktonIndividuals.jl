@@ -42,6 +42,8 @@ nut_init = [2.0, 0.50, 1.20, 0.20, 1.0, 0.5, 0.1, 1.0, 0.5, 0.1, 2.0];
 
 phy_model = PI_Model(phy_grid, RunParam;
                      nutrients = setup_nutrients(phy_grid, nut_init));
+# add diagnostics
+phy_model.params["diag_inds"] = [1,1,1,1,1,1,1,1,1,1, 1, 1, 1, 1]
 
 simulation = Simulation(model, Δt=wizard, stop_iteration=40*20, progress_frequency=20)
 run!(simulation)
