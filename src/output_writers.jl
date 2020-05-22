@@ -54,6 +54,20 @@ end
     write_nut_cons(g, gtr, nutₜ, vel, t, filepath)
 Write a brief summary of nutrients at each time step into a txt file
 """
+function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, t::Int64, filepath)
+    Σgtrⁿ = sum(gtr.NH4 .* g.V)+sum(gtr.NO3 .* g.V)+sum(gtr.DON .* g.V)+sum(gtr.PON .* g.V)
+    Σgtrᶜ = sum(gtr.DIC .* g.V)+sum(gtr.DOC .* g.V)+sum(gtr.POC .* g.V)
+    Σgtrᵖ = sum(gtr.PO4 .* g.V)+sum(gtr.DOP .* g.V)+sum(gtr.POP .* g.V)
+    TC = mean((nutₜ.DIC .+ nutₜ.DOC .+ nutₜ.POC) .* g.V)
+    TN = mean((nutₜ.NH4 .+ nutₜ.NO3 .+ nutₜ.DON .+ nutₜ.PON) .* g.V)
+    TP = mean((nutₜ.PO4 .+ nutₜ.DOP .+ nutₜ.POP) .* g.V)
+    Cio = open(filepath*"cons_C.txt","a"); Nio = open(filepath*"cons_N.txt","a");
+    Pio = open(filepath*"cons_P.txt","a");
+    println(Cio,@sprintf("%4.0f  %.16E  %.4f  %.4f",t,TC,mean(nutₜ.DOC),mean(nutₜ.ZOO)))
+    println(Nio,@sprintf("%4.0f  %.16E  %.4f  %.4f",t,TN,mean(nutₜ.NH4),mean(nutₜ.NO3)))
+    println(Pio,@sprintf("%4.0f  %.16E  %.4f",t,TP,mean(nutₜ.PO4)))
+    close(Cio);close(Nio);close(Pio);
+end
 function write_nut_cons(g::grids, nutₜ::nutrient_fields, t::Int64, filepath)
     TC = mean((nutₜ.DIC .+ nutₜ.DOC .+ nutₜ.POC) .* g.V)
     TN = mean((nutₜ.NH4 .+ nutₜ.NO3 .+ nutₜ.DON .+ nutₜ.PON) .* g.V)
@@ -92,7 +106,7 @@ Write a brief summary of each species at each time step into a txt file
 """
 function write_species_dynamics(t::Int64, phyt_sp, filepath)
     for i in 1:size(phyt_sp,1)
-        pop = size(phyt_sp[i],2)
+       pop = size(phyt_sp[i],2)
         gen_ave = mean(phyt_sp[i][11,:])
         age_ave = mean(phyt_sp[i][12,:])
         size_ave= mean(phyt_sp[i][4,:])
