@@ -135,8 +135,15 @@ function phyt_update(model, ΔT::Int64)
                         end
                     elseif params["dvid_type"][sp] == 4 # timer-like (circadian clock) cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
+                            cirT = t % 86400 ÷ 3600
+                            reg_age = params["dvid_stp"]*(cirT - params["dvid_cirT"])
+                            reg_divide = 0.2*(tanh(reg_age) + 1)
+                            P_dvi = rand(Bernoulli(reg_divide))
+                        end
+                    elseif params["dvid_type"][sp] == 5 # timer-like (circadian clock) cell division
+                        if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             # use light intensity to indicate circadian clock in the cell
-                            reg_par = max(0.0, params["dvid_PAR"] - IR_t)
+                            reg_par = params["dvid_stp"]*(params["dvid_PAR"] - IR_t)
                             reg_divide = 0.2*(tanh(reg_par) + 1)
                             P_dvi = rand(Bernoulli(reg_divide))
                         end
