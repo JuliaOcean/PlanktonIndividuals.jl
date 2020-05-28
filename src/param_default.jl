@@ -27,6 +27,7 @@ param_default=Dict(
     "katten_c" => 0.04,               # PAR attenuation (/mgChl/m^3/m)
     "inhibcoef"=> [0.0, 0.0],         # light inhibition
     "Grz_P"    => 4000,               # phyt.size/Grz_P is the probability to be grazed
+    "P_dvid"   => [0.2,0.2],          # probability scaler of cell division.
     "dvid_type"=> [1,1],              # the type of cell division, 1:sizer, 2:adder.
     "dvid_stp" => [6.0,6.0],          # steepness of sigmoidal function
     "dvid_reg" => [1.9,1.9],          # regulations of cell division(sizer, adder, timer)
