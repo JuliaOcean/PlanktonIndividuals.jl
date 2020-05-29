@@ -27,7 +27,7 @@ function setup_agents(RunParam::RunParams,grid)
     phyts0[5,:] .= phyts0[5,:] .* phyts0[4,:]                            # Bm
     phyts0[6,:] .= copy(phyts0[5,:]) .* rand(Uniform(0.08,0.12),N*Nsp)   # Cq
     phyts0[7,:] .= copy(phyts0[5,:]) .* rand(Uniform(0.03,0.06),N*Nsp)   # Nq
-    phyts0[8,:] .= copy(phyts0[5,:]) .* rand(Uniform(0.004,0.008),N*Nsp) # Pq
+    phyts0[8,:] .= copy(phyts0[5,:]) .* rand(Uniform(0.002,0.005),N*Nsp) # Pq
     phyts0[9,:] .= copy(phyts0[5,:]) .* params["Chl2Cint"]               # Chl
     phyts0[11,:] .= 1.0                                                  # generation
     phyts0[12,:] .= 1.0                                                  # age
