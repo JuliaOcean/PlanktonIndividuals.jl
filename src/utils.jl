@@ -79,6 +79,37 @@ Return a grid 'struc'
 'z' starts from the bottom
 write grid information to a netCDF file
 """
+function read_Ogrids(Ogrid)
+    Nx = Ogrid.Nx
+    Ny = Ogrid.Ny
+    Nz = Ogrid.Nz
+    xC = collect(Ogrid.xC[:,1,1])
+    yC = collect(Ogrid.yC[1,:,1])
+    zC = collect(Ogrid.zC[1,1,:])
+    xF = collect(Ogrid.xF[:,1,1])
+    yF = collect(Ogrid.yF[1,:,1])
+    zF = collect(Ogrid.zF[1,1,:])
+    dxF =  repeat(collect(Ogrid.Δx),Nx)
+    dyF =  repeat(collect(Ogrid.Δy),Ny)
+    dzF =  repeat(collect(Ogrid.Δz),Nz)
+    dxC =  repeat(collect(Ogrid.Δx),Nx)
+    dyC =  repeat(collect(Ogrid.Δy),Ny)
+    dzC =  repeat(collect(Ogrid.Δz),Nz)
+    Ax = zeros(Nx, Ny, Nz); Ay = zeros(Nx, Ny, Nz);
+    Az = zeros(Nx, Ny); V = zeros(Nx, Ny, Nz)
+    for i in 1:Nx
+        for j in 1:Ny
+            Az[i,j] = dxF[i] * dyF[j]
+            for k in 1:Nz
+                Ax[i,j,k] = dzF[k] * dyF[j]
+                Ay[i,j,k] = dzF[k] * dxF[i]
+                V[i,j,k] = dzF[k] * Az[i,j]
+            end
+        end
+    end
+    g = grids(xC, yC, zC, xF, yF, zF, dxF, dyF, dzF, dxC, dyC, dzC, Ax, Ay, Az, V, Nx, Ny, Nz)
+    return g
+end
 function read_Ogrids(Ogrid, filepath)
     Nx = Ogrid.Nx
     Ny = Ogrid.Ny
