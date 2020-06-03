@@ -159,7 +159,7 @@ function phyt_update(model, ΔT::Int64)
                         model.diags.spcs[x,y,z,diag_t,sp,idiag] += 1
                     end
                     # Compute photosynthesis rate
-                    α_I = params["α"]*IR_t
+                    α_I = params["α"]*IR_t*params["Φ"]
                     Tempstd = exp(params["TempAe"]*(1.0/(temp_t+273.15)-1.0/params["Tempref"]))
                     photoTempFunc = params["TempCoeff"]*max(1.0e-10,Tempstd)
                     PCmax_sp = params["PCmax"][sp]/86400
