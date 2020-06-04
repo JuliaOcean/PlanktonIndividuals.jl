@@ -73,8 +73,10 @@ function phyt_update(model, ΔT::Int64)
     diag_t = t÷params["diag_freq"]+1
     npop = zeros(Int, g.Nx, g.Ny, g.Nz, params["P_Nsp"])
 
+    num_phyt = size(phyts_a,2)
+
     # iterate phytoplankton agents
-    for i in 1:size(phyts_a,2)
+    for i in 1:num_phyt
         phyt = phyts_a[:,i]
         sp = Int(phyt[10])
         x, y, z = which_grid(phyt, g)
@@ -96,8 +98,8 @@ function phyt_update(model, ΔT::Int64)
             if t%3600 ≠ 1 # check hourly
                 P_graz = false
             else
-                # reg_graz = phyt[4]/params["Grz_P"]
-                reg_graz = 1.0/params["Grz_P"]
+                # reg_graz = 1.0/params["Grz_P"]
+                reg_graz = exp(num_phyt/params["P_Nind"]*params["P_Nsp"])/params["Grz_P"]
                 P_graz = rand(Bernoulli(reg_graz))
             end
         end
