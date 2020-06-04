@@ -78,7 +78,6 @@ param_default=Dict(
     "kPOC"     => 1/30/86400,         # remineralization rate for POC, turn over time: a month (per second)
     "kPON"     => 1/30/86400,         # remineralization rate for PON, turn over time: a month (per second)
     "kPOP"     => 1/30/86400,         # remineralization rate for PON, turn over time: a month (per second)
-    "mZOO"     => 1/5/86400,          # remineralization rate for PON, turn over time: a month (per second)
     "κh"       => 0,                  # horizontal diffusion
     "κv"       => 0,                  # vertical diffusion
     "κhP"      => 0,                  # horizontal diffusion for individuals

@@ -13,7 +13,6 @@ function sum_nut_tendency(a::nutrient_fields, b::nutrient_fields)
     a.NH4 = b.NH4 .+ a.NH4
     a.NO3 = b.NO3 .+ a.NO3
     a.PO4 = b.PO4 .+ a.PO4
-    a.ZOO = b.ZOO .+ a.ZOO
     return a
 end
 
@@ -28,13 +27,11 @@ function nut_forcing(g, nutrients, params,ΔT)
     DOC = copy(nutrients.DOC); DON = copy(nutrients.DON);
     DOP = copy(nutrients.DOP); POC = copy(nutrients.POC);
     PON = copy(nutrients.PON); POP = copy(nutrients.POP);
-    ZOO = copy(nutrients.ZOO);
     DIC[DIC .< 0.0] .= 0.0; NH4[NH4 .< 0.0] .= 0.0;
     NO3[NO3 .< 0.0] .= 0.0; PO4[PO4 .< 0.0] .= 0.0;
     DOC[DOC .< 0.0] .= 0.0; DON[DON .< 0.0] .= 0.0;
     DOP[DOP .< 0.0] .= 0.0; POC[POC .< 0.0] .= 0.0;
     PON[PON .< 0.0] .= 0.0; POP[POP .< 0.0] .= 0.0;
-    ZOO[ZOO .< 0.0] .= 0.0;
     F = nutrients_init(g)
     # compute remineralization of organic nutrients
     F.DIC .= F.DIC .+ DOC .* params["kDOC"] .* ΔT
@@ -53,7 +50,6 @@ function nut_forcing(g, nutrients, params,ΔT)
     F.DOP .= F.DOP .- DOP .* params["kDOP"] .* ΔT
     F.DOP .= F.DOP .+ POP .* params["kPOP"] .* ΔT
     F.POP .= F.POP .- POP .* params["kPOP"] .* ΔT
-    F.ZOO .= F.ZOO .- ZOO .* params["mZOO"] .* ΔT
     return F
 end
 
@@ -73,7 +69,6 @@ function nut_advection(g, nutrients, velᵇ, ΔT)
     gtr.POC = MultiDim_adv(g, nutrients.POC, velᵇ, ΔT) .* ΔT;
     gtr.PON = MultiDim_adv(g, nutrients.PON, velᵇ, ΔT) .* ΔT;
     gtr.POP = MultiDim_adv(g, nutrients.POP, velᵇ, ΔT) .* ΔT;
-    gtr.ZOO = MultiDim_adv(g, nutrients.ZOO, velᵇ, ΔT) .* ΔT;
     return gtr
 end
 
@@ -98,7 +93,6 @@ function nut_diffusion(g, nutrients, params, ΔT)
                 diffu.POC[i, j, k] =κ∇²(g, nutrients.POC, κh, κv, i, j, k) * ΔT
                 diffu.PON[i, j, k] =κ∇²(g, nutrients.PON, κh, κv, i, j, k) * ΔT
                 diffu.POP[i, j, k] =κ∇²(g, nutrients.POP, κh, κv, i, j, k) * ΔT
-                diffu.ZOO[i, j, k] =κ∇²(g, nutrients.ZOO, κh, κv, i, j, k) * ΔT
             end
         end
     end
@@ -135,7 +129,6 @@ function nut_update(model, velᵇ, consume, ΔT)
     nutₜ.POC .= nutrients.POC .+ tendencies.POC .+ consume.POC ./ g.V
     nutₜ.PON .= nutrients.PON .+ tendencies.PON .+ consume.PON ./ g.V
     nutₜ.POP .= nutrients.POP .+ tendencies.POP .+ consume.POP ./ g.V
-    nutₜ.ZOO .= nutrients.ZOO .+ tendencies.ZOO .+ consume.ZOO ./ g.V
     return nutₜ, gtr
 end
 
@@ -149,13 +142,11 @@ function nut_update(model, consume, ΔT)
     DOC = copy(nutrients.DOC); DON = copy(nutrients.DON);
     DOP = copy(nutrients.DOP); POC = copy(nutrients.POC);
     PON = copy(nutrients.PON); POP = copy(nutrients.POP);
-    ZOO = copy(nutrients.ZOO);
     DIC[DIC .< 0.0] .= 0.0; NH4[NH4 .< 0.0] .= 0.0;
     NO3[NO3 .< 0.0] .= 0.0; PO4[PO4 .< 0.0] .= 0.0;
     DOC[DOC .< 0.0] .= 0.0; DON[DON .< 0.0] .= 0.0;
     DOP[DOP .< 0.0] .= 0.0; POC[POC .< 0.0] .= 0.0;
     PON[PON .< 0.0] .= 0.0; POP[POP .< 0.0] .= 0.0;
-    ZOO[ZOO .< 0.0] .= 0.0;
     F = nutrients_init(g)
     # compute remineralization of organic nutrients
     F.DIC .= F.DIC .+ DOC .* params["kDOC"] .* ΔT
@@ -174,7 +165,6 @@ function nut_update(model, consume, ΔT)
     F.DOP .= F.DOP .- DOP .* params["kDOP"] .* ΔT
     F.DOP .= F.DOP .+ POP .* params["kPOP"] .* ΔT
     F.POP .= F.POP .- POP .* params["kPOP"] .* ΔT
-    F.ZOO .= F.ZOO .- ZOO .* params["mZOO"] .* ΔT
     # store nutrients of the former time step
     nutₜ = nutrients_init(g)
     nutₜ.DIC .= nutrients.DIC .+ F.DIC .+ consume.DIC ./ g.V
@@ -187,6 +177,5 @@ function nut_update(model, consume, ΔT)
     nutₜ.POC .= nutrients.POC .+ F.POC .+ consume.POC ./ g.V
     nutₜ.PON .= nutrients.PON .+ F.PON .+ consume.PON ./ g.V
     nutₜ.POP .= nutrients.POP .+ F.POP .+ consume.POP ./ g.V
-    nutₜ.ZOO .= nutrients.ZOO .+ F.ZOO .+ consume.ZOO ./ g.V
     return nutₜ, F
 end
