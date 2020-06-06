@@ -73,8 +73,10 @@ function phyt_update(model, ΔT::Int64)
     diag_t = t÷params["diag_freq"]+1
     npop = zeros(Int, g.Nx, g.Ny, g.Nz, params["P_Nsp"])
 
+    num_phyt = size(phyts_a,2)
+
     # iterate phytoplankton agents
-    for i in 1:size(phyts_a,2)
+    for i in 1:num_phyt
         phyt = phyts_a[:,i]
         sp = Int(phyt[10])
         x, y, z = which_grid(phyt, g)
@@ -96,8 +98,8 @@ function phyt_update(model, ΔT::Int64)
             if t%3600 ≠ 1 # check hourly
                 P_graz = false
             else
-                # reg_graz = phyt[4]/params["Grz_P"]
-                reg_graz = 1.0/params["Grz_P"]
+                # reg_graz = 1.0/params["Grz_P"]
+                reg_graz = exp(num_phyt/params["P_Nind"]*params["P_Nsp"])/params["Grz_P"]
                 P_graz = rand(Bernoulli(reg_graz))
             end
         end
@@ -114,28 +116,35 @@ function phyt_update(model, ΔT::Int64)
                 if t%3600 == 1 # check hourly
                     if params["dvid_type"][sp] == 1 # sizer-like cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
-                            reg_size = params["dvid_stp"]*(phyt[4] - params["dvid_size"])
-                            reg_divide = 0.2*(tanh(reg_size) + 1)
+                            reg_size = params["dvid_stp"][sp]*(phyt[4] - params["dvid_reg"][sp])
+                            reg_divide = params["P_dvid"][sp]*(tanh(reg_size) + 1)
                             P_dvi = rand(Bernoulli(reg_divide))
                         end
                     elseif params["dvid_type"][sp] == 2 # adder-like cell division
                         add_size = phyt[4] - phyt[13]
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
-                            reg_size = params["dvid_stp"]*(add_size - params["dvid_add"])
-                            reg_divide = 0.2*(tanh(reg_size) + 1)
+                            reg_size = params["dvid_stp"][sp]*(add_size - params["dvid_reg"][sp])
+                            reg_divide = params["P_dvid"][sp]*(tanh(reg_size) + 1)
                             P_dvi = rand(Bernoulli(reg_divide))
                         end
                     elseif params["dvid_type"][sp] == 3 # timer-like (age) cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
-                            reg_age = params["dvid_stp"]*(phyt[12] - params["dvid_age"])
-                            reg_divide = 0.2*(tanh(reg_age) + 1)
+                            reg_age = params["dvid_stp"][sp]*(phyt[12] - params["dvid_reg"][sp])
+                            reg_divide = params["P_dvid"][sp]*(tanh(reg_age) + 1)
                             P_dvi = rand(Bernoulli(reg_divide))
                         end
                     elseif params["dvid_type"][sp] == 4 # timer-like (circadian clock) cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
+                            cirT = t % 86400 ÷ 3600
+                            reg_age = params["dvid_stp"][sp]*(cirT - params["dvid_reg"][sp])
+                            reg_divide = params["P_dvid"][sp]*(tanh(reg_age) + 1)
+                            P_dvi = rand(Bernoulli(reg_divide))
+                        end
+                    elseif params["dvid_type"][sp] == 5 # timer-like (circadian clock) cell division
+                        if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             # use light intensity to indicate circadian clock in the cell
-                            reg_par = max(0.0, params["dvid_PAR"] - IR_t)
-                            reg_divide = 0.2*(tanh(reg_par) + 1)
+                            reg_par = params["dvid_stp"][sp]*(params["dvid_reg"][sp] - IR_t)
+                            reg_divide = params["P_dvid"][sp]*(tanh(reg_par) + 1)
                             P_dvi = rand(Bernoulli(reg_divide))
                         end
                     else
@@ -150,16 +159,19 @@ function phyt_update(model, ΔT::Int64)
                         model.diags.spcs[x,y,z,diag_t,sp,idiag] += 1
                     end
                     # Compute photosynthesis rate
-                    α_I = params["α"]*IR_t
+                    α_I = params["α"][sp]*IR_t*params["Φ"][sp]
                     Tempstd = exp(params["TempAe"]*(1.0/(temp_t+273.15)-1.0/params["Tempref"]))
                     photoTempFunc = params["TempCoeff"]*max(1.0e-10,Tempstd)
                     PCmax_sp = params["PCmax"][sp]/86400
                     PCm = PCmax_sp*photoTempFunc*phyt[4]^params["PC_b"][sp]
                     PC = PCm*(1-exp(-α_I*phyt[9]/(phyt[5]*PCm)))
-                    Eₖ = PCm/(phyt[9]/phyt[5]*params["α"])
-                    tmp = α_I/params["α"]
-                    if (tmp > Eₖ) & (params["inhibcoef"][sp] > 0.0)
-                        PC = PC*Eₖ/tmp*params["inhibcoef"][sp]
+                    # photo-inhibition
+                    if params["inhibcoef"][sp] > 0.0
+                        Eₖ = PCm/(phyt[9]/phyt[5]*params["α"][sp]*params["Φ"][sp])
+                        tmp = α_I/(params["α"][sp]*params["Φ"][sp])
+                        if tmp > Eₖ
+                            PC = PC*Eₖ/tmp*params["inhibcoef"][sp]
+                        end
                     end
                     PS = PC*phyt[5] # unit: mmol C/second/individual
                     PP = PS*ΔT # unit: mmol C/time step/individual
@@ -172,7 +184,7 @@ function phyt_update(model, ΔT::Int64)
                     # Compute cell-based N uptake rate according Droop limitation
                     Qn = (phyt[7]+phyt[5]*params["R_NC"])/(phyt[5]+phyt[6])
                     #In-Cell N uptake limitation
-                    regQn = max(0.0,min(1.0,(params["Nqmax"]-Qn)/(params["Nqmax"]-params["Nqmin"])))
+                    regQn = max(0.0,min(1.0,(params["Nqmax"][sp]-Qn)/(params["Nqmax"][sp]-params["Nqmin"][sp])))
                     VNH4max_sp = params["VNH4max"][sp]/86400
                     VNO3max_sp = params["VNO3max"][sp]/86400
                     VNH4m = VNH4max_sp*phyt[4]^params["VN_b"][sp]
@@ -196,7 +208,7 @@ function phyt_update(model, ΔT::Int64)
                     # Compute cell-based P uptake rate according Droop limitation
                     Qp = (phyt[8]+phyt[5]*params["R_PC"])/(phyt[5]+phyt[6])
                     #In-Cell P uptake limitation
-                    regQp = max(0.0,min(1.0,(params["Pqmax"]-Qp)/(params["Pqmax"]-params["Pqmin"])))
+                    regQp = max(0.0,min(1.0,(params["Pqmax"][sp]-Qp)/(params["Pqmax"][sp]-params["Pqmin"][sp])))
                     VPmax_sp = params["VPmax"][sp]/86400
                     VPm = VPmax_sp*phyt[4]^params["VP_b"][sp]
                     Puptake = VPm*PO4/(PO4+params["KsatP"][sp])*regQp
@@ -217,7 +229,7 @@ function phyt_update(model, ΔT::Int64)
                     end
 
                     # Metabolic partitioning for biosynthesis, decrease with size
-                    shape_factor_β = params["a_β"]*phyt[4]^params["b_β"]
+                    shape_factor_β = params["a_β"][sp]*phyt[4]^params["b_β"][sp]
                     β = shape_factor_β/(1+shape_factor_β)
 
                     # Compute extra cost for biosynthesis, return a rate (per hour)
@@ -230,7 +242,7 @@ function phyt_update(model, ΔT::Int64)
                         # compute the ratio of C reserve to total cellular C
                         Qc = phyt[6] /(phyt[5] + phyt[6])
                         # compute uptake rate of DOC
-                        regQc = max(0.0,min(1.0,(params["Cqmax"]-Qc)/(params["Cqmax"]-params["Nqmin"])))
+                        regQc = max(0.0,min(1.0,(params["Cqmax"][sp]-Qc)/(params["Cqmax"][sp]-params["Cqmin"][sp])))
                         VDOCmax_sp = params["VDOCmax"][sp]/86400
                         VDOCm = VDOCmax_sp*phyt[4]^params["VDOC_b"][sp]
                         DOCuptake = VDOCm*DOC/(DOC+params["KsatDOC"][sp])*regQc
@@ -251,7 +263,7 @@ function phyt_update(model, ΔT::Int64)
                     phyt[8] = phyt[8] + VPO4
 
                     # maximum biosynthesis rate based on carbon availability
-                    k_mtb = params["k_mtb"]*phyt[4]^params["b_k_mtb"]
+                    k_mtb = params["k_mtb"][sp]*phyt[4]^params["b_k_mtb"][sp]/86400 # per second
                     BS_Cmax = β*k_mtb*ΔT*phyt[6]/(1+respir_extra)
                     MaintenC = (1-β)*BS_Cmax/β
 
@@ -337,11 +349,11 @@ function phyt_update(model, ΔT::Int64)
         else #grazed, no sloppy feeding here, all nutrients go back to organic pools
             model.diags.pop[x,y,z,diag_t,sp,3] += 1
             consume.DOC[x, y, z] = consume.DOC[x, y, z] + (phyt[5]+phyt[6])*params["grazFracC"]
-            consume.DON[x, y, z] = consume.DON[x, y, z] + (phyt[7]+phyt[5]*params["R_NC"])*params["grazFracN"]
-            consume.DOP[x, y, z] = consume.DOP[x, y, z] + (phyt[8]+phyt[5]*params["R_PC"])*params["grazFracP"]
-            consume.POC[x, y, z] = consume.POC[x, y, z] + (phyt[6]+phyt[6])*(1.0 - params["grazFracC"])
-            consume.PON[x, y, z] = consume.PON[x, y, z] + (phyt[7]+phyt[5]*params["R_NC"])*(1.0 - params["grazFracN"])
-            consume.POP[x, y, z] = consume.POP[x, y, z] + (phyt[8]+phyt[5]*params["R_PC"])*(1.0 - params["grazFracP"])
+            consume.DON[x, y, z] = consume.DON[x, y, z] + (phyt[5]*params["R_NC"]+phyt[7])*params["grazFracN"]
+            consume.DOP[x, y, z] = consume.DOP[x, y, z] + (phyt[5]*params["R_PC"]+phyt[8])*params["grazFracP"]
+            consume.POC[x, y, z] = consume.POC[x, y, z] + (phyt[5]+phyt[6])*(1.0 - params["grazFracC"])
+            consume.PON[x, y, z] = consume.PON[x, y, z] + (phyt[5]*params["R_NC"]+phyt[7])*(1.0 - params["grazFracN"])
+            consume.POP[x, y, z] = consume.POP[x, y, z] + (phyt[5]*params["R_PC"]+phyt[8])*(1.0 - params["grazFracP"])
         end # graze
     end # for loop to traverse the array of agents
     # diagnostics
