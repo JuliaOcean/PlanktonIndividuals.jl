@@ -165,10 +165,13 @@ function phyt_update(model, ΔT::Int64)
                     PCmax_sp = params["PCmax"][sp]/86400
                     PCm = PCmax_sp*photoTempFunc*phyt[4]^params["PC_b"][sp]
                     PC = PCm*(1-exp(-α_I*phyt[9]/(phyt[5]*PCm)))
-                    Eₖ = PCm/(phyt[9]/phyt[5]*params["α"][sp])
-                    tmp = α_I/params["α"][sp]
-                    if (tmp > Eₖ) & (params["inhibcoef"][sp] > 0.0)
-                        PC = PC*Eₖ/tmp*params["inhibcoef"][sp]
+                    # photo-inhibition
+                    if params["inhibcoef"] > 0.0
+                        Eₖ = PCm/(phyt[9]/phyt[5]*params["α"][sp]*params["Φ"][sp])
+                        tmp = α_I/(params["α"][sp]*params["Φ"][sp])
+                        if tmp > Eₖ
+                            PC = PC*Eₖ/tmp*params["inhibcoef"][sp]
+                        end
                     end
                     PS = PC*phyt[5] # unit: mmol C/second/individual
                     PP = PS*ΔT # unit: mmol C/time step/individual
