@@ -31,10 +31,14 @@ function setup_agents(RunParam::RunParams,grid)
         phyts0[10,lower:upper] .= i                                            # species
     end
     phyts0[5,:] .= phyts0[5,:] .* phyts0[4,:]                                  # Bm
-    phyts0[6,:] .= copy(phyts0[5,:]) .* rand(Uniform(cqmin[i],cqmax[i]),N*Nsp) # Cq
-    phyts0[7,:] .= copy(phyts0[5,:]) .* rand(Uniform(nqmin[i],nqmax[i]),N*Nsp) # Nq
-    phyts0[8,:] .= copy(phyts0[5,:]) .* rand(Uniform(pqmin[i],pqmax[i]),N*Nsp) # Pq
-    phyts0[9,:] .= copy(phyts0[5,:]) .* params["Chl2Cint"]                     # Chl
+    for i in 1:Nsp
+        lower = Int(1+(i-1)*N)
+        upper = Int(N+(i-1)*N)
+        phyts0[6,lower:upper] .= copy(phyts0[5,lower:upper]) .* rand(Uniform(cqmin[i],cqmax[i]),N) # Cq
+        phyts0[7,lower:upper] .= copy(phyts0[5,lower:upper]) .* rand(Uniform(nqmin[i],nqmax[i]),N) # Nq
+        phyts0[8,lower:upper] .= copy(phyts0[5,lower:upper]) .* rand(Uniform(pqmin[i],pqmax[i]),N) # Pq
+        phyts0[9,lower:upper] .= copy(phyts0[5,lower:upper]) .* params["Chl2Cint"][i]              # Chl
+    end
     phyts0[11,:] .= 1.0                                                        # generation
     phyts0[12,:] .= 1.0                                                        # age
     phyts0[13,:] .= copy(phyts0[4,:])                                          # init_size
