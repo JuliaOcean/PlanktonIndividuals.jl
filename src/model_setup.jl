@@ -13,6 +13,12 @@ function setup_agents(RunParam::RunParams,grid)
     var = params["P_var"]
     Cquota = params["P_Cquota"]
     Nsuper = params["P_Nsuper"]
+    cqmax = params["Cqmax"]
+    cqmin = params["Cqmin"]
+    nqmax = params["Nqmax"]
+    nqmin = params["Nqmin"]
+    pqmax = params["Pqmax"]
+    pqmin = params["Pqmin"]
     phyts0 = zeros(Real,13,N*Nsp)
     phyts0[1,:] .= rand(Uniform(grid.xF[2],grid.xF[end]), N*Nsp)         # x
     phyts0[2,:] .= rand(Uniform(grid.yF[2],grid.yF[end]), N*Nsp)         # y
@@ -25,9 +31,9 @@ function setup_agents(RunParam::RunParams,grid)
         phyts0[10,lower:upper] .= i                                      # species
     end
     phyts0[5,:] .= phyts0[5,:] .* phyts0[4,:]                            # Bm
-    phyts0[6,:] .= copy(phyts0[5,:]) .* rand(Uniform(0.08,0.12),N*Nsp)   # Cq
-    phyts0[7,:] .= copy(phyts0[5,:]) .* rand(Uniform(0.03,0.06),N*Nsp)   # Nq
-    phyts0[8,:] .= copy(phyts0[5,:]) .* rand(Uniform(0.002,0.005),N*Nsp) # Pq
+    phyts0[6,:] .= copy(phyts0[5,:]) .* rand(Uniform(cqmin,cqmax),N*Nsp) # Cq
+    phyts0[7,:] .= copy(phyts0[5,:]) .* rand(Uniform(nqmin,nqmax),N*Nsp) # Nq
+    phyts0[8,:] .= copy(phyts0[5,:]) .* rand(Uniform(pqmin,pqmax),N*Nsp) # Pq
     phyts0[9,:] .= copy(phyts0[5,:]) .* params["Chl2Cint"]               # Chl
     phyts0[11,:] .= 1.0                                                  # generation
     phyts0[12,:] .= 1.0                                                  # age
