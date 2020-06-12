@@ -95,7 +95,7 @@ function phyt_update(model, ΔT::Int64)
         if params["Grz_P"] == 0
             P_graz = false
         else
-            if t%3600 ≠ 1 # check hourly
+            if t%600 ≠ 1 # check every 10 mins
                 P_graz = false
             else
                 # reg_graz = 1.0/params["Grz_P"]
@@ -113,7 +113,7 @@ function phyt_update(model, ΔT::Int64)
             if P_death == false # not natural death
                 # compute probabilities of division
                 P_dvi = false
-                if t%3600 == 1 # check hourly
+                if t%600 == 1 # check every 10 mins
                     if params["dvid_type"][sp] == 1 # sizer-like cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             reg_size = params["dvid_stp"][sp]*(phyt[4] - params["dvid_reg"][sp])
