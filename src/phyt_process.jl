@@ -123,8 +123,7 @@ function phyt_update(model, ΔT::Int64)
                     elseif params["dvid_type"][sp] == 2 # adder-like cell division
                         add_size = phyt[4] - phyt[13]
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
-                            # reg_size = params["dvid_stp"][sp]*(add_size - params["dvid_reg"][sp])
-                            reg_size = params["dvid_stp"][sp]*(add_size - phyt[13])
+                            reg_size = params["dvid_stp"][sp]*(add_size - params["dvid_reg"][sp])
                             reg_divide = params["P_dvid"][sp]*(tanh(reg_size) + 1)
                             P_dvi = rand(Bernoulli(reg_divide))
                         end
