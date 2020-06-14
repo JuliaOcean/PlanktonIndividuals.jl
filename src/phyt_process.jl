@@ -105,10 +105,14 @@ function phyt_update(model, ΔT::Int64)
         end
 
         if P_graz == false #not grazed
-            # compute death probability after a certain age, may be abandoned
-            reg_age = max(0.0, phyt[12] - params["death_age"])
-            shape_factor_death = params["a_death"]*reg_age^params["b_death"]
-            P_death = rand(Bernoulli(shape_factor_death/(1+shape_factor_death)))
+            # compute death probability according to cell size
+            # minimal vital cell size is 1.0
+            P_death = false
+            if t%600 == 1 # check every 10 mins
+                reg_de = 6.0*(params["death_reg"][sp] - phyt[4])
+                reg_death = params["P_death"][sp]*(tanh(reg_de) + 1)
+                P_death = rand(Bernoulli(reg_death))
+            end
 
             if P_death == false # not natural death
                 # compute probabilities of division
