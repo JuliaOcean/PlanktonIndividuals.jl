@@ -185,20 +185,33 @@ function phyt_update(model, ΔT::Int64)
                         model.diags.spcs[x,y,z,diag_t,sp,idiag] += PP
                     end
 
-                    # Compute cell-based N uptake rate according Droop limitation
-                    Qn = (phyt[7]+phyt[5]*params["R_NC"])/(phyt[5]+phyt[6])
-                    #In-Cell N uptake limitation
-                    regQn = max(0.0,min(1.0,(params["Nqmax"][sp]-Qn)/(params["Nqmax"][sp]-params["Nqmin"][sp])))
-                    VNH4max_sp = params["VNH4max"][sp]/86400
-                    VNO3max_sp = params["VNO3max"][sp]/86400
-                    VNH4m = VNH4max_sp*phyt[4]^params["VN_b"][sp]
-                    VNO3m = VNO3max_sp*phyt[4]^params["VN_b"][sp]
-                    NH4uptake = VNH4m*NH4/(NH4+params["KsatNH4"][sp])*regQn
-                    NO3uptake = VNO3m*NO3/(NO3+params["KsatNO3"][sp])*regQn
-                    VNH4cell = NH4uptake*phyt[5] # unit: mmol N/second/individual
-                    VNO3cell = NO3uptake*phyt[5] # unit: mmol N/second/individual
-                    VNH4 = min(NH4*g.V[x,y,z]/10.0, VNH4cell*ΔT) # unit: mmol N/time step/individual
-                    VNO3 = min(NO3*g.V[x,y,z]/10.0, VNO3cell*ΔT) # unit: mmol N/time step/individual
+                    if params["isDiaz"] ≠ 1
+                        # Compute cell-based N uptake rate according Droop limitation
+                        Qn = (phyt[7]+phyt[5]*params["R_NC"])/(phyt[5]+phyt[6])
+                        #In-Cell N uptake limitation
+                        regQn = max(0.0,min(1.0,(params["Nqmax"][sp]-Qn)/(params["Nqmax"][sp]-params["Nqmin"][sp])))
+                        VNH4max_sp = params["VNH4max"][sp]/86400
+                        VNO3max_sp = params["VNO3max"][sp]/86400
+                        VNH4m = VNH4max_sp*phyt[4]^params["VN_b"][sp]
+                        VNO3m = VNO3max_sp*phyt[4]^params["VN_b"][sp]
+                        NH4uptake = VNH4m*NH4/(NH4+params["KsatNH4"][sp])*regQn
+                        NO3uptake = VNO3m*NO3/(NO3+params["KsatNO3"][sp])*regQn
+                        VNH4cell = NH4uptake*phyt[5] # unit: mmol N/second/individual
+                        VNO3cell = NO3uptake*phyt[5] # unit: mmol N/second/individual
+                        VNH4 = min(NH4*g.V[x,y,z]/10.0, VNH4cell*ΔT) # unit: mmol N/time step/individual
+                        VNO3 = min(NO3*g.V[x,y,z]/10.0, VNO3cell*ΔT) # unit: mmol N/time step/individual
+                    else
+                        VNO3 = 0.0
+                        VNH4max_sp = params["VNH4max"][sp]/86400
+                        VNH4 = VNH4max_sp*phyt[4]^params["VN_b"][sp]*phyt[5]*ΔT # unit: mmol N/time step/individual
+                        # cost energy
+                        phyt[6] = phyt[6] - VNH4*params["C2Nfix"][sp]
+                        if phyt[6] ≤ 0.0
+                            exceed = 0.0 - phyt[6]
+                            VNH4 = VNH4 - exceed/params["C2Nfix"][sp]
+                            phyt[6] = 0.0
+                        end
+                    end
                     #diagnostics
                     if params["diag_inds"][3] == 1
                         idiag += 1
