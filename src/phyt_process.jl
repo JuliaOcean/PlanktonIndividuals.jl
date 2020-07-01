@@ -95,7 +95,7 @@ function phyt_update(model, ΔT::Int64)
         if params["Grz_P"] == 0
             P_graz = false
         else
-            if t%3600 ≠ 1 # check hourly
+            if t%600 ≠ 1 # check every 10 mins
                 P_graz = false
             else
                 # reg_graz = 1.0/params["Grz_P"]
@@ -105,15 +105,19 @@ function phyt_update(model, ΔT::Int64)
         end
 
         if P_graz == false #not grazed
-            # compute death probability after a certain age, may be abandoned
-            reg_age = max(0.0, phyt[12] - params["death_age"])
-            shape_factor_death = params["a_death"]*reg_age^params["b_death"]
-            P_death = rand(Bernoulli(shape_factor_death/(1+shape_factor_death)))
+            # compute death probability according to cell size
+            # minimal vital cell size is 1.0
+            P_death = false
+            if t%600 == 1 # check every 10 mins
+                reg_de = 6.0*(params["death_reg"][sp] - phyt[4])
+                reg_death = params["P_death"][sp]*(tanh(reg_de) + 1)
+                P_death = rand(Bernoulli(reg_death))
+            end
 
             if P_death == false # not natural death
                 # compute probabilities of division
                 P_dvi = false
-                if t%3600 == 1 # check hourly
+                if t%600 == 1 # check every 10 mins
                     if params["dvid_type"][sp] == 1 # sizer-like cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             reg_size = params["dvid_stp"][sp]*(phyt[4] - params["dvid_reg"][sp])
@@ -181,20 +185,33 @@ function phyt_update(model, ΔT::Int64)
                         model.diags.spcs[x,y,z,diag_t,sp,idiag] += PP
                     end
 
-                    # Compute cell-based N uptake rate according Droop limitation
-                    Qn = (phyt[7]+phyt[5]*params["R_NC"])/(phyt[5]+phyt[6])
-                    #In-Cell N uptake limitation
-                    regQn = max(0.0,min(1.0,(params["Nqmax"][sp]-Qn)/(params["Nqmax"][sp]-params["Nqmin"][sp])))
-                    VNH4max_sp = params["VNH4max"][sp]/86400
-                    VNO3max_sp = params["VNO3max"][sp]/86400
-                    VNH4m = VNH4max_sp*phyt[4]^params["VN_b"][sp]
-                    VNO3m = VNO3max_sp*phyt[4]^params["VN_b"][sp]
-                    NH4uptake = VNH4m*NH4/(NH4+params["KsatNH4"][sp])*regQn
-                    NO3uptake = VNO3m*NO3/(NO3+params["KsatNO3"][sp])*regQn
-                    VNH4cell = NH4uptake*phyt[5] # unit: mmol N/second/individual
-                    VNO3cell = NO3uptake*phyt[5] # unit: mmol N/second/individual
-                    VNH4 = min(NH4*g.V[x,y,z]/10.0, VNH4cell*ΔT) # unit: mmol N/time step/individual
-                    VNO3 = min(NO3*g.V[x,y,z]/10.0, VNO3cell*ΔT) # unit: mmol N/time step/individual
+                    if params["isDiaz"] ≠ 1
+                        # Compute cell-based N uptake rate according Droop limitation
+                        Qn = (phyt[7]+phyt[5]*params["R_NC"])/(phyt[5]+phyt[6])
+                        #In-Cell N uptake limitation
+                        regQn = max(0.0,min(1.0,(params["Nqmax"][sp]-Qn)/(params["Nqmax"][sp]-params["Nqmin"][sp])))
+                        VNH4max_sp = params["VNH4max"][sp]/86400
+                        VNO3max_sp = params["VNO3max"][sp]/86400
+                        VNH4m = VNH4max_sp*phyt[4]^params["VN_b"][sp]
+                        VNO3m = VNO3max_sp*phyt[4]^params["VN_b"][sp]
+                        NH4uptake = VNH4m*NH4/(NH4+params["KsatNH4"][sp])*regQn
+                        NO3uptake = VNO3m*NO3/(NO3+params["KsatNO3"][sp])*regQn
+                        VNH4cell = NH4uptake*phyt[5] # unit: mmol N/second/individual
+                        VNO3cell = NO3uptake*phyt[5] # unit: mmol N/second/individual
+                        VNH4 = min(NH4*g.V[x,y,z]/10.0, VNH4cell*ΔT) # unit: mmol N/time step/individual
+                        VNO3 = min(NO3*g.V[x,y,z]/10.0, VNO3cell*ΔT) # unit: mmol N/time step/individual
+                    else
+                        VNO3 = 0.0
+                        VNH4max_sp = params["VNH4max"][sp]/86400
+                        VNH4 = VNH4max_sp*phyt[4]^params["VN_b"][sp]*phyt[5]*ΔT # unit: mmol N/time step/individual
+                        # cost energy
+                        phyt[6] = phyt[6] - VNH4*params["C2Nfix"][sp]
+                        if phyt[6] ≤ 0.0
+                            exceed = 0.0 - phyt[6]
+                            VNH4 = VNH4 - exceed/params["C2Nfix"][sp]
+                            phyt[6] = 0.0
+                        end
+                    end
                     #diagnostics
                     if params["diag_inds"][3] == 1
                         idiag += 1
@@ -228,12 +245,15 @@ function phyt_update(model, ΔT::Int64)
                         ρ_chl = 0.0
                     end
 
-                    # Metabolic partitioning for biosynthesis, decrease with size
-                    shape_factor_β = params["a_β"][sp]*phyt[4]^params["b_β"][sp]
-                    β = shape_factor_β/(1+shape_factor_β)
+                    # # Metabolic partitioning for biosynthesis, decrease with size
+                    # shape_factor_β = params["a_β"][sp]*phyt[4]^params["b_β"][sp]
+                    # β = shape_factor_β/(1+shape_factor_β)
 
-                    # Compute extra cost for biosynthesis, return a rate (per hour)
-                    respir_extra = params["respir_ex"]*phyt[4]^params["respir_b"]
+                    # Respiration
+                    respir_sp = params["respir_a"][sp]/86400
+                    respir_m = respir_sp*phyt[4]^params["respir_b"][sp]*photoTempFunc
+                    respir_cell = respir_m*phyt[5] # unit: mmolC/second/individual
+                    respir = respir_cell*ΔT # unit: mmolC/time step/individual
 
                     # DOC uptake if allowed
                     if params["useDOC"][sp] == 1
@@ -258,14 +278,22 @@ function phyt_update(model, ΔT::Int64)
                     end
 
                     # C, N, P storages update
-                    phyt[6] = phyt[6] + PP + VDOC
+                    phyt[6] = phyt[6] + PP + VDOC - respir
+                    if phyt[6] ≤ 0.0 # if C reserve is not enough for respiration
+                        exceed = 0.0 - phyt[6]
+                        phyt[5] = phyt[5] - exceed # respire functional C instead
+                        phyt[6] = 0.0
+                        phyt[7] = phyt[7] + exceed*params["R_NC"] # return N from function pool to N reserve
+                        phyt[8] = phyt[8] + exceed*params["R_PC"] # return P from function pool to P reserve
+                    end
                     phyt[7] = phyt[7] + VNH4 + VNO3
                     phyt[8] = phyt[8] + VPO4
 
                     # maximum biosynthesis rate based on carbon availability
                     k_mtb = params["k_mtb"][sp]*phyt[4]^params["b_k_mtb"][sp]/86400 # per second
-                    BS_Cmax = β*k_mtb*ΔT*phyt[6]/(1+respir_extra)
-                    MaintenC = (1-β)*BS_Cmax/β
+                    # BS_Cmax = β*k_mtb*ΔT*phyt[6]/(1+respir_extra)
+                    # MaintenC = (1-β)*BS_Cmax/β
+                    BS_Cmax = k_mtb*phyt[6]*ΔT
 
                     # maximum allowed biosynthesis rate by Nq and Pq
                     BS_Nmax = k_mtb*ΔT*phyt[7]/params["R_NC"]
@@ -282,7 +310,7 @@ function phyt_update(model, ΔT::Int64)
                     end
                     if params["diag_inds"][8] == 1
                         idiag += 1
-                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += MaintenC
+                        model.diags.spcs[x,y,z,diag_t,sp,idiag] += respir
                     end
                     if params["diag_inds"][9] == 1
                         idiag += 1
@@ -290,13 +318,12 @@ function phyt_update(model, ΔT::Int64)
                     end
 
                     # update quotas, biomass, Chla and cell size etc.
-                    CostC = BS_C*(1+respir_extra)
                     phyt[5] = phyt[5] + BS_C
-                    phyt[6] = phyt[6] - CostC -MaintenC - excretC
-                    phyt[7] = phyt[7]- BS_C*params["R_NC"]
-                    phyt[8] = phyt[8]- BS_C*params["R_PC"]
+                    phyt[6] = phyt[6] - BS_C - excretC
+                    phyt[7] = phyt[7] - BS_C*params["R_NC"]
+                    phyt[8] = phyt[8] - BS_C*params["R_PC"]
                     phyt[9] = phyt[9] + ρ_chl*BS_C*params["R_NC"]
-                    phyt[12]= phyt[12] + 1.0*(ΔT/3600)
+                    phyt[12]= phyt[12]+ 1.0*(ΔT/3600)
 
                     # normalized by standard C quota
                     # dsize= (PP + VDOC - MaintenC - excretC)/(params["P_Cquota"][sp]*params["P_Nsuper"])
@@ -325,7 +352,7 @@ function phyt_update(model, ΔT::Int64)
                         model.diags.spcs[x,y,z,diag_t,sp,idiag] += phyt[9]
                     end
 
-                    consume.DIC[x, y, z] = consume.DIC[x, y, z] + MaintenC + CostC - BS_C
+                    consume.DIC[x, y, z] = consume.DIC[x, y, z] + respir + BS_C - PP
                     consume.DOC[x, y, z] = consume.DOC[x, y, z] + excretC - VDOC
                     consume.NH4[x, y, z] = consume.NH4[x, y, z] - VNH4
                     consume.NO3[x, y, z] = consume.NO3[x, y, z] - VNO3
