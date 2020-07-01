@@ -9,9 +9,9 @@ makedocs(;
              "Various" => "various.md",
              "Equations" => "equations.md",
          ],
-         repo="https://github.com/zhenwu0728/PlanktonIndividuals.jl/blob/{commit}{path}#L{line}",
+         repo="https://github.com/JuliaOcean/PlanktonIndividuals.jl/blob/{commit}{path}#L{line}",
          sitename = "PlanktonIndividuals.jl",
          authors="ZhenWu <zhenwu@mit.edu>",
 )
 
-deploydocs(repo="github.com/zhenwu0728/PlanktonIndividuals.jl.git")
+deploydocs(repo="github.com/JuliaOcean/PlanktonIndividuals.jl.git")
