@@ -98,8 +98,8 @@ function phyt_update(model, ΔT::Int64)
             if t%600 ≠ 1 # check every 10 mins
                 P_graz = false
             else
-                # reg_graz = 1.0/params["Grz_P"]
-                reg_graz = exp(num_phyt/(params["P_Nind"]*params["P_Nsp"]))/params["Grz_P"]
+                reg_graz = 1.0/params["Grz_P"]
+                # reg_graz = exp(num_phyt/(params["P_Nind"]*params["P_Nsp"]))/params["Grz_P"]
                 P_graz = rand(Bernoulli(reg_graz))
             end
         end
