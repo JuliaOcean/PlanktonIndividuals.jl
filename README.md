@@ -1,8 +1,7 @@
 # PlanktonIndividuals.jl
-
-[![Travis Build Status](https://www.travis-ci.org/zhenwu0728/PlanktonIndividuals.jl.svg?branch=master)](https://travis-ci.org/zhenwu0728/PlanktonIndividuals.jl)
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://zhenwu0728.github.io/PlanktonIndividuals.jl/stable)
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://zhenwu0728.github.io/PlanktonIndividuals.jl/dev)
+[![Build Status](https://travis-ci.org/JuliaOcean/PlanktonIndividuals.jl.svg?branch=master)](https://travis-ci.org/JuliaOcean/PlanktonIndividuals.jl)
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaOcean.github.io/PlanktonIndividuals.jl/stable)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaOcean.github.io/PlanktonIndividuals.jl/dev)
 [![DOI](https://zenodo.org/badge/178023615.svg)](https://zenodo.org/badge/latestdoi/178023615)
 
 This package simulates the behavior of an ensemble of phytoplankton `individuals`.
