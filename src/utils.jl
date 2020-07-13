@@ -175,7 +175,7 @@ function count_chl(phyts_a, grid)
     for i in 1:size(phyts_a,2)
         phyt = phyts_a[:,i]
         x,y,z = which_grid(phyt, grid)
-        cells[x, y, z] = cells[x, y, z] + phyt[12]
+        cells[x, y, z] = cells[x, y, z] + phyt[9]
     end
     cells .= cells ./ grid.V
     return cells
