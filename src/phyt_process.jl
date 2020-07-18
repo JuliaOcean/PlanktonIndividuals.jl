@@ -120,37 +120,52 @@ function phyt_update(model, ΔT::Int64)
                 if t%600 == 1 # check every 10 mins
                     if params["dvid_type"][sp] == 1 # sizer-like cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
-                            reg_size = params["dvid_stp"][sp]*(phyt[4] - params["dvid_reg"][sp])
+                            reg_size   = params["dvid_stp"][sp]*(phyt[4] - params["dvid_size"][sp])
                             reg_divide = params["P_dvid"][sp]*(tanh(reg_size) + 1)
-                            P_dvi = rand(Bernoulli(reg_divide))
+                            P_dvi      = rand(Bernoulli(reg_divide))
                         end
                     elseif params["dvid_type"][sp] == 2 # adder-like cell division
                         add_size = phyt[4] - phyt[13]
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
-                            reg_size = params["dvid_stp"][sp]*(add_size - params["dvid_reg"][sp])
-                            reg_divide = params["P_dvid"][sp]*(tanh(reg_size) + 1)
-                            P_dvi = rand(Bernoulli(reg_divide))
+                            reg_add    = params["dvid_stp"][sp]*(add_size - params["dvid_add"][sp])
+                            reg_divide = params["P_dvid"][sp]*(tanh(reg_add) + 1)
+                            P_dvi      = rand(Bernoulli(reg_divide))
                         end
                     elseif params["dvid_type"][sp] == 3 # timer-like (age) cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
-                            reg_age = params["dvid_stp"][sp]*(phyt[12] - params["dvid_reg"][sp])
+                            reg_age    = params["dvid_stp"][sp]*(phyt[12] - params["dvid_age"][sp])
                             reg_divide = params["P_dvid"][sp]*(tanh(reg_age) + 1)
-                            P_dvi = rand(Bernoulli(reg_divide))
+                            P_dvi      = rand(Bernoulli(reg_divide))
                         end
                     elseif params["dvid_type"][sp] == 4 # timer-like (circadian clock) cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
-                            cirT = t % 86400 ÷ 3600
-                            reg_age = params["dvid_stp"][sp]*(cirT - params["dvid_reg"][sp])
-                            reg_divide = params["P_dvid"][sp]*(tanh(reg_age) + 1)
-                            P_dvi = rand(Bernoulli(reg_divide))
+                            cirT       = t % 86400 ÷ 3600
+                            reg_cirT   = params["dvid_stp"][sp]*(cirT - params["dvid_cirT"][sp])
+                            reg_divide = params["P_dvid"][sp]*(tanh(reg_cirT) + 1)
+                            P_dvi      = rand(Bernoulli(reg_divide))
                         end
                     elseif params["dvid_type"][sp] == 5 # timer-like (circadian clock) cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             # use light intensity to indicate circadian clock in the cell
-                            reg_par = params["dvid_stp"][sp]*(params["dvid_reg"][sp] - IR_t)
+                            reg_par    = params["dvid_stp"][sp]*(params["dvid_par"][sp] - IR_t)
                             reg_divide = params["P_dvid"][sp]*(tanh(reg_par) + 1)
-                            P_dvi = rand(Bernoulli(reg_divide))
+                            P_dvi      = rand(Bernoulli(reg_divide))
                         end
+                    elseif params["dvid_type"][sp] == 6 # timer & sizer-like cell division
+                        cirT       = t % 86400 ÷ 3600
+                        reg_cirT   = cirT - params["dvid_cirT"][sp]
+                        reg_size   = params["dvid_stp"][sp]*(phyt[4] - params["dvid_size"][sp])
+                        reg_divide = params["P_dvid"][sp]*(tanh(reg_size) + 1)*(tanh(reg_cirT) + 1)/2.0
+                        P_dvi      = rand(Bernoulli(reg_divide))
+                    elseif params["dvid_type"][sp] == 7 # timer-like (circadian clock) cell division
+                        cirT       = t % 86400 ÷ 3600
+                        reg_cirT   = params["dvid_stp"][sp]*(cirT - params["dvid_cirT"][sp])
+                        reg_divide = params["P_dvid"][sp]*(tanh(reg_cirT) + 1)
+                        P_dvi      = rand(Bernoulli(reg_divide))
+                    elseif params["dvid_type"][sp] == 8 # sizer-like cell division
+                        reg_size   = params["dvid_stp"][sp]*(phyt[4] - params["dvid_size"][sp])
+                        reg_divide = params["P_dvid"][sp]*(tanh(reg_size) + 1)
+                        P_dvi      = rand(Bernoulli(reg_divide))
                     else
                         print("wrong division type! \n")
                     end
