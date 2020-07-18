@@ -152,20 +152,26 @@ function phyt_update(model, ΔT::Int64)
                             P_dvi      = rand(Bernoulli(reg_divide))
                         end
                     elseif params["dvid_type"][sp] == 6 # timer & sizer-like cell division
-                        cirT       = t % 86400 ÷ 3600
-                        reg_cirT   = cirT - params["dvid_cirT"][sp]
-                        reg_size   = params["dvid_stp"][sp]*(phyt[4] - params["dvid_size"][sp])
-                        reg_divide = params["P_dvid"][sp]*(tanh(reg_size) + 1)*(tanh(reg_cirT) + 1)/2.0
-                        P_dvi      = rand(Bernoulli(reg_divide))
+                        if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
+                            cirT       = t % 86400 ÷ 3600
+                            reg_cirT   = cirT - params["dvid_cirT"][sp]
+                            reg_size   = params["dvid_stp"][sp]*(phyt[4] - params["dvid_size"][sp])
+                            reg_divide = params["P_dvid"][sp]*(tanh(reg_size) + 1)*(tanh(reg_cirT) + 1)/2.0
+                            P_dvi      = rand(Bernoulli(reg_divide))
+                        end
                     elseif params["dvid_type"][sp] == 7 # timer-like (circadian clock) cell division
-                        cirT       = t % 86400 ÷ 3600
-                        reg_cirT   = params["dvid_stp"][sp]*(cirT - params["dvid_cirT"][sp])
-                        reg_divide = params["P_dvid"][sp]*(tanh(reg_cirT) + 1)
-                        P_dvi      = rand(Bernoulli(reg_divide))
+                        if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
+                            cirT       = t % 86400 ÷ 3600
+                            reg_cirT   = params["dvid_stp"][sp]*(cirT - params["dvid_cirT"][sp])
+                            reg_divide = params["P_dvid"][sp]*(tanh(reg_cirT) + 1)
+                            P_dvi      = rand(Bernoulli(reg_divide))
+                        end
                     elseif params["dvid_type"][sp] == 8 # sizer-like cell division
-                        reg_size   = params["dvid_stp"][sp]*(phyt[4] - params["dvid_size"][sp])
-                        reg_divide = params["P_dvid"][sp]*(tanh(reg_size) + 1)
-                        P_dvi      = rand(Bernoulli(reg_divide))
+                        if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
+                            reg_size   = params["dvid_stp"][sp]*(phyt[4] - params["dvid_size"][sp])
+                            reg_divide = params["P_dvid"][sp]*(tanh(reg_size) + 1)
+                            P_dvi      = rand(Bernoulli(reg_divide))
+                        end
                     else
                         print("wrong division type! \n")
                     end
