@@ -73,6 +73,13 @@ function phyt_update(model, ΔT::Int64)
     diag_t = t÷params["diag_freq"]+1
     npop = zeros(Int, g.Nx, g.Ny, g.Nz, params["P_Nsp"])
 
+    # diagnostics
+    model.diags.tr[:,:,:,diag_t,1] += PAR
+    model.diags.tr[:,:,:,diag_t,2] += nutrients.NO3
+    model.diags.tr[:,:,:,diag_t,3] += nutrients.NH4
+    model.diags.tr[:,:,:,diag_t,4] += nutrients.PO4
+    model.diags.tr[:,:,:,diag_t,5] += nutrients.DOC
+
     num_phyt = size(phyts_a,2)
 
     # iterate phytoplankton agents
@@ -404,10 +411,8 @@ function phyt_update(model, ΔT::Int64)
             consume.POP[x, y, z] = consume.POP[x, y, z] + (phyt[5]*params["R_PC"]+phyt[8])*(1.0 - params["grazFracP"])
         end # graze
     end # for loop to traverse the array of agents
-    # diagnostics
-    model.diags.tr[:,:,:,diag_t,1] += PAR
     for k in 1:params["P_Nsp"]
-        model.diags.tr[:,:,:,diag_t,k+1] += npop[:,:,:,k]
+        model.diags.tr[:,:,:,diag_t,k+5] += npop[:,:,:,k]
     end
     phyts_b = reshape(phyts_b,size(phyts_a,1),Int(length(phyts_b)/size(phyts_a,1)))
     return phyts_b,consume
