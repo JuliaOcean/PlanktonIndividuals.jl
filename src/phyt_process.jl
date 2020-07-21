@@ -161,7 +161,7 @@ function phyt_update(model, ΔT::Int64)
                     elseif params["dvid_type"][sp] == 6 # timer & sizer-like cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             cirT       = t % 86400 ÷ 3600
-                            reg_cirT   = cirT - params["dvid_cirT"][sp]
+                            reg_cirT   = cparams["dvid_stp"][sp]*(irT - params["dvid_cirT"][sp])
                             reg_size   = params["dvid_stp"][sp]*(phyt[4] - params["dvid_size"][sp])
                             reg_divide = params["P_dvid"][sp]*√((tanh(reg_size) + 1)*(tanh(reg_cirT) + 1))
                             P_dvi      = rand(Bernoulli(reg_divide))
