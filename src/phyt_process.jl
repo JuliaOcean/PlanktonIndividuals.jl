@@ -163,7 +163,7 @@ function phyt_update(model, ΔT::Int64)
                             cirT       = t % 86400 ÷ 3600
                             reg_cirT   = cirT - params["dvid_cirT"][sp]
                             reg_size   = params["dvid_stp"][sp]*(phyt[4] - params["dvid_size"][sp])
-                            reg_divide = params["P_dvid"][sp]*(tanh(reg_size) + 1)*(tanh(reg_cirT) + 1)/2.0
+                            reg_divide = params["P_dvid"][sp]*√((tanh(reg_size) + 1)*(tanh(reg_cirT) + 1))
                             P_dvi      = rand(Bernoulli(reg_divide))
                         end
                     elseif params["dvid_type"][sp] == 7 # timer-like (circadian clock) cell division
