@@ -102,7 +102,7 @@ function phyt_update(model, ΔT::Int64)
         if params["Grz_P"] == 0
             P_graz = false
         else
-            if t%1800 ≠ 1 # check every 30 mins
+            if t%300 ≠ 1 # check every 5 mins
                 P_graz = false
             else
                 reg_graz = 1.0/params["Grz_P"]
@@ -115,7 +115,7 @@ function phyt_update(model, ΔT::Int64)
             # compute death probability according to cell size
             # minimal vital cell size is 1.0
             P_death = false
-            if t%1800 == 1 # check every 30 mins
+            if t%300 == 1 # check every 5 mins
                 reg_de = 6.0*(params["death_reg"][sp] - phyt[4])
                 reg_death = params["P_death"][sp]*(tanh(reg_de) + 1)
                 P_death = rand(Bernoulli(reg_death))
@@ -124,7 +124,7 @@ function phyt_update(model, ΔT::Int64)
             if P_death == false # not natural death
                 # compute probabilities of division
                 P_dvi = false
-                if t%1800 == 1 # check every 30 mins
+                if t%300 == 1 # check every 5 mins
                     if params["dvid_type"][sp] == 1 # sizer-like cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             reg_size   = params["dvid_stp"][sp]*(phyt[4] - params["dvid_size"][sp])
