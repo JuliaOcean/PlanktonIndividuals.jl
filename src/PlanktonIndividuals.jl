@@ -7,6 +7,7 @@ using CUDA
 
 src=""
 
+include("$src"*"architecture.jl")
 include("$src"*"model_struct.jl")
 include("$src"*"model_setup.jl")
 include("$src"*"phyt_process.jl")
@@ -27,6 +28,7 @@ export
     # model structures
     PI_Model, grids, nutrient_fields, velocity,
     RunOptions, RunParams, read_Ogrids,
+    Architecture, GPUs, CPUs,
 
     # read input functions
     read_IR_input, read_temp_input,

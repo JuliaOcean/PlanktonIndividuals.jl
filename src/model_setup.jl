@@ -5,7 +5,7 @@ Set up a series of agents following a normal distribution (mean,var)
 'Cquota' is the initial biomass for one cell
 '(x,y,z)' of an individual is the actual location not grid indices
 """
-function setup_agents(RunParam::RunParams,grid)
+function setup_agents(::CPUs,RunParam::RunParams,grid)
     params = RunParam.params
     Nsp = params["P_Nsp"]
     N = params["P_Nind"]
@@ -19,7 +19,7 @@ function setup_agents(RunParam::RunParams,grid)
     nqmin = params["Nqmin"]
     pqmax = params["Pqmax"]
     pqmin = params["Pqmin"]
-    phyts0 = zeros(Real,13,N*Nsp)
+    phyts0 = zeros(Float64,13,N*Nsp)
     phyts0[1,:] .= rand(Uniform(grid.xF[2],grid.xF[end]), N*Nsp)               # x
     phyts0[2,:] .= rand(Uniform(grid.yF[2],grid.yF[end]), N*Nsp)               # y
     phyts0[3,:] .= rand(Uniform(grid.zF[2],grid.zF[end-1]), N*Nsp)             # z
@@ -49,6 +49,53 @@ function setup_agents(RunParam::RunParams,grid)
         zoos0 = setup_zooplkt(params, grid)
         return individuals(phyts0,zoos0)
     end
+end
+function setup_agents(::GPUs,RunParam::RunParams,grid)
+    params = RunParam.params
+    Nsp = params["P_Nsp"]
+    N = params["P_Nind"]
+    mean = params["P_mean"]
+    var = params["P_var"]
+    Cquota = params["P_Cquota"]
+    Nsuper = params["P_Nsuper"]
+    cqmax = params["Cqmax"]
+    cqmin = params["Cqmin"]
+    nqmax = params["Nqmax"]
+    nqmin = params["Nqmin"]
+    pqmax = params["Pqmax"]
+    pqmin = params["Pqmin"]
+    phyts0 = zeros(Float64,13,N*Nsp) |> CuArray
+    phyts0[1,:] .= CuArray(rand(Uniform(grid.xF[2],grid.xF[end]), N*Nsp))               # x
+    phyts0[2,:] .= CuArray(rand(Uniform(grid.yF[2],grid.yF[end]), N*Nsp))               # y
+    phyts0[3,:] .= CuArray(rand(Uniform(grid.zF[2],grid.zF[end-1]), N*Nsp))             # z
+    phyts0[4,:] .= CuArray(max.(1.0, rand(Normal(mean,var), N*Nsp)))                    # size
+    for i in 1:Nsp
+        lower = Int(1+(i-1)*N)
+        upper = Int(N+(i-1)*N)
+        phyts0[5,lower:upper]  .= Cquota[i]*Nsuper                             # Bm
+        phyts0[10,lower:upper] .= i                                            # species
+    end
+    phyts0[5,:] .= phyts0[5,:] .* phyts0[4,:]                                  # Bm
+    for i in 1:Nsp
+        lower = Int(1+(i-1)*N)
+        upper = Int(N+(i-1)*N)
+        phyts0[6,lower:upper] .= copy(phyts0[5,lower:upper]) .* CuArray(rand(Uniform(cqmin[i],cqmax[i]),N)) # Cq
+        phyts0[7,lower:upper] .= copy(phyts0[5,lower:upper]) .* CuArray(rand(Uniform(nqmin[i],nqmax[i]),N)) # Nq
+        phyts0[8,lower:upper] .= copy(phyts0[5,lower:upper]) .* CuArray(rand(Uniform(pqmin[i],pqmax[i]),N)) # Pq
+        phyts0[9,lower:upper] .= copy(phyts0[5,lower:upper]) .* params["Chl2Cint"][i]                       # Chl
+    end
+    phyts0[11,:] .= 1.0                                                        # generation
+    phyts0[12,:] .= 1.0                                                        # age
+    phyts0[13,:] .= copy(phyts0[4,:])                                          # init_size
+
+    return individuals(phyts0,nothing)
+
+    # if RunParam.Zoo == false
+    #     return individuals(phyts0,nothing)
+    # else
+    #     zoos0 = setup_zooplkt(params, grid)
+    #     return individuals(phyts0,zoos0)
+    # end
 end
 
 """
@@ -85,12 +132,20 @@ end
 """
     nutrients_init(g)
 """
-function nutrients_init(g)
+function nutrients_init(::CPUs,g)
     nut = nutrient_fields(zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz),
                           zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz),
                           zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz),
                           zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz),
                           zeros(g.Nx, g.Ny, g.Nz), zeros(g.Nx, g.Ny, g.Nz))
+    return nut
+end
+function nutrients_init(::GPUs,g)
+    nut = nutrient_fields(CuArray(zeros(g.Nx, g.Ny, g.Nz)), CuArray(zeros(g.Nx, g.Ny, g.Nz)),
+                          CuArray(zeros(g.Nx, g.Ny, g.Nz)), CuArray(zeros(g.Nx, g.Ny, g.Nz)),
+                          CuArray(zeros(g.Nx, g.Ny, g.Nz)), CuArray(zeros(g.Nx, g.Ny, g.Nz)),
+                          CuArray(zeros(g.Nx, g.Ny, g.Nz)), CuArray(zeros(g.Nx, g.Ny, g.Nz)),
+                          CuArray(zeros(g.Nx, g.Ny, g.Nz)), CuArray(zeros(g.Nx, g.Ny, g.Nz)))
     return nut
 end
 
@@ -100,7 +155,7 @@ end
 Set up initial nutrient fields according to grid information
 'nut' is an array of 10 elements, each element is a kind of nutrient
 """
-function setup_nutrients(g,nut)
+function setup_nutrients(::CPUs,g,nut)
     DIC = fill(nut[1],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
     NH4 = fill(nut[2],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
     NO3 = fill(nut[3],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
@@ -111,6 +166,21 @@ function setup_nutrients(g,nut)
     POC = fill(nut[8],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
     PON = fill(nut[9],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
     POP = fill(nut[10],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz)
+
+    nutrients = nutrient_fields(DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP)
+    return nutrients
+end
+function setup_nutrients(::GPUs,g,nut)
+    DIC = fill(nut[1],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz) |> CuArray
+    NH4 = fill(nut[2],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz) |> CuArray
+    NO3 = fill(nut[3],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz) |> CuArray
+    PO4 = fill(nut[4],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz) |> CuArray
+    DOC = fill(nut[5],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz) |> CuArray
+    DON = fill(nut[6],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz) |> CuArray
+    DOP = fill(nut[7],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz) |> CuArray
+    POC = fill(nut[8],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz) |> CuArray
+    PON = fill(nut[9],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz) |> CuArray
+    POP = fill(nut[10],(g.Nx, g.Ny, g.Nz)) .* rand(Uniform(0.8,1.2), g.Nx, g.Ny, g.Nz) |> CuArray
 
     nutrients = nutrient_fields(DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP)
     return nutrients
@@ -128,7 +198,7 @@ function load_nut_initials(paths,g)
         if length(findall(x->x==index, pathkeys)) == 0
             print("NUT_INIT: nutrient not found \n")
         else
-            tmp = deserialize(paths[index])
+            tmp = deserialize(paths[index]) |> CuArray
             if size(tmp) == (g.Nx, g.Ny, g.Nz)
                 push!(tmps,tmp)
             else

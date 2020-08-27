@@ -18,7 +18,7 @@ Indices:
 =#
 """
 """
-function diags_setup(nTime::Int64, ΔT::Int64, grids, freq::Int64, diag_inds::Array, Nsp::Int64)
+function diags_setup(::CPUs, nTime::Int64, ΔT::Int64, grids, freq::Int64, diag_inds::Array, Nsp::Int64)
     ndiags = sum(diag_inds)
     nt = nTime*ΔT÷freq
     if nTime*ΔT%freq ≠ 0
@@ -28,12 +28,30 @@ function diags_setup(nTime::Int64, ΔT::Int64, grids, freq::Int64, diag_inds::Ar
     diags_pop = zeros(grids.Nx, grids.Ny, grids.Nz, nt, Nsp, 3)
     return diags_sp, diags_pop
 end
+function diags_setup(::GPUs, nTime::Int64, ΔT::Int64, grids, freq::Int64, diag_inds::Array, Nsp::Int64)
+    ndiags = sum(diag_inds)
+    nt = nTime*ΔT÷freq
+    if nTime*ΔT%freq ≠ 0
+        nt += 1
+    end
+    diags_sp = zeros(grids.Nx, grids.Ny, grids.Nz, nt, Nsp, ndiags) |> CuArray
+    diags_pop = zeros(grids.Nx, grids.Ny, grids.Nz, nt, Nsp, 3) |> CuArray
+    return diags_sp, diags_pop
+end
 
-function diags_setup(nTime::Int64, ΔT::Int64, grids, freq::Int64, nTr::Int64)
+function diags_setup(::CPUs, nTime::Int64, ΔT::Int64, grids, freq::Int64, nTr::Int64)
     nt = nTime*ΔT÷freq
     if nTime*ΔT%freq ≠ 0
         nt += 1
     end
     diags = zeros(grids.Nx, grids.Ny, grids.Nz, nt, nTr)
+    return diags
+end
+function diags_setup(::GPUs, nTime::Int64, ΔT::Int64, grids, freq::Int64, nTr::Int64)
+    nt = nTime*ΔT÷freq
+    if nTime*ΔT%freq ≠ 0
+        nt += 1
+    end
+    diags = zeros(grids.Nx, grids.Ny, grids.Nz, nt, nTr) |> CuArray
     return diags
 end
