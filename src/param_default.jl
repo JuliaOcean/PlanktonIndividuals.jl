@@ -29,6 +29,7 @@ param_default=Dict(
     "inhibcoef"=> [0.0, 0.0],         # Light inhibition
     "Grz_P"    => 4000,               # Grazing probability scalar
     "Grz_stp"  => 0,                  # Grazing probability decrease with depth
+    "Grz_min"  => 0.1,                # Minimal grazing probability at depth
     "P_dvid"   => [0.2,0.2],          # Probability scaler of cell division.
     "dvid_type"=> [1,6],              # The type of cell division, 1:sizer, 2:adder.
     "dvid_stp" => [6.0,[2.0,6.0]],    # Steepness of sigmoidal function
