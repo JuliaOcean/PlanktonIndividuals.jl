@@ -20,7 +20,7 @@ end
     nut_forcing(nut, g, params)
 compute remineralization and nitrification of nutrients
 """
-function nut_forcing(g, nutrients, params,ΔT)
+function nut_forcing(arch::Architecture, g, nutrients, params,ΔT)
     # compute Forcings (remineralization)
     DIC = copy(nutrients.DIC); NH4 = copy(nutrients.NH4);
     NO3 = copy(nutrients.NO3); PO4 = copy(nutrients.PO4);
@@ -32,7 +32,7 @@ function nut_forcing(g, nutrients, params,ΔT)
     DOC[DOC .< 0.0] .= 0.0; DON[DON .< 0.0] .= 0.0;
     DOP[DOP .< 0.0] .= 0.0; POC[POC .< 0.0] .= 0.0;
     PON[PON .< 0.0] .= 0.0; POP[POP .< 0.0] .= 0.0;
-    F = nutrients_init(g)
+    F = nutrients_init(arch, g)
     # compute remineralization of organic nutrients
     F.DIC .= F.DIC .+ DOC .* params["kDOC"] .* ΔT
     F.DOC .= F.DOC .- DOC .* params["kDOC"] .* ΔT
@@ -57,8 +57,8 @@ end
     nut_advection(g, nutrients, velᵇ, ΔT)
 compute nutrient advection using DST3FL shceme
 """
-function nut_advection(g, nutrients, velᵇ, ΔT)
-    gtr = nutrients_init(g)
+function nut_advection(arch::Architecture, g, nutrients, velᵇ, ΔT)
+    gtr = nutrients_init(arch, g)
     gtr.DIC = MultiDim_adv(g, nutrients.DIC, velᵇ, ΔT) .* ΔT;
     gtr.NH4 = MultiDim_adv(g, nutrients.NH4, velᵇ, ΔT) .* ΔT;
     gtr.NO3 = MultiDim_adv(g, nutrients.NO3, velᵇ, ΔT) .* ΔT;
@@ -76,8 +76,8 @@ end
     nut_diffusion(g, nutrients, params)
 compute diffusion for each nutrient tracer
 """
-function nut_diffusion(g, nutrients, params, ΔT)
-    diffu = nutrients_init(g)
+function nut_diffusion(arch::Architecture, g, nutrients, params, ΔT)
+    diffu = nutrients_init(arch, g)
     κh = params["κh"]
     κv = params["κv"]
     for k in 1:g.Nz
@@ -103,22 +103,22 @@ end
     function nut_update(model, velᵇ, consume, ΔT, Dim)
 Update nutrient fields to next time step with source term and consumption by phytoplankton ('consume')
 """
-function nut_update(model, velᵇ, consume, ΔT)
+function nut_update(arch::Architecture, model, velᵇ, consume, ΔT)
     nutrients = model.nutrients
     params = model.params
     g = model.grid
     # compute biogeochemical forcings of nutrients,for each time step
-    F = nut_forcing(g, nutrients, params, ΔT)
+    F = nut_forcing(arch, g, nutrients, params, ΔT)
     # Compute nutrient advection using DST3FL scheme,for each time step
-    gtr = nut_advection(g, nutrients, velᵇ, ΔT)
+    gtr = nut_advection(arch, g, nutrients, velᵇ, ΔT)
     # Compute nutrient diffusion,for each time step
-    diffu = nut_diffusion(g, nutrients, params, ΔT)
+    diffu = nut_diffusion(arch, g, nutrients, params, ΔT)
     # sum all tendencies
     gtr = sum_nut_tendency(gtr,diffu)
     tendencies = sum_nut_tendency(gtr,F)
     # tendencies = gtr
     # store nutrients of the former time step
-    nutₜ = nutrients_init(g)
+    nutₜ = nutrients_init(arch, g)
     nutₜ.DIC .= nutrients.DIC .+ tendencies.DIC .+ consume.DIC ./ g.V
     nutₜ.NH4 .= nutrients.NH4 .+ tendencies.NH4 .+ consume.NH4 ./ g.V
     nutₜ.NO3 .= nutrients.NO3 .+ tendencies.NO3 .+ consume.NO3 ./ g.V
@@ -132,7 +132,7 @@ function nut_update(model, velᵇ, consume, ΔT)
     return nutₜ, gtr
 end
 
-function nut_update(model, consume, ΔT)
+function nut_update(arch::Architecture, model, consume, ΔT)
     nutrients = model.nutrients
     params = model.params
     g = model.grid
@@ -147,7 +147,7 @@ function nut_update(model, consume, ΔT)
     DOC[DOC .< 0.0] .= 0.0; DON[DON .< 0.0] .= 0.0;
     DOP[DOP .< 0.0] .= 0.0; POC[POC .< 0.0] .= 0.0;
     PON[PON .< 0.0] .= 0.0; POP[POP .< 0.0] .= 0.0;
-    F = nutrients_init(g)
+    F = nutrients_init(arch, g)
     # compute remineralization of organic nutrients
     F.DIC .= F.DIC .+ DOC .* params["kDOC"] .* ΔT
     F.DOC .= F.DOC .- DOC .* params["kDOC"] .* ΔT
@@ -166,7 +166,7 @@ function nut_update(model, consume, ΔT)
     F.DOP .= F.DOP .+ POP .* params["kPOP"] .* ΔT
     F.POP .= F.POP .- POP .* params["kPOP"] .* ΔT
     # store nutrients of the former time step
-    nutₜ = nutrients_init(g)
+    nutₜ = nutrients_init(arch, g)
     nutₜ.DIC .= nutrients.DIC .+ F.DIC .+ consume.DIC ./ g.V
     nutₜ.NH4 .= nutrients.NH4 .+ F.NH4 .+ consume.NH4 ./ g.V
     nutₜ.NO3 .= nutrients.NO3 .+ F.NO3 .+ consume.NO3 ./ g.V

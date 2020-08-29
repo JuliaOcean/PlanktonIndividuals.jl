@@ -9,6 +9,7 @@ src=""
 
 include("$src"*"architecture.jl")
 include("$src"*"model_struct.jl")
+include("$src"*"grids.jl")
 include("$src"*"model_setup.jl")
 include("$src"*"phyt_process.jl")
 include("$src"*"zooplankton.jl")
@@ -27,7 +28,7 @@ include("$src"*"time_step.jl")
 export
     # model structures
     PI_Model, grids, nutrient_fields, velocity,
-    RunOptions, RunParams, read_Ogrids,
+    RunOptions, RunParams, read_Ogrids, gen_Grid,
     Architecture, GPUs, CPUs,
 
     # read input functions

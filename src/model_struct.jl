@@ -25,19 +25,19 @@ struct grids
     xF::Array{Float64,1}
     yF::Array{Float64,1}
     zF::Array{Float64,1}
-    dxF::Array{Float64,1} # unit: meter
-    dyF::Array{Float64,1} # unit: meter
-    dzF::Array{Float64,1} # unit: meter
-    dxC::Array{Float64,1} # unit: meter, distance from center to center
-    dyC::Array{Float64,1} # unit: meter, distance from center to center
-    dzC::Array{Float64,1} # unit: meter, distance from center to center
-    Ax::Array{Float64,3} # unit: m²
-    Ay::Array{Float64,3} # unit: m²
-    Az::Array{Float64,2} # unit: m²
-    V ::Array{Float64,3} # unit: m³
+    Δx::Float64 # unit: meter
+    Δy::Float64 # unit: meter
+    Δz::Float64 # unit: meter
+    Ax::Float64 # unit: m²
+    Ay::Float64 # unit: m²
+    Az::Float64 # unit: m²
+    V ::Float64 # unit: m³
     Nx::Int
     Ny::Int
     Nz::Int
+    Hx::Int
+    Hy::Int
+    Hz::Int
 end
 
 mutable struct individuals
