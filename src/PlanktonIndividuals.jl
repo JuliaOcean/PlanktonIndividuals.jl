@@ -3,7 +3,7 @@ module PlanktonIndividuals
 using NCDatasets, Serialization
 using Random, Distributions, Interpolations, Statistics
 using Printf
-using CUDA
+using CUDA, KernelAbstractions
 
 src=""
 
@@ -16,7 +16,8 @@ include("$src"*"zooplankton.jl")
 include("$src"*"utils.jl")
 include("$src"*"output_writers.jl")
 include("$src"*"agent_div.jl")
-include("$src"*"dst3fl.jl")
+include("$src"*"third_order_DSTFL.jl")
+include("$src"*"multi_dim_adv.jl")
 include("$src"*"nutrient_processes.jl")
 include("$src"*"diffusivity.jl")
 include("$src"*"param_default.jl")

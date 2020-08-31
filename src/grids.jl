@@ -71,7 +71,7 @@ function read_Ogrids(Ogrid, filepath)
     return g
 end
 
-function gen_Grid(;size, spacing ,halo = (1, 1, 1),)
+function gen_Grid(;size, spacing, halo = (1, 1, 1),)
     Nx, Ny, Nz = size
     Hx, Hy, Hz = halo
     Δx, Δy, Δz = spacing
