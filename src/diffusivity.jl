@@ -38,21 +38,37 @@ end
 @inline κ∇²(i, j, k, grid, κ, c) = κ∇²(i, j, k, grid, κ, κ, κ, c)
 
 ##### calculate the tendency by diffusion for tracer c
-@kernel function calc_diffusion!(Gc, grid, κˣ, κʸ, κᶻ, c)
+@kernel function calc_diffusion!(Gc, grid, κˣ, κʸ, κᶻ, c, ΔT)
     i, j, k = @index(Global, NTuple)
     ### offset index for halo points
     ii = i + g.Hx
     jj = j + g.Hy
     kk = k + g.Hz
-    @inbounds Gc[ii, jj, kk] = κ∇²(ii, jj, kk, grid, κˣ, κʸ, κᶻ, c)
+    @inbounds Gc[ii, jj, kk] = κ∇²(ii, jj, kk, grid, κˣ, κʸ, κᶻ, c) * ΔT
 end
 
-@kernel function calc_diffusion!(Gc, grid, κ, c)
-    i, j, k = @index(Global, NTuple)
-    ### offset index for halo points
-    ii = i + g.Hx
-    jj = j + g.Hy
-    kk = k + g.Hz
-    @inbounds Gc[ii, jj, kk] = κ∇²(ii, jj, kk, grid, κ, c)
-end
+function nut_diffusion!(diffu, arch::Architecture, g, nutrients, κˣ, κʸ, κᶻ, ΔT)
+    calc_diffusion_kernel! = calc_diffusion!(device(arch), (g.Nx, g.Ny, g.Nz))
+    barrier = Event(device(arch))
 
+    DIC_event = calc_diffusion_kernel!(diffu.DIC, g, κˣ, κʸ, κᶻ, nutrients.DIC, dependencies=barrier)
+    NH4_event = calc_diffusion_kernel!(diffu.NH4, g, κˣ, κʸ, κᶻ, nutrients.NH4, dependencies=barrier)
+    NO3_event = calc_diffusion_kernel!(diffu.NO3, g, κˣ, κʸ, κᶻ, nutrients.NO3, dependencies=barrier)
+    PO4_event = calc_diffusion_kernel!(diffu.PO4, g, κˣ, κʸ, κᶻ, nutrients.PO4, dependencies=barrier)
+    DOC_event = calc_diffusion_kernel!(diffu.DOC, g, κˣ, κʸ, κᶻ, nutrients.DOC, dependencies=barrier)
+    POC_event = calc_diffusion_kernel!(diffu.POC, g, κˣ, κʸ, κᶻ, nutrients.POC, dependencies=barrier)
+    DON_event = calc_diffusion_kernel!(diffu.DON, g, κˣ, κʸ, κᶻ, nutrients.DON, dependencies=barrier)
+    PON_event = calc_diffusion_kernel!(diffu.PON, g, κˣ, κʸ, κᶻ, nutrients.PON, dependencies=barrier)
+    DOP_event = calc_diffusion_kernel!(diffu.DOP, g, κˣ, κʸ, κᶻ, nutrients.DOP, dependencies=barrier)
+    POP_event = calc_diffusion_kernel!(diffu.POP, g, κˣ, κʸ, κᶻ, nutrients.POP, dependencies=barrier)
+
+    events = [DIC_events, NH4_events, NO3_events, PO4_events,
+              DOC_events, POC_events, DON_events, PON_events,
+              DOP_events, POP_events]
+
+    wait(device(arch), MultiEvent(Tuple(events)))
+
+    return nothing
+end
+nut_diffusion!(diffu, arch::Architecture, g, nutrients, κ, ΔT) =
+    nut_diffusion!(diffu, arch::Architecture, g, nutrients, κ, κ, κ, ΔT)

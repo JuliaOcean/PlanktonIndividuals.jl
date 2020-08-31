@@ -1,19 +1,18 @@
 """
-    sum_nut_tendency(consume_p, consume_z)
-sum up 2 nut tendencies
+    sub_nut_tendency!(consume_p, consume_z)
+subtract one tendency from total tendencies
 """
-function sum_nut_tendency(a::nutrient_fields, b::nutrient_fields)
-    a.DOC = b.DOC .+ a.DOC
-    a.POC = b.POC .+ a.POC
-    a.DON = b.DON .+ a.DON
-    a.PON = b.PON .+ a.PON
-    a.DOP = b.DOP .+ a.DOP
-    a.POP = b.POP .+ a.POP
-    a.DIC = b.DIC .+ a.DIC
-    a.NH4 = b.NH4 .+ a.NH4
-    a.NO3 = b.NO3 .+ a.NO3
-    a.PO4 = b.PO4 .+ a.PO4
-    return a
+function sub_nut_tendency!(a::nutrient_fields, b::nutrient_fields, c::nutrient_fields)
+    a.DOC = b.DOC .- c.DOC
+    a.POC = b.POC .- c.POC
+    a.DON = b.DON .- c.DON
+    a.PON = b.PON .- c.PON
+    a.DOP = b.DOP .- c.DOP
+    a.POP = b.POP .- c.POP
+    a.DIC = b.DIC .- c.DIC
+    a.NH4 = b.NH4 .- c.NH4
+    a.NO3 = b.NO3 .- c.NO3
+    a.PO4 = b.PO4 .- c.PO4
 end
 
 """
@@ -53,51 +52,6 @@ function nut_forcing(arch::Architecture, g, nutrients, params,ΔT)
     return F
 end
 
-"""
-    nut_advection(g, nutrients, velᵇ, ΔT)
-compute nutrient advection using DST3FL shceme
-"""
-function nut_advection(arch::Architecture, g, nutrients, velᵇ, ΔT)
-    gtr = nutrients_init(arch, g)
-    gtr.DIC = MultiDim_adv(g, nutrients.DIC, velᵇ, ΔT) .* ΔT;
-    gtr.NH4 = MultiDim_adv(g, nutrients.NH4, velᵇ, ΔT) .* ΔT;
-    gtr.NO3 = MultiDim_adv(g, nutrients.NO3, velᵇ, ΔT) .* ΔT;
-    gtr.PO4 = MultiDim_adv(g, nutrients.PO4, velᵇ, ΔT) .* ΔT;
-    gtr.DOC = MultiDim_adv(g, nutrients.DOC, velᵇ, ΔT) .* ΔT;
-    gtr.DON = MultiDim_adv(g, nutrients.DON, velᵇ, ΔT) .* ΔT;
-    gtr.DOP = MultiDim_adv(g, nutrients.DOP, velᵇ, ΔT) .* ΔT;
-    gtr.POC = MultiDim_adv(g, nutrients.POC, velᵇ, ΔT) .* ΔT;
-    gtr.PON = MultiDim_adv(g, nutrients.PON, velᵇ, ΔT) .* ΔT;
-    gtr.POP = MultiDim_adv(g, nutrients.POP, velᵇ, ΔT) .* ΔT;
-    return gtr
-end
-
-"""
-    nut_diffusion(g, nutrients, params)
-compute diffusion for each nutrient tracer
-"""
-function nut_diffusion(arch::Architecture, g, nutrients, params, ΔT)
-    diffu = nutrients_init(arch, g)
-    κh = params["κh"]
-    κv = params["κv"]
-    for k in 1:g.Nz
-        for j in 1:g.Ny
-            for i in 1:g.Nx
-                diffu.DIC[i, j, k] =κ∇²(g, nutrients.DIC, κh, κv, i, j, k) * ΔT
-                diffu.NH4[i, j, k] =κ∇²(g, nutrients.NH4, κh, κv, i, j, k) * ΔT
-                diffu.NO3[i, j, k] =κ∇²(g, nutrients.NO3, κh, κv, i, j, k) * ΔT
-                diffu.PO4[i, j, k] =κ∇²(g, nutrients.PO4, κh, κv, i, j, k) * ΔT
-                diffu.DOC[i, j, k] =κ∇²(g, nutrients.DOC, κh, κv, i, j, k) * ΔT
-                diffu.DON[i, j, k] =κ∇²(g, nutrients.DON, κh, κv, i, j, k) * ΔT
-                diffu.DOP[i, j, k] =κ∇²(g, nutrients.DOP, κh, κv, i, j, k) * ΔT
-                diffu.POC[i, j, k] =κ∇²(g, nutrients.POC, κh, κv, i, j, k) * ΔT
-                diffu.PON[i, j, k] =κ∇²(g, nutrients.PON, κh, κv, i, j, k) * ΔT
-                diffu.POP[i, j, k] =κ∇²(g, nutrients.POP, κh, κv, i, j, k) * ΔT
-            end
-        end
-    end
-    return diffu
-end
 
 """
     function nut_update(model, velᵇ, consume, ΔT, Dim)
@@ -107,28 +61,34 @@ function nut_update(arch::Architecture, model, velᵇ, consume, ΔT)
     nutrients = model.nutrients
     params = model.params
     g = model.grid
+
     # compute biogeochemical forcings of nutrients,for each time step
     F = nut_forcing(arch, g, nutrients, params, ΔT)
-    # Compute nutrient advection using DST3FL scheme,for each time step
-    gtr = nut_advection(arch, g, nutrients, velᵇ, ΔT)
-    # Compute nutrient diffusion,for each time step
-    diffu = nut_diffusion(arch, g, nutrients, params, ΔT)
-    # sum all tendencies
-    gtr = sum_nut_tendency(gtr,diffu)
-    tendencies = sum_nut_tendency(gtr,F)
-    # tendencies = gtr
-    # store nutrients of the former time step
+
+    # compute nutrient diffusion,for each time step
+    diffu = nutrients_init(arch, g)
+    nut_diffusion!(diffu, arch, g, nutrients, params["κh"], params["κh"], params["κv"], ΔT)
+
+    # compute advection tendency
     nutₜ = nutrients_init(arch, g)
-    nutₜ.DIC .= nutrients.DIC .+ tendencies.DIC .+ consume.DIC ./ g.V
-    nutₜ.NH4 .= nutrients.NH4 .+ tendencies.NH4 .+ consume.NH4 ./ g.V
-    nutₜ.NO3 .= nutrients.NO3 .+ tendencies.NO3 .+ consume.NO3 ./ g.V
-    nutₜ.PO4 .= nutrients.PO4 .+ tendencies.PO4 .+ consume.PO4 ./ g.V
-    nutₜ.DOC .= nutrients.DOC .+ tendencies.DOC .+ consume.DOC ./ g.V
-    nutₜ.DON .= nutrients.DON .+ tendencies.DON .+ consume.DON ./ g.V
-    nutₜ.DOP .= nutrients.DOP .+ tendencies.DOP .+ consume.DOP ./ g.V
-    nutₜ.POC .= nutrients.POC .+ tendencies.POC .+ consume.POC ./ g.V
-    nutₜ.PON .= nutrients.PON .+ tendencies.PON .+ consume.PON ./ g.V
-    nutₜ.POP .= nutrients.POP .+ tendencies.POP .+ consume.POP ./ g.V
+    nut_advection!(nutₜ, arch, g, nutrients, velᵇ, ΔT)
+
+    # apply diffusion and forcing tendency
+    nutₜ.DIC .= nutₜ.DIC .+ diffu.DIC .+ F.DIC .+ consume.DIC ./ g.V
+    nutₜ.NH4 .= nutₜ.NH4 .+ diffu.NH4 .+ F.NH4 .+ consume.NH4 ./ g.V
+    nutₜ.NO3 .= nutₜ.NO3 .+ diffu.NO3 .+ F.NO3 .+ consume.NO3 ./ g.V
+    nutₜ.PO4 .= nutₜ.PO4 .+ diffu.PO4 .+ F.PO4 .+ consume.PO4 ./ g.V
+    nutₜ.DOC .= nutₜ.DOC .+ diffu.DOC .+ F.DOC .+ consume.DOC ./ g.V
+    nutₜ.DON .= nutₜ.DON .+ diffu.DON .+ F.DON .+ consume.DON ./ g.V
+    nutₜ.DOP .= nutₜ.DOP .+ diffu.DOP .+ F.DOP .+ consume.DOP ./ g.V
+    nutₜ.POC .= nutₜ.POC .+ diffu.POC .+ F.POC .+ consume.POC ./ g.V
+    nutₜ.PON .= nutₜ.PON .+ diffu.PON .+ F.PON .+ consume.PON ./ g.V
+    nutₜ.POP .= nutₜ.POP .+ diffu.POP .+ F.POP .+ consume.POP ./ g.V
+
+    # compute total tendencies
+    gtr = nutrients_init(arch, g)
+    gtr = sub_nut_tendency!(gtr, nutₜ,nutrients)
+
     return nutₜ, gtr
 end
 
