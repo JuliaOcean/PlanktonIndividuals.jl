@@ -3,23 +3,23 @@
 Write a NetCDF file of nutrient fields at each time step
 Default filepath -> "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
 """
-function write_nut_nc_each_step(nut::nutrient_fields, t::Int64, filepath::String)
+function write_nut_nc_each_step(nut::NamedTuple, t::Int64, filepath::String)
     C_attr = Dict("units" => "mmolC/m^3")
     N_attr = Dict("units" => "mmolN/m^3")
     P_attr = Dict("units" => "mmolP/m^3")
     path = filepath*"nutrients/nut."*lpad(t,10,"0")*".nc"
     isfile(path) && rm(path)
     ds = NCDataset(path, "c")
-    v1 = defVar(ds, "DIC", nut.DIC, ("xC", "yC", "zC"), attrib = C_attr)
-    v2 = defVar(ds, "DOC", nut.DOC, ("xC", "yC", "zC"), attrib = C_attr)
-    v3 = defVar(ds, "POC", nut.POC, ("xC", "yC", "zC"), attrib = C_attr)
-    v4 = defVar(ds, "NH4", nut.NH4, ("xC", "yC", "zC"), attrib = N_attr)
-    v5 = defVar(ds, "NO3", nut.NO3, ("xC", "yC", "zC"), attrib = N_attr)
-    v6 = defVar(ds, "DON", nut.DON, ("xC", "yC", "zC"), attrib = N_attr)
-    v7 = defVar(ds, "PON", nut.PON, ("xC", "yC", "zC"), attrib = N_attr)
-    v8 = defVar(ds, "PO4", nut.PO4, ("xC", "yC", "zC"), attrib = P_attr)
-    v9 = defVar(ds, "DOP", nut.DOP, ("xC", "yC", "zC"), attrib = P_attr)
-    v10= defVar(ds, "POP", nut.POP, ("xC", "yC", "zC"), attrib = P_attr)
+    v1 = defVar(ds, "DIC", nut.DIC.data, ("xC", "yC", "zC"), attrib = C_attr)
+    v2 = defVar(ds, "DOC", nut.DOC.data, ("xC", "yC", "zC"), attrib = C_attr)
+    v3 = defVar(ds, "POC", nut.POC.data, ("xC", "yC", "zC"), attrib = C_attr)
+    v4 = defVar(ds, "NH4", nut.NH4.data, ("xC", "yC", "zC"), attrib = N_attr)
+    v5 = defVar(ds, "NO3", nut.NO3.data, ("xC", "yC", "zC"), attrib = N_attr)
+    v6 = defVar(ds, "DON", nut.DON.data, ("xC", "yC", "zC"), attrib = N_attr)
+    v7 = defVar(ds, "PON", nut.PON.data, ("xC", "yC", "zC"), attrib = N_attr)
+    v8 = defVar(ds, "PO4", nut.PO4.data, ("xC", "yC", "zC"), attrib = P_attr)
+    v9 = defVar(ds, "DOP", nut.DOP.data, ("xC", "yC", "zC"), attrib = P_attr)
+    v10= defVar(ds, "POP", nut.POP.data, ("xC", "yC", "zC"), attrib = P_attr)
     close(ds)
 end
 
@@ -52,29 +52,23 @@ end
     write_nut_cons(g, gtr, nutₜ, vel, t, filepath)
 Write a brief summary of nutrients at each time step into a txt file
 """
-function write_nut_cons(g::grids, gtr::nutrient_fields, nutₜ::nutrient_fields, t::Int64, filepath)
-    Σgtrⁿ = sum(gtr.NH4 .* g.V)+sum(gtr.NO3 .* g.V)+sum(gtr.DON .* g.V)+sum(gtr.PON .* g.V)
-    Σgtrᶜ = sum(gtr.DIC .* g.V)+sum(gtr.DOC .* g.V)+sum(gtr.POC .* g.V)
-    Σgtrᵖ = sum(gtr.PO4 .* g.V)+sum(gtr.DOP .* g.V)+sum(gtr.POP .* g.V)
-    TC = mean((nutₜ.DIC .+ nutₜ.DOC .+ nutₜ.POC) .* g.V)
-    TN = mean((nutₜ.NH4 .+ nutₜ.NO3 .+ nutₜ.DON .+ nutₜ.PON) .* g.V)
-    TP = mean((nutₜ.PO4 .+ nutₜ.DOP .+ nutₜ.POP) .* g.V)
+function write_nut_cons(g::grids, gtr::NamedTuple, nutₜ::NamedTuple, t::Int64, filepath)
+    Σgtrⁿ = sum(gtr.NH4.data .* g.V)+sum(gtr.NO3.data .* g.V)+sum(gtr.DON.data .* g.V)+sum(gtr.PON.data .* g.V)
+    Σgtrᶜ = sum(gtr.DIC.data .* g.V)+sum(gtr.DOC.data .* g.V)+sum(gtr.POC.data .* g.V)
+    Σgtrᵖ = sum(gtr.PO4.data .* g.V)+sum(gtr.DOP.data .* g.V)+sum(gtr.POP.data .* g.V)
     Cio = open(filepath*"cons_C.txt","a"); Nio = open(filepath*"cons_N.txt","a");
     Pio = open(filepath*"cons_P.txt","a");
-    println(Cio,@sprintf("%4.0f  %.16E  %.16E  %.4f",t,Σgtrᶜ,TC,mean(nutₜ.DOC)))
-    println(Nio,@sprintf("%4.0f  %.16E  %.16E  %.4f  %.4f",t,Σgtrⁿ,TN,mean(nutₜ.NH4),mean(nutₜ.NO3)))
-    println(Pio,@sprintf("%4.0f  %.16E  %.16E  %.4f",t,Σgtrᵖ,TP,mean(nutₜ.PO4)))
+    println(Cio,@sprintf("%4.0f  %.16E  %.4f", t, Σgtrᶜ, mean(nutₜ.DOC.data)))
+    println(Nio,@sprintf("%4.0f  %.16E  %.4f  %.4f",t, Σgtrⁿ, mean(nutₜ.NH4.data), mean(nutₜ.NO3.data)))
+    println(Pio,@sprintf("%4.0f  %.16E  %.4f",t, Σgtrᵖ, mean(nutₜ.PO4.data)))
     close(Cio);close(Nio);close(Pio);
 end
-function write_nut_cons(g::grids, nutₜ::nutrient_fields, t::Int64, filepath)
-    TC = mean((nutₜ.DIC .+ nutₜ.DOC .+ nutₜ.POC) .* g.V)
-    TN = mean((nutₜ.NH4 .+ nutₜ.NO3 .+ nutₜ.DON .+ nutₜ.PON) .* g.V)
-    TP = mean((nutₜ.PO4 .+ nutₜ.DOP .+ nutₜ.POP) .* g.V)
+function write_nut_cons(g::grids, nutₜ::NamedTuple, t::Int64, filepath)
     Cio = open(filepath*"cons_C.txt","a"); Nio = open(filepath*"cons_N.txt","a");
     Pio = open(filepath*"cons_P.txt","a");
-    println(Cio,@sprintf("%4.0f  %.16E  %.4f",t,TC,mean(nutₜ.DOC)))
-    println(Nio,@sprintf("%4.0f  %.16E  %.4f  %.4f",t,TN,mean(nutₜ.NH4),mean(nutₜ.NO3)))
-    println(Pio,@sprintf("%4.0f  %.16E  %.4f",t,TP,mean(nutₜ.PO4)))
+    println(Cio,@sprintf("%4.0f  %.4f",t, mean(nutₜ.DOC.data)))
+    println(Nio,@sprintf("%4.0f  %.4f  %.4f",t, mean(nutₜ.NH4.data),mean(nutₜ.NO3.data)))
+    println(Pio,@sprintf("%4.0f  %.4f",t, mean(nutₜ.PO4.data)))
     close(Cio);close(Nio);close(Pio);
 end
 

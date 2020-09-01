@@ -2,7 +2,7 @@
     PI_TimeStep!(model, RunParam, velᵇ)
 Update physiology part and nutrient field of 'model' one time step forward
 """
-function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::velocity, resultspath)
+function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::NamedTuple, resultspath::String)
     model.t = model.t+ΔT
     # phyts_b,consume_p=phyt_update(model, ΔT)
     # model.individuals.phytos = phyts_b
@@ -16,7 +16,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::velocity, resultspath)
     write_nut_cons(model.grid, gtr, nutₜ, model.t, resultspath)
     model.nutrients = nutₜ
 end
-function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::velocity)
+function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::NamedTuple)
     model.t = model.t+ΔT
     phyts_b,consume_p=phyt_update(model, ΔT)
     model.individuals.phytos = phyts_b
@@ -28,7 +28,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::velocity)
     nutₜ,gtr = nut_update(model, velᵇ, consume_p, ΔT)
     model.nutrients = nutₜ
 end
-function PI_TimeStep!(model::Model_Struct, ΔT, resultspath)
+function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     model.t = model.t+ΔT
     phyts_b,consume_p=phyt_update(model, ΔT)
     nutₜ,gtr = nut_update(model, consume_p, ΔT)
