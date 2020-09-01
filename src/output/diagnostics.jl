@@ -16,6 +16,11 @@ Indices:
 13: Pq
 14: Chl
 =#
+mutable struct Diagnostics
+    spcs::AbstractArray{Float64,6}       # for each species
+    pop::AbstractArray{Float64,6}        # for each species, population dynamics
+    tr::AbstractArray{Float64,5}         # for tracers
+end
 """
 """
 function diags_setup(::CPUs, nTime::Int64, ΔT::Int64, grids, freq::Int64, diag_inds::Array, Nsp::Int64)

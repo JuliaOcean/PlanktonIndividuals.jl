@@ -1,3 +1,46 @@
+struct grids
+    xC::Array{Float64,1}
+    yC::Array{Float64,1}
+    zC::Array{Float64,1}
+    xF::Array{Float64,1}
+    yF::Array{Float64,1}
+    zF::Array{Float64,1}
+    Δx::Float64 # unit: meter
+    Δy::Float64 # unit: meter
+    Δz::Float64 # unit: meter
+    Ax::Float64 # unit: m²
+    Ay::Float64 # unit: m²
+    Az::Float64 # unit: m²
+    V ::Float64 # unit: m³
+    Nx::Int
+    Ny::Int
+    Nz::Int
+    Hx::Int
+    Hy::Int
+    Hz::Int
+end
+
+function gen_Grid(;size, spacing, halo = (1, 1, 1),)
+    Nx, Ny, Nz = size
+    Hx, Hy, Hz = halo
+    Δx, Δy, Δz = spacing
+
+    xF = range(-Hx * Δx, Nx * Δx, length = Nx + 2 * Hx)
+    yF = range(-Hy * Δy, Ny * Δy, length = Ny + 2 * Hy)
+    zF = range(-(Hz + Nz) * Δz, Δz, length = Nz + 2 * Hz + 1)
+
+    xC = range((0.5 - Hx) * Δx, (Nx + 0.5) * Δx, length = Nx + 2 * Hx)
+    yC = range((0.5 - Hy) * Δy, (Ny + 0.5) * Δy, length = Ny + 2 * Hy)
+    zC = range((0.5 - Hz - Nz) * Δz, 0.5 * Δz, length = Nz + 2 * Hz)
+
+    Ax = Δy*Δz
+    Ay = Δx*Δz
+    Az = Δx*Δy
+    V  = Δx*Δy*Δz
+
+    return grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz)
+end
+
 """
     grid_Ogrids(Ogrid, filepath)
 Read grid information from Oceananigans
@@ -69,27 +112,6 @@ function read_Ogrids(Ogrid, filepath)
 
     g = grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz)
     return g
-end
-
-function gen_Grid(;size, spacing, halo = (1, 1, 1),)
-    Nx, Ny, Nz = size
-    Hx, Hy, Hz = halo
-    Δx, Δy, Δz = spacing
-
-    xF = range(-Hx * Δx, Nx * Δx, length = Nx + 2 * Hx)
-    yF = range(-Hy * Δy, Ny * Δy, length = Ny + 2 * Hy)
-    zF = range(-(Hz + Nz) * Δz, Δz, length = Nz + 2 * Hz + 1)
-
-    xC = range((0.5 - Hx) * Δx, (Nx + 0.5) * Δx, length = Nx + 2 * Hx)
-    yC = range((0.5 - Hy) * Δy, (Ny + 0.5) * Δy, length = Ny + 2 * Hy)
-    zC = range((0.5 - Hz - Nz) * Δz, 0.5 * Δz, length = Nz + 2 * Hz)
-
-    Ax = Δy*Δz
-    Ay = Δx*Δz
-    Az = Δx*Δy
-    V  = Δx*Δy*Δz
-
-    return grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz)
 end
 
 import Base: show

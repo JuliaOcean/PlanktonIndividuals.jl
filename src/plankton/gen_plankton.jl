@@ -1,3 +1,7 @@
+mutable struct individuals
+    phytos::AbstractArray
+    zoos::Union{Nothing,Array}
+end
 """
     gen_agents(RunParams,grid)
 Set up a series of agents following a normal distribution (mean,var)
