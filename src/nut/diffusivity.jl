@@ -51,20 +51,11 @@ function nut_diffusion!(diffu, arch::Architecture, g, nutrients, κˣ, κʸ, κ�
     calc_diffusion_kernel! = calc_diffusion!(device(arch), (g.Nx, g.Ny, g.Nz))
     barrier = Event(device(arch))
 
-    DIC_event = calc_diffusion_kernel!(diffu.DIC, g, κˣ, κʸ, κᶻ, nutrients.DIC, dependencies=barrier)
-    NH4_event = calc_diffusion_kernel!(diffu.NH4, g, κˣ, κʸ, κᶻ, nutrients.NH4, dependencies=barrier)
-    NO3_event = calc_diffusion_kernel!(diffu.NO3, g, κˣ, κʸ, κᶻ, nutrients.NO3, dependencies=barrier)
-    PO4_event = calc_diffusion_kernel!(diffu.PO4, g, κˣ, κʸ, κᶻ, nutrients.PO4, dependencies=barrier)
-    DOC_event = calc_diffusion_kernel!(diffu.DOC, g, κˣ, κʸ, κᶻ, nutrients.DOC, dependencies=barrier)
-    POC_event = calc_diffusion_kernel!(diffu.POC, g, κˣ, κʸ, κᶻ, nutrients.POC, dependencies=barrier)
-    DON_event = calc_diffusion_kernel!(diffu.DON, g, κˣ, κʸ, κᶻ, nutrients.DON, dependencies=barrier)
-    PON_event = calc_diffusion_kernel!(diffu.PON, g, κˣ, κʸ, κᶻ, nutrients.PON, dependencies=barrier)
-    DOP_event = calc_diffusion_kernel!(diffu.DOP, g, κˣ, κʸ, κᶻ, nutrients.DOP, dependencies=barrier)
-    POP_event = calc_diffusion_kernel!(diffu.POP, g, κˣ, κʸ, κᶻ, nutrients.POP, dependencies=barrier)
-
-    events = [DIC_events, NH4_events, NO3_events, PO4_events,
-              DOC_events, POC_events, DON_events, PON_events,
-              DOP_events, POP_events]
+    events=[]
+    for name in nut_names
+        event = calc_diffusion_kernel!(diffu[name].data, g, κˣ, κʸ, κᶻ, nutrients[name].data, dependencies=barrier)
+        push!(events, event)
+    end
 
     wait(device(arch), MultiEvent(Tuple(events)))
 

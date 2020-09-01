@@ -22,28 +22,18 @@ end
     return nothing
 end
 
-@inline function fill_halo!(nut::nutrient_fields, grid)
-    fill_halo!(nut.DIC, grid)
-    fill_halo!(nut.DOC, grid)
-    fill_halo!(nut.POC, grid)
-    fill_halo!(nut.NO3, grid)
-    fill_halo!(nut.NH4, grid)
-    fill_halo!(nut.DON, grid)
-    fill_halo!(nut.PON, grid)
-    fill_halo!(nut.PO4, grid)
-    fill_halo!(nut.DOP, grid)
-    fill_halo!(nut.POP, grid)
+@inline function fill_halo!(nuts::NamedTuple, grid)
+    for nut in nuts
+        fill_halo!(nut.data, grid)
+    end
+
+    return nothing
 end
 
-@inline function zero_halo!(nut::nutrient_fields, grid)
-    zero_halo!(nut.DIC, grid)
-    zero_halo!(nut.DOC, grid)
-    zero_halo!(nut.POC, grid)
-    zero_halo!(nut.NO3, grid)
-    zero_halo!(nut.NH4, grid)
-    zero_halo!(nut.DON, grid)
-    zero_halo!(nut.PON, grid)
-    zero_halo!(nut.PO4, grid)
-    zero_halo!(nut.DOP, grid)
-    zero_halo!(nut.POP, grid)
+@inline function zero_halo!(nuts::NamedTuple, grid)
+    for nut in nuts
+        zero_halo!(nut.data, grid)
+    end
+
+    return nothing
 end
