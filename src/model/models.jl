@@ -6,7 +6,7 @@ Default PAR and temp are from ../samples
 """
 function PI_Model(arch::Architecture, grid, RunParam;
                   t = 1-RunParam.ΔT,
-                  individuals = setup_agents(arch,RunParam,grid),
+                  individuals = gen_agents(arch,RunParam,grid),
                   nutrients,
                   PAR = read_IR_input(RunParam.ΔT, grid),
                   temp = read_temp_input(RunParam.ΔT, grid),

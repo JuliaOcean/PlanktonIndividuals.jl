@@ -4,15 +4,16 @@ Update physiology part and nutrient field of 'model' one time step forward
 """
 function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::velocity, resultspath)
     model.t = model.t+ΔT
-    phyts_b,consume_p=phyt_update(model, ΔT)
-    model.individuals.phytos = phyts_b
-    if model.individuals.zoos ≠ nothing
-        zoos_b,consume_z =zoo_update(model, ΔT)
-        consume_p = sum_nut_tendency(consume_p, consume_z)
-        model.individuals.zoos = zoos_b
-    end
+    # phyts_b,consume_p=phyt_update(model, ΔT)
+    # model.individuals.phytos = phyts_b
+    # if model.individuals.zoos ≠ nothing
+    #     zoos_b,consume_z =zoo_update(model, ΔT)
+    #     add_nut_tendency!(consume_p, consume_z)
+    #     model.individuals.zoos = zoos_b
+    # end
+    comsume_p = nutrients_init(model.arch, model.grid)
     nutₜ,gtr = nut_update(model, velᵇ, consume_p, ΔT)
-    write_nut_cons(model.grid, gtr, nutₜ,model.t,resultspath)
+    write_nut_cons(model.grid, gtr, nutₜ, model.t, resultspath)
     model.nutrients = nutₜ
 end
 function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::velocity)
@@ -21,7 +22,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::velocity)
     model.individuals.phytos = phyts_b
     if model.individuals.zoos ≠ nothing
         zoos_b,consume_z =zoo_update(model, ΔT)
-        consume_p = sum_nut_tendency(consume_p, consume_z)
+        add_nut_tendency!(consume_p, consume_z)
         model.individuals.zoos = zoos_b
     end
     nutₜ,gtr = nut_update(model, velᵇ, consume_p, ΔT)

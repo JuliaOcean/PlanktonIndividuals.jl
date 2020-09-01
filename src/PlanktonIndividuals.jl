@@ -8,22 +8,25 @@ using CUDA, KernelAbstractions
 src=""
 
 include("$src"*"architecture.jl")
-include("$src"*"model_struct.jl")
-include("$src"*"grids.jl")
-include("$src"*"model_setup.jl")
-include("$src"*"phyt_process.jl")
-include("$src"*"zooplankton.jl")
+include("$src"*"model/structs.jl")
+include("$src"*"model/grids.jl")
+include("$src"*"param/param_default.jl")
+include("$src"*"param/param_update.jl")
+include("$src"*"nut/diffusivity.jl")
+include("$src"*"nut/forcing.jl")
+include("$src"*"nut/third_order_DSTFL.jl")
+include("$src"*"nut/multi_dim_adv.jl")
+include("$src"*"nut/halo_regions.jl")
+include("$src"*"nut/gen_nut_fields.jl")
+include("$src"*"nut/nutrient_processes.jl")
+include("$src"*"plankton/phyt_process.jl")
+include("$src"*"plankton/zooplankton.jl")
+include("$src"*"plankton/agent_div.jl")
 include("$src"*"utils.jl")
-include("$src"*"output_writers.jl")
-include("$src"*"agent_div.jl")
-include("$src"*"third_order_DSTFL.jl")
-include("$src"*"multi_dim_adv.jl")
-include("$src"*"nutrient_processes.jl")
-include("$src"*"diffusivity.jl")
-include("$src"*"param_default.jl")
-include("$src"*"diagnostics.jl")
-include("$src"*"models.jl")
-include("$src"*"time_step.jl")
+include("$src"*"output/output_writers.jl")
+include("$src"*"output/diagnostics.jl")
+include("$src"*"model/models.jl")
+include("$src"*"model/time_step.jl")
 
 
 export
@@ -38,7 +41,7 @@ export
     PrepRunDir, generate_vel_itp, diags_setup,
 
     # initialize nutrient field and individual sets
-    setup_agents, setup_nutrients, load_nut_initials,
+    gen_agents, gen_nutrients, load_nut_initials,
 
     # Run the model
     RunParam, RunOption, PI_TimeStep!,
