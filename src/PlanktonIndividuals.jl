@@ -32,13 +32,13 @@ include("$src"*"model/time_step.jl")
 
 export
     # model structures
-    PI_Model, grids, nutrient_fields, velocity,
+    PI_Model, Grids, nutrient_fields, velocity,
     RunOptions, RunParams, read_Ogrids, gen_Grid,
     Architecture, GPUs, CPUs,
 
     # read input functions
     read_IR_input, read_temp_input,
-    update_params!, grid_offline, param_default,
+    update_params!, param_default,
     PrepRunDir, generate_vel_itp, diags_setup,
 
     # initialize nutrient field and individual sets

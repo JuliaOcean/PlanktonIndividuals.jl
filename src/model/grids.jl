@@ -1,17 +1,18 @@
-struct grids
-    xC::Array{Float64,1}
-    yC::Array{Float64,1}
-    zC::Array{Float64,1}
-    xF::Array{Float64,1}
-    yF::Array{Float64,1}
-    zF::Array{Float64,1}
-    Δx::Float64 # unit: meter
-    Δy::Float64 # unit: meter
-    Δz::Float64 # unit: meter
-    Ax::Float64 # unit: m²
-    Ay::Float64 # unit: m²
-    Az::Float64 # unit: m²
-    V ::Float64 # unit: m³
+abstract type AbstractGrid{FT, A} end
+struct Grids{FT, A} <: AbstractGrid{FT, A}
+    xC::A
+    yC::A
+    zC::A
+    xF::A
+    yF::A
+    zF::A
+    Δx::FT # unit: meter
+    Δy::FT # unit: meter
+    Δz::FT # unit: meter
+    Ax::FT # unit: m²
+    Ay::FT # unit: m²
+    Az::FT # unit: m²
+    V ::FT # unit: m³
     Nx::Int
     Ny::Int
     Nz::Int
@@ -38,7 +39,7 @@ function gen_Grid(;size, spacing, halo = (1, 1, 1),)
     Az = Δx*Δy
     V  = Δx*Δy*Δz
 
-    return grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz)
+    return Grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz)
 end
 
 """
@@ -68,7 +69,7 @@ function read_Ogrids(Ogrid)
     Ay = Δx*Δz
     Az = Δx*Δy
     V  = Δx*Δy*Δz
-    g = grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz)
+    g = Grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz)
     return g
 end
 function read_Ogrids(Ogrid, filepath)
@@ -110,13 +111,13 @@ function read_Ogrids(Ogrid, filepath)
     defVar(ds,"zF",zF,("zF",), attrib = Dict("units" => "m"))
     close(ds)
 
-    g = grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz)
+    g = Grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz)
     return g
 end
 
 import Base: show
 
-function show(io::IO, g::grids)
+function show(io::IO, g::Grids)
     xL, xR = g.xF[2], g.xF[end]
     yL, yR = g.yF[2], g.yF[end]
     zL, zR = g.zF[2], g.zF[end-1]
