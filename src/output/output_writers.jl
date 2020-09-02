@@ -53,36 +53,36 @@ end
 Write a brief summary of nutrients at each time step into a txt file
 """
 function write_nut_cons(g::Grids, gtr::NamedTuple, nutₜ::NamedTuple, t::Int64, filepath)
-    Σgtrⁿ = sum(interior(gtr.NH4.data) .* g.V) +
-            sum(interior(gtr.NO3.data) .* g.V) +
-            sum(interior(gtr.DON.data) .* g.V) +
-            sum(interior(gtr.PON.data) .* g.V)
+    Σgtrⁿ = sum(interior(gtr.NH4.data, g) .* g.V) +
+            sum(interior(gtr.NO3.data, g) .* g.V) +
+            sum(interior(gtr.DON.data, g) .* g.V) +
+            sum(interior(gtr.PON.data, g) .* g.V)
 
-    Σgtrᶜ = sum(interior(gtr.DIC.data) .* g.V) +
-            sum(interior(gtr.DOC.data) .* g.V) +
-            sum(interior(gtr.POC.data) .* g.V)
+    Σgtrᶜ = sum(interior(gtr.DIC.data, g) .* g.V) +
+            sum(interior(gtr.DOC.data, g) .* g.V) +
+            sum(interior(gtr.POC.data, g) .* g.V)
 
-    Σgtrᵖ = sum(interior(gtr.PO4.data) .* g.V) +
-            sum(interior(gtr.DOP.data) .* g.V) +
-            sum(interior(gtr.POP.data) .* g.V)
+    Σgtrᵖ = sum(interior(gtr.PO4.data, g) .* g.V) +
+            sum(interior(gtr.DOP.data, g) .* g.V) +
+            sum(interior(gtr.POP.data, g) .* g.V)
 
     Cio = open(filepath*"cons_C.txt","a")
     Nio = open(filepath*"cons_N.txt","a")
     Pio = open(filepath*"cons_P.txt","a")
 
-    println(Cio,@sprintf("%4.0f  %.16E  %.4f", t, Σgtrᶜ, mean(interior(nutₜ.DOC.data))))
+    println(Cio,@sprintf("%4.0f  %.16E  %.4f", t, Σgtrᶜ, mean(interior(nutₜ.DOC.data, g))))
     println(Nio,@sprintf("%4.0f  %.16E  %.4f  %.4f",
-                         t, Σgtrⁿ, mean(interior(nutₜ.NH4.data)), mean(interior(nutₜ.NO3.data))))
-    println(Pio,@sprintf("%4.0f  %.16E  %.4f",t, Σgtrᵖ, mean(interior(nutₜ.PO4.data))))
+                         t, Σgtrⁿ, mean(interior(nutₜ.NH4.data, g)), mean(interior(nutₜ.NO3.data, g))))
+    println(Pio,@sprintf("%4.0f  %.16E  %.4f",t, Σgtrᵖ, mean(interior(nutₜ.PO4.data, g))))
     close(Cio);close(Nio);close(Pio);
 end
 function write_nut_cons(g::Grids, nutₜ::NamedTuple, t::Int64, filepath)
     Cio = open(filepath*"cons_C.txt","a")
     Nio = open(filepath*"cons_N.txt","a")
     Pio = open(filepath*"cons_P.txt","a")
-    println(Cio,@sprintf("%4.0f  %.4f",t, mean(interior(nutₜ.DOC.data))))
-    println(Nio,@sprintf("%4.0f  %.4f  %.4f",t, mean(interior(nutₜ.NH4.data)),mean(interior(nutₜ.NO3.data))))
-    println(Pio,@sprintf("%4.0f  %.4f",t, mean(interior(nutₜ.PO4.data))))
+    println(Cio,@sprintf("%4.0f  %.4f",t, mean(interior(nutₜ.DOC.data, g))))
+    println(Nio,@sprintf("%4.0f  %.4f  %.4f",t, mean(interior(nutₜ.NH4.data, g)),mean(interior(nutₜ.NO3.data, g))))
+    println(Pio,@sprintf("%4.0f  %.4f",t, mean(interior(nutₜ.PO4.data, g))))
     close(Cio);close(Nio);close(Pio);
 end
 
