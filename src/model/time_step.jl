@@ -11,8 +11,8 @@ function PI_TimeStep!(model::Model_Struct, ΔT, velᵇ::NamedTuple, resultspath:
     #     add_nut_tendency!(consume_p, consume_z)
     #     model.individuals.zoos = zoos_b
     # end
-    comsume_p = nutrients_init(model.arch, model.grid)
-    nutₜ,gtr = nut_update(model, velᵇ, consume_p, ΔT)
+    consume_p = nutrients_init(model.arch, model.grid)
+    nutₜ,gtr = nut_update_interior(model, velᵇ, consume_p, ΔT)
     write_nut_cons(model.grid, gtr, nutₜ, model.t, resultspath)
     model.nutrients = nutₜ
 end

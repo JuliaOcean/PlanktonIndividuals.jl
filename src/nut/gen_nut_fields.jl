@@ -22,7 +22,7 @@ function gen_nutrients(arch, g, nut)
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2+1)
     nutrients = nutrients_init(arch, g)
 
-    for i in 1:size(nut_names)
+    for i in 1:length(nut_names)
         nutrients[i].data .= fill(nut[i],total_size) .* rand(Uniform(0.8,1.2), total_size) |> array_type(arch)
     end
 
@@ -48,9 +48,9 @@ function load_nut_initials(arch, paths, g)
         if length(findall(x->x==name, pathkeys)) == 0
             print("NUT_INIT: nutrient not found \n")
         else
-            tmp = deserialize(paths[name])
+            tmp = deserialize(paths[name]) |> array_type(arch)
             if size(tmp) == (g.Nx, g.Ny, g.Nz)
-                nut[name].data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] .= tmp
+                @views @. nut[name].data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] = tmp[:,:,:]
             else
                 print("NUT_INIT: grid mismatch \n")
             end

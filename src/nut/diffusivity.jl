@@ -41,19 +41,19 @@ end
 @kernel function calc_diffusion!(Gc, grid, κˣ, κʸ, κᶻ, c, ΔT)
     i, j, k = @index(Global, NTuple)
     ### offset index for halo points
-    ii = i + g.Hx
-    jj = j + g.Hy
-    kk = k + g.Hz
+    ii = i + grid.Hx
+    jj = j + grid.Hy
+    kk = k + grid.Hz
     @inbounds Gc[ii, jj, kk] = κ∇²(ii, jj, kk, grid, κˣ, κʸ, κᶻ, c) * ΔT
 end
 
 function nut_diffusion!(diffu, arch::Architecture, g, nutrients, κˣ, κʸ, κᶻ, ΔT)
-    calc_diffusion_kernel! = calc_diffusion!(device(arch), (g.Nx, g.Ny, g.Nz))
+    calc_diffusion_kernel! = calc_diffusion!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
     barrier = Event(device(arch))
 
     events=[]
     for name in nut_names
-        event = calc_diffusion_kernel!(diffu[name].data, g, κˣ, κʸ, κᶻ, nutrients[name].data, dependencies=barrier)
+        event = calc_diffusion_kernel!(diffu[name].data, g, κˣ, κʸ, κᶻ, nutrients[name].data, ΔT, dependencies=barrier)
         push!(events, event)
     end
 
