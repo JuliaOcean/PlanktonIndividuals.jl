@@ -17,4 +17,4 @@ end
 
 const nut_names=(:DIC,:NH4,:NO3,:PO4,:DOC,:DON,:DOP,:POC,:PON,:POP)
 
-@inline interior(c, g) = c[g.Hx+1:g.Hx+g.Nz, g.Hy+1:g.Hy+g.Hy, g.Hz+1:g.Hz+g.Nz]
+@inline interior(c, g) = c[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz]
