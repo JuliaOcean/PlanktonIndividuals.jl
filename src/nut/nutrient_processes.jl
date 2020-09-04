@@ -10,7 +10,7 @@ function nut_update_interior(model, velᵇ, consume, ΔT)
 
     # compute biogeochemical forcings of nutrients,for each time step
     F = nutrients_init(arch, g)
-    # nut_forcing!(F, arch, g, nutrients, params, ΔT)
+    nut_forcing!(F, arch, g, nutrients, params, ΔT)
 
     # compute nutrient diffusion,for each time step
     diffu = nutrients_init(arch, g)
@@ -18,17 +18,14 @@ function nut_update_interior(model, velᵇ, consume, ΔT)
     add_nut_tendency!(diffu, F)
 
     # compute advection tendency
-    nutₜ = nutrients_init(arch, g)
-    nut_advection!(nutₜ, arch, g, nutrients, velᵇ, ΔT)
-
-    # compute advection tendency for record
     gtr = nutrients_init(arch, g)
-    sub_nut_tendency!(gtr, nutₜ,nutrients)
+    nut_advection!(gtr, arch, g, nutrients, velᵇ, ΔT)
     add_nut_tendency!(gtr, diffu)
 
     # apply diffusion and forcing tendency
+    nutₜ = nutrients_init(arch, g)
     for name in nut_names
-        nutₜ[name].data .= nutₜ[name].data .+ diffu[name].data .+ consume[name].data ./ g.V
+        nutₜ[name].data .= nutrients[name].data .+ gtr[name].data .+ consume[name].data ./ g.V
     end
 
     fill_halo!(nutₜ, g)
@@ -50,7 +47,7 @@ function nut_update_interior(model, consume, ΔT)
     nutₜ = nutrients_init(arch, g)
 
     for name in nut_names
-        nutₜ[name].data .= nutₜ[name].data .+ diffu[name].data .+ F[name].data .+ consume[name].data ./ g.V
+        nutₜ[name].data .= nutrients[name].data .+ F[name].data .+ consume[name].data ./ g.V
     end
 
     fill_halo!(nutₜ, g)
