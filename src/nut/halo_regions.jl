@@ -12,7 +12,7 @@ end
     @views @. c[1:grid.Hx, :, :] = c[grid.Nx+1:grid.Nx+grid.Hx, :, :] # west
     @views @. c[:, 1:grid.Hy, :] = c[:, grid.Ny+1:grid.Ny+grid.Hy, :] # south
 
-    @views @. c[:, :, 1:grid.Hz] = c[:, :, grid.Hx+1:grid.Hx+1]       # bottom
+    @views @. c[:, :, 1:grid.Hz] = c[:, :, grid.Hz+1:grid.Hz+1]       # bottom
 
     @views @. c[grid.Nx+grid.Hx+1:grid.Nx+2*grid.Hx, :, :] = c[1+grid.Hx:2*grid.Hx, :, :] # east
     @views @. c[:, grid.Ny+grid.Hy+1:grid.Ny+2*grid.Hy, :] = c[:, 1+grid.Hy:2*grid.Hy, :] # north

@@ -66,14 +66,27 @@ function write_nut_cons(g::Grids, gtr::NamedTuple, nutₜ::NamedTuple, t::Int64,
             sum(interior(gtr.DOP.data, g) .* g.V) +
             sum(interior(gtr.POP.data, g) .* g.V)
 
+    TN = sum(interior(nutₜ.NH4.data, g) .* g.V) +
+         sum(interior(nutₜ.NO3.data, g) .* g.V) +
+         sum(interior(nutₜ.DON.data, g) .* g.V) +
+         sum(interior(nutₜ.PON.data, g) .* g.V)
+
+    TC = sum(interior(nutₜ.DIC.data, g) .* g.V) +
+         sum(interior(nutₜ.DOC.data, g) .* g.V) +
+         sum(interior(nutₜ.POC.data, g) .* g.V)
+
+    TP = sum(interior(nutₜ.PO4.data, g) .* g.V) +
+         sum(interior(nutₜ.DOP.data, g) .* g.V) +
+         sum(interior(nutₜ.POP.data, g) .* g.V)
+
     Cio = open(filepath*"cons_C.txt","a")
     Nio = open(filepath*"cons_N.txt","a")
     Pio = open(filepath*"cons_P.txt","a")
 
-    println(Cio,@sprintf("%4.0f  %.16E  %.4f", t, Σgtrᶜ, mean(interior(nutₜ.DOC.data, g))))
-    println(Nio,@sprintf("%4.0f  %.16E  %.4f  %.4f",
-                         t, Σgtrⁿ, mean(interior(nutₜ.NH4.data, g)), mean(interior(nutₜ.NO3.data, g))))
-    println(Pio,@sprintf("%4.0f  %.16E  %.4f",t, Σgtrᵖ, mean(interior(nutₜ.PO4.data, g))))
+    println(Cio,@sprintf("%4.0f  %.16E  %.16E  %.4f", t, Σgtrᶜ, TC, mean(interior(nutₜ.DOC.data, g))))
+    println(Nio,@sprintf("%4.0f  %.16E  %.16E  %.4f  %.4f",
+                         t, Σgtrⁿ, TN, mean(interior(nutₜ.NH4.data, g)), mean(interior(nutₜ.NO3.data, g))))
+    println(Pio,@sprintf("%4.0f  %.16E  %.16E  %.4f",t, Σgtrᵖ, TP, mean(interior(nutₜ.PO4.data, g))))
     close(Cio);close(Nio);close(Pio);
 end
 function write_nut_cons(g::Grids, nutₜ::NamedTuple, t::Int64, filepath)
