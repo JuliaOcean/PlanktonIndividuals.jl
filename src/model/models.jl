@@ -3,6 +3,11 @@ mutable struct Model_Input
     PAR::AbstractArray{Float64,3}       # PAR
 end
 
+mutable struct velocities
+    vel₀::NamedTuple
+    vel₁::NamleTuple
+end
+
 mutable struct Model_Struct
     arch::Architecture          # architecture on which models will run
     t::Int64
@@ -12,6 +17,7 @@ mutable struct Model_Struct
     input::Model_Input          # model input, temp and PAR
     params::Dict                # biogeochemical parameter set
     diags::Diagnostics          # diagnostics
+    velocities::velocities      # save the velocities of last and current time steps from physical models
 end
 """
     PI_model(grid, RunParam)

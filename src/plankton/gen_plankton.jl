@@ -24,9 +24,9 @@ function gen_agents(::CPUs,RunParam::RunParams,grid)
     pqmax = params["Pqmax"]
     pqmin = params["Pqmin"]
     phyts0 = zeros(Float64,13,N*Nsp)
-    phyts0[1,:] .= rand(Uniform(grid.xF[grid.Hx+1], grid.xF[grid.Nx+1]), N*Nsp)               # x
-    phyts0[2,:] .= rand(Uniform(grid.yF[grid.Hy+1], grid.yF[grid.Ny+1]), N*Nsp)               # y
-    phyts0[3,:] .= rand(Uniform(grid.zF[grid.Hz+1], grid.zF[grid.Nz+1]), N*Nsp)               # z
+    phyts0[1,:] .= rand(Uniform(grid.xF[grid.Hx+1], grid.xF[grid.Nx+grid.Hx+1]), N*Nsp)               # x
+    phyts0[2,:] .= rand(Uniform(grid.yF[grid.Hy+1], grid.yF[grid.Ny+grid.Hy+1]), N*Nsp)               # y
+    phyts0[3,:] .= rand(Uniform(grid.zF[grid.Hz+1], grid.zF[grid.Nz+grid.Hz+1]), N*Nsp)               # z
     phyts0[4,:] .= max.(1.0, rand(Normal(mean,var), N*Nsp))                    # size
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)

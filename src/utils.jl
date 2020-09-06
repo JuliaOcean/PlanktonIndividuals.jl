@@ -1,17 +1,3 @@
-
-"""
-    which_grid(phyt,g)
-decide which grid an individual is in
-return grid indices
-"""
-function which_grid(phyt, g)
-    x = phyt[1]; y = phyt[2]; z = phyt[3];
-    xind = findall(t -> t≤x, g.xF[2:end-1])[end]
-    yind = findall(t -> t≤y, g.yF[2:end-1])[end]
-    zind = findall(t -> t≤z, g.zF[2:end-2])[end]
-    return xind, yind, zind
-end
-
 """
     count_chl(phyts_a, grid)
 Compute total chl concentration in each grid cell

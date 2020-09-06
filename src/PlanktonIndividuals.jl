@@ -1,7 +1,7 @@
 module PlanktonIndividuals
 
 using NCDatasets, Serialization
-using Random, Distributions, Interpolations, Statistics
+using Random, Distributions, Statistics
 using Printf
 using CUDA, KernelAbstractions
 
@@ -20,9 +20,12 @@ include("$src"*"nut/halo_regions.jl")
 include("$src"*"nut/gen_nut_fields.jl")
 include("$src"*"nut/nutrient_processes.jl")
 include("$src"*"plankton/gen_plankton.jl")
+include("$src"*"plankton/velocity_interpolations.jl")
+include("$src"*"plankton/advection_operations.jl")
+include("$src"*"plankton/plankton_advection.jl")
+include("$src"*"plankton/plankton_diffusion.jl")
 include("$src"*"plankton/phyt_process.jl")
 include("$src"*"plankton/zooplankton.jl")
-include("$src"*"plankton/plankton_advection.jl")
 include("$src"*"utils.jl")
 include("$src"*"output/output_writers.jl")
 include("$src"*"output/diagnostics.jl")
