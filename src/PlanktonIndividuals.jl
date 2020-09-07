@@ -20,10 +20,10 @@ include("$src"*"nut/halo_regions.jl")
 include("$src"*"nut/gen_nut_fields.jl")
 include("$src"*"nut/nutrient_processes.jl")
 include("$src"*"plankton/gen_plankton.jl")
-include("$src"*"plankton/velocity_interpolations.jl")
-include("$src"*"plankton/advection_operations.jl")
-include("$src"*"plankton/plankton_advection.jl")
-include("$src"*"plankton/plankton_diffusion.jl")
+include("$src"*"plankton/advection/velocity_interpolations.jl")
+include("$src"*"plankton/advection/advection_operations.jl")
+include("$src"*"plankton/advection/plankton_advection.jl")
+include("$src"*"plankton/advection/plankton_diffusion.jl")
 include("$src"*"plankton/phyt_process.jl")
 include("$src"*"plankton/zooplankton.jl")
 include("$src"*"utils.jl")
@@ -35,7 +35,7 @@ include("$src"*"model/time_step.jl")
 
 export
     # model structures
-    PI_Model, Grids, nutrient_fields, velocity,
+    PI_Model, Grids, nutrient_fields, velocities,
     RunOptions, RunParams, read_Ogrids, gen_Grid,
     Architecture, GPUs, CPUs,
 

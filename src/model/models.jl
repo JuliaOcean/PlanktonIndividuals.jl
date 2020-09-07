@@ -5,7 +5,7 @@ end
 
 mutable struct velocities
     vel₀::NamedTuple
-    vel₁::NamleTuple
+    vel₁::NamedTuple
 end
 
 mutable struct Model_Struct
