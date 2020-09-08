@@ -26,25 +26,6 @@ function divide(phyt)
 end
 
 """
-    calc_PAR(surfPAR,grid,Chl,katten_c, katten_w)
-Compute PAR for each grid according to depth and Chla concentration
-"""
-function calc_PAR(surfPAR, grid, Chl, katten_c, katten_w)
-    PAR = zeros(grid.Nx, grid.Ny, grid.Nz)
-    for k in grid.Nz:-1:1
-        atten = zeros(grid.Nx, grid.Ny)
-        for i in 1:grid.Nx
-            for j in 1:grid.Ny
-                atten[i,j] = (Chl[i,j,k] * katten_c + katten_w) * grid.dzF[k]
-                PAR[i,j,k] = surfPAR[i,j] * ((1.0 - exp(-atten[i,j])) / atten[i,j])
-                surfPAR[i,j] = surfPAR[i,j] * exp(-atten[i,j])
-            end
-        end
-    end
-    return PAR
-end
-
-"""
     phyt_update(t, ΔT, g, phyts_a, nutrients, IR, temp)
 Update the individuals of current time step into next time step
 Control flow: Graze ->Grow(photosynthesis, biosynthesis, maintenance) -> Natural Death -> Division

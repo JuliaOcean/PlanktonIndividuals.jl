@@ -27,25 +27,25 @@ function gen_agents(::CPUs,RunParam::RunParams,grid)
     phyts0[1,:] .= rand(Uniform(grid.xF[grid.Hx+1], grid.xF[grid.Nx+grid.Hx+1]), N*Nsp)               # x
     phyts0[2,:] .= rand(Uniform(grid.yF[grid.Hy+1], grid.yF[grid.Ny+grid.Hy+1]), N*Nsp)               # y
     phyts0[3,:] .= rand(Uniform(grid.zF[grid.Hz+1], grid.zF[grid.Nz+grid.Hz+1]), N*Nsp)               # z
-    phyts0[4,:] .= max.(1.0, rand(Normal(mean,var), N*Nsp))                    # size
+    phyts0[5,:] .= max.(1.0, rand(Normal(mean,var), N*Nsp))                    # size
+    phyts0[4,:] .= copy(phyts0[5,:])                                           # init_size
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
         upper = Int(N+(i-1)*N)
-        phyts0[5,lower:upper]  .= Cquota[i]*Nsuper                             # Bm
-        phyts0[10,lower:upper] .= i                                            # species
+        phyts0[6,lower:upper]  .= Cquota[i]*Nsuper                             # Bm
+        phyts0[11,lower:upper] .= i                                            # species
     end
-    phyts0[5,:] .= phyts0[5,:] .* phyts0[4,:]                                  # Bm
+    phyts0[6,:] .= phyts0[6,:] .* phyts0[5,:]                                  # Bm
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
         upper = Int(N+(i-1)*N)
-        phyts0[6,lower:upper] .= copy(phyts0[5,lower:upper]) .* rand(Uniform(cqmin[i],cqmax[i]),N) # Cq
-        phyts0[7,lower:upper] .= copy(phyts0[5,lower:upper]) .* rand(Uniform(nqmin[i],nqmax[i]),N) # Nq
-        phyts0[8,lower:upper] .= copy(phyts0[5,lower:upper]) .* rand(Uniform(pqmin[i],pqmax[i]),N) # Pq
-        phyts0[9,lower:upper] .= copy(phyts0[5,lower:upper]) .* params["Chl2Cint"][i]              # Chl
+        phyts0[7, lower:upper] .= copy(phyts0[6,lower:upper]) .* rand(Uniform(cqmin[i],cqmax[i]),N) # Cq
+        phyts0[8, lower:upper] .= copy(phyts0[6,lower:upper]) .* rand(Uniform(nqmin[i],nqmax[i]),N) # Nq
+        phyts0[9, lower:upper] .= copy(phyts0[6,lower:upper]) .* rand(Uniform(pqmin[i],pqmax[i]),N) # Pq
+        phyts0[10,lower:upper] .= copy(phyts0[6,lower:upper]) .* params["Chl2Cint"][i]              # Chl
     end
-    phyts0[11,:] .= 1.0                                                        # generation
-    phyts0[12,:] .= 1.0                                                        # age
-    phyts0[13,:] .= copy(phyts0[4,:])                                          # init_size
+    phyts0[12,:] .= 1.0                                                        # generation
+    phyts0[13,:] .= 1.0                                                        # age
 
     if RunParam.Zoo == false
         return individuals(phyts0,nothing)
@@ -72,25 +72,25 @@ function gen_agents(::GPUs,RunParam::RunParams,grid)
     phyts0[1,:] .= CuArray(rand(Uniform(grid.xF[grid.Hx+1], grid.xF[grid.Hx+grid.Nx+1]), N*Nsp))               # x
     phyts0[2,:] .= CuArray(rand(Uniform(grid.yF[grid.Hy+1], grid.yF[grid.Hy+grid.Ny+1]), N*Nsp))               # y
     phyts0[3,:] .= CuArray(rand(Uniform(grid.zF[grid.Hz+1], grid.zF[grid.Hz+grid.Nz+1]), N*Nsp))             # z
-    phyts0[4,:] .= CuArray(max.(1.0, rand(Normal(mean,var), N*Nsp)))                    # size
+    phyts0[5,:] .= CuArray(max.(1.0, rand(Normal(mean,var), N*Nsp)))                    # size
+    phyts0[4,:] .= copy(phyts0[5,:])                                                    # init_size
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
         upper = Int(N+(i-1)*N)
-        phyts0[5,lower:upper]  .= Cquota[i]*Nsuper                             # Bm
-        phyts0[10,lower:upper] .= i                                            # species
+        phyts0[6,lower:upper]  .= Cquota[i]*Nsuper                             # Bm
+        phyts0[11,lower:upper] .= i                                            # species
     end
-    phyts0[5,:] .= phyts0[5,:] .* phyts0[4,:]                                  # Bm
+    phyts0[6,:] .= phyts0[6,:] .* phyts0[5,:]                                  # Bm
     for i in 1:Nsp
         lower = Int(1+(i-1)*N)
         upper = Int(N+(i-1)*N)
-        phyts0[6,lower:upper] .= copy(phyts0[5,lower:upper]) .* CuArray(rand(Uniform(cqmin[i],cqmax[i]),N)) # Cq
-        phyts0[7,lower:upper] .= copy(phyts0[5,lower:upper]) .* CuArray(rand(Uniform(nqmin[i],nqmax[i]),N)) # Nq
-        phyts0[8,lower:upper] .= copy(phyts0[5,lower:upper]) .* CuArray(rand(Uniform(pqmin[i],pqmax[i]),N)) # Pq
-        phyts0[9,lower:upper] .= copy(phyts0[5,lower:upper]) .* params["Chl2Cint"][i]                       # Chl
+        phyts0[7, lower:upper] .= copy(phyts0[6,lower:upper]) .* CuArray(rand(Uniform(cqmin[i],cqmax[i]),N)) # Cq
+        phyts0[8, lower:upper] .= copy(phyts0[6,lower:upper]) .* CuArray(rand(Uniform(nqmin[i],nqmax[i]),N)) # Nq
+        phyts0[9, lower:upper] .= copy(phyts0[6,lower:upper]) .* CuArray(rand(Uniform(pqmin[i],pqmax[i]),N)) # Pq
+        phyts0[10,lower:upper] .= copy(phyts0[6,lower:upper]) .* params["Chl2Cint"][i]                       # Chl
     end
-    phyts0[11,:] .= 1.0                                                        # generation
-    phyts0[12,:] .= 1.0                                                        # age
-    phyts0[13,:] .= copy(phyts0[4,:])                                          # init_size
+    phyts0[12,:] .= 1.0                                                        # generation
+    phyts0[13,:] .= 1.0                                                        # age
 
     return individuals(phyts0,nothing)
 

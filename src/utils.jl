@@ -1,19 +1,4 @@
 """
-    count_chl(phyts_a, grid)
-Compute total chl concentration in each grid cell
-"""
-function count_chl(phyts_a, grid)
-    cells = zeros(grid.Nx, grid.Ny, grid.Nz)
-    for i in 1:size(phyts_a,2)
-        phyt = phyts_a[:,i]
-        x,y,z = which_grid(phyt, grid)
-        cells[x, y, z] = cells[x, y, z] + phyt[9]
-    end
-    cells .= cells ./ grid.V
-    return cells
-end
-
-"""
     count_vertical_num(phyts_a)
 Count individual numbers in each meter vertically, accumulate horizontally
 """

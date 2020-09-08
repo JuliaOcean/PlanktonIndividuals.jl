@@ -18,7 +18,7 @@ end
 ##### set up the operating array(cuarray) for plankton advection
 function adv_op_array_setup(phytos, arch::Architecture)
     total_num = size(phytos, 2)
-    op_array = zeros(24, total_num) |>array_type(arch)
+    op_array = zeros(24, total_num) |> array_type(arch)
 
     op_array[1:3, :] .= phytos[1:3, :]
     return op_array
