@@ -21,13 +21,41 @@ function mortality!(op_array, consume, arch::Architecture, g::Grids, p)
                g, p["mortFracC"], p["mortFracN"], p["mortFracP"], p["_R_NC"], p["R_PC"])
 end
 
+function divide!(op_array)
+    dvid_array = op_array[:, findall(x -> x == 1.0, op_array[27,:])]
+    op_array   = op_array[:, findall(x -> x == 0.0, op_array[27,:])]
+
+    dvid_array[4,:]  .= dvid_array[5,:]  .* 0.45
+    dvid_array[5,:]  .= dvid_array[5,:]  .* 0.45
+    dvid_array[6,:]  .= dvid_array[6,:]  .* 0.45
+    dvid_array[7,:]  .= dvid_array[7,:]  .* 0.5
+    dvid_array[8,:]  .= dvid_array[8,:]  .* 0.5
+    dvid_array[9,:]  .= dvid_array[9,:]  .* 0.5
+    dvid_array[10,:] .= dvid_array[10,:] .* 0.5
+    dvid_array[12,:] .= dvid_array[12,:] .+ 1.0
+    dvid_array[13,:] .= 1.0
+
+    op_array = hcat(op_array, dvid_array)
+    op_array = hcat(op_array, dvid_array)
+end
+
+
 ##### update physiological attributes of each individual
-function plankton_update!(phytos, consume, arch::Architecture, temp, surf_par, DOC, NH4, NO3, PO4, g, p, ΔT, t)
+function plankton_update!(phytos, consume, diags, arch::Architecture, temp, surf_par, DOC, NH4, NO3, PO4, g, p, ΔT, t)
     chl = zeros(g.Nx, g.Ny, g.Nz) |> array_type(arch)
     par = zeros(g.Nx, g.Ny, g.Nz) |> array_type(arch)
     calc_chla_field!(chl, arch, phytos, g)
     calc_par!(par, arch ,chl, g, surf_par, p["kc"], p["kw"])
 
+    ##### diagnostics for nutrients and par
+    diag_t = t ÷ p["diag_freq"]+1
+    diags.tr[:,:,:,diag_t,1] += par
+    diags.tr[:,:,:,diag_t,2] += NO3
+    diags.tr[:,:,:,diag_t,3] += NH4
+    diags.tr[:,:,:,diag_t,4] += PO4
+    diags.tr[:,:,:,diag_t,5] += DOC
+
+    ##### set up the operating array
     op = phyt_op_array_setup(phytos, arch)
 
     calc_αI!(op, arch, par, g, p["α"], p["Φ"])
@@ -57,6 +85,8 @@ function plankton_update!(phytos, consume, arch::Architecture, temp, surf_par, D
     calc_BS!(op, arch, p["k_mtb"], p["b_k_mtb"], p["R_NC"], p["R_PC"])
     updata_biomass!(op, arch, p["R_NC"], p["R_PC"], p["P_Cquota"], p["P_Nsuper"], ΔT)
 
+    calc_consume!(op, arch, consume.DIC, consume.DOC, consume.NH4, consume.NO3, consume.PO4, g, ΔT)
+
     ##### probabilities of grazing, mortality, and cell division
     if t%300 == 1 # check every 5 mins
         calc_graz!(op, arch, p["Grz_P"], p["Grz_stp"])
@@ -64,16 +94,27 @@ function plankton_update!(phytos, consume, arch::Architecture, temp, surf_par, D
         calc_dvid!(op, arch, p["dvid_type"], p["dvid_stp"], p["dvid_P"], p["divd_reg"], p["P_Cquota"], p["P_Nsuper"])
     end
 
+    ###### diagnostics for each species
+    sum_diags!(diags.spcs, op, arch, g, p["diags_inds"], diag_t)
+
     ##### deal with grazed individual
     grazing!(op, consume, arch, g, p)
+
+    ###### diagnostics of mortality after grazing for each species
+    sum_diags_mort!(diags.spcs, op, arch, g, diag_t)
 
     ##### deal with dead individual
     mortality!(op, consume, arch, g, p)
 
+    ###### diagnostics of cell division after grazing and mortality for each species
+    sum_diags_dvid!(diags.spcs, op, arch, g, diag_t)
+
     ##### deal with divided individual
+    divide!(op)
 
     ##### deal with diagnostics
 
+    phytos = op[1:13, :]
 end
 
 

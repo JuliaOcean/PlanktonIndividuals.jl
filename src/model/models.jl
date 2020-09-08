@@ -33,7 +33,7 @@ function PI_Model(arch::Architecture, grid, RunParam;
                   temp = read_temp_input(RunParam.ΔT, grid),
                   params = RunParam.params,
                   diag = diags_setup(arch, RunParam.nTime, RunParam.ΔT, grid, RunParam.params["diag_freq"], RunParam.params["diag_inds"], RunParam.params["P_Nsp"]),
-                  diag_tr = diags_setup(arch, RunParam.nTime, RunParam.ΔT, grid, RunParam.params["diag_freq"], 5+params["P_Nsp"])
+                  diag_tr = diags_setup(arch, RunParam.nTime, RunParam.ΔT, grid, RunParam.params["diag_freq"], 5)
                   )
 
     if arch == GPUs()
@@ -42,7 +42,7 @@ function PI_Model(arch::Architecture, grid, RunParam;
         input = Model_Input(temp,PAR)
     end
 
-    diags = Diagnostics(diag[1],diag[2],diag_tr)
+    diags = Diagnostics(diag[1],diag_tr)
 
     if arch == GPUs() && !has_cuda()
         throw(ArgumentError("Cannot create a GPU model. No CUDA-enabled GPU was detected!"))

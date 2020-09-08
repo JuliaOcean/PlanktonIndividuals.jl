@@ -281,3 +281,21 @@ function calc_loss!(op_array, arch::Architecture, DOC_con, POC_con, DON_con, PON
     return nothing
 end
 
+##### deal with nutrients uptake
+@kernel function calc_consume_kernel!(op_array, DIC_con, DOC_con, NH4_con, NO3_con, PO4_con, g::Grids, ΔT)
+    i = @index(Global, Linear)
+    xi = find_xF_ind(op_array[1,i], g)
+    yi = find_yF_ind(op_array[2,i], g)
+    zi = find_zF_ind(op_array[3,i], g)
+    DIC_con[xi, yi, zi] = DIC_con[xi, yi, zi] + (op_array[22,i] - op_array[16,i]) * ΔT
+    DOC_con[xi, yi, zi] = DOC_con[xi, yi, zi] + (op_array[24,i] - op_array[17,i]) * ΔT
+    NH4_con[xi, yi, zi] = NH4_con[xi, yi, zi] -  op_array[18,i] * ΔT
+    NO3_con[xi, yi, zi] = NO3_con[xi, yi, zi] -  op_array[19,i] * ΔT
+    PO4_con[xi, yi, zi] = PO4_con[xi, yi, zi] -  op_array[20,i] * ΔT
+end
+function calc_consume!(op_array, arch::Architecture, DIC_con, DOC_con, NH4_con, NO3_con, PO4_con, g::Grids, ΔT)
+    kernel! = calc_consume_kernel!(device(arch), 256, (size(op_array,2),))
+    event = kernel!(op_array, DIC_con, DOC_con, NH4_con, NO3_con, PO4_con, g, ΔT)
+    wait(device(arch), event)
+    return nothing
+end
