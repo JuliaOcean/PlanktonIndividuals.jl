@@ -1,7 +1,7 @@
 module PlanktonIndividuals
 
 using NCDatasets, Serialization
-using Random, Distributions, Statistics
+using Random, Distributions, Statistics, Interpolations
 using Printf
 using CUDA, KernelAbstractions
 

@@ -59,9 +59,9 @@ end
 ##### record diagnostics at each time step
 @kernel function sum_diags_kernel!(diags, op_array, g::Grids, diags_inds, diag_t)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[1,i], g)
-    yi = find_yF_ind(op_array[2,i], g)
-    zi = find_zF_ind(op_array[3,i], g)
+    xi = find_xF_ind(op_array[1,i], g) |> Int
+    yi = find_yF_ind(op_array[2,i], g) |> Int
+    zi = find_zF_ind(op_array[3,i], g) |> Int
     sp = op_array[11,i]
 
     diags[xi, yi, zi, diag_t, sp, 1] += 1 # individual count
@@ -130,9 +130,9 @@ end
 
 @kernel function sum_diags_mort_kernel!(diags_spcs, op_array, g::Grids, diag_t)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[1,i], g)
-    yi = find_yF_ind(op_array[2,i], g)
-    zi = find_zF_ind(op_array[3,i], g)
+    xi = find_xF_ind(op_array[1,i], g) |> Int
+    yi = find_yF_ind(op_array[2,i], g) |> Int
+    zi = find_zF_ind(op_array[3,i], g) |> Int
     sp = op_array[11,i]
     diags[xi, yi, zi, diag_t, sp, 3] += op_array[26,i]
 end
@@ -145,9 +145,9 @@ end
 
 @kernel function sum_diags_dvid_kernel!(diags_spcs, op_array, g::Grids, diag_t)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[1,i], g)
-    yi = find_yF_ind(op_array[2,i], g)
-    zi = find_zF_ind(op_array[3,i], g)
+    xi = find_xF_ind(op_array[1,i], g) |> Int
+    yi = find_yF_ind(op_array[2,i], g) |> Int
+    zi = find_zF_ind(op_array[3,i], g) |> Int
     sp = op_array[11,i]
     diags[xi, yi, zi, diag_t, sp, 4] += op_array[27,i]
 end

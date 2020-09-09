@@ -2,9 +2,9 @@ using KernelAbstractions.Extras.LoopInfo: @unroll
 ##### calculate Chla field based on the status of plankton individuals
 @kernel function calc_chla_field_kernel!(chl, phytos, g::Grids)
     i = @index(Global, Linear)
-    xi = find_xF_ind(phytos[1,i], g)
-    yi = find_yF_ind(phytos[2,i], g)
-    zi = find_zF_ind(phytos[3,i], g)
+    xi = find_xF_ind(phytos[1,i], g) |> Int
+    yi = find_yF_ind(phytos[2,i], g) |> Int
+    zi = find_zF_ind(phytos[3,i], g) |> Int
     chl[xi, yi, zi] = chl[xi, yi, zi] + phytos[9,i]
 end
 function calc_chla_field!(chl, arch::Architecture, phytos, g::Grids)

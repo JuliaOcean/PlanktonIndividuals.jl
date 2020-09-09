@@ -42,13 +42,15 @@ function PI_Model(arch::Architecture, grid, RunParam;
         input = Model_Input(temp,PAR)
     end
 
-    diags = Diagnostics(diag[1],diag_tr)
+    diags = Diagnostics(diag, diag_tr)
 
     if arch == GPUs() && !has_cuda()
         throw(ArgumentError("Cannot create a GPU model. No CUDA-enabled GPU was detected!"))
     end
 
-    model = Model_Struct(arch,t,individuals, nutrients, grid, input, params, diags)
+    vel = velocities((;),(;))
+
+    model = Model_Struct(arch,t,individuals, nutrients, grid, input, params, diags, vel)
 
     if RunParam.Zoo == true
         model.params["Grz_P"] = 0

@@ -41,9 +41,15 @@ end
 
 
 ##### update physiological attributes of each individual
-function plankton_update!(phytos, consume, diags, arch::Architecture, temp, surf_par, DOC, NH4, NO3, PO4, g, p, ΔT, t)
+function plankton_update!(phytos, consume, diags, arch::Architecture,
+                          temp, surf_par, DOC, NH4, NO3, PO4, g::Grids, p, ΔT, t)
     chl = zeros(g.Nx, g.Ny, g.Nz) |> array_type(arch)
     par = zeros(g.Nx, g.Ny, g.Nz) |> array_type(arch)
+    NO3 = interior(NO3, g)
+    NH4 = interior(NH4, g)
+    PO4 = interior(PO4, g)
+    DOC = interior(DOC, g)
+
     calc_chla_field!(chl, arch, phytos, g)
     calc_par!(par, arch ,chl, g, surf_par, p["kc"], p["kw"])
 

@@ -1,9 +1,9 @@
 ##### calculate αI for each individual
 @kernel function calc_αI_kernel!(op_array, par, g::Grids, α, Φ)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[1,i], g)
-    yi = find_yF_ind(op_array[2,i], g)
-    zi = find_zF_ind(op_array[3,i], g)
+    xi = find_xF_ind(op_array[1,i], g) |> Int
+    yi = find_yF_ind(op_array[2,i], g) |> Int
+    zi = find_zF_ind(op_array[3,i], g) |> Int
     sp = op_array[11,i]
     op_array[14,i] = α[sp] * par[xi, yi, zi] * Φ[sp]
 end
@@ -17,9 +17,9 @@ end
 ##### calculate the limitation of temperature
 @kernel function calc_tempfunc_kernel!(op_array, temp, g::Grids, TempAe, Tempref, TempCoeff)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[1,i], g)
-    yi = find_yF_ind(op_array[2,i], g)
-    zi = find_zF_ind(op_array[3,i], g)
+    xi = find_xF_ind(op_array[1,i], g) |> Int
+    yi = find_yF_ind(op_array[2,i], g) |> Int
+    zi = find_zF_ind(op_array[3,i], g) |> Int
     op_array[15,i] = max(1.0e-10, exp(TempAe * (1.0 / (temp[xi, yi, zi] + 273.15) - 1.0 / Tempref))) * TempCoeff
 end
 function calc_tempfunc!(op_array, arch::Architecture, temp, g::Grids, TempAe, Tempref, TempCoeff)
@@ -46,9 +46,9 @@ end
 ##### calculate DOC uptake rate (mmolC/individual/second)
 @kernel function calc_VDOC_kernel!(op_array, DOC, g::Grids, ΔT, Cqmax, Cqmin, VDOCmax, VDOC_b, KsatDOC)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[1,i], g)
-    yi = find_yF_ind(op_array[2,i], g)
-    zi = find_zF_ind(op_array[3,i], g)
+    xi = find_xF_ind(op_array[1,i], g) |> Int
+    yi = find_yF_ind(op_array[2,i], g) |> Int
+    zi = find_zF_ind(op_array[3,i], g) |> Int
     sp = op_array[11,i]
     Qc = op_array[7,i] / (op_array[6,i] + op_array[7,i])
     reg= max(0.0, min(1.0, (Cqmax[sp] - Qc) / (Cqmax[sp] - Cqmin[sp])))
@@ -66,9 +66,9 @@ end
 ##### calculate NH4 and NO3 uptake rate (mmolN/individual/second)
 @kernel function calc_VN_kernel!(op_array, NH4, NO3, g::Grids, ΔT, Nqmax, Nqmin, VNH4max, VNO3max, VN_b, KsatNH4, KsatNO3, R_NC)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[1,i], g)
-    yi = find_yF_ind(op_array[2,i], g)
-    zi = find_zF_ind(op_array[3,i], g)
+    xi = find_xF_ind(op_array[1,i], g) |> Int
+    yi = find_yF_ind(op_array[2,i], g) |> Int
+    zi = find_zF_ind(op_array[3,i], g) |> Int
     sp = op_array[11,i]
     Qn = (op_array[8,i] + op_array[6,i] * R_NC) / (op_array[6,i] + op_array[7,i])
     reg= max(0.0, min(1.0, (Nqmax[sp] - Qn) / (Nqmax[sp] - Nqmin[sp])))
@@ -89,9 +89,9 @@ end
 ##### calculate PO4 uptake rate (mmolP/individual/second)
 @kernel function calc_VP_kernel!(op_array, PO4, g::Grids, ΔT, Pqmax, Pqmin, VPO4max, VP_b, KsatPO4, R_PC)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[1,i], g)
-    yi = find_yF_ind(op_array[2,i], g)
-    zi = find_zF_ind(op_array[3,i], g)
+    xi = find_xF_ind(op_array[1,i], g) |> Int
+    yi = find_yF_ind(op_array[2,i], g) |> Int
+    zi = find_zF_ind(op_array[3,i], g) |> Int
     sp = op_array[11,i]
     Qp = (op_array[9,i] + op_array[6,i] * R_PC) / (op_array[6,i] + op_array[7,i])
     reg= max(0.0, min(1.0, (Pqmax[sp] - Qp) / (Pqmax[sp] - Pqmin[sp])))
@@ -262,9 +262,9 @@ end
 @kernel function calc_loss_kernel!(op_array, DOC_con, POC_con, DON_con, PON_con, DOP_con, POP_con, g::Grids,
                                 lossFracC, lossFracN, lossFracP, R_NC, R_PC)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[1,i], g)
-    yi = find_yF_ind(op_array[2,i], g)
-    zi = find_zF_ind(op_array[3,i], g)
+    xi = find_xF_ind(op_array[1,i], g) |> Int
+    yi = find_yF_ind(op_array[2,i], g) |> Int
+    zi = find_zF_ind(op_array[3,i], g) |> Int
     DOC_con[xi, yi, zi] = DOC_con[xi, yi, zi] + (op_array[6,i] + op_array[7,i]) * lossFracC
     POC_con[xi, yi, zi] = POC_con[xi, yi, zi] + (op_array[6,i] + op_array[7,i]) * (1.0 - lossFracC)
     DON_con[xi, yi, zi] = DON_con[xi, yi, zi] + (op_array[6,i] * R_NC + op_array[8,i]) * lossFracN
@@ -284,9 +284,9 @@ end
 ##### deal with nutrients uptake
 @kernel function calc_consume_kernel!(op_array, DIC_con, DOC_con, NH4_con, NO3_con, PO4_con, g::Grids, ΔT)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[1,i], g)
-    yi = find_yF_ind(op_array[2,i], g)
-    zi = find_zF_ind(op_array[3,i], g)
+    xi = find_xF_ind(op_array[1,i], g) |> Int
+    yi = find_yF_ind(op_array[2,i], g) |> Int
+    zi = find_zF_ind(op_array[3,i], g) |> Int
     DIC_con[xi, yi, zi] = DIC_con[xi, yi, zi] + (op_array[22,i] - op_array[16,i]) * ΔT
     DOC_con[xi, yi, zi] = DOC_con[xi, yi, zi] + (op_array[24,i] - op_array[17,i]) * ΔT
     NH4_con[xi, yi, zi] = NH4_con[xi, yi, zi] -  op_array[18,i] * ΔT

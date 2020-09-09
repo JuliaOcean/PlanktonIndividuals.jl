@@ -15,15 +15,6 @@ function bounded_domain_z(z, g::Grids)
     return z
 end
 
-##### set up the operating array(cuarray) for plankton advection
-function adv_op_array_setup(phytos, arch::Architecture)
-    total_num = size(phytos, 2)
-    op_array = zeros(24, total_num) |> array_type(arch)
-
-    op_array[1:3, :] .= phytos[1:3, :]
-    return op_array
-end
-
 ##### find cell and face indices for each individual
 @kernel function find_inds_kernel!(op_array, g::Grids)
     i = @index(Global, Linear)
@@ -59,9 +50,14 @@ end
 ##### velocity interpolation for each individual
 @kernel function vel₁_interpolation_kernel!(op_array, g::Grids, u, v, w)
     i = @index(Global, Linear)
-    @inbounds op_array[13,i] = trilinear_itlp(op_array[1:3,i], op_array[4,i], op_array[7,i], op_array[9,i], u)
-    @inbounds op_array[14,i] = trilinear_itlp(op_array[1:3,i], op_array[5,i], op_array[6,i], op_array[9,i], v)
-    @inbounds op_array[15,i] = trilinear_itlp(op_array[1:3,i], op_array[5,i], op_array[7,i], op_array[8,i], w)
+    @inbounds op_array[13,i] = trilinear_itpl(op_array[1,i], op_array[2,i], op_array[3,i],
+                                              op_array[4,i], op_array[7,i], op_array[9,i], u, g)
+
+    @inbounds op_array[14,i] = trilinear_itpl(op_array[1,i], op_array[2,i], op_array[3,i],
+                                              op_array[5,i], op_array[6,i], op_array[9,i], v, g)
+
+    @inbounds op_array[15,i] = trilinear_itpl(op_array[1,i], op_array[2,i], op_array[3,i],
+                                              op_array[5,i], op_array[7,i], op_array[8,i], w, g)
 end
 function vel₁_interpolation!(op_array, arch::Architecture, g::Grids, u, v, w)
     kernel! = vel₁_interpolation_kernel!(device(arch), 256, (size(op_array,2),))
@@ -72,9 +68,14 @@ end
 
 @kernel function vel₂_interpolation_kernel!(op_array, g::Grids, u, v, w)
     i = @index(Global, Linear)
-    @inbounds op_array[16,i] = trilinear_itlp(op_array[1:3,i], op_array[4,i], op_array[7,i], op_array[9,i], u)
-    @inbounds op_array[17,i] = trilinear_itlp(op_array[1:3,i], op_array[5,i], op_array[6,i], op_array[9,i], v)
-    @inbounds op_array[18,i] = trilinear_itlp(op_array[1:3,i], op_array[5,i], op_array[7,i], op_array[8,i], w)
+    @inbounds op_array[16,i] = trilinear_itpl(op_array[1,i], op_array[2,i], op_array[3,i],
+                                              op_array[4,i], op_array[7,i], op_array[9,i], u, g)
+
+    @inbounds op_array[17,i] = trilinear_itpl(op_array[1,i], op_array[2,i], op_array[3,i],
+                                              op_array[5,i], op_array[6,i], op_array[9,i], v, g)
+
+    @inbounds op_array[18,i] = trilinear_itpl(op_array[1,i], op_array[2,i], op_array[3,i],
+                                              op_array[5,i], op_array[7,i], op_array[8,i], w, g)
 end
 function vel₂_interpolation!(op_array, arch::Architecture, g::Grids, u, v, w)
     kernel! = vel₂_interpolation_kernel!(device(arch), 256, (size(op_array,2),))
@@ -85,9 +86,14 @@ end
 
 @kernel function vel₃_interpolation_kernel!(op_array, g::Grids, u, v, w)
     i = @index(Global, Linear)
-    @inbounds op_array[19,i] = trilinear_itlp(op_array[1:3,i], op_array[4,i], op_array[7,i], op_array[9,i], u)
-    @inbounds op_array[20,i] = trilinear_itlp(op_array[1:3,i], op_array[5,i], op_array[6,i], op_array[9,i], v)
-    @inbounds op_array[21,i] = trilinear_itlp(op_array[1:3,i], op_array[5,i], op_array[7,i], op_array[8,i], w)
+    @inbounds op_array[19,i] = trilinear_itpl(op_array[1,i], op_array[2,i], op_array[3,i],
+                                              op_array[4,i], op_array[7,i], op_array[9,i], u, g)
+
+    @inbounds op_array[20,i] = trilinear_itpl(op_array[1,i], op_array[2,i], op_array[3,i],
+                                              op_array[5,i], op_array[6,i], op_array[9,i], v, g)
+
+    @inbounds op_array[21,i] = trilinear_itpl(op_array[1,i], op_array[2,i], op_array[3,i],
+                                              op_array[5,i], op_array[7,i], op_array[8,i], w, g)
 end
 function vel₃_interpolation!(op_array, arch::Architecture, g::Grids, u, v, w)
     kernel! = vel₃_interpolation_kernel!(device(arch), 256, (size(op_array,2),))
@@ -98,9 +104,14 @@ end
 
 @kernel function vel₄_interpolation_kernel!(op_array, g::Grids, u, v, w)
     i = @index(Global, Linear)
-    @inbounds op_array[22,i] = trilinear_itlp(op_array[1:3,i], op_array[4,i], op_array[7,i], op_array[9,i], u)
-    @inbounds op_array[23,i] = trilinear_itlp(op_array[1:3,i], op_array[5,i], op_array[6,i], op_array[9,i], v)
-    @inbounds op_array[24,i] = trilinear_itlp(op_array[1:3,i], op_array[5,i], op_array[7,i], op_array[8,i], w)
+    @inbounds op_array[22,i] = trilinear_itpl(op_array[1,i], op_array[2,i], op_array[3,i],
+                                              op_array[4,i], op_array[7,i], op_array[9,i], u, g)
+
+    @inbounds op_array[23,i] = trilinear_itpl(op_array[1,i], op_array[2,i], op_array[3,i],
+                                              op_array[5,i], op_array[6,i], op_array[9,i], v, g)
+
+    @inbounds op_array[24,i] = trilinear_itpl(op_array[1,i], op_array[2,i], op_array[3,i],
+                                              op_array[5,i], op_array[7,i], op_array[8,i], w, g)
 end
 function vel₄_interpolation!(op_array, arch::Architecture, g::Grids, u, v, w)
     kernel! = vel₄_interpolation_kernel!(device(arch), 256, (size(op_array,2),))
@@ -172,7 +183,7 @@ end
 end
 function calc_coord!(op_array, phytos, arch::Architecture, g::Grids, ΔT)
     kernel! = calc_coord_kernel!(device(arch), 256, (size(op_array,2),))
-    event = kernel!(op_array, g, ΔT)
+    event = kernel!(op_array, phytos, g, ΔT)
     wait(device(arch), event)
     return nothing
 end

@@ -1,13 +1,5 @@
-"""
-    function nut_update(model, velᵇ, consume, ΔT, Dim)
-Update nutrient fields to next time step with source term and consumption by phytoplankton ('consume')
-"""
-function nut_update_interior(model, velᵇ, consume, ΔT)
-    nutrients = model.nutrients
-    params = model.params
-    g = model.grid
-    arch = model.arch
-
+##### update nutrient fields
+function nut_update!(nutrients, gtr, arch::Architecture, g::Grids, params, vel, consume, ΔT)
     # compute biogeochemical forcings of nutrients,for each time step
     F = nutrients_init(arch, g)
     nut_forcing!(F, arch, g, nutrients, params, ΔT)
@@ -18,39 +10,25 @@ function nut_update_interior(model, velᵇ, consume, ΔT)
     add_nut_tendency!(diffu, F)
 
     # compute advection tendency
-    gtr = nutrients_init(arch, g)
-    nut_advection!(gtr, arch, g, nutrients, velᵇ, ΔT)
+    nut_advection!(gtr, arch, g, nutrients, vel, ΔT)
     add_nut_tendency!(gtr, diffu)
 
     # apply diffusion and forcing tendency
-    nutₜ = nutrients_init(arch, g)
     for name in nut_names
-        nutₜ[name].data .= nutrients[name].data .+ gtr[name].data .+ consume[name].data ./ g.V
+        nutrients[name].data .= nutrients[name].data .+ gtr[name].data .+ consume[name].data ./ g.V
     end
 
-    fill_halo!(nutₜ, g)
-
-    return nutₜ, gtr
+    fill_halo!(nutrients, g)
 end
 
-function nut_update_interior(model, consume, ΔT)
-    nutrients = model.nutrients
-    params = model.params
-    g = model.grid
-    arch = model.arch
-
+function nut_update!(nutrients, gtr, arch::Architecture, g::Grids, params, consume, ΔT)
     # compute biogeochemical forcings of nutrients,for each time step
-    F = nutrients_init(arch, g)
-    nut_forcing!(F, arch, g, nutrients, params, ΔT)
+    nut_forcing!(gtr, arch, g, nutrients, params, ΔT)
 
     # apply forcing tendency
-    nutₜ = nutrients_init(arch, g)
-
     for name in nut_names
-        nutₜ[name].data .= nutrients[name].data .+ F[name].data .+ consume[name].data ./ g.V
+        nutrients[name].data .= nutrients[name].data .+ gtr[name].data .+ consume[name].data ./ g.V
     end
 
-    fill_halo!(nutₜ, g)
-
-    return nutₜ, F
+    fill_halo!(nutrients, g)
 end
