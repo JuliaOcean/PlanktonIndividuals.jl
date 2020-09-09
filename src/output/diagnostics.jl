@@ -59,70 +59,70 @@ end
 ##### record diagnostics at each time step
 @kernel function sum_diags_kernel!(diags, op_array, g::Grids, diags_inds, diag_t)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[1,i], g) |> Int
-    yi = find_yF_ind(op_array[2,i], g) |> Int
-    zi = find_zF_ind(op_array[3,i], g) |> Int
-    sp = op_array[11,i]
+    xi = find_xF_ind(op_array[i,1], g) |> Int
+    yi = find_yF_ind(op_array[i,2], g) |> Int
+    zi = find_zF_ind(op_array[i,3], g) |> Int
+    sp = op_array[i,11]
 
     diags[xi, yi, zi, diag_t, sp, 1] += 1 # individual count
-    diags[xi, yi, zi, diag_t, sp, 2] += op_array[25,i] # grazing
+    diags[xi, yi, zi, diag_t, sp, 2] += op_array[i,29] # grazing
 
     id = 4
     if diags_inds[1] == 1 # PS
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[16,i]
+        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,20]
     end
     if diags_inds[2] == 1 # VDOC
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[17,i]
+        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,21]
     end
     if diags_inds[3] == 1 # VNH4
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[18,i]
+        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,22]
     end
     if diags_inds[4] == 1 # VNO3
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[19,i]
+        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,23]
     end
     if diags_inds[5] == 1 # VPO4
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[20,i]
+        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,24]
     end
     if diags_inds[6] == 1 # respiration
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[22,i]
+        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,26]
     end
     if diags_inds[7] == 1 # BS
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[23,i]
+        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,27]
     end
     if diags_inds[8] == 1 # exudation
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[24,i]
+        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,28]
     end
     if diags_inds[9] == 1 # Bm
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[6,i]
+        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,6]
     end
     if diags_inds[10] == 1 # Cq
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[7,i]
+        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,7]
     end
     if diags_inds[11] == 1 # Nq
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[8,i]
+        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,8]
     end
     if diags_inds[12] == 1 # Pq
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[9,i]
+        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,9]
     end
     if diags_inds[13] == 1 # Chla
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[10,i]
+        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,10]
     end
 end
 function sum_diags!(diags, op_array, arch::Architecture, g::Grids, diags_inds, diag_t)
-    kernel! = sum_diags_kernel!(device(arch), 256, (size(op_array,2),))
+    kernel! = sum_diags_kernel!(device(arch), 256, (size(op_array,1),))
     event = kernel!(diags, op_array, g, diags_inds, diag_t)
     wait(device(arch), event)
     return nothing
@@ -130,14 +130,14 @@ end
 
 @kernel function sum_diags_mort_kernel!(diags_spcs, op_array, g::Grids, diag_t)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[1,i], g) |> Int
-    yi = find_yF_ind(op_array[2,i], g) |> Int
-    zi = find_zF_ind(op_array[3,i], g) |> Int
-    sp = op_array[11,i]
-    diags[xi, yi, zi, diag_t, sp, 3] += op_array[26,i]
+    xi = find_xF_ind(op_array[i,1], g) |> Int
+    yi = find_yF_ind(op_array[i,2], g) |> Int
+    zi = find_zF_ind(op_array[i,3], g) |> Int
+    sp = op_array[i,11]
+    diags[xi, yi, zi, diag_t, sp, 3] += op_array[i,30]
 end
 function sum_diags_mort!(diags, op_array, arch::Architecture, g::Grids, diag_t)
-    kernel! = sum_diags_mort_kernel!(device(arch), 256, (size(op_array,2),))
+    kernel! = sum_diags_mort_kernel!(device(arch), 256, (size(op_array,1),))
     event = kernel!(diags, op_array, g, diag_t)
     wait(device(arch), event)
     return nothing
@@ -145,14 +145,14 @@ end
 
 @kernel function sum_diags_dvid_kernel!(diags_spcs, op_array, g::Grids, diag_t)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[1,i], g) |> Int
-    yi = find_yF_ind(op_array[2,i], g) |> Int
-    zi = find_zF_ind(op_array[3,i], g) |> Int
-    sp = op_array[11,i]
-    diags[xi, yi, zi, diag_t, sp, 4] += op_array[27,i]
+    xi = find_xF_ind(op_array[i,1], g) |> Int
+    yi = find_yF_ind(op_array[i,2], g) |> Int
+    zi = find_zF_ind(op_array[i,3], g) |> Int
+    sp = op_array[i,11]
+    diags[xi, yi, zi, diag_t, sp, 4] += op_array[i,31]
 end
 function sum_diags_dvid!(diags, op_array, arch::Architecture, g::Grids, diag_t)
-    kernel! = sum_diags_dvid_kernel!(device(arch), 256, (size(op_array,2),))
+    kernel! = sum_diags_dvid_kernel!(device(arch), 256, (size(op_array,1),))
     event = kernel!(diags, op_array, g, diag_t)
     wait(device(arch), event)
     return nothing
