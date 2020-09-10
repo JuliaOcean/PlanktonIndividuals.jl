@@ -23,7 +23,7 @@ function gen_agents(::CPUs,RunParam::RunParams,grid)
     nqmin = params["Nqmin"]
     pqmax = params["Pqmax"]
     pqmin = params["Pqmin"]
-    phyts0 = zeros(Float64,13,N*Nsp)
+    phyts0 = zeros(Float64, N*Nsp, 13)
     phyts0[:,1] .= rand(Uniform(grid.xF[grid.Hx+1], grid.xF[grid.Nx+grid.Hx+1]), N*Nsp)               # x
     phyts0[:,2] .= rand(Uniform(grid.yF[grid.Hy+1], grid.yF[grid.Ny+grid.Hy+1]), N*Nsp)               # y
     phyts0[:,3] .= rand(Uniform(grid.zF[grid.Hz+1], grid.zF[grid.Nz+grid.Hz+1]), N*Nsp)               # z
@@ -68,7 +68,7 @@ function gen_agents(::GPUs,RunParam::RunParams,grid)
     nqmin = params["Nqmin"]
     pqmax = params["Pqmax"]
     pqmin = params["Pqmin"]
-    phyts0 = zeros(Float64,13,N*Nsp) |> CuArray
+    phyts0 = zeros(Float64, N*Nsp, 13) |> CuArray
     phyts0[:,1] .= CuArray(rand(Uniform(grid.xF[grid.Hx+1], grid.xF[grid.Hx+grid.Nx+1]), N*Nsp))               # x
     phyts0[:,2] .= CuArray(rand(Uniform(grid.yF[grid.Hy+1], grid.yF[grid.Hy+grid.Ny+1]), N*Nsp))               # y
     phyts0[:,3] .= CuArray(rand(Uniform(grid.zF[grid.Hz+1], grid.zF[grid.Hz+grid.Nz+1]), N*Nsp))             # z
