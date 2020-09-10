@@ -15,7 +15,6 @@ u1 v1 w1 u2 v2 w2 u3 v3 w3 u4 v4 w4
 function adv_op_array_setup(phytos, arch::Architecture)
     total_num = size(phytos, 1)
     op_array = zeros(total_num, 17) |> array_type(arch)
-
     op_array[:, 1:3] .= phytos[:, 1:3]
     return op_array
 end
@@ -31,38 +30,70 @@ function vel_array_setup(phytos, arch::Architecture)
 end
 
 ##### deal with particles moved out of the domain
-function periodic_domain_x(x, g::Grids)
-    x = x ≤ g.xF[g.Hx+1]      ? x + g.xF[g.Nx+g.Hx+1] : x
-    x = x ≥ g.xF[g.Nx+g.Hx+1] ? x - g.xF[g.Nx+g.Hx+1] : x
-    return x
+@kernel function periodic_domain⁺_kernel!(op_array, g::Grids, ind)
+    i = @index(Global, Linear)
+    if op_array[i,1+ind] ≥ g.xF[g.Nx+g.Hx+1]
+        op_array[i,1+ind] = op_array[i,1+ind] - g.Nx*g.Δx
+        # op_array[i,1+ind] = g.xF[g.Nx+g.Hx+1]
+    end
+    if op_array[i,2+ind] ≥ g.yF[g.Ny+g.Hy+1]
+        op_array[i,2+ind] = op_array[i,2+ind] - g.Ny*g.Δy
+        # op_array[i,2+ind] = g.yF[g.Ny+g.Hy+1]
+    end
+    if op_array[i,3+ind] ≥ g.zF[g.Nz+g.Hz+1]
+        op_array[i,3+ind] = g.zF[g.Nz+g.Hz+1]
+    end
+    # @inbounds op_array[i,3+ind] = min(g.zF[g.Hz+g.Nz+1], op_array[i,3+ind])
 end
-function periodic_domain_y(y, g::Grids)
-    y = y ≤ g.yF[g.Hy+1]      ? y + g.yF[g.Ny+g.Hy+1] : y
-    y = y ≥ g.yF[g.Ny+g.Hy+1] ? y - g.yF[g.Ny+g.Hy+1] : y
-    return y
+function periodic_domain⁺!(op_array, arch::Architecture, g::Grids, ind::Int64)
+    kernel! = periodic_domain⁺_kernel!(device(arch), 256, (size(op_array,1),))
+    event = kernel!(op_array, g, ind)
+    wait(device(arch), event)
+    return nothing
 end
-function bounded_domain_z(z, g::Grids)
-    z = z ≤ g.zF[g.Hz+1]      ? g.zF[g.Hz+1] : z
-    z = z ≥ g.zF[g.Nz+g.Hz+1] ? g.zF[g.Nz+g.Hz+1] : z
-    return z
+@kernel function periodic_domain⁻_kernel!(op_array, g::Grids, ind)
+    i = @index(Global, Linear)
+    if op_array[i,1+ind] < g.xF[g.Hx+1]
+        # op_array[i,1+ind] = g.xF[g.Hx+1]
+        op_array[i,1+ind] = op_array[i,1+ind] + g.Nx*g.Δx
+    end
+    if op_array[i,2+ind] < g.yF[g.Hy+1]
+        # op_array[i,2+ind] = g.yF[g.Hy+1]
+        op_array[i,2+ind] = op_array[i,2+ind] + g.Ny*g.Δy
+    end
+    if op_array[i,3+ind] < g.zF[g.Hz+1]
+        op_array[i,3+ind] = g.zF[g.Hz+1]
+    end
+    # @inbounds op_array[i,1+ind] = op_array[i,1+ind] > g.xF[g.Hx+1] ? op_array[i,1+ind] : op_array[i,1+ind] + g.Nx*g.Δx
+    # @inbounds op_array[i,2+ind] = op_array[i,2+ind] > g.yF[g.Hy+1] ? op_array[i,2+ind] : op_array[i,2+ind] + g.Ny*g.Δy
+    # @inbounds op_array[i,3+ind] = max(g.zF[g.Hz+1], op_array[i,3+ind])
 end
+function periodic_domain⁻!(op_array, arch::Architecture, g::Grids, ind::Int64)
+    kernel! = periodic_domain⁻_kernel!(device(arch), 256, (size(op_array,1),))
+    event = kernel!(op_array, g, ind)
+    wait(device(arch), event)
+    return nothing
+end
+function in_domain!(op_array, arch::Architecture, g::Grids, ind)
+    periodic_domain⁺!(op_array, arch::Architecture, g::Grids, ind)
+    periodic_domain⁻!(op_array, arch::Architecture, g::Grids, ind)
+end
+
+in_domain!(op_array, arch::Architecture, g::Grids) = in_domain!(op_array, arch::Architecture, g::Grids, 0)
+
 
 ##### find indices (halo points excluded)
-@inline find_xF_ind(x, g::Grids) = x ≥ 0.0 ? x ÷ g.Δx + 1 : x ÷ g.Δx
+@inline find_xF_ind(x, g::Grids) = x ≥ g.xF[g.Hx+1] ? x ÷ g.Δx + 1 : 0.0
 
-@inline find_yF_ind(y, g::Grids) = y ≥ 0.0 ? y ÷ g.Δy + 1 : y ÷ g.Δy
+@inline find_yF_ind(y, g::Grids) = y ≥ g.yF[g.Hy+1] ? y ÷ g.Δy + 1 : 0.0
 
-@inline find_zF_ind(z, g::Grids) = (g.Nz * g.Δz + z) ≥ 0.0 ?
-    (g.Nz * g.Δz + z) ÷ g.Δz + 1 : (g.Nz * g.Δz + z) ÷ g.Δz
+@inline find_zF_ind(z, g::Grids) = z ≥ g.zF[g.Hz+1] ? (g.Nz * g.Δz + z) ÷ g.Δz + 1 : 0.0
 
-@inline find_xC_ind(x, g::Grids) = (x - g.Δx * 0.5) ≥ 0.0 ?
-    (x - g.Δx * 0.5) ÷ g.Δx + 1 : (x - g.Δx * 0.5) ÷ g.Δx
+@inline find_xC_ind(x, g::Grids) = x ≥ g.xC[g.Hx+1] ? (x - g.Δx * 0.5) ÷ g.Δx + 1 : 0.0
 
-@inline find_yC_ind(y, g::Grids) = (y - g.Δy * 0.5) ≥ 0.0 ?
-    (y - g.Δy * 0.5) ÷ g.Δy + 1 : (y - g.Δy * 0.5) ÷ g.Δy
+@inline find_yC_ind(y, g::Grids) = y ≥ g.yC[g.Hy+1] ? (y - g.Δy * 0.5) ÷ g.Δy + 1 : 0.0
 
-@inline find_zC_ind(z, g::Grids) = (g.Nz * g.Δz + z - g.Δz * 0.5) ≥ 0.0 ?
-    (g.Nz * g.Δz + z - g.Δz * 0.5) ÷ g.Δz + 1 : (g.Nz * g.Δz + z - g.Δz * 0.5) ÷ g.Δz
+@inline find_zC_ind(z, g::Grids) = z ≥ g.zC[g.Hz+1] ? (g.Nz * g.Δz + z - g.Δz * 0.5) ÷ g.Δz + 1 : 0.0
 
 ##### find cell and face indices for each individual
 @kernel function find_inds_kernel!(ind_array, op_array, g::Grids)
@@ -129,27 +160,27 @@ end
     x₀ = ind_array[i,1] + g.Hx
     y₀ = ind_array[i,2] + g.Hy
     z₀ = ind_array[i,3] + g.Hz
-    @inbounds op_array[i,12] = op_array[i,1] - g.xF[x₀] # dx
-    @inbounds op_array[i,13] = op_array[i,2] - g.yC[y₀] # dy
-    @inbounds op_array[i,14] = op_array[i,3] - g.zC[z₀] # dz
+    @inbounds op_array[i,12] = (op_array[i,1] - g.xF[x₀]) / g.Δx # dx
+    @inbounds op_array[i,13] = (op_array[i,2] - g.yC[y₀]) / g.Δy # dy
+    @inbounds op_array[i,14] = (op_array[i,3] - g.zC[z₀]) / g.Δz # dz
 end
 @kernel function find_yᵈ_kernel!(op_array, ind_array::AbstractArray{Int64,2}, g::Grids)
     i = @index(Global, Linear)
     x₀ = ind_array[i,1] + g.Hx
     y₀ = ind_array[i,2] + g.Hy
     z₀ = ind_array[i,3] + g.Hz
-    @inbounds op_array[i,12] = op_array[i,1] - g.xC[x₀] # dx
-    @inbounds op_array[i,13] = op_array[i,2] - g.yF[y₀] # dy
-    @inbounds op_array[i,14] = op_array[i,3] - g.zC[z₀] # dz
+    @inbounds op_array[i,12] = (op_array[i,1] - g.xC[x₀]) / g.Δx # dx
+    @inbounds op_array[i,13] = (op_array[i,2] - g.yF[y₀]) / g.Δy # dy
+    @inbounds op_array[i,14] = (op_array[i,3] - g.zC[z₀]) / g.Δz # dz
 end
 @kernel function find_zᵈ_kernel!(op_array, ind_array::AbstractArray{Int64,2}, g::Grids)
     i = @index(Global, Linear)
     x₀ = ind_array[i,1] + g.Hx
     y₀ = ind_array[i,2] + g.Hy
     z₀ = ind_array[i,3] + g.Hz
-    @inbounds op_array[i,12] = op_array[i,1] - g.xC[x₀] # dx
-    @inbounds op_array[i,13] = op_array[i,2] - g.yC[y₀] # dy
-    @inbounds op_array[i,14] = op_array[i,3] - g.zF[z₀] # dz
+    @inbounds op_array[i,12] = (op_array[i,1] - g.xC[x₀]) / g.Δx # dx
+    @inbounds op_array[i,13] = (op_array[i,2] - g.yC[y₀]) / g.Δy # dy
+    @inbounds op_array[i,14] = (op_array[i,3] - g.zF[z₀]) / g.Δz # dz
 end
 function find_xᵈ!(op_array, ind_array::AbstractArray{Int64,2}, arch::Architecture, g::Grids)
     kernel! = find_xᵈ_kernel!(device(arch), 256, (size(op_array,1),))
@@ -170,12 +201,11 @@ function find_zᵈ!(op_array, ind_array::AbstractArray{Int64,2}, arch::Architect
     return nothing
 end
 
+##### velocity interpolation for each individual
 @inline trilinear_itpl(u000, u100, u010, u110, u001, u101, u011, u111, dx, dy, dz) =
     ((u000 * (1 - dx) + u100 * dx) * (1 - dy) + (u010 * (1-dx) + u110 * dx) * dy) * (1 - dz) +
     ((u001 * (1 - dx) + u101 * dx) * (1 - dy) + (u011 * (1-dx) + u111 * dx) * dy) * dz
 
-
-##### velocity interpolation for each individual
 @kernel function vel_interpolation_kernel!(vel_array, op_array, g::Grids, ind::Int64)
     i = @index(Global, Linear)
     @inbounds vel_array[i, ind] = trilinear_itpl(op_array[i,4], op_array[i,5], op_array[i,6], op_array[i,7],
@@ -190,15 +220,15 @@ function vel_interpolation!(vel_array, op_array, arch::Architecture, g::Grids, i
 end
 
 ##### calculate intermediate coordinates
-@kernel function calc_intermediate_coord_kernel!(op_array, vel_array, g::Grids, ΔT, ind::Int64)
+@kernel function calc_intermediate_coord_kernel!(op_array, vel_array, ΔT, ind::Int64, dt::Float64)
     i = @index(Global, Linear)
-    @inbounds op_array[i,15] = periodic_domain_x(op_array[i,1] + 0.5 * vel_array[i,1+ind*3] * ΔT, g)
-    @inbounds op_array[i,16] = periodic_domain_y(op_array[i,2] + 0.5 * vel_array[i,2+ind*3] * ΔT, g)
-    @inbounds op_array[i,17] =  bounded_domain_z(op_array[i,3] + 0.5 * vel_array[i,3+ind*3] * ΔT, g)
+    @inbounds op_array[i,15] = op_array[i,1] + dt * vel_array[i,1+ind*3] * ΔT
+    @inbounds op_array[i,16] = op_array[i,2] + dt * vel_array[i,2+ind*3] * ΔT
+    @inbounds op_array[i,17] = op_array[i,3] + dt * vel_array[i,3+ind*3] * ΔT
 end
-function calc_intermediate_coord!(op_array, vel_array, arch::Architecture, g::Grids, ΔT, ind::Int64)
+function calc_intermediate_coord!(op_array, vel_array, arch::Architecture, ΔT, ind::Int64, dt::Float64)
     kernel! = calc_intermediate_coord_kernel!(device(arch), 256, (size(op_array,1),))
-    event = kernel!(op_array, vel_array, g, ΔT, ind)
+    event = kernel!(op_array, vel_array, ΔT, ind, dt)
     wait(device(arch), event)
     return nothing
 end
@@ -218,15 +248,15 @@ function calc_vel_rk4!(vel_array, arch::Architecture)
 end
 
 ##### calculate coordinates of each individual
-@kernel function calc_coord_kernel!(phytos, vel_array, g::Grids, ΔT)
+@kernel function calc_coord_kernel!(phytos, vel_array, ΔT)
     i = @index(Global, Linear)
-    @inbounds phytos[i,1] = periodic_domain_x(phytos[i,1] + vel_array[i,1] * ΔT, g)
-    @inbounds phytos[i,2] = periodic_domain_y(phytos[i,2] + vel_array[i,2] * ΔT, g)
-    @inbounds phytos[i,3] =  bounded_domain_z(phytos[i,3] + vel_array[i,3] * ΔT, g)
+    @inbounds phytos[i,1] = phytos[i,1] + vel_array[i,1] * ΔT
+    @inbounds phytos[i,2] = phytos[i,2] + vel_array[i,2] * ΔT
+    @inbounds phytos[i,3] = phytos[i,3] + vel_array[i,3] * ΔT
 end
-function calc_coord!(phytos, vel_array, arch::Architecture, g::Grids, ΔT)
+function calc_coord!(phytos, vel_array, arch::Architecture, ΔT)
     kernel! = calc_coord_kernel!(device(arch), 256, (size(vel_array,1),))
-    event = kernel!(phytos, vel_array, g, ΔT)
+    event = kernel!(phytos, vel_array, ΔT)
     wait(device(arch), event)
     return nothing
 end

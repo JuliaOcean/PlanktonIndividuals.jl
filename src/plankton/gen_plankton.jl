@@ -71,7 +71,7 @@ function gen_agents(::GPUs,RunParam::RunParams,grid)
     phyts0 = zeros(Float64, N*Nsp, 13) |> CuArray
     phyts0[:,1] .= CuArray(rand(Uniform(grid.xF[grid.Hx+1], grid.xF[grid.Hx+grid.Nx+1]), N*Nsp))               # x
     phyts0[:,2] .= CuArray(rand(Uniform(grid.yF[grid.Hy+1], grid.yF[grid.Hy+grid.Ny+1]), N*Nsp))               # y
-    phyts0[:,3] .= CuArray(rand(Uniform(grid.zF[grid.Hz+1], grid.zF[grid.Hz+grid.Nz+1]), N*Nsp))             # z
+    phyts0[:,3] .= CuArray(rand(Uniform(grid.zF[grid.Hz+1], grid.zF[grid.Hz+grid.Nz+1]), N*Nsp))               # z
     phyts0[:,5] .= CuArray(max.(1.0, rand(Normal(mean,var), N*Nsp)))                    # size
     phyts0[:,4] .= copy(phyts0[:,5])                                                    # init_size
     for i in 1:Nsp

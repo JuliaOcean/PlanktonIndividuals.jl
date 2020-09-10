@@ -78,7 +78,7 @@ param_default=Dict(
     "kPOP"     => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
     "κh"       => 1.0e-5,             # Horizontal diffusion
     "κv"       => 1.0e-5,             # Vertical diffusion
-    "κhP"      => 0,                  # Horizontal diffusion for individuals
+    "κhP"      => 1.0e-6,             # Horizontal diffusion for individuals
     "κvP"      => 0,                  # Vertical diffusion for individuals
     "v_zoo"    => 1.0e-5              # Velocity of zooplankton, m/s
 )

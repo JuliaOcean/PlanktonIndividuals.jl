@@ -121,11 +121,8 @@ end
 ##### calculate ρchl
 @kernel function calc_ρchl_kernel!(op_array, Chl2N)
     i = @index(Global, Linear)
-    if op_array[i,18] > 0
-        op_array[i,25] = op_array[i,20] / op_array[i,6] * Chl2N / (op_array[i,18] * op_array[i,10] / op_array[i,6])
-    else
-        op_array[i,25] = 0.0
-    end
+    op_array[i,25] = op_array[i,18] < 0 ? 0.0 :
+        op_array[i,20] / op_array[i,6] * Chl2N / (op_array[i,18] * op_array[i,10] / op_array[i,6])
 end
 function calc_ρchl!(op_array, arch::Architecture, Chl2N)
     kernel! = calc_ρchl_kernel!(device(arch), 256, (size(op_array,1),))

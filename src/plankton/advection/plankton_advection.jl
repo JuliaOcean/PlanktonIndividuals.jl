@@ -16,6 +16,7 @@ function plankton_advection!(phytos, arch::Architecture, g::Grids, vel, ΔT)
     vel_interpolation!(vel_array, op_array, arch, g, 3)
 
     calc_coord!(phytos, vel_array, arch, g, ΔT)
+    in_domain!(phytos, arch, g)
 end
 
 ##### update coordinates of each individual using RK4 integration
@@ -39,7 +40,8 @@ function plankton_advectionRK4!(phytos, arch::Architecture, g::Grids, vel₀, ve
     find_zᵈ!(op_array, Int.(ind_array[:,7:9]), arch, g)
     vel_interpolation!(vel_array, op_array, arch, g, 3)
 
-    calc_intermediate_coord!(op_array, vel_array, arch, g, ΔT, 0)
+    calc_intermediate_coord!(op_array, vel_array, arch, ΔT, 0, 0.5)
+    in_domain!(op_array, arch, g, 14)
 
     update_inds!(ind_array, op_array, arch, g)
 
@@ -55,7 +57,8 @@ function plankton_advectionRK4!(phytos, arch::Architecture, g::Grids, vel₀, ve
     find_zᵈ!(op_array, Int.(ind_array[:,7:9]), arch, g)
     vel_interpolation!(vel_array, op_array, arch, g, 6)
 
-    calc_intermediate_coord!(op_array, vel_array, arch, g, ΔT, 1)
+    calc_intermediate_coord!(op_array, vel_array, arch, ΔT, 1, 0.5)
+    in_domain!(op_array, arch, g, 14)
 
     update_inds!(ind_array, op_array, arch, g)
 
@@ -71,7 +74,8 @@ function plankton_advectionRK4!(phytos, arch::Architecture, g::Grids, vel₀, ve
     find_zᵈ!(op_array, Int.(ind_array[:,1:3]), arch, g)
     vel_interpolation!(vel_array, op_array, arch, g, 9)
 
-    calc_intermediate_coord!(op_array, vel_array, arch, g, ΔT, 2)
+    calc_intermediate_coord!(op_array, vel_array, arch, ΔT, 2, 1.0)
+    in_domain!(op_array, arch, g, 14)
 
     update_inds!(ind_array, op_array, arch, g)
 
@@ -88,5 +92,6 @@ function plankton_advectionRK4!(phytos, arch::Architecture, g::Grids, vel₀, ve
     vel_interpolation!(vel_array, op_array, arch, g, 12)
 
     calc_vel_rk4!(vel_array, arch)
-    calc_coord!(phytos, vel_array, arch, g, ΔT)
+    calc_coord!(phytos, vel_array, arch, ΔT)
+    in_domain!(phytos, arch, g)
 end
