@@ -8,6 +8,15 @@ mutable struct velocities
     vel₁::NamedTuple
 end
 
+mutable struct timestepper
+    Gcs::NamedTuple
+    MD1::NamedTuple
+    MD2::NamedTuple
+    MD3::NamedTuple
+    plk::NamedTuple
+    ope::AbstractArray
+end
+
 mutable struct Model_Struct
     arch::Architecture          # architecture on which models will run
     t::Int64
@@ -18,6 +27,7 @@ mutable struct Model_Struct
     params::Dict                # biogeochemical parameter set
     diags::Diagnostics          # diagnostics
     velocities::velocities      # save the velocities of last and current time steps from physical models
+    timestepper::timestepper    # operating Tuples and arrays for timestep
 end
 """
     PI_model(grid, RunParam)
@@ -50,7 +60,15 @@ function PI_Model(arch::Architecture, grid, RunParam;
 
     vel = velocities((;),(;))
 
-    model = Model_Struct(arch,t,individuals, nutrients, grid, input, params, diags, vel)
+    Gcs = nutrients_init(arch, grid)
+    MD1 = nutrients_init(arch, grid)
+    MD2 = nutrients_init(arch, grid)
+    MD3 = nutrients_init(arch, grid)
+    plk = nutrients_init(arch, grid)
+    ope = zeros(Float64, RunParam.params["P_Nind"], 50) |> array_type(arch)
+    ts = timestepper(Gcs, MD1, MD2, MD3, plk, ope)
+
+    model = Model_Struct(arch, t, individuals, nutrients, grid, input, params, diags, vel, ts)
 
     if RunParam.Zoo == true
         model.params["Grz_P"] = 0

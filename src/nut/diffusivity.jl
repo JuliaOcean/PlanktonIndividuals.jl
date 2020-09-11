@@ -44,16 +44,16 @@ end
     ii = i + grid.Hx
     jj = j + grid.Hy
     kk = k + grid.Hz
-    @inbounds Gc[ii, jj, kk] = κ∇²(ii, jj, kk, grid, κˣ, κʸ, κᶻ, c) * ΔT
+    @inbounds Gc[ii, jj, kk] = Gc[ii, jj, kk] + κ∇²(ii, jj, kk, grid, κˣ, κʸ, κᶻ, c) * ΔT
 end
 
-function nut_diffusion!(diffu, arch::Architecture, g, nutrients, κˣ, κʸ, κᶻ, ΔT)
+function nut_diffusion!(Gcs, arch::Architecture, g, nutrients, κˣ, κʸ, κᶻ, ΔT)
     calc_diffusion_kernel! = calc_diffusion!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
     barrier = Event(device(arch))
 
     events=[]
     for name in nut_names
-        event = calc_diffusion_kernel!(diffu[name].data, g, κˣ, κʸ, κᶻ, nutrients[name].data, ΔT, dependencies=barrier)
+        event = calc_diffusion_kernel!(Gcs[name].data, g, κˣ, κʸ, κᶻ, nutrients[name].data, ΔT, dependencies=barrier)
         push!(events, event)
     end
 
@@ -61,5 +61,5 @@ function nut_diffusion!(diffu, arch::Architecture, g, nutrients, κˣ, κʸ, κ�
 
     return nothing
 end
-nut_diffusion!(diffu, arch::Architecture, g, nutrients, κ, ΔT) =
-    nut_diffusion!(diffu, arch::Architecture, g, nutrients, κ, κ, κ, ΔT)
+nut_diffusion!(Gcs, arch::Architecture, g, nutrients, κ, ΔT) =
+    nut_diffusion!(Gcs, arch::Architecture, g, nutrients, κ, κ, κ, ΔT)

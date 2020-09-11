@@ -4,7 +4,7 @@
     ii = i + grid.Hx
     jj = j + grid.Hy
     kk = k + grid.Hz
-    @inbounds F_DIC[ii, jj, kk] = max(0.0, DOC[ii, jj, kk]) * kDOC * ΔT
+    @inbounds F_DIC[ii, jj, kk] = F_DIC[ii, jj, kk] + max(0.0, DOC[ii, jj, kk]) * kDOC * ΔT
 end
 
 @kernel function calc_DOC_forcing!(F_DOC, grid, DOC, POC, kDOC, kPOC, ΔT)
@@ -13,8 +13,8 @@ end
     ii = i + grid.Hx
     jj = j + grid.Hy
     kk = k + grid.Hz
-    @inbounds F_DOC[ii, jj, kk] = max(0.0, POC[ii, jj, kk]) * kPOC * ΔT -
-                                  max(0.0, DOC[ii, jj, kk]) * kDOC * ΔT
+    @inbounds F_DOC[ii, jj, kk] = F_DOC[ii, jj, kk] + max(0.0, POC[ii, jj, kk]) * kPOC * ΔT -
+                                                      max(0.0, DOC[ii, jj, kk]) * kDOC * ΔT
 end
 
 @kernel function calc_POC_forcing!(F_POC, grid, POC, kPOC, ΔT)
@@ -23,7 +23,7 @@ end
     ii = i + grid.Hx
     jj = j + grid.Hy
     kk = k + grid.Hz
-    @inbounds F_POC[ii, jj, kk] =-max(0.0, POC[ii, jj, kk]) * kPOC * ΔT
+    @inbounds F_POC[ii, jj, kk] =F_POC[ii, jj, kk] - max(0.0, POC[ii, jj, kk]) * kPOC * ΔT
 end
 
 @kernel function calc_NH4_forcing!(F_NH4, grid, NH4, DON, kNit, kDON, ΔT)
@@ -32,8 +32,8 @@ end
     ii = i + grid.Hx
     jj = j + grid.Hy
     kk = k + grid.Hz
-    @inbounds F_NH4[ii, jj, kk] = max(0.0, DON[ii, jj, kk]) * kDON * ΔT -
-                                  max(0.0, NH4[ii, jj, kk]) * kNit  * ΔT
+    @inbounds F_NH4[ii, jj, kk] = F_NH4[ii, jj, kk] + max(0.0, DON[ii, jj, kk]) * kDON * ΔT -
+                                                      max(0.0, NH4[ii, jj, kk]) * kNit * ΔT
 end
 
 @kernel function calc_NO3_forcing!(F_NO3, grid, NH4, kNit, ΔT)
@@ -42,7 +42,7 @@ end
     ii = i + grid.Hx
     jj = j + grid.Hy
     kk = k + grid.Hz
-    @inbounds F_NO3[ii, jj, kk] =  max(0.0, NH4[ii, jj, kk]) * kNit  * ΔT
+    @inbounds F_NO3[ii, jj, kk] =  F_NO3[ii, jj, kk] + max(0.0, NH4[ii, jj, kk]) * kNit * ΔT
 end
 
 @kernel function calc_DON_forcing!(F_DON, grid, DON, PON, kDON, kPON, ΔT)
@@ -51,8 +51,8 @@ end
     ii = i + grid.Hx
     jj = j + grid.Hy
     kk = k + grid.Hz
-    @inbounds F_DON[ii, jj, kk] = max(0.0, PON[ii, jj, kk]) * kPON * ΔT -
-                                  max(0.0, DON[ii, jj, kk]) * kDON * ΔT
+    @inbounds F_DON[ii, jj, kk] = F_DON[ii, jj, kk] + max(0.0, PON[ii, jj, kk]) * kPON * ΔT -
+                                                      max(0.0, DON[ii, jj, kk]) * kDON * ΔT
 end
 
 @kernel function calc_PON_forcing!(F_PON, grid, PON, kPON, ΔT)
@@ -61,7 +61,7 @@ end
     ii = i + grid.Hx
     jj = j + grid.Hy
     kk = k + grid.Hz
-    @inbounds F_PON[ii, jj, kk] =-max(0.0, PON[ii, jj, kk]) * kPON * ΔT
+    @inbounds F_PON[ii, jj, kk] = F_PON[ii, jj, kk] - max(0.0, PON[ii, jj, kk]) * kPON * ΔT
 end
 
 @kernel function calc_PO4_forcing!(F_PO4, grid, DOP, kDOP, ΔT)
@@ -70,7 +70,7 @@ end
     ii = i + grid.Hx
     jj = j + grid.Hy
     kk = k + grid.Hz
-    @inbounds F_PO4[ii, jj, kk] = max(0.0, DOP[ii, jj, kk]) * kDOP * ΔT
+    @inbounds F_PO4[ii, jj, kk] = F_PO4[ii, jj, kk] + max(0.0, DOP[ii, jj, kk]) * kDOP * ΔT
 end
 
 @kernel function calc_DOP_forcing!(F_DOP, grid, DOP, POP, kDOP, kPOP, ΔT)
@@ -79,8 +79,8 @@ end
     ii = i + grid.Hx
     jj = j + grid.Hy
     kk = k + grid.Hz
-    @inbounds F_DOP[ii, jj, kk] = max(0.0, POP[ii, jj, kk]) * kPOP * ΔT -
-                                  max(0.0, DOP[ii, jj, kk]) * kDOP * ΔT
+    @inbounds F_DOP[ii, jj, kk] = F_DOP[ii, jj, kk] + max(0.0, POP[ii, jj, kk]) * kPOP * ΔT -
+                                                      max(0.0, DOP[ii, jj, kk]) * kDOP * ΔT
 end
 
 @kernel function calc_POP_forcing!(F_POP, grid, POP, kPOP, ΔT)
@@ -89,7 +89,7 @@ end
     ii = i + grid.Hx
     jj = j + grid.Hy
     kk = k + grid.Hz
-    @inbounds F_POP[ii, jj, kk] =-max(0.0, POP[ii, jj, kk]) * kPOP * ΔT
+    @inbounds F_POP[ii, jj, kk] = F_POP[ii, jj, kk] - max(0.0, POP[ii, jj, kk]) * kPOP * ΔT
 end
 
 function nut_forcing!(F, arch::Architecture, g, nut, params, ΔT)
@@ -132,12 +132,17 @@ function sub_nut_tendency!(a, b, c)
     end
 end
 
-"""
-    add_nut_tendency!(a, b)
-add one tendency to another tendency
-"""
-function add_nut_tendency!(a, b)
+function zero_fields!(a)
     for i in 1:length(a)
-        a[i].data .= a[i].data .+ b[i].data
+        a[i].data .= 0.0
     end
 end
+# """
+#     add_nut_tendency!(a, b)
+# add one tendency to another tendency
+# """
+# function add_nut_tendency!(a, b)
+#     for i in 1:length(a)
+#         a[i].data .= a[i].data .+ b[i].data
+#     end
+# end

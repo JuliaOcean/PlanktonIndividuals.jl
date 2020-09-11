@@ -77,12 +77,8 @@ function nut_advectionᶻ!(nutₜ, arch::Architecture, g, nutrients, w, ΔT)
     return nothing
 end
 
-function nut_advection!(Gc, arch::Architecture, g, nutrients, vel, ΔT)
-    nut₁ = nutrients_init(arch, g)
-    nut₂ = nutrients_init(arch, g)
-    nut₃ = nutrients_init(arch, g)
-
-    nut_advectionˣ!(nut₁, arch::Architecture, g, nutrients, vel.u, ΔT)
+function nut_advection!(Gc, arch::Architecture, g, nut, nut₁, nut₂, nut₃, vel, ΔT)
+    nut_advectionˣ!(nut₁, arch::Architecture, g, nut, vel.u, ΔT)
 
     fill_halo!(nut₁, g)
 
@@ -92,7 +88,7 @@ function nut_advection!(Gc, arch::Architecture, g, nutrients, vel, ΔT)
 
     nut_advectionᶻ!(nut₃, arch::Architecture, g, nut₂, vel.w, ΔT)
 
-    sub_nut_tendency!(Gc, nut₃, nutrients)
+    sub_nut_tendency!(Gc, nut₃, nut)
 
 end
 
