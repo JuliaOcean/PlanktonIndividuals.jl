@@ -5,6 +5,7 @@ end
 
 mutable struct velocities
     vel₀::NamedTuple
+    vel½::NamedTuple
     vel₁::NamedTuple
 end
 
@@ -58,7 +59,7 @@ function PI_Model(arch::Architecture, grid, RunParam;
         throw(ArgumentError("Cannot create a GPU model. No CUDA-enabled GPU was detected!"))
     end
 
-    vel = velocities((;),(;))
+    vel = velocities((;),(;),(;))
 
     Gcs = nutrients_init(arch, grid)
     MD1 = nutrients_init(arch, grid)

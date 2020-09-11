@@ -6,10 +6,14 @@ function PI_TimeStep!(model::Model_Struct, ΔT, vel₁::NamedTuple, resultspath:
     model.t = model.t+ΔT
     clock = model.t % 86400 ÷ ΔT + 1
     zero_fields!(model.timestepper.plk)
+    model.timestepper.ope = zeros(size(model.individuals.phytos,1), 50) |> array_type(model.arch)
     model.velocities.vel₁ = vel₁
+    model.velocities.vel½ = (u = (model.velocities.vel₀.u .+ model.velocities.vel₁.u) .* 0.5,
+                             v = (model.velocities.vel₀.v .+ model.velocities.vel₁.v) .* 0.5,
+                             w = (model.velocities.vel₀.w .+ model.velocities.vel₁.w) .* 0.5)
 
-    # plankton_advectionRK4!(model.individuals.phytos, model.arch, model.grid,
-    #                        model.velocities.vel₀, model.velocities.vel₁, ΔT)
+    plankton_advectionRK4!(model.individuals.phytos, model.timestepper.ope, model.arch, model.grid,
+                           model.velocities.vel₀, model.velocities.vel½, model.velocities.vel₁, ΔT)
 
     # plankton_diffusion!(model.individuals.phytos, model.arch, model.grid, model.params["κhP"], ΔT)
 

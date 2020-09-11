@@ -20,78 +20,39 @@ function plankton_advection!(phytos, arch::Architecture, g::Grids, vel, ΔT)
 end
 
 ##### update coordinates of each individual using RK4 integration
-function plankton_advectionRK4!(phytos, arch::Architecture, g::Grids, vel₀, vel₁, ΔT)
-    vel½ = (u = (vel₀.u .+ vel₁.u) .* 0.5, v = (vel₀.v .+ vel₁.v) .* 0.5, w = (vel₀.w .+ vel₁.w) .* 0.5)
-    op_array = adv_op_array_setup(phytos, arch)
-    vel_array = vel_array_setup(phytos, arch)
-    ind_array = ind_array_setup(phytos, arch)
+function plankton_advectionRK4!(phytos, ope, arch::Architecture, g::Grids, vel₀, vel½, vel₁, ΔT)
+    update_op_array!(phytos, ope, arch)
 
-    find_inds!(ind_array, op_array, arch, g)
+    find_inds!(ope, arch, g)
+    find_vel!(ope, Int.(ope[:,4:6]), arch, g, vel₀.u, vel₀.v, vel₀.w)
+    find_xᵈ!(ope, Int.(ope[:,4:6]), arch, g)
+    vel_interpolation!(ope, arch, g, 0)
 
-    find_vel!(op_array, Int.(ind_array[:,1:3]), arch, g, vel₀.u)
-    find_xᵈ!(op_array, Int.(ind_array[:,1:3]), arch, g)
-    vel_interpolation!(vel_array, op_array, arch, g, 1)
+    calc_1st_intermediate_coord!(ope, arch, ΔT)
+    in_domain!(ope, arch, g, 15)
 
-    find_vel!(op_array, Int.(ind_array[:,4:6]), arch, g, vel₀.v)
-    find_yᵈ!(op_array, Int.(ind_array[:,4:6]), arch, g)
-    vel_interpolation!(vel_array, op_array, arch, g, 2)
+    update_inds!(ope, arch, g)
+    find_vel!(ope, Int.(ope[:,4:6]), arch, g, vel½.u, vel½.v, vel½.w)
+    find_xᵈ!(ope, Int.(ope[:,4:6]), arch, g)
+    vel_interpolation!(ope, arch, g, 1)
 
-    find_vel!(op_array, Int.(ind_array[:,7:9]), arch, g, vel₀.w)
-    find_zᵈ!(op_array, Int.(ind_array[:,7:9]), arch, g)
-    vel_interpolation!(vel_array, op_array, arch, g, 3)
+    calc_2nd_intermediate_coord!(ope, arch, ΔT)
+    in_domain!(ope, arch, g, 15)
 
-    calc_intermediate_coord!(op_array, vel_array, arch, ΔT, 0, 0.5)
-    in_domain!(op_array, arch, g, 14)
+    update_inds!(ope, arch, g)
+    find_vel!(ope, Int.(ope[:,4:6]), arch, g, vel½.u, vel½.v, vel½.w)
+    find_xᵈ!(ope, Int.(ope[:,4:6]), arch, g)
+    vel_interpolation!(ope, arch, g, 2)
 
-    update_inds!(ind_array, op_array, arch, g)
+    calc_3rd_intermediate_coord!(ope, arch, ΔT)
+    in_domain!(ope, arch, g, 15)
 
-    find_vel!(op_array, Int.(ind_array[:,1:3]), arch, g, vel½.u)
-    find_xᵈ!(op_array, Int.(ind_array[:,1:3]), arch, g)
-    vel_interpolation!(vel_array, op_array, arch, g, 4)
+    update_inds!(ope, arch, g)
+    find_vel!(ope, Int.(ope[:,4:6]), arch, g, vel₁.u, vel₁.v, vel₁.w)
+    find_xᵈ!(ope, Int.(ope[:,4:6]), arch, g)
+    vel_interpolation!(ope, arch, g, 3)
 
-    find_vel!(op_array, Int.(ind_array[:,4:6]), arch, g, vel½.v)
-    find_yᵈ!(op_array, Int.(ind_array[:,4:6]), arch, g)
-    vel_interpolation!(vel_array, op_array, arch, g, 5)
-
-    find_vel!(op_array, Int.(ind_array[:,7:9]), arch, g, vel½.w)
-    find_zᵈ!(op_array, Int.(ind_array[:,7:9]), arch, g)
-    vel_interpolation!(vel_array, op_array, arch, g, 6)
-
-    calc_intermediate_coord!(op_array, vel_array, arch, ΔT, 1, 0.5)
-    in_domain!(op_array, arch, g, 14)
-
-    update_inds!(ind_array, op_array, arch, g)
-
-    find_vel!(op_array, Int.(ind_array[:,1:3]), arch, g, vel½.u)
-    find_xᵈ!(op_array, Int.(ind_array[:,1:3]), arch, g)
-    vel_interpolation!(vel_array, op_array, arch, g, 7)
-
-    find_vel!(op_array, Int.(ind_array[:,4:6]), arch, g, vel½.v)
-    find_yᵈ!(op_array, Int.(ind_array[:,1:3]), arch, g)
-    vel_interpolation!(vel_array, op_array, arch, g, 8)
-
-    find_vel!(op_array, Int.(ind_array[:,7:9]), arch, g, vel½.w)
-    find_zᵈ!(op_array, Int.(ind_array[:,1:3]), arch, g)
-    vel_interpolation!(vel_array, op_array, arch, g, 9)
-
-    calc_intermediate_coord!(op_array, vel_array, arch, ΔT, 2, 1.0)
-    in_domain!(op_array, arch, g, 14)
-
-    update_inds!(ind_array, op_array, arch, g)
-
-    find_vel!(op_array, Int.(ind_array[:,1:3]), arch, g, vel₁.u)
-    find_xᵈ!(op_array, Int.(ind_array[:,1:3]), arch, g)
-    vel_interpolation!(vel_array, op_array, arch, g, 10)
-
-    find_vel!(op_array, Int.(ind_array[:,4:6]), arch, g, vel₁.v)
-    find_yᵈ!(op_array, Int.(ind_array[:,1:3]), arch, g)
-    vel_interpolation!(vel_array, op_array, arch, g, 11)
-
-    find_vel!(op_array, Int.(ind_array[:,7:9]), arch, g, vel₁.w)
-    find_zᵈ!(op_array, Int.(ind_array[:,1:3]), arch, g)
-    vel_interpolation!(vel_array, op_array, arch, g, 12)
-
-    calc_vel_rk4!(vel_array, arch)
-    calc_coord!(phytos, vel_array, arch, ΔT)
+    calc_vel_rk4!(ope, arch)
+    calc_coord!(phytos, ope, arch, ΔT)
     in_domain!(phytos, arch, g)
 end
