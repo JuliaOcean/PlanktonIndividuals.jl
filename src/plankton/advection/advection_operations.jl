@@ -34,7 +34,6 @@ end
     if ope[i,3+ind] ≥ g.zF[g.Nz+g.Hz+1]
         ope[i,3+ind] = g.zF[g.Nz+g.Hz+1]
     end
-    # @inbounds ope[i,3+ind] = min(g.zF[g.Hz+g.Nz+1], ope[i,3+ind])
 end
 function periodic_domain⁺!(ope, arch::Architecture, g::Grids, ind::Int64)
     kernel! = periodic_domain⁺_kernel!(device(arch), 256, (size(ope,1),))
@@ -92,9 +91,9 @@ function find_inds!(ope, arch::Architecture, g::Grids)
 end
 @kernel function update_inds_kernel!(ope, g::Grids)
     i = @index(Global, Linear)
-    @inbounds ope[i,4] = find_xF_ind(ope[i,15], g)  # xF index
-    @inbounds ope[i,5] = find_yF_ind(ope[i,16], g)  # yF index
-    @inbounds ope[i,6] = find_zF_ind(ope[i,17], g)  # zF index
+    @inbounds ope[i,4] = find_xF_ind(ope[i,16], g)  # xF index
+    @inbounds ope[i,5] = find_yF_ind(ope[i,17], g)  # yF index
+    @inbounds ope[i,6] = find_zF_ind(ope[i,18], g)  # zF index
 end
 function update_inds!(ope, arch::Architecture, g::Grids)
     kernel! = update_inds_kernel!(device(arch), 256, (size(ope,1),))

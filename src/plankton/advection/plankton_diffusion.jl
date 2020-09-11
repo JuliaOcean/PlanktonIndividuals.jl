@@ -1,9 +1,9 @@
 ##### calculate diffusivities of each individual
 @kernel function calc_diffu_kernel!(phytos, rand_nums, κx, κy, κz, ΔT)
     i = @index(Global, Linear)
-    @inbounds phytos[i,1] = phytos[i,1] + rand_nums[i,1] * ΔT * κx
-    @inbounds phytos[i,2] = phytos[i,2] + rand_nums[i,2] * ΔT * κy
-    @inbounds phytos[i,3] = phytos[i,3] + rand_nums[i,3] * ΔT * κz
+    @inbounds phytos[i,1] = phytos[i,1] + rand_nums[i,1] * √(3*ΔT) * 2*√(2*κx)
+    @inbounds phytos[i,2] = phytos[i,2] + rand_nums[i,2] * √(3*ΔT) * 2*√(2*κx)
+    @inbounds phytos[i,3] = phytos[i,3] + rand_nums[i,3] * √(3*ΔT) * 2*√(2*κx)
 end
 
 function calc_diffusion!(phytos, arch::Architecture, κx, κy, κz, ΔT)
