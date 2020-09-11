@@ -7,14 +7,14 @@ x  y  z  xF  yF  zF  u0  u1  v0  v1  w0  w1  xd  yd  zd  xt  yt  zt
 19  20  21  22  23  24  25  26  27  28  29  30
 u1  v1  w1  u2  v2  w2  u3  v3  w3  u4  v4  w4
 =#
-@kernel function update_op_array_kernel!(phytos, ope)
+@kernel function update_adv_ope_kernel!(phytos, ope)
     i = @index(Global, Linear)
     ope[i,1] = phytos[i,1]
     ope[i,2] = phytos[i,2]
     ope[i,3] = phytos[i,3]
 end
-function update_op_array!(phytos, ope, arch::Architecture)
-    kernel! = update_op_array_kernel!(device(arch), 256, (size(ope,1),))
+function update_adv_ope!(phytos, ope, arch::Architecture)
+    kernel! = update_adv_ope_kernel!(device(arch), 256, (size(phytos,1),))
     event = kernel!(phytos,ope)
     wait(device(arch), event)
     return nothing
@@ -77,27 +77,15 @@ in_domain!(ope, arch::Architecture, g::Grids) = in_domain!(ope, arch::Architectu
 @inline find_zF_ind(z, g::Grids) = z ≥ g.zF[g.Hz+1] ? (g.Nz * g.Δz + z) ÷ g.Δz + 1 : 0.0
 
 ##### find cell and face indices for each individual
-@kernel function find_inds_kernel!(ope, g::Grids)
+@kernel function find_inds_kernel!(ope, g::Grids, indₜ::Int64, ind₀::Int64)
     i = @index(Global, Linear)
-    @inbounds ope[i,4] = find_xF_ind(ope[i,1], g)  # xF index
-    @inbounds ope[i,5] = find_yF_ind(ope[i,2], g)  # yF index
-    @inbounds ope[i,6] = find_zF_ind(ope[i,3], g)  # zF index
+    @inbounds ope[i,1+indₜ] = find_xF_ind(ope[i,1+ind₀], g)  # xF index
+    @inbounds ope[i,2+indₜ] = find_yF_ind(ope[i,2+ind₀], g)  # yF index
+    @inbounds ope[i,3+indₜ] = find_zF_ind(ope[i,3+ind₀], g)  # zF index
 end
-function find_inds!(ope, arch::Architecture, g::Grids)
+function find_inds!(ope, arch::Architecture, g::Grids, indₜ::Int64, ind₀::Int64)
     kernel! = find_inds_kernel!(device(arch), 256, (size(ope,1),))
-    event = kernel!(ope, g)
-    wait(device(arch), event)
-    return nothing
-end
-@kernel function update_inds_kernel!(ope, g::Grids)
-    i = @index(Global, Linear)
-    @inbounds ope[i,4] = find_xF_ind(ope[i,16], g)  # xF index
-    @inbounds ope[i,5] = find_yF_ind(ope[i,17], g)  # yF index
-    @inbounds ope[i,6] = find_zF_ind(ope[i,18], g)  # zF index
-end
-function update_inds!(ope, arch::Architecture, g::Grids)
-    kernel! = update_inds_kernel!(device(arch), 256, (size(ope,1),))
-    event = kernel!(ope, g)
+    event = kernel!(ope, g, indₜ, ind₀)
     wait(device(arch), event)
     return nothing
 end
