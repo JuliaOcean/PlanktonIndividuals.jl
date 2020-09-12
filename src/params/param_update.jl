@@ -4,16 +4,21 @@ Update parameter values based on .yaml file
 'parameters' is default parameter set
 'tmp' is the parameters need to update
 """
-function update_params!(parameters::Dict, tmp::Dict)
+function update_params!(parameters::Dict, tmp::Dict, arch::Architecture)
     tmp_keys = collect(keys(tmp))
+    pkeys = collect(keys(parameters))
     for key in tmp_keys
-        if length(findall(x->x==key, collect(keys(parameters))))==0
-            print("PARAM: parameter not found \n")
+        if length(findall(x->x==key, pkeys))==0
+            throw(ArgumentError("PARAM: parameter not found"))
         else
             parameters[key] = tmp[key]
         end
     end
-    return parameters
+    for key in pkeys
+        if isa(parameters[key], Array)
+            parameters[key] = parameters[key] |> array_type(arch)
+        end
+    end
 end
 
 """
