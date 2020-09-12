@@ -16,6 +16,8 @@ mutable struct timestepper
     MD3::NamedTuple
     plk::NamedTuple
     ope::AbstractArray
+    par::AbstractArray
+    chl::AbstractArray
 end
 
 mutable struct Model_Struct
@@ -66,8 +68,10 @@ function PI_Model(arch::Architecture, grid, RunParam;
     MD2 = nutrients_init(arch, grid)
     MD3 = nutrients_init(arch, grid)
     plk = nutrients_init(arch, grid)
-    ope = zeros(Float64, RunParam.params["P_Nind"], 50) |> array_type(arch)
-    ts = timestepper(Gcs, MD1, MD2, MD3, plk, ope)
+    ope = zeros(Float64, RunParam.params["P_Nind"], 34) |> array_type(arch)
+    par = zeros(Float64, grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
+    chl = zeros(Float64, grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
+    ts = timestepper(Gcs, MD1, MD2, MD3, plk, ope, par, chl)
 
     model = Model_Struct(arch, t, individuals, nutrients, grid, input, params, diags, vel, ts)
 

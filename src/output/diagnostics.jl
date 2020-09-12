@@ -57,103 +57,109 @@ function diags_setup(::GPUs, nTime::Int64, ΔT::Int64, grids, freq::Int64, nTr::
 end
 
 ##### record diagnostics at each time step
-@kernel function sum_diags_kernel!(diags, op_array, g::Grids, diags_inds, diag_t)
+@kernel function sum_diags_kernel!(diags, ope, inds::AbstractArray{Int64,2}, sp::AbstractArray{Int64,1},
+                                   g::Grids, diags_inds, diag_t)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[i,1], g) |> Int
-    yi = find_yF_ind(op_array[i,2], g) |> Int
-    zi = find_zF_ind(op_array[i,3], g) |> Int
-    sp = op_array[i,11]
+    xi = inds[i,1]
+    yi = inds[i,2]
+    zi = inds[i,3]
+    sp = sp[i]
 
     diags[xi, yi, zi, diag_t, sp, 1] += 1 # individual count
-    diags[xi, yi, zi, diag_t, sp, 2] += op_array[i,29] # grazing
+    diags[xi, yi, zi, diag_t, sp, 2] += ope[i,32] # grazing
 
     id = 4
     if diags_inds[1] == 1 # PS
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,20]
+        diags[xi, yi, zi, diag_t, sp, id] += ope[i,23]
     end
     if diags_inds[2] == 1 # VDOC
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,21]
+        diags[xi, yi, zi, diag_t, sp, id] += ope[i,24]
     end
     if diags_inds[3] == 1 # VNH4
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,22]
+        diags[xi, yi, zi, diag_t, sp, id] += ope[i,25]
     end
     if diags_inds[4] == 1 # VNO3
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,23]
+        diags[xi, yi, zi, diag_t, sp, id] += ope[i,26]
     end
     if diags_inds[5] == 1 # VPO4
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,24]
+        diags[xi, yi, zi, diag_t, sp, id] += ope[i,27]
     end
     if diags_inds[6] == 1 # respiration
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,26]
+        diags[xi, yi, zi, diag_t, sp, id] += ope[i,29]
     end
     if diags_inds[7] == 1 # BS
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,27]
+        diags[xi, yi, zi, diag_t, sp, id] += ope[i,30]
     end
     if diags_inds[8] == 1 # exudation
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,28]
+        diags[xi, yi, zi, diag_t, sp, id] += ope[i,31]
     end
     if diags_inds[9] == 1 # Bm
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,6]
+        diags[xi, yi, zi, diag_t, sp, id] += ope[i,6]
     end
     if diags_inds[10] == 1 # Cq
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,7]
+        diags[xi, yi, zi, diag_t, sp, id] += ope[i,7]
     end
     if diags_inds[11] == 1 # Nq
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,8]
+        diags[xi, yi, zi, diag_t, sp, id] += ope[i,8]
     end
     if diags_inds[12] == 1 # Pq
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,9]
+        diags[xi, yi, zi, diag_t, sp, id] += ope[i,9]
     end
     if diags_inds[13] == 1 # Chla
         id += 1
-        diags[xi, yi, zi, diag_t, sp, id] += op_array[i,10]
+        diags[xi, yi, zi, diag_t, sp, id] += ope[i,10]
     end
 end
-function sum_diags!(diags, op_array, arch::Architecture, g::Grids, diags_inds, diag_t)
-    kernel! = sum_diags_kernel!(device(arch), 256, (size(op_array,1),))
-    event = kernel!(diags, op_array, g, diags_inds, diag_t)
+function sum_diags!(diags, ope, inds::AbstractArray{Int64,2}, sp::AbstractArray{Int64,1},
+                    arch::Architecture, g::Grids, diags_inds, diag_t)
+    kernel! = sum_diags_kernel!(device(arch), 256, (size(ope,1),))
+    event = kernel!(diags, ope, inds, sp, g, diags_inds, diag_t)
     wait(device(arch), event)
     return nothing
 end
 
-@kernel function sum_diags_mort_kernel!(diags_spcs, op_array, g::Grids, diag_t)
+@kernel function sum_diags_mort_kernel!(diags_spcs, ope, inds::AbstractArray{Int64,2}, sp::AbstractArray{Int64,1},
+                                        g::Grids, diag_t)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[i,1], g) |> Int
-    yi = find_yF_ind(op_array[i,2], g) |> Int
-    zi = find_zF_ind(op_array[i,3], g) |> Int
-    sp = op_array[i,11]
-    diags[xi, yi, zi, diag_t, sp, 3] += op_array[i,30]
+    xi = inds[i,1]
+    yi = inds[i,2]
+    zi = inds[i,3]
+    sp = sp[i]
+    diags[xi, yi, zi, diag_t, sp, 3] += ope[i,33]
 end
-function sum_diags_mort!(diags, op_array, arch::Architecture, g::Grids, diag_t)
-    kernel! = sum_diags_mort_kernel!(device(arch), 256, (size(op_array,1),))
-    event = kernel!(diags, op_array, g, diag_t)
+function sum_diags_mort!(diags, ope, inds::AbstractArray{Int64,2}, sp::AbstractArray{Int64,1},
+                         arch::Architecture, g::Grids, diag_t)
+    kernel! = sum_diags_mort_kernel!(device(arch), 256, (size(ope,1),))
+    event = kernel!(diags, ope, inds, sp, g, diag_t)
     wait(device(arch), event)
     return nothing
 end
 
-@kernel function sum_diags_dvid_kernel!(diags_spcs, op_array, g::Grids, diag_t)
+@kernel function sum_diags_dvid_kernel!(diags_spcs, ope, inds::AbstractArray{Int64,2}, sp::AbstractArray{Int64,1},
+                                        g::Grids, diag_t)
     i = @index(Global, Linear)
-    xi = find_xF_ind(op_array[i,1], g) |> Int
-    yi = find_yF_ind(op_array[i,2], g) |> Int
-    zi = find_zF_ind(op_array[i,3], g) |> Int
-    sp = op_array[i,11]
-    diags[xi, yi, zi, diag_t, sp, 4] += op_array[i,31]
+    xi = inds[i,1]
+    yi = inds[i,2]
+    zi = inds[i,3]
+    sp = sp[i]
+    diags[xi, yi, zi, diag_t, sp, 4] += ope[i,34]
 end
-function sum_diags_dvid!(diags, op_array, arch::Architecture, g::Grids, diag_t)
-    kernel! = sum_diags_dvid_kernel!(device(arch), 256, (size(op_array,1),))
-    event = kernel!(diags, op_array, g, diag_t)
+function sum_diags_dvid!(diags, ope, inds::AbstractArray{Int64,2}, sp::AbstractArray{Int64,1},
+                         arch::Architecture, g::Grids, diag_t)
+    kernel! = sum_diags_dvid_kernel!(device(arch), 256, (size(ope,1),))
+    event = kernel!(diags, ope, inds, sp, g, diag_t)
     wait(device(arch), event)
     return nothing
 end

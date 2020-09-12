@@ -5,8 +5,10 @@ Update physiology part and nutrient field of 'model' one time step forward
 function PI_TimeStep!(model::Model_Struct, ΔT, vel₁::NamedTuple, resultspath::String)
     model.t = model.t+ΔT
     clock = model.t % 86400 ÷ ΔT + 1
-    zero_fields!(model.timestepper.plk)
-    model.timestepper.ope = zeros(size(model.individuals.phytos,1), 50) |> array_type(model.arch)
+
+    ##### clear operating array for advection calculations
+    model.timestepper.ope .= 0.0
+
     model.velocities.vel₁ = vel₁
     model.velocities.vel½ = (u = (model.velocities.vel₀.u .+ model.velocities.vel₁.u) .* 0.5,
                              v = (model.velocities.vel₀.v .+ model.velocities.vel₁.v) .* 0.5,
@@ -17,10 +19,15 @@ function PI_TimeStep!(model::Model_Struct, ΔT, vel₁::NamedTuple, resultspath:
 
     plankton_diffusion!(model.individuals.phytos, model.arch, model.grid, model.params["κhP"], ΔT)
 
-    # plankton_update!(model.individuals.phytos, model.timestepper.plk, model.diags, model.arch,
-    #                  model.input.temp[:,:,:,clock], model.input.PAR[:,:,clock],
-    #                  model.nutrients.DOC, model.nutrients.NH4, model.nutrients.NO3, model.nutrients.PO4,
-    #                  model.grid, model.params, ΔT, model.t)
+    ##### clear operating array for physiological calculations
+    model.timestepper.ope .= 0.0
+    zero_fields!(model.timestepper.plk)
+
+    plankton_update!(model.individuals.phytos, model.timestepper.ope, model.timestepper.plk,
+                     model.timestepper.par, model.timestepper.chl, model.diags, model.arch,
+                     model.input.temp[:,:,:,clock], model.input.PAR[:,:,clock],
+                     model.nutrients.DOC, model.nutrients.NH4, model.nutrients.NO3, model.nutrients.PO4,
+                     model.grid, model.params, ΔT, model.t)
 
 
     nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.MD1,

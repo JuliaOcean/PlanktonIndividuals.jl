@@ -124,16 +124,16 @@ end
 Write a brief summary of each species at each time step into a txt file
 """
 function write_species_dynamics(t::Int64, phyt_sp, filepath)
-    for i in 1:size(phyt_sp,1)
-        pop = size(phyt_sp[i],2)
-        gen_ave = mean(phyt_sp[i][12,:])
-        age_ave = mean(phyt_sp[i][13,:])
-        size_ave= mean(phyt_sp[i][5,:])
-        Bm_ave= mean(phyt_sp[i][6,:])
-        Cq_ave= mean(phyt_sp[i][7,:])
-        Nq_ave= mean(phyt_sp[i][9,:])
-        Pq_ave= mean(phyt_sp[i][0,:])
-        Chl_ave= mean(phyt_sp[i][10,:])
+    for i in 1:size(phyt_sp,2)
+        pop = size(phyt_sp[i],1)
+        gen_ave = mean(phyt_sp[i][:,12])
+        age_ave = mean(phyt_sp[i][:,13])
+        size_ave= mean(phyt_sp[i][:,5])
+        Bm_ave= mean(phyt_sp[i][:,6])
+        Cq_ave= mean(phyt_sp[i][:,7])
+        Nq_ave= mean(phyt_sp[i][:,8])
+        Pq_ave= mean(phyt_sp[i][:,9])
+        Chl_ave= mean(phyt_sp[i][:,10])
         io = open(filepath*"dynamic_species"*lpad(i,3,"0")*".txt","a");
         println(io,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E",t,pop,gen_ave,age_ave,size_ave,Bm_ave,Cq_ave,Nq_ave,Pq_ave,Chl_ave))
         close(io);
@@ -145,23 +145,6 @@ end
 write model output of individuals at each time step in a binary file
 time = model.t
 """
-function write_output(individuals::individuals, filepath, time)
-    phytos = individuals.phytos
-    path = filepath*"phy_"*lpad(time, 10, "0")*".bin"
-    if individuals.zoos == nothing
-        open(path, "w") do io
-            serialize(io, phytos)
-        end
-    else
-        open(path, "w") do io
-            serialize(io, phytos)
-        end
-        path_zoo = filepath*"zoo_"*lpad(time, 10, "0")*".bin"
-        open(path_zoo, "w") do io
-            serialize(io, individuals.zoos)
-        end
-    end
-end
 function write_output(phyts_sp::Array, filepath, time)
     for i in 1:size(phyts_sp,1)
         path = filepath*"planks/phy"*lpad(time, 10, "0")*"_"*lpad(i,2,"0")*".bin"
