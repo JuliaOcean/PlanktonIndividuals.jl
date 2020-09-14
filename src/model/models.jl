@@ -10,14 +10,13 @@ mutable struct velocities
 end
 
 mutable struct timestepper
-    Gcs::NamedTuple
-    MD1::NamedTuple
-    MD2::NamedTuple
-    MD3::NamedTuple
-    plk::NamedTuple
-    ope::AbstractArray
-    par::AbstractArray
-    chl::AbstractArray
+    Gcs::NamedTuple     # a NamedTuple same as nutrients to store tendencies
+    MD1::NamedTuple     # a NamedTuple same as nutrients to store nutrients fields in multi-dims advection scheme
+    MD2::NamedTuple     # a NamedTuple same as nutrients to store nutrients fields in multi-dims advection scheme
+    MD3::NamedTuple     # a NamedTuple same as nutrients to store nutrients fields in multi-dims advection scheme
+    plk::NamedTuple     # a NamedTuple same as nutrients to store interactions with individuals
+    par::AbstractArray  # a (Cu)Array to store PAR field of each timestep
+    chl::AbstractArray  # a (Cu)Array to store Chl field of each timestep
 end
 
 mutable struct Model_Struct
@@ -40,7 +39,7 @@ Default PAR and temp are from ../samples
 """
 function PI_Model(arch::Architecture, grid, RunParam;
                   t = 1-RunParam.ΔT,
-                  individuals = gen_agents(arch,RunParam,grid),
+                  individuals = individuals(RunParam.params["P_Nsp"], RunParam.params["P_Nind"], arch),
                   nutrients,
                   PAR = read_IR_input(RunParam.ΔT, grid),
                   temp = read_temp_input(RunParam.ΔT, grid),
@@ -49,17 +48,22 @@ function PI_Model(arch::Architecture, grid, RunParam;
                   diag_tr = diags_setup(arch, RunParam.nTime, RunParam.ΔT, grid, RunParam.params["diag_freq"], 5)
                   )
 
+    if arch == GPUs() && !has_cuda()
+        throw(ArgumentError("Cannot create a GPU model. No CUDA-enabled GPU was detected!"))
+    end
+
     if arch == GPUs()
         input = Model_Input(CuArray(temp), CuArray(PAR))
     else
         input = Model_Input(temp,PAR)
     end
 
+    for plank in individuals.phytos
+        gen_individuals!(plank, RunParam, grid, arch)
+    end
+
     diags = Diagnostics(diag, diag_tr)
 
-    if arch == GPUs() && !has_cuda()
-        throw(ArgumentError("Cannot create a GPU model. No CUDA-enabled GPU was detected!"))
-    end
 
     vel = velocities((;),(;),(;))
 
@@ -68,10 +72,9 @@ function PI_Model(arch::Architecture, grid, RunParam;
     MD2 = nutrients_init(arch, grid)
     MD3 = nutrients_init(arch, grid)
     plk = nutrients_init(arch, grid)
-    ope = zeros(Float64, RunParam.params["P_Nind"], 34) |> array_type(arch)
     par = zeros(Float64, grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
     chl = zeros(Float64, grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
-    ts = timestepper(Gcs, MD1, MD2, MD3, plk, ope, par, chl)
+    ts = timestepper(Gcs, MD1, MD2, MD3, plk, par, chl)
 
     model = Model_Struct(arch, t, individuals, nutrients, grid, input, params, diags, vel, ts)
 

@@ -1,15 +1,15 @@
 using KernelAbstractions.Extras.LoopInfo: @unroll
 ##### calculate Chla field based on the status of plankton individuals
-@kernel function acc_chla_field_kernel!(chl, ope, inds::AbstractArray{Int64,2})
+@kernel function acc_chla_field_kernel!(chl, plank, inds::AbstractArray{Int64,2})
     i = @index(Global, Linear)
     xi = inds[i,1]
     yi = inds[i,2]
     zi = inds[i,3]
-    chl[xi, yi, zi] = chl[xi, yi, zi] + ope[i,9]
+    chl[xi, yi, zi] = chl[xi, yi, zi] + plank[i,10]
 end
-function acc_chla_field!(chl, ope, inds::AbstractArray{Int64,2}, arch::Architecture)
-    kernel! = acc_chla_field_kernel!(device(arch), 256, (size(ope,1),))
-    event = kernel!(chl, ope, inds)
+function acc_chla_field!(chl, plank, inds::AbstractArray{Int64,2}, arch::Architecture)
+    kernel! = acc_chla_field_kernel!(device(arch), 256, (size(plank,1),))
+    event = kernel!(chl, plank, inds)
     wait(device(arch), event)
     return nothing
 end
