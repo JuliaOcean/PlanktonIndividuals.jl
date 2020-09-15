@@ -64,7 +64,7 @@ function gen_individuals!(plank, RunParam::RunParams, g::Grids, arch::Architectu
     plank.data[:,3] .= rand(Uniform(g.zF[g.Hz+1], g.zF[g.Nz+g.Hz+1]), N) |> array_type(arch)   # z
     plank.data[:,4] .= max.(1.0, rand(Normal(mean,var), N) |> array_type(arch))                # init_size
     plank.data[:,5] .= copy(plank.data[:,4])                                                   # size
-    plank.data[:,6] .= Cquota .* plank.data[:,5]                                               # Bm
+    plank.data[:,6] .= Cquota .* plank.data[:,5] .* Nsuper                                     # Bm
     plank.data[:,7] .= rand(Uniform(cqmin, cqmax), N) |> array_type(arch)                      # Cq
     plank.data[:,7] .= plank.data[:,7] .* plank.data[:,6]                                      # Cq
     plank.data[:,8] .= rand(Uniform(nqmin, nqmax), N) |> array_type(arch)                      # Nq

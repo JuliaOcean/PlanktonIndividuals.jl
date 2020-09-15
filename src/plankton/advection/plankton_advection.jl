@@ -43,4 +43,6 @@ function plankton_advectionRK4!(plank, arch::Architecture, g::Grids, vel₀, vel
     calc_vel_rk4!(plank, arch)
     calc_coord!(plank, arch, ΔT)
     in_domain!(plank, arch, g)
+
+    find_inds!(plank, arch, g, 12, 0)
 end
