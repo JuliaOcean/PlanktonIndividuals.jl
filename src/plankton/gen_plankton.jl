@@ -11,6 +11,7 @@ u0  u1  v0  v1  w0  w1  xd  yd  zd  u1  v1  w1  u2  v2  w2  u3  v3  w3  u4  v4  
 struct plankton
     data::AbstractArray{Float64,2}
     sp::Int64
+    p::NamedTuple
 end
 
 struct individuals
@@ -18,46 +19,69 @@ struct individuals
     zoos::NamedTuple
 end
 
-function plankton(N::Int64, arch::Architecture, sp)
+function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict)
     data  = zeros(Float64, N, 57) |> array_type(arch)
-    return plankton(data, sp)
+
+    pkeys = collect(keys(params))
+    tmp = zeros(length(param_names))
+    for i in 1:length(param_names)
+        if length(findall(x->x==string(param_names[i]),pkeys))==0
+            throw(ArgumentError("PARAM: parameter not found $(param_names[i])"))
+        else
+            tmp[i] = params[string(param_names[i])][sp]
+        end
+    end
+    p = NamedTuple{param_names}(tmp)
+    return plankton(data, sp, p)
 end
 
 const plank_names=(:sp1, :sp2, :sp3, :sp4, :sp5, :sp6, :sp7, :sp8, :sp9)
+const param_names=(:Nsuper, :Cquota, :mean, :var, :Chl2Cint, :α, :Φ, :Tempref, :TempAe, :TempCoeff,
+                   :PCmax, :PC_b, :VDOCmax, :VDOC_b, :VNO3max, :VNH4max, :VN_b, :VPO4max, :VP_b,
+                   :KsatDOC, :KsatNH4, :KsatNO3, :KsatPO4, :Cqmax, :Cqmin, :Nqmax, :Nqmin, :Pqmax, :Pqmin,
+                   :Chl2N, :R_NC, :R_PC, :k_mtb, :k_mtb_b, :respir_a, :respir_b,
+                   :grz_P, :grz_stp, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
+                   :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP)
 
-function individuals(Nsp::Int64, N::Int64, arch::Architecture)
-    plank_data = (plankton(N, arch, 1), plankton(N, arch, 2), plankton(N, arch, 3),
-                  plankton(N, arch, 4), plankton(N, arch, 5), plankton(N, arch, 6),
-                  plankton(N, arch, 7), plankton(N, arch, 8), plankton(N, arch, 9))
+function individuals(params::Dict, arch::Architecture)
+    plank_data=[]
+    Nsp = params["Nsp"]
+    N = params["Nind"]
     if Nsp > 9
         throw(ArgumentError("INDIVIDUALS: species must ≤ 9!"))
     else
+        for i in 1:Nsp
+            plank = plankton(N,arch,i,params)
+            push!(plank_data,plank)
+        end
         plank_name = plank_names[1:Nsp]
-        planks = NamedTuple{plank_name}(plank_data[1:Nsp])
+        planks = NamedTuple{plank_name}(plank_data)
         return individuals(planks,(;))
     end
 end
 
 """
-    gen_didividuals!(plank, RunParams, grid, arch)
+    gen_didividuals!(plank, grid, arch)
 Set up a series of agents following a normal distribution (mean,var)
 'Nindivi' is agent number for each species, 'sp' is number of species, 'Nsuper' is the number of cells one agent represents,
 'Cquota' is the initial biomass for one cell
 '(x,y,z)' of an individual is the actual location not grid indices
 """
-function gen_individuals!(plank, RunParam::RunParams, g::Grids, arch::Architecture)
-    params = RunParam.params
-    N = params["P_Nind"]
-    mean = params["P_mean"][plank.sp]
-    var = params["P_var"][plank.sp]
-    Cquota = params["P_Cquota"][plank.sp]
-    Nsuper = params["P_Nsuper"][plank.sp]
-    cqmax = params["Cqmax"][plank.sp]
-    cqmin = params["Cqmin"][plank.sp]
-    nqmax = params["Nqmax"][plank.sp]
-    nqmin = params["Nqmin"][plank.sp]
-    pqmax = params["Pqmax"][plank.sp]
-    pqmin = params["Pqmin"][plank.sp]
+function gen_individuals!(plank, g::Grids, arch::Architecture)
+    N = size(plank.data,1)
+    mean = plank.p.mean
+    var = plank.p.var
+    Cquota = plank.p.Cquota
+    Nsuper = plank.p.Nsuper
+    cqmax = plank.p.Cqmax
+    cqmin = plank.p.Cqmin
+    nqmax = plank.p.Nqmax
+    nqmin = plank.p.Nqmin
+    pqmax = plank.p.Pqmax
+    pqmin = plank.p.Pqmin
+    Chl2Cint = plank.p.Chl2Cint
+
+
 
     plank.data[:,1] .= rand(Uniform(g.xF[g.Hx+1], g.xF[g.Nx+g.Hx+1]), N) |> array_type(arch)   # x
     plank.data[:,2] .= rand(Uniform(g.yF[g.Hy+1], g.yF[g.Ny+g.Hy+1]), N) |> array_type(arch)   # y
@@ -71,7 +95,7 @@ function gen_individuals!(plank, RunParam::RunParams, g::Grids, arch::Architectu
     plank.data[:,8] .= plank.data[:,8] .* plank.data[:,6]                                      # Nq
     plank.data[:,9] .= rand(Uniform(pqmin, pqmax), N) |> array_type(arch)                      # Pq
     plank.data[:,9] .= plank.data[:,9] .* plank.data[:,6]                                      # Pq
-    plank.data[:,10] .= plank.data[:,6] .* params["Chl2Cint"][plank.sp]                        # Chl
+    plank.data[:,10] .= plank.data[:,6] .* Chl2Cint                                            # Chl
     plank.data[:,11] .= 1.0                                                                    # generation
     plank.data[:,12] .= 1.0                                                                    # age
 

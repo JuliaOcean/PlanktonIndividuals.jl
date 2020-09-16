@@ -20,7 +20,7 @@ mutable struct Diagnostics
     tr::AbstractArray{Float64,5}         # for tracers
 end
 
-function diags_setup(::CPUs, nTime::Int64, ΔT::Int64, grids, freq::Int64, diag_inds::Array, Nsp::Int64)
+function diags_setup(::CPUs, nTime::Int64, ΔT::Int64, grids, freq::Int64, diag_inds, Nsp::Int64)
     ndiags = sum(diag_inds) + 4
     nt = nTime*ΔT÷freq
     if nTime*ΔT%freq ≠ 0
@@ -29,7 +29,7 @@ function diags_setup(::CPUs, nTime::Int64, ΔT::Int64, grids, freq::Int64, diag_
     diags_sp = zeros(grids.Nx, grids.Ny, grids.Nz, nt, Nsp, ndiags)
     return diags_sp
 end
-function diags_setup(::GPUs, nTime::Int64, ΔT::Int64, grids, freq::Int64, diag_inds::Array, Nsp::Int64)
+function diags_setup(::GPUs, nTime::Int64, ΔT::Int64, grids, freq::Int64, diag_inds, Nsp::Int64)
     ndiags = sum(diag_inds) + 4
     nt = nTime*ΔT÷freq
     if nTime*ΔT%freq ≠ 0
