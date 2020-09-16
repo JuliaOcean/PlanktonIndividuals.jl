@@ -25,3 +25,13 @@ function count_horizontal_num(phyts_a,grid)
     end
     return HD
 end
+
+function vel_copy!(vel::NamedTuple, O_vels, arch::Architecture)
+    u = O_vels.u.data.parent |> array_type(arch)
+    v = O_vels.v.data.parent |> array_type(arch)
+    w = O_vels.w.data.parent |> array_type(arch)
+    vel.u.data .= u
+    vel.v.data .= v
+    vel.w.data .= w[:,:,1:end-1]
+end
+

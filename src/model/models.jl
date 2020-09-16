@@ -1,12 +1,6 @@
 mutable struct Model_Input
     temp::AbstractArray{Float64,4}      # temperature
-    PAR::AbstractArray{Float64,3}       # PAR
-end
-
-mutable struct velocities
-    vel₀::NamedTuple
-    vel½::NamedTuple
-    vel₁::NamedTuple
+    PARF::AbstractArray{Float64,3}      # PARF
 end
 
 mutable struct timestepper
@@ -14,6 +8,9 @@ mutable struct timestepper
     MD1::NamedTuple     # a NamedTuple same as nutrients to store nutrients fields in multi-dims advection scheme
     MD2::NamedTuple     # a NamedTuple same as nutrients to store nutrients fields in multi-dims advection scheme
     MD3::NamedTuple     # a NamedTuple same as nutrients to store nutrients fields in multi-dims advection scheme
+    vel₀::NamedTuple    # a NamedTuple with u, v, w velocities
+    vel½::NamedTuple    # a NamedTuple with u, v, w velocities
+    vel₁::NamedTuple    # a NamedTuple with u, v, w velocities
     plk::NamedTuple     # a NamedTuple same as nutrients to store interactions with individuals
     par::AbstractArray  # a (Cu)Array to store PAR field of each timestep
     chl::AbstractArray  # a (Cu)Array to store Chl field of each timestep
@@ -28,7 +25,6 @@ mutable struct Model_Struct
     input::Model_Input          # model input, temp and PAR
     params::Dict                # biogeochemical parameter set
     diags::Diagnostics          # diagnostics
-    velocities::velocities      # save the velocities of last and current time steps from physical models
     timestepper::timestepper    # operating Tuples and arrays for timestep
 end
 """
@@ -39,12 +35,12 @@ Default PAR and temp are from ../samples
 """
 function PI_Model(arch::Architecture, grid, RunParam;
                   t = 1-RunParam.ΔT,
-                  individuals = individuals(RunParam.params["P_Nsp"], RunParam.params["P_Nind"], arch),
+                  individuals = individuals(RunParam.params, arch),
                   nutrients,
-                  PAR = read_IR_input(RunParam.ΔT, grid),
+                  PARF = read_IR_input(RunParam.ΔT, grid),
                   temp = read_temp_input(RunParam.ΔT, grid),
                   params = RunParam.params,
-                  diag = diags_setup(arch, RunParam.nTime, RunParam.ΔT, grid, RunParam.params["diag_freq"], RunParam.params["diag_inds"], RunParam.params["P_Nsp"]),
+                  diag = diags_setup(arch, RunParam.nTime, RunParam.ΔT, grid, RunParam.params["diag_freq"], RunParam.params["diag_inds"], RunParam.params["Nsp"]),
                   diag_tr = diags_setup(arch, RunParam.nTime, RunParam.ΔT, grid, RunParam.params["diag_freq"], 5)
                   )
 
@@ -53,33 +49,33 @@ function PI_Model(arch::Architecture, grid, RunParam;
     end
 
     if arch == GPUs()
-        input = Model_Input(CuArray(temp), CuArray(PAR))
+        input = Model_Input(CuArray(temp), CuArray(PARF))
     else
-        input = Model_Input(temp,PAR)
+        input = Model_Input(temp,PARF)
     end
 
     for plank in individuals.phytos
-        gen_individuals!(plank, RunParam, grid, arch)
+        gen_individuals!(plank, grid, arch)
     end
 
     diags = Diagnostics(diag, diag_tr)
 
-
-    vel = velocities((;),(;),(;))
-
+    vel₀ = (u = Field(arch, grid), v = Field(arch, grid), w = Field(arch, grid))
+    vel½ = (u = Field(arch, grid), v = Field(arch, grid), w = Field(arch, grid))
+    vel₁ = (u = Field(arch, grid), v = Field(arch, grid), w = Field(arch, grid))
     Gcs = nutrients_init(arch, grid)
     MD1 = nutrients_init(arch, grid)
     MD2 = nutrients_init(arch, grid)
     MD3 = nutrients_init(arch, grid)
     plk = nutrients_init(arch, grid)
-    par = zeros(Float64, grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
-    chl = zeros(Float64, grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
-    ts = timestepper(Gcs, MD1, MD2, MD3, plk, par, chl)
+    par = zeros(grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
+    chl = zeros(grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
+    ts = timestepper(Gcs, MD1, MD2, MD3, vel₀, vel½, vel₁, plk, par, chl)
 
-    model = Model_Struct(arch, t, individuals, nutrients, grid, input, params, diags, vel, ts)
+    model = Model_Struct(arch, t, individuals, nutrients, grid, input, params, diags, ts)
 
     if RunParam.Zoo == true
-        model.params["Grz_P"] = 0
+        model.params["grz_P"] = 0
     else
         nothing
     end

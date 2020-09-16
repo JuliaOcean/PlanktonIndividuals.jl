@@ -28,7 +28,7 @@ function gen_Grid(;size, spacing, halo = (1, 1, 1),)
 
     xF = range(-Hx * Δx, (Nx + Hx - 1) * Δx, length = Nx + 2 * Hx)
     yF = range(-Hy * Δy, (Ny + Hy - 1) * Δy, length = Ny + 2 * Hy)
-    zF = range(-(Hz + Nz) * Δz, Hz * Δz, length = Nz + 2 * Hz + 1)
+    zF = range(-(Hz + Nz) * Δz, (Hz -1) * Δz, length = Nz + 2 * Hz)
 
     xC = range((0.5 - Hx) * Δx, (Nx + Hx - 0.5) * Δx, length = Nx + 2 * Hx)
     yC = range((0.5 - Hy) * Δy, (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy)

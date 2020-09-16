@@ -36,7 +36,7 @@ include("$src"*"model/time_step.jl")
 
 export
     # model structures
-    PI_Model, Grids, nutrient_fields, velocities,
+    PI_Model, Grids, nutrient_fields,
     RunOptions, RunParams, read_Ogrids, gen_Grid,
     Architecture, GPUs, CPUs,
 
@@ -49,7 +49,7 @@ export
     gen_agents, gen_nutrients, load_nut_initials,
 
     # Run the model
-    RunParam, RunOption, PI_TimeStep!,
+    RunParam, RunOption, vel_copy!, PI_TimeStep!,
     PI_advectRK4!, PI_advect!,
 
     # write output functions

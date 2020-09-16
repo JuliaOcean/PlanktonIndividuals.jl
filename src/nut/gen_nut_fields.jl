@@ -19,7 +19,7 @@ Set up initial nutrient fields according to grid information
 'nut' is an array of 10 elements, each element is a kind of nutrient
 """
 function gen_nutrients(arch, g, nut)
-    total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2+1)
+    total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
     nutrients = nutrients_init(arch, g)
 
     for i in 1:length(nut_names)

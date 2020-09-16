@@ -78,15 +78,15 @@ function nut_advectionᶻ!(nutₜ, arch::Architecture, g, nutrients, w, ΔT)
 end
 
 function nut_advection!(Gc, arch::Architecture, g, nut, nut₁, nut₂, nut₃, vel, ΔT)
-    nut_advectionˣ!(nut₁, arch::Architecture, g, nut, vel.u, ΔT)
+    nut_advectionˣ!(nut₁, arch::Architecture, g, nut, vel.u.data, ΔT)
 
     fill_halo!(nut₁, g)
 
-    nut_advectionʸ!(nut₂, arch::Architecture, g, nut₁, vel.v, ΔT)
+    nut_advectionʸ!(nut₂, arch::Architecture, g, nut₁, vel.v.data, ΔT)
 
     fill_halo!(nut₂, g)
 
-    nut_advectionᶻ!(nut₃, arch::Architecture, g, nut₂, vel.w, ΔT)
+    nut_advectionᶻ!(nut₃, arch::Architecture, g, nut₂, vel.w.data, ΔT)
 
     sub_nut_tendency!(Gc, nut₃, nut)
 
