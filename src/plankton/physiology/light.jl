@@ -15,19 +15,18 @@ function acc_chla_field!(chl, plank, inds::AbstractArray{Int64,2}, arch::Archite
 end
 
 ##### calculate PAR field based on Chla field and depth
-@kernel function calc_par_kernel!(par, chl, g::Grids, surf_par, kc, kw)
+@kernel function calc_par_kernel!(par, chl, PARF, g::Grids, kc, kw)
     @unroll for k in 1:g.Nz
         i, j = @index(Global, NTuple)
         kk = g.Nz - k + 1
-        atten = exp(-(chl[i,j,kk]/g.V * kc + kw) * g.Δz)
-        par[i,j,kk] = surf_par[i,j] * (1.0 - atten) / ((chl[i,j,kk]/g.V * kc + kw) * g.Δz)
-        surf_par[i,j] = surf_par[i,j] * atten
+        atten = (chl[i,j,kk]/g.V * kc + kw) * g.Δz
+        par[i,j,kk] = PARF[i,j] * (1.0 - exp(-atten)) / atten
+        PARF[i,j] = PARF[i,j] * exp(-atten)
     end
-
 end
-function calc_par!(par, arch::Architecture, chl, g::Grids, surf_par, kc, kw)
+function calc_par!(par, arch::Architecture, chl, PARF, g::Grids, kc, kw)
     kernel! = calc_par_kernel!(device(arch), (16,16), (g.Nx, g.Ny))
-    event = kernel!(par, chl, g, surf_par, kc, kw)
+    event = kernel!(par, chl, PARF, g, kc, kw)
     wait(device(arch), event)
     return nothing
 end
