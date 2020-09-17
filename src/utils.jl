@@ -35,3 +35,16 @@ function vel_copy!(vel::NamedTuple, O_vels, arch::Architecture)
     vel.w.data .= w[:,:,1:end-1]
 end
 
+function vel_copy!(vel::NamedTuple, u, v, w, arch::Architecture, g::Grids)
+    uvel = u |> array_type(arch)
+    vvel = v |> array_type(arch)
+    wvel = w |> array_type(arch)
+
+    vel.u.data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] .= uvel
+    vel.v.data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] .= vvel
+    vel.w.data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] .= wvel
+
+    fill_halo!(vel.u.data, g)
+    fill_halo!(vel.v.data, g)
+    fill_halo!(vel.w.data, g)
+end
