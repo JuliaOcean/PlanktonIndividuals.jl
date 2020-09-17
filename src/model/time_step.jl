@@ -14,19 +14,20 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     zero_fields!(model.timestepper.plk)
     model.timestepper.chl .= 0.0
 
-    # for plank in model.individuals.phytos
-    #     plankton_advectionRK4!(plank.data, model.arch, model.grid,
-    #                           model.velocities.vel₀, model.velocities.vel½, model.velocities.vel₁, ΔT)
+    for plank in model.individuals.phytos
+        plankton_advectionRK4!(plank.data, model.arch, model.grid,
+                              model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT)
 
-    #     plankton_diffusion!(plank.data, model.arch, model.grid, model.params["κhP"], ΔT)
+        # plankton_diffusion!(plank.data, model.arch, model.grid, model.params["κhP"], ΔT)
 
-    #     ##### calculate accumulated chla quantity (not concentration)
-    #     # acc_chla_field!(model.timestepper.chl, plank.data, Int.(plank.data[:,13:15]), model.arch)
-    # end
+        ##### calculate accumulated chla quantity (not concentration)
+        find_inds!(plank.data, model.arch, model.grid, 12, 0)
+        acc_chla_field!(model.timestepper.chl, plank.data, Int.(plank.data[:,13:15]), model.arch)
+    end
 
     ##### calculate PAR
-    # calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.input.PARF[:,:,clock],
-    #           model.grid, model.params["kc"], model.params["kw"])
+    calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.input.PARF[:,:,clock],
+              model.grid, model.params["kc"], model.params["kw"])
 
     # plankton_update!(model.individuals.phytos, model.timestepper.ope, model.timestepper.plk,
     #                  model.timestepper.par, model.timestepper.chl, model.diags, model.arch,
@@ -34,10 +35,10 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     #                  model.nutrients.DOC, model.nutrients.NH4, model.nutrients.NO3, model.nutrients.PO4,
     #                  model.grid, model.params, ΔT, model.t)
 
-    zero_fields!(model.timestepper.Gcs)
-    zero_fields!(model.timestepper.MD1)
-    zero_fields!(model.timestepper.MD2)
-    zero_fields!(model.timestepper.MD3)
+    # zero_fields!(model.timestepper.Gcs)
+    # zero_fields!(model.timestepper.MD1)
+    # zero_fields!(model.timestepper.MD2)
+    # zero_fields!(model.timestepper.MD3)
 
     nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.MD1,
                 model.timestepper.MD2, model.timestepper.MD3, model.arch,
