@@ -13,3 +13,6 @@ device(::GPUs) = KernelAbstractions.CUDADevice()
 
 array_type(::CPUs) = Array
 @hascuda array_type(::GPUs) = CuArray
+
+rng_type(::CPUs) = MersenneTwister()
+@hascuda rng_type(::GPUs) = CURAND.default_rng()

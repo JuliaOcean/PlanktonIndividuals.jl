@@ -10,7 +10,7 @@
         # plank[i,2+ind] = g.yF[g.Ny+g.Hy+1]
     end
     if plank[i,3+ind] ≥ g.zF[g.Nz+g.Hz+1]
-        plank[i,3+ind] = g.zF[g.Nz+g.Hz+1]
+        plank[i,3+ind] = g.zF[g.Nz+g.Hz+1] - 1.0e-10 # to keep in the boundary
     end
 end
 function periodic_domain⁺!(plank, arch::Architecture, g::Grids, ind::Int64)

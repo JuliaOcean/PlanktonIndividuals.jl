@@ -18,7 +18,9 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
         plankton_advectionRK4!(plank.data, model.arch, model.grid,
                               model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT)
 
-        # plankton_diffusion!(plank.data, model.arch, model.grid, model.params["κhP"], ΔT)
+        gen_rand_adv!(plank.data, model.arch)
+        plankton_diffusion!(plank.data, model.arch, model.params["κhP"], ΔT)
+        in_domain!(plank.data, model.arch, model.grid)
 
         ##### calculate accumulated chla quantity (not concentration)
         find_inds!(plank.data, model.arch, model.grid, 12, 0)
@@ -29,16 +31,13 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.input.PARF[:,:,clock],
               model.grid, model.params["kc"], model.params["kw"])
 
-    # plankton_update!(model.individuals.phytos, model.timestepper.ope, model.timestepper.plk,
-    #                  model.timestepper.par, model.timestepper.chl, model.diags, model.arch,
-    #                  model.input.temp[:,:,:,clock], model.input.PAR[:,:,clock],
-    #                  model.nutrients.DOC, model.nutrients.NH4, model.nutrients.NO3, model.nutrients.PO4,
-    #                  model.grid, model.params, ΔT, model.t)
+    for plank in model.individuals.phytos
+        plankton_update!(plank.data, model.timestepper.plk,
+                         model.timestepper.par, model.arch, model.input.temp[:,:,:,clock],
+                         model.nutrients.DOC.data, model.nutrients.NH4.data, model.nutrients.NO3.data,
+                         model.nutrients.PO4.data, model.grid, plank.p, ΔT, model.t)
+    end
 
-    # zero_fields!(model.timestepper.Gcs)
-    # zero_fields!(model.timestepper.MD1)
-    # zero_fields!(model.timestepper.MD2)
-    # zero_fields!(model.timestepper.MD3)
 
     nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.MD1,
                 model.timestepper.MD2, model.timestepper.MD3, model.arch,
