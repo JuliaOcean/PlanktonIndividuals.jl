@@ -32,6 +32,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
               model.grid, model.params["kc"], model.params["kw"])
 
     for plank in model.individuals.phytos
+        plank[:,58:60] .= rand!(rng_type(model.arch), plank[:,58:60])
         plankton_update!(plank.data, model.timestepper.plk,
                          model.timestepper.par, model.arch, model.input.temp[:,:,:,clock],
                          model.nutrients.DOC.data, model.nutrients.NH4.data, model.nutrients.NO3.data,
