@@ -40,8 +40,8 @@ function PI_Model(arch::Architecture, grid, RunParam;
                   PARF = read_IR_input(RunParam.ΔT, grid),
                   temp = read_temp_input(RunParam.ΔT, grid),
                   params = RunParam.params,
-                  diag = diags_setup(arch, RunParam.nTime, RunParam.ΔT, grid, RunParam.params["diag_freq"], RunParam.params["diag_inds"], RunParam.params["Nsp"]),
-                  diag_tr = diags_setup(arch, RunParam.nTime, RunParam.ΔT, grid, RunParam.params["diag_freq"], 5)
+                  diags = diags_setup(arch, RunParam.nTime, RunParam.ΔT, grid,
+                                     RunParam.params["diag_freq"], RunParam.params["Nsp"], 5),
                   )
 
     if arch == GPUs() && !has_cuda()
@@ -57,8 +57,6 @@ function PI_Model(arch::Architecture, grid, RunParam;
     for plank in individuals.phytos
         gen_individuals!(plank, grid, arch)
     end
-
-    diags = Diagnostics(diag, diag_tr)
 
     vel₀ = (u = Field(arch, grid), v = Field(arch, grid), w = Field(arch, grid))
     vel½ = (u = Field(arch, grid), v = Field(arch, grid), w = Field(arch, grid))

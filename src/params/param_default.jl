@@ -7,7 +7,6 @@ param_default=Dict(
     "isDiaz"   => [0,0],              # A switch that controls whether the individual can fix N
     "mean"     => [1.5, 1.5],         # Mean of the normal distribution of initial phyto individuals
     "var"      => [0.3, 0.3],         # Variance of the normal distribution of initial phyto individuals
-    "diag_inds"=> zeros(Int,14),      # Diagnostic indices, refer to diagnostics.jl
     "diag_freq"=> 3600,               # Frequency of diagnostics (second)
     "PCmax"    => [2.1e-5, 2.1e-5],   # Maximum primary production rate (per second)
     "PC_b"     => [0.6, 0.6],         # Shape parameter for size

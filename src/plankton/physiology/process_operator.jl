@@ -246,7 +246,7 @@ end
 end
 function calc_loss!(plank, inds::AbstractArray{Int64,2}, arch::Architecture,
                     DOC_con, POC_con, DON_con, PON_con, DOP_con, POP_con, g::Grids,
-                    lossFracC, lossFracN, lossFracP, R_NC, R_P)
+                    lossFracC, lossFracN, lossFracP, R_NC, R_PC)
     kernel! = calc_loss_kernel!(device(arch), 256, (size(plank,1),))
     event = kernel!(plank, inds, DOC_con, POC_con, DON_con, PON_con, DOP_con, POP_con, g,
                     lossFracC, lossFracN, lossFracP, R_NC, R_PC)

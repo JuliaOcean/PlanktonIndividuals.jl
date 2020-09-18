@@ -43,18 +43,17 @@ export
     # read input functions
     read_IR_input, read_temp_input,
     update_params!, param_default,
-    PrepRunDir, generate_vel_itp, diags_setup,
+    PrepRunDir, diags_setup,
 
     # initialize nutrient field and individual sets
     gen_agents, gen_nutrients, load_nut_initials,
 
     # Run the model
     RunParam, RunOption, vel_copy!, PI_TimeStep!,
-    PI_advectRK4!, PI_advect!,
 
     # write output functions
     write_nut_nc_alltime, write_nut_nc_each_step,
     count_vertical_num, count_horizontal_num,
     write_species_dynamics, write_nut_cons,
-    sort_species, write_output
+    write_output
 end # module

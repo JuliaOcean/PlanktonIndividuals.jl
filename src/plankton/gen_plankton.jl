@@ -9,7 +9,7 @@ x  y  z  size_i  size  Bm  Cq  Nq  Pq  chl  gen  age  xi  yi  zi  NH4  NO3  PO4 
 u0  u1  v0  v1  w0  w1  xd  yd  zd  u1  v1  w1  u2  v2  w2  u3  v3  w3  u4  v4  w4 (random numbers
                                                                                    for diffusion/division)
 =#
-struct plankton
+mutable struct plankton
     data::AbstractArray{Float64,2}
     sp::Int64
     p::NamedTuple

@@ -100,40 +100,20 @@ function write_nut_cons(g::Grids, nutₜ::NamedTuple, t::Int64, filepath)
 end
 
 """
-    sort_species(phyts, Nsp)
-separate different species in different arrays
-"""
-function sort_species(phyts,Nsp)
-    phyt_sp=[]
-    for i in 1:Nsp
-        push!(phyt_sp,Real[])
-    end
-    for i in 1:size(phyts,2)
-        phyt = phyts[:,i]
-        sp = Int(phyt[10])
-        append!(phyt_sp[sp],phyt)
-    end
-    for i in 1:Nsp
-        phyt_sp[i] = reshape(phyt_sp[i],size(phyts,1),Int(length(phyt_sp[i])/size(phyts,1)))
-    end
-    return phyt_sp
-end
-
-"""
     write_species_dynamics(t, phyts, filepath)
 Write a brief summary of each species at each time step into a txt file
 """
-function write_species_dynamics(t::Int64, phyt_sp, filepath)
-    for i in 1:size(phyt_sp,2)
-        pop = size(phyt_sp[i],1)
-        gen_ave = mean(phyt_sp[i][:,12])
-        age_ave = mean(phyt_sp[i][:,13])
-        size_ave= mean(phyt_sp[i][:,5])
-        Bm_ave= mean(phyt_sp[i][:,6])
-        Cq_ave= mean(phyt_sp[i][:,7])
-        Nq_ave= mean(phyt_sp[i][:,8])
-        Pq_ave= mean(phyt_sp[i][:,9])
-        Chl_ave= mean(phyt_sp[i][:,10])
+function write_species_dynamics(t::Int64, phytos, filepath)
+    for i in 1:length(phytos)
+        pop = size(phytos[i].data,1)
+        gen_ave = mean(phytos[i].data[:,11])
+        age_ave = mean(phytos[i].data[:,12])
+        size_ave= mean(phytos[i].data[:,5])
+        Bm_ave= mean(phytos[i].data[:,6])
+        Cq_ave= mean(phytos[i].data[:,7])
+        Nq_ave= mean(phytos[i].data[:,8])
+        Pq_ave= mean(phytos[i].data[:,9])
+        Chl_ave= mean(phytos[i].data[:,10])
         io = open(filepath*"dynamic_species"*lpad(i,3,"0")*".txt","a");
         println(io,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E",t,pop,gen_ave,age_ave,size_ave,Bm_ave,Cq_ave,Nq_ave,Pq_ave,Chl_ave))
         close(io);
@@ -145,11 +125,11 @@ end
 write model output of individuals at each time step in a binary file
 time = model.t
 """
-function write_output(phyts_sp::Array, filepath, time)
-    for i in 1:size(phyts_sp,1)
+function write_output(phytos::NamedTuple, filepath, time)
+    for i in 1:length(phytos)
         path = filepath*"planks/phy"*lpad(time, 10, "0")*"_"*lpad(i,2,"0")*".bin"
         open(path, "w") do io
-            serialize(io, phyts_sp[i])
+            serialize(io, phytos[i].data[:,1:12])
         end
     end
 end

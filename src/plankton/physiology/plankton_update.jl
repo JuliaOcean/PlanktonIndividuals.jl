@@ -1,17 +1,19 @@
 function grazing!(plank, plk, arch::Architecture, g::Grids, p)
     grz_array = plank[findall(x -> x == 1.0, plank[:,31]), :]
-    plank  = plank[findall(x -> x == 0.0, plank[:,31]), :]
     calc_loss!(grz_array, Int.(grz_array[:,13:15]), arch,
                plk.DOC.data, plk.POC.data, plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
-               g, p["grazFracC"], p["grazFracN"], p["grazFracP"], p["_R_NC"], p["R_PC"])
+               g, p.grazFracC, p.grazFracN, p.grazFracP, p.R_NC, p.R_PC)
+    plank = plank[findall(x -> x == 0.0, plank[:,31]), :]
 end
 
 function mortality!(plank, plk, arch::Architecture, g::Grids, p)
     mo_array = plank[findall(x -> x == 1.0, plank[:,32]), :]
-    plank = plank[findall(x -> x == 0.0, plank[:,32]), :]
+
     calc_loss!(mo_array, Int.(mo_array[:,13:15]), arch,
                plk.DOC.data, plk.POC.data, plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
-               g, p["mortFracC"], p["mortFracN"], p["mortFracP"], p["_R_NC"], p["R_PC"])
+               g, p.mortFracC, p.mortFracN, p.mortFracP, p.R_NC, p.R_PC)
+
+    plank = plank[findall(x -> x == 0.0, plank[:,32]), :]
 end
 
 function divide!(plank)
@@ -40,14 +42,6 @@ function plankton_update!(plank, plk, par, arch::Architecture,
     NH4 = interior(NH4, g)
     PO4 = interior(PO4, g)
     DOC = interior(DOC, g)
-
-    # ##### diagnostics for nutrients and par
-    # diag_t = t ÷ p["diag_freq"] + 1
-    # diags.tr[:,:,:,diag_t,1] += par
-    # diags.tr[:,:,:,diag_t,2] += NO3
-    # diags.tr[:,:,:,diag_t,3] += NH4
-    # diags.tr[:,:,:,diag_t,4] += PO4
-    # diags.tr[:,:,:,diag_t,5] += DOC
 
     ##### find nutrient, temperature, and par values for each individual
     find_NPT!(plank, Int.(plank[:,13:15]), arch, NH4, NO3, PO4, DOC, par, temp, g,
@@ -81,7 +75,7 @@ function plankton_update!(plank, plk, par, arch::Architecture,
                   plk.NH4.data, plk.NO3.data, plk.PO4.data, g, ΔT)
 
     # ##### probabilities of grazing, mortality, and cell division
-    if t%300 == 1
+    if t%600 == 1
         ##### grazing
         if p.grz_P == 0
             @inbounds plank[:,31] .= 0.0
@@ -105,25 +99,6 @@ function plankton_update!(plank, plk, par, arch::Architecture,
         @inbounds plank[:,32] .= 0.0
         @inbounds plank[:,33] .= 0.0
     end
-
-
-    # ###### diagnostics for each species
-    # sum_diags!(diags.spcs, plank, Int.(plank[:,14:16]), arch, g, p["diag_inds"], diag_t)
-
-    # ##### deal with grazed individual
-    # grazing!(plank, plk, arch, g, p)
-
-    # ###### diagnostics of mortality after grazing for each species
-    # sum_diags_mort!(diags.spcs, plank, Int.(plank[:,14:16]), arch, g, diag_t)
-
-    # ##### deal with dead individual
-    # mortality!(plank, plk, arch, g, p)
-
-    # ###### diagnostics of cell division after grazing and mortality for each species
-    # sum_diags_dvid!(diags.spcs, plank, Int.(plank[:,14:16]), arch, g, diag_t)
-
-    # ##### deal with divided individual
-    # divide!(plank)
 end
 
 
