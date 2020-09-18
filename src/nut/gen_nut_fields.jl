@@ -36,7 +36,7 @@ end
 Load nutrient initial conditions from files
 """
 function load_nut_initials(arch, paths, g)
-    total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2+1)
+    total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
 
     nut = nutrients_init(arch, g)
 
