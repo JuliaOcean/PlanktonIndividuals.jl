@@ -26,7 +26,7 @@ function gen_nutrients(arch, g, nut)
         nutrients[i].data .= fill(nut[i],total_size) .* rand(Uniform(0.8,1.2), total_size) |> array_type(arch)
     end
 
-    fill_halo!(nutrients,g)
+    fill_halo_nut!(nutrients,g)
 
     return nutrients
 end
@@ -57,6 +57,6 @@ function load_nut_initials(arch, paths, g)
         end
     end
 
-    fill_halo!(nut,g)
+    fill_halo_nut!(nut,g)
     return nut
 end

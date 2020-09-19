@@ -44,7 +44,5 @@ function vel_copy!(vel::NamedTuple, u, v, w, arch::Architecture, g::Grids)
     vel.v.data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] .= vvel
     vel.w.data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] .= wvel
 
-    fill_halo!(vel.u.data, g)
-    fill_halo!(vel.v.data, g)
-    fill_halo!(vel.w.data, g)
+    fill_halo_vel!(vel, g)
 end
