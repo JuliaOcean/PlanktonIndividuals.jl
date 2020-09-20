@@ -7,7 +7,8 @@
 end
 
 function plankton_diffusion!(plank, arch::Architecture, κx, κy, κz, ΔT)
-    kernel! = calc_diffu_kernel!(device(arch), 256, (size(plank,1),))
+    plank_num = floor(Int64, sum(plank[:,61]))
+    kernel! = calc_diffu_kernel!(device(arch), 256, (plank_num,))
     event = kernel!(plank, κx, κy, κz, ΔT)
     wait(device(arch), event)
     return nothing

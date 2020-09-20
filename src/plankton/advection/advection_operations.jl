@@ -14,7 +14,8 @@
     end
 end
 function periodic_domain⁺!(plank, arch::Architecture, g::Grids, ind::Int64)
-    kernel! = periodic_domain⁺_kernel!(device(arch), 256, (size(plank,1),))
+    plank_num = floor(Int64, sum(plank[:,61]))
+    kernel! = periodic_domain⁺_kernel!(device(arch), 256, (plank_num,))
     event = kernel!(plank, g, ind)
     wait(device(arch), event)
     return nothing
@@ -34,7 +35,8 @@ end
     end
 end
 function periodic_domain⁻!(plank, arch::Architecture, g::Grids, ind::Int64)
-    kernel! = periodic_domain⁻_kernel!(device(arch), 256, (size(plank,1),))
+    plank_num = floor(Int64, sum(plank[:,61]))
+    kernel! = periodic_domain⁻_kernel!(device(arch), 256, (plank_num,))
     event = kernel!(plank, g, ind)
     wait(device(arch), event)
     return nothing
@@ -62,7 +64,8 @@ in_domain!(plank, arch::Architecture, g::Grids) = in_domain!(plank, arch::Archit
     @inbounds plank[i,3+indₜ] = find_zF_ind(plank[i,3+ind₀], g)  # zF index
 end
 function find_inds!(plank, arch::Architecture, g::Grids, indₜ::Int64, ind₀::Int64)
-    kernel! = find_inds_kernel!(device(arch), 256, (size(plank,1),))
+    plank_num = floor(Int64, sum(plank[:,61]))
+    kernel! = find_inds_kernel!(device(arch), 256, (plank_num,))
     event = kernel!(plank, g, indₜ, ind₀)
     wait(device(arch), event)
     return nothing
@@ -82,7 +85,8 @@ end
     @inbounds plank[i,42] = w[x₀,   y₀,   z₀+1]
 end
 function find_vel!(plank, ind_array::AbstractArray{Int64,2}, arch::Architecture, g::Grids, u, v, w)
-    kernel! = find_vel_kernel!(device(arch), 256, (size(plank,1),))
+    plank_num = floor(Int64, sum(plank[:,61]))
+    kernel! = find_vel_kernel!(device(arch), 256, (plank_num,))
     event = kernel!(plank, ind_array, g, u, v, w)
     wait(device(arch), event)
     return nothing
@@ -98,7 +102,8 @@ end
     @inbounds plank[i,45] = (plank[i,3] - g.zF[z₀]) / g.Δz
 end
 function find_xᵈ!(plank, ind_array::AbstractArray{Int64,2}, arch::Architecture, g::Grids)
-    kernel! = find_xᵈ_kernel!(device(arch), 256, (size(plank,1),))
+    plank_num = floor(Int64, sum(plank[:,61]))
+    kernel! = find_xᵈ_kernel!(device(arch), 256, (plank_num,))
     event = kernel!(plank, ind_array, g)
     wait(device(arch), event)
     return nothing
@@ -114,7 +119,8 @@ end
     @inbounds plank[i, 48+ind*3] = linear_itpl(plank[i,41], plank[i,42], plank[i,45])
 end
 function vel_interpolation!(plank, arch::Architecture, g::Grids, ind::Int64)
-    kernel! = vel_interpolation_kernel!(device(arch), 256, (size(plank,1),))
+    plank_num = floor(Int64, sum(plank[:,61]))
+    kernel! = vel_interpolation_kernel!(device(arch), 256, (plank_num,))
     event = kernel!(plank, g, ind)
     wait(device(arch), event)
     return nothing
@@ -140,19 +146,22 @@ end
     @inbounds plank[i,36] = plank[i,36] + 1.0 * plank[i,54] * ΔT
 end
 function calc_1st_intermediate_coord!(plank, arch::Architecture, ΔT)
-    kernel! = calc_1st_intermediate_coord_kernel!(device(arch), 256, (size(plank,1),))
+    plank_num = floor(Int64, sum(plank[:,61]))
+    kernel! = calc_1st_intermediate_coord_kernel!(device(arch), 256, (plank_num,))
     event = kernel!(plank, ΔT)
     wait(device(arch), event)
     return nothing
 end
 function calc_2nd_intermediate_coord!(plank, arch::Architecture, ΔT)
-    kernel! = calc_2nd_intermediate_coord_kernel!(device(arch), 256, (size(plank,1),))
+    plank_num = floor(Int64, sum(plank[:,61]))
+    kernel! = calc_2nd_intermediate_coord_kernel!(device(arch), 256, (plank_num,))
     event = kernel!(plank, ΔT)
     wait(device(arch), event)
     return nothing
 end
 function calc_3rd_intermediate_coord!(plank, arch::Architecture, ΔT)
-    kernel! = calc_3rd_intermediate_coord_kernel!(device(arch), 256, (size(plank,1),))
+    plank_num = floor(Int64, sum(plank[:,61]))
+    kernel! = calc_3rd_intermediate_coord_kernel!(device(arch), 256, (plank_num,))
     event = kernel!(plank, ΔT)
     wait(device(arch), event)
     return nothing
@@ -166,7 +175,8 @@ end
     @inbounds plank[i,48] = (plank[i,48] + 2*plank[i,51] + 2*plank[i,54] + plank[i,57]) /6
 end
 function calc_vel_rk4!(plank, arch::Architecture)
-    kernel! = calc_vel_rk4_kernel!(device(arch), 256, (size(plank,1),))
+    plank_num = floor(Int64, sum(plank[:,61]))
+    kernel! = calc_vel_rk4_kernel!(device(arch), 256, (plank_num,))
     event = kernel!(plank)
     wait(device(arch), event)
     return nothing
@@ -180,7 +190,8 @@ end
     @inbounds plank[i,3] = plank[i,3] + plank[i,48] * ΔT
 end
 function calc_coord!(plank, arch::Architecture, ΔT)
-    kernel! = calc_coord_kernel!(device(arch), 256, (size(plank,1),))
+    plank_num = floor(Int64, sum(plank[:,61]))
+    kernel! = calc_coord_kernel!(device(arch), 256, (plank_num,))
     event = kernel!(plank, ΔT)
     wait(device(arch), event)
     return nothing

@@ -46,13 +46,13 @@ function load_nut_initials(arch, paths, g)
 
     for name in nut_names
         if length(findall(x->x==name, pathkeys)) == 0
-            print("NUT_INIT: nutrient not found \n")
+            throw(ArgumentError("NUT_INIT: nutrient not found $(name)"))
         else
             tmp = deserialize(paths[name]) |> array_type(arch)
             if size(tmp) == (g.Nx, g.Ny, g.Nz)
                 @views @. nut[name].data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] = tmp[:,:,:]
             else
-                print("NUT_INIT: grid mismatch \n")
+                throw(ArgumentError("NUT_INIT:  grid mismatch"))
             end
         end
     end

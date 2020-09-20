@@ -55,7 +55,7 @@ function PI_Model(arch::Architecture, grid, RunParam;
     end
 
     for plank in individuals.phytos
-        gen_individuals!(plank, grid, arch)
+        gen_individuals!(plank, params["Nind"], grid, arch)
     end
 
     vel₀ = (u = Field(arch, grid), v = Field(arch, grid), w = Field(arch, grid))
