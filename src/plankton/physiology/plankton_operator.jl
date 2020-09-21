@@ -49,6 +49,7 @@ function divide_copy!(plank, tmp, arch::Architecture, plank_num::Int64)
 end
 
 @kernel function divide_half_kernel!(tmp, con)
+    i = @index(Global, Linear)
     if con[i] == 1.0
         @inbounds tmp[i,4]  = tmp[i,5]  .* 0.45
         @inbounds tmp[i,5]  = tmp[i,5]  .* 0.45

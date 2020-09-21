@@ -14,6 +14,7 @@ mutable struct timestepper
     plk::NamedTuple     # a NamedTuple same as nutrients to store interactions with individuals
     par::AbstractArray  # a (Cu)Array to store PAR field of each timestep
     chl::AbstractArray  # a (Cu)Array to store Chl field of each timestep
+    tmp::AbstractArray  # a (Cu)Array to store temporary individuals of each timestep
 end
 
 mutable struct Model_Struct
@@ -68,7 +69,8 @@ function PI_Model(arch::Architecture, grid, RunParam;
     plk = nutrients_init(arch, grid)
     par = zeros(grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
     chl = zeros(grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
-    ts = timestepper(Gcs, MD1, MD2, MD3, vel₀, vel½, vel₁, plk, par, chl)
+    tmp = zeros(3*params["Nind"],62) |> array_type(arch)
+    ts = timestepper(Gcs, MD1, MD2, MD3, vel₀, vel½, vel₁, plk, par, chl, tmp)
 
     model = Model_Struct(arch, t, individuals, nutrients, grid, input, params, diags, ts)
 
