@@ -1,14 +1,15 @@
 ##### calculate diffusivities of each individual
 @kernel function calc_diffu_kernel!(plank, κx, κy, κz, ΔT)
     i = @index(Global, Linear)
-    @inbounds plank[i,1] = plank[i,1] + plank[i,58] * √(3*ΔT) * 2*√(2*κx)
-    @inbounds plank[i,2] = plank[i,2] + plank[i,59] * √(3*ΔT) * 2*√(2*κx)
-    @inbounds plank[i,3] = plank[i,3] + plank[i,60] * √(3*ΔT) * 2*√(2*κx)
+    if plank[i,61] == 1.0
+        @inbounds plank[i,1] = plank[i,1] + plank[i,58] * √(3*ΔT) * 2*√(2*κx)
+        @inbounds plank[i,2] = plank[i,2] + plank[i,59] * √(3*ΔT) * 2*√(2*κx)
+        @inbounds plank[i,3] = plank[i,3] + plank[i,60] * √(3*ΔT) * 2*√(2*κx)
+    end
 end
 
 function plankton_diffusion!(plank, arch::Architecture, κx, κy, κz, ΔT)
-    plank_num = floor(Int64, sum(plank[:,61]))
-    kernel! = calc_diffu_kernel!(device(arch), 256, (plank_num,))
+    kernel! = calc_diffu_kernel!(device(arch), 256, (size(plank,1),))
     event = kernel!(plank, κx, κy, κz, ΔT)
     wait(device(arch), event)
     return nothing
