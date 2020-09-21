@@ -7,10 +7,10 @@
         @inbounds xi = inds[i,1]
         @inbounds yi = inds[i,2]
         @inbounds zi = inds[i,3]
-        @inbounds plank[i,16] = max(0.0, NH4[xi, yi, zi])
-        @inbounds plank[i,17] = max(0.0, NO3[xi, yi, zi])
-        @inbounds plank[i,18] = max(0.0, PO4[xi, yi, zi])
-        @inbounds plank[i,19] = max(0.0, DOC[xi, yi, zi])
+        @inbounds plank[i,16] = max(1.0e-10, NH4[xi, yi, zi])
+        @inbounds plank[i,17] = max(1.0e-10, NO3[xi, yi, zi])
+        @inbounds plank[i,18] = max(1.0e-10, PO4[xi, yi, zi])
+        @inbounds plank[i,19] = max(1.0e-10, DOC[xi, yi, zi])
         @inbounds plank[i,20] = α * par[xi, yi, zi] * Φ
         @inbounds plank[i,21] = max(1.0e-10, exp(TempAe * (1.0 / (temp[xi, yi, zi] + 273.15)
                                                            - 1.0 / Tempref))) * TempCoeff
@@ -141,6 +141,7 @@ end
         if plank[i,7] ≤ 0.0  # if C reserve is not enough for respiration
             @inbounds exceed = 0.0 - plank[i,7]
             @inbounds plank[i,7] = 0.0
+            @inbounds plank[i,6] = plank[i,6] - exceed        # use biomass for respiration
             @inbounds plank[i,8] = plank[i,8] + exceed * R_NC # return N from function pool to N reserve
             @inbounds plank[i,9] = plank[i,9] + exceed * R_PC # return P from function pool to P reserve
         end
@@ -172,7 +173,7 @@ function calc_BS!(plank, arch::Architecture, k_mtb, b_k_mtb, R_NC, R_PC)
 end
 
 ##### update C, N, P quotas, biomass, Chla, cell size
-@kernel function update_biomass_kernel!(plank, R_NC, R_PC, P_Cquota, P_Nsuper, ΔT)
+@kernel function update_biomass_kernel!(plank, R_NC, R_PC, Cquota, Nsuper, ΔT)
     i = @index(Global, Linear)
     if plank[i,61] == 1.0
         @inbounds plank[i,6] = plank[i,6]  + ΔT *  plank[i,29]
@@ -181,12 +182,12 @@ end
         @inbounds plank[i,9] = plank[i,9]  - ΔT *  plank[i,29] * R_PC
         @inbounds plank[i,10]= plank[i,10] + ΔT *  plank[i,29] * R_NC * plank[i,27]
         @inbounds plank[i,12]= plank[i,12] + ΔT /3600
-        @inbounds plank[i,5] =(plank[i,6]  + plank[i,7]) / P_Cquota / P_Nsuper
+        @inbounds plank[i,5] =(plank[i,6]  + plank[i,7]) / Cquota / Nsuper
     end
 end
-function update_biomass!(plank, arch::Architecture, R_NC, R_PC, P_Cquota, P_Nsuper, ΔT)
+function update_biomass!(plank, arch::Architecture, R_NC, R_PC, Cquota, Nsuper, ΔT)
     kernel! = update_biomass_kernel!(device(arch), 256, (size(plank,1),))
-    event = kernel!(plank, R_NC, R_PC, P_Cquota, P_Nsuper, ΔT)
+    event = kernel!(plank, R_NC, R_PC, Cquota, Nsuper, ΔT)
     wait(device(arch), event)
     return nothing
 end
