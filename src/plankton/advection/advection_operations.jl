@@ -2,14 +2,14 @@
 @kernel function periodic_domain⁺_kernel!(plank, g::Grids, ind)
     i = @index(Global, Linear)
     if plank[i,61] == 1.0
-        if plank[i,1+ind] ≥ g.xF[g.Nx+g.Hx+1]
+        if plank[i,1+ind] > g.xF[g.Nx+g.Hx+1]
             plank[i,1+ind] = plank[i,1+ind] - g.Nx*g.Δx
         end
-        if plank[i,2+ind] ≥ g.yF[g.Ny+g.Hy+1]
+        if plank[i,2+ind] > g.yF[g.Ny+g.Hy+1]
             plank[i,2+ind] = plank[i,2+ind] - g.Ny*g.Δy
         end
         if plank[i,3+ind] ≥ g.zF[g.Nz+g.Hz+1]
-            plank[i,3+ind] = g.zF[g.Nz+g.Hz+1] - 1.0e-10 # to keep in the boundary
+            plank[i,3+ind] = g.zF[g.Nz+g.Hz+1] - 1.0e-2 # to keep in the boundary
         end
     end
 end
@@ -74,9 +74,9 @@ end
 @kernel function find_vel_kernel!(plank, ind_array::AbstractArray{Int64,2}, g::Grids, u, v, w)
     i = @index(Global, Linear)
     if plank[i,61] == 1.0
-        x₀ = ind_array[i,1] + g.Hx
-        y₀ = ind_array[i,2] + g.Hy
-        z₀ = ind_array[i,3] + g.Hz
+        @inbounds x₀ = ind_array[i,1] + g.Hx
+        @inbounds y₀ = ind_array[i,2] + g.Hy
+        @inbounds z₀ = ind_array[i,3] + g.Hz
         @inbounds plank[i,37] = u[x₀,   y₀,   z₀  ]
         @inbounds plank[i,38] = u[x₀+1, y₀,   z₀  ]
         @inbounds plank[i,39] = v[x₀,   y₀,   z₀  ]
@@ -95,9 +95,9 @@ end
 @kernel function find_xᵈ_kernel!(plank, ind_array::AbstractArray{Int64,2}, g::Grids)
     i = @index(Global, Linear)
     if plank[i,61] == 1.0
-        x₀ = ind_array[i,1] + g.Hx
-        y₀ = ind_array[i,2] + g.Hy
-        z₀ = ind_array[i,3] + g.Hz
+        @inbounds x₀ = ind_array[i,1] + g.Hx
+        @inbounds y₀ = ind_array[i,2] + g.Hy
+        @inbounds z₀ = ind_array[i,3] + g.Hz
         @inbounds plank[i,43] = (plank[i,1] - g.xF[x₀]) / g.Δx
         @inbounds plank[i,44] = (plank[i,2] - g.yF[y₀]) / g.Δy
         @inbounds plank[i,45] = (plank[i,3] - g.zF[z₀]) / g.Δz
@@ -113,7 +113,7 @@ end
 ##### velocity interpolation for each individual
 @inline linear_itpl(u0, u1, xd) = u0 * (1.0 - xd) + u1 * xd
 
-@kernel function vel_interpolation_kernel!(plank, g::Grids, ind::Int64)
+@kernel function vel_interpolation_kernel!(plank, ind::Int64)
     i = @index(Global, Linear)
     if plank[i,61] == 1.0
         @inbounds plank[i, 46+ind*3] = linear_itpl(plank[i,37], plank[i,38], plank[i,43])
@@ -121,9 +121,9 @@ end
         @inbounds plank[i, 48+ind*3] = linear_itpl(plank[i,41], plank[i,42], plank[i,45])
     end
 end
-function vel_interpolation!(plank, arch::Architecture, g::Grids, ind::Int64)
+function vel_interpolation!(plank, arch::Architecture, ind::Int64)
     kernel! = vel_interpolation_kernel!(device(arch), 256, (size(plank,1),))
-    event = kernel!(plank, g, ind)
+    event = kernel!(plank, ind)
     wait(device(arch), event)
     return nothing
 end
