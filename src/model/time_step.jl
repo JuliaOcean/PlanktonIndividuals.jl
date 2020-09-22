@@ -65,10 +65,11 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
         plank.data[:,62] .= cumsum(plank.data[:,61])
 
         ##### copy active individuals to timestepper.tmp
-        copyto_tmp!(plank.data, model.timestepper.tmp, plank.data[:,61], Int.(plank.data[:,62]), model.arch)
+        copyto_tmp!(plank.data, model.timestepper.tmp, plank.data[:,61], Int.(plank.data[:,62]), false, model.arch)
 
         ##### copy individuals which are ready to divide to the end of active individuals
-        divide_copy!(plank.data, model.timestepper.tmp, model.arch, plank_num)
+        tmp_num = floor(Int64, sum(model.timestepper.tmp[:,61]))
+        divide_copy!(model.timestepper.tmp, model.arch, tmp_num)
         divide_half!(model.timestepper.tmp, model.timestepper.tmp[:,33], model.arch)
 
         plank.data .= copy(model.timestepper.tmp)

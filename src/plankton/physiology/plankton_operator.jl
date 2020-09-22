@@ -1,14 +1,14 @@
-##### copy active individuals to plank.dataₜ
-@kernel function copyto_tmp_kernel!(plank, tmp, con, idx)
+##### copy active individuals to model.timestepper.tmp
+@kernel function copyto_tmp_kernel!(plank, tmp, con, idx, b::Bool)
     i,j = @index(Global, NTuple)
     if con[i] == 1.0
         @inbounds tmp[idx[i],j] = copy(plank[i,j])
-        @inbounds plank[i,j] = 0.0 # deactivate individual
+        @inbounds plank[i,j] = plank[i,j] * b # (de)activate individual
     end
 end
-function copyto_tmp!(plank, tmp, con, idx::AbstractArray{Int64,1}, arch::Architecture)
+function copyto_tmp!(plank, tmp, con, idx::AbstractArray{Int64,1}, b::Bool, arch::Architecture)
     kernel! = copyto_tmp_kernel!(device(arch), (16,16), (size(plank,1),62))
-    event = kernel!(plank, tmp, con, idx)
+    event = kernel!(plank, tmp, con, idx, b)
     wait(device(arch), event)
     return nothing
 end
@@ -19,7 +19,7 @@ function grazing!(plank, tmp, arch::Architecture, g::Grids, plk, p)
     plank[:,62] .= 0.0
     plank[:,62] .= cumsum(plank[:,31])
     ##### copy grazed individuals to timestepper.tmp
-    copyto_tmp!(plank, tmp, plank[:,31], Int.(plank[:,62]), arch)
+    copyto_tmp!(plank, tmp, plank[:,31], Int.(plank[:,62]), false, arch)
     ##### calculate grazing loss
     calc_loss!(tmp, Int.(tmp[:,13:15]), arch, plk.DOC.data, plk.POC.data,
                plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
@@ -32,7 +32,7 @@ function mortality!(plank, tmp, arch::Architecture, g::Grids, plk, p)
     plank[:,62] .= 0.0
     plank[:,62] .= cumsum(plank[:,32])
     ##### copy grazed individuals to timestepper.tmp
-    copyto_tmp!(plank, tmp, plank[:,32], Int.(plank[:,62]), arch)
+    copyto_tmp!(plank, tmp, plank[:,32], Int.(plank[:,62]), false, arch)
     ##### calculate grazing loss
     calc_loss!(tmp, Int.(tmp[:,13:15]), arch, plk.DOC.data, plk.POC.data,
                plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
@@ -40,12 +40,12 @@ function mortality!(plank, tmp, arch::Architecture, g::Grids, plk, p)
 end
 
 ##### cell division
-function divide_copy!(plank, tmp, arch::Architecture, plank_num::Int64)
+function divide_copy!(tmp, arch::Architecture, tmp_num::Int64)
     ##### calculate index for timestepper.tmp
-    plank[:,62] .= 0.0
-    plank[:,62] .= cumsum(plank[:,33])
-    plank[:,62] .= plank[:,62] .+ plank_num
-    copyto_tmp!(plank, tmp, plank[:,33], Int.(plank[:,62]), arch)
+    tmp[:,62] .= 0.0
+    tmp[:,62] .= cumsum(tmp[:,33])
+    tmp[:,62] .= tmp[:,62] .+ tmp_num
+    copyto_tmp!(tmp, tmp, tmp[:,33], Int.(tmp[:,62]), true, arch)
 end
 
 @kernel function divide_half_kernel!(tmp, con)
