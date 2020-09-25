@@ -3,7 +3,7 @@
                                   NH4, NO3, PO4, DOC, par, temp, g::Grids,
                                   α, Φ, TempAe, Tempref, TempCoeff)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds xi = inds[i,1]
         @inbounds yi = inds[i,2]
         @inbounds zi = inds[i,3]
@@ -30,7 +30,7 @@ end
 ##### calculate photosynthesis rate (mmolC/individual/second)
 @kernel function calc_PS_kernel!(plank, PCmax, PC_b)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds PCm = PCmax * plank[i,5]^PC_b * plank[i,21]
         @inbounds plank[i,22] = PCm * (1.0 - exp(-plank[i,20] * plank[i,10] / plank[i,6] / PCm)) * plank[i,6]
     end
@@ -45,7 +45,7 @@ end
 ##### calculate DOC uptake rate (mmolC/individual/second)
 @kernel function calc_VDOC_kernel!(plank, g::Grids, ΔT, Cqmax, Cqmin, VDOCmax, VDOC_b, KsatDOC)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds Qc = plank[i,7] / (plank[i,6] + plank[i,7])
         @inbounds reg= max(0.0, min(1.0, (Cqmax - Qc) / (Cqmax - Cqmin)))
         @inbounds ksat = plank[i,19] / (plank[i,19] + KsatDOC)
@@ -65,7 +65,7 @@ end
 @kernel function calc_VN_kernel!(plank, g::Grids,
                                  ΔT, Nqmax, Nqmin, VNH4max, VNO3max, VN_b, KsatNH4, KsatNO3, R_NC)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds Qn = (plank[i,8] + plank[i,6] * R_NC) / (plank[i,6] + plank[i,7])
         @inbounds reg= max(0.0, min(1.0, (Nqmax - Qn) / (Nqmax - Nqmin)))
         @inbounds ksatNH = plank[i,16] / (plank[i,16] + KsatNH4)
@@ -88,7 +88,7 @@ end
 ##### calculate PO4 uptake rate (mmolP/individual/second)
 @kernel function calc_VP_kernel!(plank, g::Grids, ΔT, Pqmax, Pqmin, VPO4max, VP_b, KsatPO4, R_PC)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds Qp = (plank[i,9] + plank[i,6] * R_PC) / (plank[i,6] + plank[i,7])
         @inbounds reg= max(0.0, min(1.0, (Pqmax - Qp) / (Pqmax - Pqmin)))
         @inbounds ksat = plank[i,18] / (plank[i,18] + KsatPO4)
@@ -107,7 +107,7 @@ end
 ##### calculate ρchl
 @kernel function calc_ρchl_kernel!(plank, Chl2N)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds plank[i,27] = plank[i,20] ≤  0 ? 0.0 :
             plank[i,22] / plank[i,6] * Chl2N / (plank[i,20] * plank[i,10] / plank[i,6])
     end
@@ -122,7 +122,7 @@ end
 ##### calculate respiration (mmolC/individual/second)
 @kernel function calc_respir_kernel!(plank, respir_a, respir_b)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds plank[i,28] = respir_a * plank[i,5]^respir_b * plank[i,6] * plank[i,21]
     end
 end
@@ -136,7 +136,7 @@ end
 ##### update C, N, P quotas
 @kernel function update_quotas_kernel!(plank, R_NC, R_PC, ΔT)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds plank[i,7] = plank[i,7] + ΔT * (plank[i,22] + plank[i,23] - plank[i,28])
         if plank[i,7] ≤ 0.0  # if C reserve is not enough for respiration
             @inbounds exceed = 0.0 - plank[i,7]
@@ -159,7 +159,7 @@ end
 ##### calculate biosynthesis and exudation (mmolC/individual/second)
 @kernel function calc_BS_kernel!(plank, k_mtb, b_k_mtb, R_NC, R_PC)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds BS_Cmax = k_mtb * plank[i,5]^b_k_mtb * plank[i,7]
         @inbounds plank[i,29] = min(plank[i,7], plank[i,8]/R_NC, plank[i,9]/R_PC) * k_mtb * plank[i,5]^b_k_mtb
         @inbounds plank[i,30] = max(0.0, BS_Cmax - plank[i,29])
@@ -175,7 +175,7 @@ end
 ##### update C, N, P quotas, biomass, Chla, cell size
 @kernel function update_biomass_kernel!(plank, R_NC, R_PC, Cquota, Nsuper, ΔT)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds plank[i,6] = plank[i,6]  + ΔT *  plank[i,29]
         @inbounds plank[i,7] = plank[i,7]  - ΔT * (plank[i,29] + plank[i,30])
         @inbounds plank[i,8] = plank[i,8]  - ΔT *  plank[i,29] * R_NC
@@ -196,7 +196,7 @@ end
 @kernel function calc_consume_kernel!(plank, inds::AbstractArray{Int64,2},
                                       DIC_con, DOC_con, NH4_con, NO3_con, PO4_con, g::Grids, ΔT)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds xi = inds[i,1] + g.Hx
         @inbounds yi = inds[i,2] + g.Hy
         @inbounds zi = inds[i,3] + g.Hz
@@ -219,7 +219,7 @@ end
 @kernel function calc_dvid_kernel!(plank, dvid_type, dvid_stp, dvid_stp2,
                                    dvid_P, dvid_reg, dvid_reg2, Cquota, Nsuper, t)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         if plank[i,6] ≥ 2 * Cquota * Nsuper
             if dvid_type == 1
                 @inbounds plank[i,33] = dvid_P * (tanh(dvid_stp * (plank[i,5] - dvid_reg))+1)
@@ -250,17 +250,17 @@ function calc_dvid!(plank, arch::Architecture, dvid_type, dvid_stp, dvid_stp2,
     return nothing
 end
 ##### generate the random results from probabilities of grazing, mortality and cell division
-@kernel function get_rands_kernel!(plank)
+@kernel function get_rands_kernel!(plank, rnd)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
-        @inbounds plank[i,31] = plank[i,58] ≥ plank[i,31] ? 0.0 : 1.0
-        @inbounds plank[i,32] = plank[i,59] ≥ plank[i,32] ? 0.0 : 1.0
-        @inbounds plank[i,33] = plank[i,60] ≥ plank[i,33] ? 0.0 : 1.0
+    if plank[i,58] == 1.0
+        @inbounds plank[i,31] = rnd[i,1] ≥ plank[i,31] ? 0.0 : 1.0
+        @inbounds plank[i,32] = rnd[i,2] ≥ plank[i,32] ? 0.0 : 1.0
+        @inbounds plank[i,33] = rnd[i,3] ≥ plank[i,33] ? 0.0 : 1.0
     end
 end
-function get_rands!(plank, arch::Architecture)
+function get_rands!(plank, rnd, arch::Architecture)
     kernel! = get_rands_kernel!(device(arch), 256, (size(plank,1),))
-    event = kernel!(plank)
+    event = kernel!(plank, rnd)
     wait(device(arch), event)
     return nothing
 end
@@ -270,7 +270,7 @@ end
                                    DOC_con, POC_con, DON_con, PON_con, DOP_con, POP_con, g::Grids,
                                    lossFracC, lossFracN, lossFracP, R_NC, R_PC)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds xi = inds[i,1] + g.Hx
         @inbounds yi = inds[i,2] + g.Hy
         @inbounds zi = inds[i,3] + g.Hz

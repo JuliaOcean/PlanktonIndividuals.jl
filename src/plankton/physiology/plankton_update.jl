@@ -1,5 +1,5 @@
 ##### update physiological attributes of each individual
-function plankton_update!(plank, plk, par, arch::Architecture, temp, DOC, NH4, NO3, PO4,
+function plankton_update!(plank, rnd, plk, par, arch::Architecture, temp, DOC, NH4, NO3, PO4,
                           g::Grids, p, ΔT, t, plank_num::Int64)
     NO3 = interior(NO3, g)
     NH4 = interior(NH4, g)
@@ -58,7 +58,7 @@ function plankton_update!(plank, plk, par, arch::Architecture, temp, DOC, NH4, N
         ##### cell division
         calc_dvid!(plank, arch, p.dvid_type, p.dvid_stp, p.dvid_stp2, p.dvid_P,
                    p.dvid_reg, p.dvid_reg2, p.Cquota, p.Nsuper, t)
-        get_rands!(plank, arch)
+        get_rands!(plank, rnd, arch)
     else
         @inbounds plank[1:plank_num,31] .= 0.0
         @inbounds plank[1:plank_num,32] .= 0.0

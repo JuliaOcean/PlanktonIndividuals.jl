@@ -7,7 +7,7 @@
     end
 end
 function copyto_tmp!(plank, tmp, con, idx::AbstractArray{Int64,1}, b::Bool, arch::Architecture)
-    kernel! = copyto_tmp_kernel!(device(arch), (16,16), (size(plank,1),62))
+    kernel! = copyto_tmp_kernel!(device(arch), (16,16), (size(plank,1),59))
     event = kernel!(plank, tmp, con, idx, b)
     wait(device(arch), event)
     return nothing
@@ -16,10 +16,10 @@ end
 ##### grazing and grazing loss
 function grazing!(plank, tmp, arch::Architecture, g::Grids, plk, p)
     ##### calculate index for timestepper.tmp
-    plank[:,62] .= 0.0
-    plank[:,62] .= cumsum(plank[:,31])
+    plank[:,59] .= 0.0
+    plank[:,59] .= cumsum(plank[:,31])
     ##### copy grazed individuals to timestepper.tmp
-    copyto_tmp!(plank, tmp, plank[:,31], Int.(plank[:,62]), false, arch)
+    copyto_tmp!(plank, tmp, plank[:,31], Int.(plank[:,59]), false, arch)
     ##### calculate grazing loss
     calc_loss!(tmp, Int.(tmp[:,13:15]), arch, plk.DOC.data, plk.POC.data,
                plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
@@ -29,10 +29,10 @@ end
 ##### mortality and mortality loss
 function mortality!(plank, tmp, arch::Architecture, g::Grids, plk, p)
     ##### calculate index for timestepper.tmp
-    plank[:,62] .= 0.0
-    plank[:,62] .= cumsum(plank[:,32])
+    plank[:,59] .= 0.0
+    plank[:,59] .= cumsum(plank[:,32])
     ##### copy grazed individuals to timestepper.tmp
-    copyto_tmp!(plank, tmp, plank[:,32], Int.(plank[:,62]), false, arch)
+    copyto_tmp!(plank, tmp, plank[:,32], Int.(plank[:,59]), false, arch)
     ##### calculate grazing loss
     calc_loss!(tmp, Int.(tmp[:,13:15]), arch, plk.DOC.data, plk.POC.data,
                plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
@@ -42,10 +42,10 @@ end
 ##### cell division
 function divide_copy!(tmp, arch::Architecture, tmp_num::Int64)
     ##### calculate index for timestepper.tmp
-    tmp[:,62] .= 0.0
-    tmp[:,62] .= cumsum(tmp[:,33])
-    tmp[:,62] .= tmp[:,62] .+ tmp_num
-    copyto_tmp!(tmp, tmp, tmp[:,33], Int.(tmp[:,62]), true, arch)
+    tmp[:,59] .= 0.0
+    tmp[:,59] .= cumsum(tmp[:,33])
+    tmp[:,59] .= tmp[:,59] .+ tmp_num
+    copyto_tmp!(tmp, tmp, tmp[:,33], Int.(tmp[:,59]), true, arch)
 end
 
 @kernel function divide_half_kernel!(tmp, con)
@@ -70,26 +70,3 @@ function divide_half!(tmp, con, arch::Architecture)
     return nothing
 end
 
-
-
-
-# function divide!(plank, plank_num)
-#     dvid_num = floor(Int64, sum(plank[:,33]))
-#     if dvid_num > size(plank,1) - plank_num
-#         throw(ArgumentError("INDIVIDUAL: individual number exceeded"))
-#     end
-#     if dvid_num > 0
-#         plank[plank_num+1:plank_num+dvid_num, :] .= plank[Bool.(plank[:,33]), :]
-#         plank[Bool.(plank[:,33]), 4]  .= plank[Bool.(plank[:,33]), 5]  .* 0.45
-#         plank[Bool.(plank[:,33]), 5]  .= plank[Bool.(plank[:,33]), 5]  .* 0.45
-#         plank[Bool.(plank[:,33]), 6]  .= plank[Bool.(plank[:,33]), 6]  .* 0.45
-#         plank[Bool.(plank[:,33]), 7]  .= plank[Bool.(plank[:,33]), 7]  .* 0.5
-#         plank[Bool.(plank[:,33]), 8]  .= plank[Bool.(plank[:,33]), 8]  .* 0.5
-#         plank[Bool.(plank[:,33]), 9]  .= plank[Bool.(plank[:,33]), 9]  .* 0.5
-#         plank[Bool.(plank[:,33]), 10] .= plank[Bool.(plank[:,33]), 10] .* 0.5
-#         plank[Bool.(plank[:,33]), 11] .= plank[Bool.(plank[:,33]), 11] .+ 1.0
-#         plank[Bool.(plank[:,33]), 12] .= 1.0
-#     else
-#         nothing
-#     end
-# end

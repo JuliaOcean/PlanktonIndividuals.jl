@@ -40,7 +40,7 @@ end
 @kernel function sum_diags_kernel!(diags, plank, inds::AbstractArray{Int64,2},
                                    sp::Int64, g::Grids, diag_t)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds xi = inds[i,1]
         @inbounds yi = inds[i,2]
         @inbounds zi = inds[i,3]
@@ -74,7 +74,7 @@ end
 @kernel function sum_diags_mort_kernel!(diags, plank, inds::AbstractArray{Int64,2},
                                         sp::Int64, g::Grids, diag_t)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds xi = inds[i,1]
         @inbounds yi = inds[i,2]
         @inbounds zi = inds[i,3]
@@ -92,7 +92,7 @@ end
 @kernel function sum_diags_dvid_kernel!(diags, plank, inds::AbstractArray{Int64,2},
                                         sp::Int64, g::Grids, diag_t)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds xi = inds[i,1]
         @inbounds yi = inds[i,2]
         @inbounds zi = inds[i,3]

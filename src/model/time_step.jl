@@ -19,8 +19,8 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
         plankton_advectionRK4!(plank.data, model.arch, model.grid,
                               model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT)
 
-        gen_rand_adv!(plank.data, model.arch)
-        plankton_diffusion!(plank.data, model.arch, model.params["κhP"], ΔT)
+        gen_rand_adv!(plank.rnd, model.arch)
+        plankton_diffusion!(plank.data, plank.rnd, model.arch, model.params["κhP"], ΔT)
         in_domain!(plank.data, model.arch, model.grid)
 
         ##### calculate accumulated chla quantity (not concentration)
@@ -33,9 +33,9 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
               model.grid, model.params["kc"], model.params["kw"])
 
     for plank in model.individuals.phytos
-        plank_num = floor(Int64, sum(plank.data[:,61]))
-        plank.data[1:plank_num,58:60] .= rand!(rng_type(model.arch), plank.data[1:plank_num,58:60])
-        plankton_update!(plank.data, model.timestepper.plk,
+        plank_num = floor(Int64, sum(plank.data[:,58]))
+        rand!(rng_type(model.arch), plank.rnd)
+        plankton_update!(plank.data, plank.rnd, model.timestepper.plk,
                          model.timestepper.par, model.arch, model.input.temp[:,:,:,clock],
                          model.nutrients.DOC.data, model.nutrients.NH4.data, model.nutrients.NO3.data,
                          model.nutrients.PO4.data, model.grid, plank.p, ΔT, model.t, plank_num)
@@ -45,7 +45,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
                    model.grid, diag_t)
 
         ##### grazing
-        model.timestepper.tmp[:,:] .= 0.0
+        model.timestepper.tmp .= 0.0
         grazing!(plank.data, model.timestepper.tmp, model.arch,
                  model.grid, model.timestepper.plk, plank.p)
 
@@ -61,14 +61,14 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
                         plank.sp, model.arch, model.grid, diag_t)
 
         ##### calculate index for timestepper.tmp to move active individuals to tmp
-        plank.data[:,62] .= 0.0
-        plank.data[:,62] .= cumsum(plank.data[:,61])
+        plank.data[:,59] .= 0.0
+        plank.data[:,59] .= cumsum(plank.data[:,58])
 
         ##### copy active individuals to timestepper.tmp
-        copyto_tmp!(plank.data, model.timestepper.tmp, plank.data[:,61], Int.(plank.data[:,62]), false, model.arch)
+        copyto_tmp!(plank.data, model.timestepper.tmp, plank.data[:,58], Int.(plank.data[:,59]), false, model.arch)
 
         ##### copy individuals which are ready to divide to the end of active individuals
-        tmp_num = floor(Int64, sum(model.timestepper.tmp[:,61]))
+        tmp_num = floor(Int64, sum(model.timestepper.tmp[:,58]))
         divide_copy!(model.timestepper.tmp, model.arch, tmp_num)
         divide_half!(model.timestepper.tmp, model.timestepper.tmp[:,33], model.arch)
 

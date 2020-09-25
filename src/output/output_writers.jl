@@ -105,7 +105,7 @@ Write a brief summary of each species at each time step into a txt file
 """
 function write_species_dynamics(t::Int64, phytos, filepath)
     for i in 1:length(phytos)
-        pop = floor(Int64, sum(phytos[i].data[:,61]))
+        pop = floor(Int64, sum(phytos[i].data[:,58]))
         gen_ave = mean(phytos[i].data[1:pop,11])
         age_ave = mean(phytos[i].data[1:pop,12])
         size_ave= mean(phytos[i].data[1:pop,5])

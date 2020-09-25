@@ -1,7 +1,7 @@
 ##### deal with particles moved out of the domain
 @kernel function periodic_domain⁺_kernel!(plank, g::Grids, ind)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         if plank[i,1+ind] > g.xF[g.Nx+g.Hx+1]
             plank[i,1+ind] = plank[i,1+ind] - g.Nx*g.Δx
         end
@@ -21,7 +21,7 @@ function periodic_domain⁺!(plank, arch::Architecture, g::Grids, ind::Int64)
 end
 @kernel function periodic_domain⁻_kernel!(plank, g::Grids, ind)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         if plank[i,1+ind] < g.xF[g.Hx+1]
             plank[i,1+ind] = plank[i,1+ind] + g.Nx*g.Δx
         end
@@ -57,7 +57,7 @@ in_domain!(plank, arch::Architecture, g::Grids) = in_domain!(plank, arch::Archit
 ##### find cell and face indices for each individual
 @kernel function find_inds_kernel!(plank, g::Grids, indₜ::Int64, ind₀::Int64)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds plank[i,1+indₜ] = find_xF_ind(plank[i,1+ind₀], g)  # xF index
         @inbounds plank[i,2+indₜ] = find_yF_ind(plank[i,2+ind₀], g)  # yF index
         @inbounds plank[i,3+indₜ] = find_zF_ind(plank[i,3+ind₀], g)  # zF index
@@ -73,7 +73,7 @@ end
 ##### find velocities around the individual to interpolate
 @kernel function find_vel_kernel!(plank, ind_array::AbstractArray{Int64,2}, g::Grids, u, v, w)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds x₀ = ind_array[i,1] + g.Hx
         @inbounds y₀ = ind_array[i,2] + g.Hy
         @inbounds z₀ = ind_array[i,3] + g.Hz
@@ -94,7 +94,7 @@ end
 
 @kernel function find_xᵈ_kernel!(plank, ind_array::AbstractArray{Int64,2}, g::Grids)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds x₀ = ind_array[i,1] + g.Hx
         @inbounds y₀ = ind_array[i,2] + g.Hy
         @inbounds z₀ = ind_array[i,3] + g.Hz
@@ -115,7 +115,7 @@ end
 
 @kernel function vel_interpolation_kernel!(plank, ind::Int64)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds plank[i, 46+ind*3] = linear_itpl(plank[i,37], plank[i,38], plank[i,43])
         @inbounds plank[i, 47+ind*3] = linear_itpl(plank[i,39], plank[i,40], plank[i,44])
         @inbounds plank[i, 48+ind*3] = linear_itpl(plank[i,41], plank[i,42], plank[i,45])
@@ -131,7 +131,7 @@ end
 ##### calculate intermediate coordinates
 @kernel function calc_1st_intermediate_coord_kernel!(plank, ΔT)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds plank[i,34] = plank[i,1] + 0.5 * plank[i,46] * ΔT
         @inbounds plank[i,35] = plank[i,2] + 0.5 * plank[i,47] * ΔT
         @inbounds plank[i,36] = plank[i,3] + 0.5 * plank[i,48] * ΔT
@@ -139,7 +139,7 @@ end
 end
 @kernel function calc_2nd_intermediate_coord_kernel!(plank, ΔT)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds plank[i,34] = plank[i,34] + 0.5 * plank[i,49] * ΔT
         @inbounds plank[i,35] = plank[i,35] + 0.5 * plank[i,50] * ΔT
         @inbounds plank[i,36] = plank[i,36] + 0.5 * plank[i,51] * ΔT
@@ -147,7 +147,7 @@ end
 end
 @kernel function calc_3rd_intermediate_coord_kernel!(plank, ΔT)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds plank[i,34] = plank[i,34] + 1.0 * plank[i,52] * ΔT
         @inbounds plank[i,35] = plank[i,35] + 1.0 * plank[i,53] * ΔT
         @inbounds plank[i,36] = plank[i,36] + 1.0 * plank[i,54] * ΔT
@@ -175,7 +175,7 @@ end
 ##### calculate final velocities by RK4
 @kernel function calc_vel_rk4_kernel!(plank)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds plank[i,46] = (plank[i,46] + 2*plank[i,49] + 2*plank[i,52] + plank[i,55]) /6
         @inbounds plank[i,47] = (plank[i,47] + 2*plank[i,50] + 2*plank[i,53] + plank[i,56]) /6
         @inbounds plank[i,48] = (plank[i,48] + 2*plank[i,51] + 2*plank[i,54] + plank[i,57]) /6
@@ -191,7 +191,7 @@ end
 ##### calculate coordinates of each individual
 @kernel function calc_coord_kernel!(plank, ΔT)
     i = @index(Global, Linear)
-    if plank[i,61] == 1.0
+    if plank[i,58] == 1.0
         @inbounds plank[i,1] = plank[i,1] + plank[i,46] * ΔT
         @inbounds plank[i,2] = plank[i,2] + plank[i,47] * ΔT
         @inbounds plank[i,3] = plank[i,3] + plank[i,48] * ΔT
