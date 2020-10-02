@@ -59,7 +59,7 @@ function phyt_update(model, ΔT::Int64)
     phyts_a = copy(model.individuals.phytos)
 
     # load nutrients
-    chl_num = count_chl(phyts_a, g)
+    chl_num, pop_num = count_chl(phyts_a, g)
 
     # Compute light attenuation, compute from surface
     surfPAR = model.input.PAR[:,:,clock]
@@ -106,7 +106,7 @@ function phyt_update(model, ΔT::Int64)
                 P_graz = false
             else
                 if params["Grz_stp"] == 0
-                    reg_graz = 1.0/params["Grz_P"]
+                    reg_graz = 1.0/params["Grz_P"] * pop_num[x, y, z]
                 else
                     reg_graz = 1.0/params["Grz_P"]*max(params["Grz_min"],1-abs(phyt[3])/params["Grz_stp"])
                 end
