@@ -64,7 +64,7 @@ function update_params!(parameters::Dict, tmp::Dict)
     tmp_keys = collect(keys(tmp))
     for key in tmp_keys
         if length(findall(x->x==key, collect(keys(parameters))))==0
-            print("PARAM: parameter not found \n")
+            print("PARAM: parameter not found $key \n")
         else
             parameters[key] = tmp[key]
         end
