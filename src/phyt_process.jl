@@ -79,6 +79,11 @@ function phyt_update(model, ΔT::Int64)
     model.diags.tr[:,:,:,diag_t,3] += nutrients.NH4
     model.diags.tr[:,:,:,diag_t,4] += nutrients.PO4
     model.diags.tr[:,:,:,diag_t,5] += nutrients.DOC
+    model.diags.tr[:,:,:,diag_t,6] += nutrients.POC
+    model.diags.tr[:,:,:,diag_t,7] += nutrients.DON
+    model.diags.tr[:,:,:,diag_t,8] += nutrients.DOP
+    model.diags.tr[:,:,:,diag_t,9] += nutrients.PON
+    model.diags.tr[:,:,:,diag_t,10]+= nutrients.POP
 
     num_phyt = size(phyts_a,2)
 
@@ -403,7 +408,7 @@ function phyt_update(model, ΔT::Int64)
         end # graze
     end # for loop to traverse the array of agents
     for k in 1:params["P_Nsp"]
-        model.diags.tr[:,:,:,diag_t,k+5] += npop[:,:,:,k]
+        model.diags.tr[:,:,:,diag_t,k+10] += npop[:,:,:,k]
     end
     phyts_b = reshape(phyts_b,size(phyts_a,1),Int(length(phyts_b)/size(phyts_a,1)))
     return phyts_b,consume
