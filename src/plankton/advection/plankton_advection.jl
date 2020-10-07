@@ -5,7 +5,7 @@ function plankton_advection!(plank, arch::Architecture, g::Grids, vel, ΔT)
     find_xᵈ!(plank, Int.(plank[:,13:15]), arch, g)
     vel_interpolation!(plank, arch, g, 0)
 
-    calc_coord!(plank, plank, arch, ΔT)
+    calc_coord!(plank, arch, ΔT)
     in_domain!(plank, arch, g)
 end
 
