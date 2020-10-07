@@ -1,6 +1,6 @@
 ##### find and calculate nutrients, αI, and tempfunc for each individual
 @kernel function find_NPT_kernel!(plank, inds::AbstractArray{Int64,2},
-                                  NH4, NO3, PO4, DOC, par, temp, g::Grids,
+                                  NH4, NO3, PO4, DOC, par, temp, pop, g::Grids,
                                   α, Φ, TempAe, Tempref, TempCoeff)
     i = @index(Global, Linear)
     if plank[i,58] == 1.0
@@ -14,14 +14,15 @@
         @inbounds plank[i,20] = α * par[xi, yi, zi] * Φ
         @inbounds plank[i,21] = max(1.0e-10, exp(TempAe * (1.0 / (temp[xi, yi, zi] + 273.15)
                                                            - 1.0 / Tempref))) * TempCoeff
+        @inbounds plank[i,60] = pop[xi, yi, zi]
     end
 end
 function find_NPT!(plank, inds::AbstractArray{Int64,2}, arch::Architecture,
-                   NH4, NO3, PO4, DOC, par, temp, g::Grids,
+                   NH4, NO3, PO4, DOC, par, temp, pop, g::Grids,
                    α, Φ, TempAe, Tempref, TempCoeff)
     kernel! = find_NPT_kernel!(device(arch), 256, (size(plank,1),))
 
-    event = kernel!(plank, inds,  NH4, NO3, PO4, DOC, par, temp, g,
+    event = kernel!(plank, inds,  NH4, NO3, PO4, DOC, par, temp, pop, g,
                     α, Φ, TempAe, Tempref, TempCoeff)
     wait(device(arch), event)
     return nothing
@@ -216,39 +217,127 @@ function calc_consume!(plank, inds::AbstractArray{Int64,2}, arch::Architecture,
 end
 
 ##### calculate probability of cell division
-@kernel function calc_dvid_kernel!(plank, dvid_type, dvid_stp, dvid_stp2,
-                                   dvid_P, dvid_reg, dvid_reg2, Cquota, Nsuper, t)
+##### sizer
+@kernel function calc_dvid_size_kernel!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
     i = @index(Global, Linear)
     if plank[i,58] == 1.0
         if plank[i,6] ≥ 2 * Cquota * Nsuper
-            if dvid_type == 1
-                @inbounds plank[i,33] = dvid_P * (tanh(dvid_stp * (plank[i,5] - dvid_reg))+1)
-            elseif dvid_type == 2
-                @inbounds plank[i,33] = dvid_P * (tanh(dvid_stp * (plank[i,5] - plank[i,4] - dvid_reg))+1)
-            elseif dvid_type == 3
-                @inbounds plank[i,33] = dvid_P * (tanh(dvid_stp * (plank[i,12] - dvid_reg))+1)
-            elseif dvid_type == 4
-                cirT = t % 86400 ÷ 3600
-                @inbounds plank[i,33] = dvid_P * (tanh(dvid_stp * (cirT - dvid_reg))+1)
-            elseif dvid_type == 5
-                cirT = t % 86400 ÷ 3600
-                regT = dvid_stp  * (cirT - dvid_reg)
-                @inbounds regS = dvid_stp2 * (plank[i,5] - dvid_reg2)
-                @inbounds plank[i,33] = dvid_P * (tanh(regS) + 1) * (tanh(regT) + 1)
-            else
-                throw(ArgumentError("Wrong cell division type, must be in 1 to 5"))
-            end
+            @inbounds plank[i,33] = dvid_P * (tanh(dvid_stp * (plank[i,5] - dvid_reg))+1)
         end
     end
 end
-function calc_dvid!(plank, arch::Architecture, dvid_type, dvid_stp, dvid_stp2,
-                    dvid_P, dvid_reg, dvid_reg2, Cquota, Nsuper, t)
-    kernel! = calc_dvid_kernel!(device(arch), 256, (size(plank,1),))
-    event = kernel!(plank, dvid_type, dvid_stp, dvid_stp2, dvid_P,
-                    dvid_reg, dvid_reg2, Cquota, Nsuper, t)
+function calc_dvid_size!(plank, arch::Architecture, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
+    kernel! = calc_dvid_size_kernel!(device(arch), 256, (size(plank,1),))
+    event = kernel!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
     wait(device(arch), event)
     return nothing
 end
+##### adder
+@kernel function calc_dvid_add_kernel!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
+    i = @index(Global, Linear)
+    if plank[i,58] == 1.0
+        if plank[i,6] ≥ 2 * Cquota * Nsuper
+            @inbounds plank[i,33] = dvid_P * (tanh(dvid_stp * (plank[i,5] - plank[i,4] - dvid_reg))+1)
+        end
+    end
+end
+function calc_dvid_add!(plank, arch::Architecture, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
+    kernel! = calc_dvid_add_kernel!(device(arch), 256, (size(plank,1),))
+    event = kernel!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
+    wait(device(arch), event)
+    return nothing
+end
+##### age
+@kernel function calc_dvid_age_kernel!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
+    i = @index(Global, Linear)
+    if plank[i,58] == 1.0
+        if plank[i,6] ≥ 2 * Cquota * Nsuper
+            @inbounds plank[i,33] = dvid_P * (tanh(dvid_stp * (plank[i,12] - dvid_reg))+1)
+        end
+    end
+end
+function calc_dvid_age!(plank, arch::Architecture, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
+    kernel! = calc_dvid_age_kernel!(device(arch), 256, (size(plank,1),))
+    event = kernel!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
+    wait(device(arch), event)
+    return nothing
+end
+##### timer
+@kernel function calc_dvid_time_kernel!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper, t)
+    i = @index(Global, Linear)
+    if plank[i,58] == 1.0
+        if plank[i,6] ≥ 2 * Cquota * Nsuper
+            @inbounds plank[i,33] = dvid_P * (tanh(dvid_stp * (t % 86400 ÷ 3600 - dvid_reg))+1)
+        end
+    end
+end
+function calc_dvid_time!(plank, arch::Architecture, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper, t)
+    kernel! = calc_dvid_time_kernel!(device(arch), 256, (size(plank,1),))
+    event = kernel!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper, t)
+    wait(device(arch), event)
+    return nothing
+end
+##### timer & sizer
+@kernel function calc_dvid_ts_kernel!(plank, dvid_stp, dvid_stp2,
+                                      dvid_P, dvid_reg, dvid_reg2, Cquota, Nsuper, t)
+    i = @index(Global, Linear)
+    if plank[i,58] == 1.0
+        if plank[i,6] ≥ 2 * Cquota * Nsuper
+            @inbounds plank[i,33] = dvid_P * (tanh(dvid_stp2 * (plank[i,5] - dvid_reg2)) + 1) *
+                                             (tanh(dvid_stp  * (t % 86400 ÷ 3600 - dvid_reg)) + 1)
+        end
+    end
+end
+function calc_dvid_ts!(plank, arch::Architecture, dvid_stp, dvid_stp2, dvid_P,
+                       dvid_reg, dvid_reg2, Cquota, Nsuper, t)
+    kernel! = calc_dvid_ts_kernel!(device(arch), 256, (size(plank,1),))
+    event = kernel!(plank, dvid_stp, dvid-stp2, dvid_P, dvid_reg, dvid_reg2, Cquota, Nsuper, t)
+    wait(device(arch), event)
+    return nothing
+end
+
+##### calculate the probability of grazing
+##### quadratic grazing
+@kernel function calc_graz_quadratic_kernel!(plank, grz_P)
+    i = @index(Global, Linear)
+    if plank[i,58] == 1.0
+        @inbounds plank[i,31] = plank[i,60] /grz_P
+    end
+end
+function calc_graz_quadratic!(plank, arch::Architecture, grz_P)
+    kernel! = calc_graz_quadratic_kernel!(device(arch), 256, (size(plank,1),))
+    event = kernel!(plank, grz_P)
+    wait(device(arch), event)
+    return nothing
+end
+##### linear grazing decrease with depth
+@kernel function calc_graz_linear_kernel!(plank, grz_P, grz_stp)
+    i = @index(Global, Linear)
+    if plank[i,58] == 1.0
+        @inbounds plank[i,31] = 1.0 / grz_P * max(0.15, 1 - abs(plank[i,3]) / grz_stp)
+    end
+end
+function calc_graz_linear!(plank, arch::Architecture, grz_P, grz_stp)
+    kernel! = calc_graz_linear_kernel!(device(arch), 256, (size(plank,1),))
+    event = kernel!(plank, grz_P, grz_stp)
+    wait(device(arch), event)
+    return nothing
+end
+
+##### calculate the probability of mortality
+@kernel function calc_mort_kernel!(plank, mort_reg, mort_P)
+    i = @index(Global, Linear)
+    if plank[i,58] == 1.0
+        @inbounds plank[i,32] = mort_P * (tanh(6.0 * (mort_reg - plank[i,5]))+1)
+    end
+end
+function calc_mort!(plank, arch::Architecture, mort_reg, mort_P)
+    kernel! = calc_mort_kernel!(device(arch), 256, (size(plank,1),))
+    event = kernel!(plank, mort_reg, mort_P)
+    wait(device(arch), event)
+    return nothing
+end
+
 ##### generate the random results from probabilities of grazing, mortality and cell division
 @kernel function get_rands_kernel!(plank, rnd)
     i = @index(Global, Linear)

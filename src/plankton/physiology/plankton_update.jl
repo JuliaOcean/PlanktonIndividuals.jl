@@ -1,5 +1,5 @@
 ##### update physiological attributes of each individual
-function plankton_update!(plank, rnd, plk, par, arch::Architecture, temp, DOC, NH4, NO3, PO4,
+function plankton_update!(plank, rnd, plk, par, arch::Architecture, temp, pop, DOC, NH4, NO3, PO4,
                           g::Grids, p, ΔT, t, plank_num::Int64)
     NO3 = interior(NO3, g)
     NH4 = interior(NH4, g)
@@ -8,7 +8,7 @@ function plankton_update!(plank, rnd, plk, par, arch::Architecture, temp, DOC, N
 
     ##### calculate the total active plankton numbers
     ##### find nutrient, temperature, and par values for each individual
-    find_NPT!(plank, Int.(plank[:,13:15]), arch, NH4, NO3, PO4, DOC, par, temp, g,
+    find_NPT!(plank, Int.(plank[:,13:15]), arch, NH4, NO3, PO4, DOC, par, temp, pop, g,
               p.α, p.Φ, p.TempAe, p.Tempref, p.TempCoeff)
 
     ##### Carbon uptake
@@ -45,19 +45,31 @@ function plankton_update!(plank, rnd, plk, par, arch::Architecture, temp, DOC, N
             @inbounds plank[1:plank_num,31] .= 0.0
         else
             if p.grz_stp == 0
-                @inbounds plank[1:plank_num,31] .= 1.0/p.grz_P
+                calc_graz_quadratic!(plank, arch, p.grz_P)
             else
-                @inbounds plank[1:plank_num,31] .=
-                    1.0 ./ p.grz_P .* max.(0.15, 1 .- abs.(plank[1:plank_num,3]) ./ p.grz_stp)
+                calc_graz_linear!(plank, arch, p.grz_P, p.grz_stp)
             end
         end
 
         ##### mortality
-        @inbounds plank[1:plank_num,32] .= p.mort_P .* (tanh.(6.0 .* (p.mort_reg .- plank[1:plank_num,5])) .+ 1)
+        calc_mort!(plank, arch, p.mort_reg,  p.mort_P)
 
         ##### cell division
-        calc_dvid!(plank, arch, p.dvid_type, p.dvid_stp, p.dvid_stp2, p.dvid_P,
-                   p.dvid_reg, p.dvid_reg2, p.Cquota, p.Nsuper, t)
+        if p.dvid_type == 1
+            calc_dvid_size!(plank, arch, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
+        elseif p.dvid_type == 2
+            calc_dvid_add!(plank, arch, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
+        elseif p.dvid_type == 3
+            calc_dvid_age!(plank, arch, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
+        elseif p.dvid_type == 4
+            calc_dvid_time!(plank, arch, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper, t)
+        elseif p.dvid_type == 4
+            calc_dvid_ts!(plank, arch, p.dvid_type, p.dvid_stp, p.dvid_stp2, p.dvid_P,
+                          p.dvid_reg, p.dvid_reg2, p.Cquota, p.Nsuper, t)
+        else
+            throw(ArgumentError("Wrong cell division type, must be in 1 to 5"))
+        end
+
         get_rands!(plank, rnd, arch)
     else
         @inbounds plank[1:plank_num,31] .= 0.0

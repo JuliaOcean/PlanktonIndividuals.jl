@@ -7,7 +7,7 @@
     end
 end
 function copyto_tmp!(plank, tmp, con, idx::AbstractArray{Int64,1}, b::Bool, arch::Architecture)
-    kernel! = copyto_tmp_kernel!(device(arch), (16,16), (size(plank,1),59))
+    kernel! = copyto_tmp_kernel!(device(arch), (16,16), (size(plank,1),60))
     event = kernel!(plank, tmp, con, idx, b)
     wait(device(arch), event)
     return nothing
