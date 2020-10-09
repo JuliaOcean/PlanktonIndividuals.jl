@@ -60,8 +60,8 @@ end
         @inbounds tmp[i,10] = tmp[i,10] .* 0.5
         @inbounds tmp[i,11] = tmp[i,11] .+ 1.0
         @inbounds tmp[i,12] = 1.0
-        @inbounds tmp[i,33] = 0.0
     end
+    @inbounds tmp[i,33] = 0.0
 end
 function divide_half!(tmp, con, arch::Architecture)
     kernel! = divide_half_kernel!(device(arch), 256, (size(tmp,1),))

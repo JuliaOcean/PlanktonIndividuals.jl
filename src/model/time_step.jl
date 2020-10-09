@@ -14,6 +14,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     ##### clear operating array for physiological calculations
     zero_fields!(model.timestepper.plk)
     model.timestepper.chl .= 0.0
+    model.timestepper.pop .= 0.0
 
     for plank in model.individuals.phytos
         plankton_advectionRK4!(plank.data, model.arch, model.grid,
@@ -25,7 +26,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
 
         ##### calculate accumulated chla quantity (not concentration)
         find_inds!(plank.data, model.arch, model.grid, 12, 0)
-        acc_chla_field!(model.timestepper.chl, plank.data, Int.(plank.data[:,13:15]), model.arch)
+        acc_chla_field!(model.timestepper.chl, model.timestepper.pop, plank.data, Int.(plank.data[:,13:15]), model.arch)
     end
 
     ##### calculate PAR
@@ -41,8 +42,8 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
                          model.nutrients.PO4.data, model.grid, plank.p, ΔT, model.t, plank_num)
 
         ##### diagnostics for each species and grazing
-        sum_diags!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch,
-                   model.grid, diag_t)
+        # sum_diags!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch,
+        #            model.grid, diag_t)
 
         ##### grazing
         model.timestepper.tmp .= 0.0
@@ -50,15 +51,15 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
                  model.grid, model.timestepper.plk, plank.p)
 
         ###### mortality and its diagnostic
-        sum_diags_mort!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]),
-                        plank.sp, model.arch, model.grid, diag_t)
+        # sum_diags_mort!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]),
+        #                 plank.sp, model.arch, model.grid, diag_t)
 
         mortality!(plank.data, model.timestepper.tmp, model.arch,
                    model.grid, model.timestepper.plk, plank.p)
 
         ###### cell division and its diagnostic
-        sum_diags_dvid!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]),
-                        plank.sp, model.arch, model.grid, diag_t)
+        # sum_diags_dvid!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]),
+        #                 plank.sp, model.arch, model.grid, diag_t)
 
         ##### calculate index for timestepper.tmp to move active individuals to tmp
         plank.data[:,59] .= 0.0
@@ -87,7 +88,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
                 model.timestepper.MD2, model.timestepper.MD3, model.arch,
                 model.grid, model.params, model.timestepper.vel₁, model.timestepper.plk, ΔT)
 
-    write_nut_cons(model.grid, model.timestepper.Gcs, model.nutrients, model.t, resultspath)
+    # write_nut_cons(model.grid, model.timestepper.Gcs, model.nutrients, model.t, resultspath)
 
     model.timestepper.vel₀.u.data .= model.timestepper.vel₁.u.data
     model.timestepper.vel₀.v.data .= model.timestepper.vel₁.v.data

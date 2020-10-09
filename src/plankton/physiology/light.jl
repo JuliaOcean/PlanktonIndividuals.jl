@@ -1,17 +1,19 @@
 using KernelAbstractions.Extras.LoopInfo: @unroll
 ##### calculate Chla field based on the status of plankton individuals
-@kernel function acc_chla_field_kernel!(chl, plank, inds::AbstractArray{Int64,2})
-    i = @index(Global, Linear)
-    if plank[i,58] == 1.0
-        @inbounds xi = inds[i,1]
-        @inbounds yi = inds[i,2]
-        @inbounds zi = inds[i,3]
-        @inbounds chl[xi, yi, zi] = chl[xi, yi, zi] + plank[i,10]
+@kernel function acc_chla_field_kernel!(chl, pop, plank, inds::AbstractArray{Int64,2})
+    @unroll for i in 1:size(plank,1)
+        if plank[i,58] == 1.0
+            @inbounds xi = inds[i,1]
+            @inbounds yi = inds[i,2]
+            @inbounds zi = inds[i,3]
+            @inbounds chl[xi, yi, zi] += plank[i,10]
+            @inbounds pop[xi, yi, zi] += 1.0
+        end
     end
 end
-function acc_chla_field!(chl, plank, inds::AbstractArray{Int64,2}, arch::Architecture)
-    kernel! = acc_chla_field_kernel!(device(arch), 256, (size(plank,1),))
-    event = kernel!(chl, plank, inds)
+function acc_chla_field!(chl, pop, plank, inds::AbstractArray{Int64,2}, arch::Architecture)
+    kernel! = acc_chla_field_kernel!(device(arch), 256, (1,))
+    event = kernel!(chl, pop, plank, inds)
     wait(device(arch), event)
     return nothing
 end
@@ -33,19 +35,3 @@ function calc_par!(par, arch::Architecture, chl, PARF, g::Grids, kc, kw)
     return nothing
 end
 
-##### calculate individual number field based on the status of plankton individuals
-@kernel function pop_field_kernel!(pop, plank, inds::AbstractArray{Int64,2})
-    i = @index(Global, Linear)
-    if plank[i,58] == 1.0
-        @inbounds xi = inds[i,1]
-        @inbounds yi = inds[i,2]
-        @inbounds zi = inds[i,3]
-        @inbounds pop[xi, yi, zi] = pop[xi, yi, zi] + 1.0
-    end
-end
-function pop_field!(pop, plank, inds::AbstractArray{Int64,2}, arch::Architecture)
-    kernel! = pop_field_kernel!(device(arch), 256, (size(plank,1),))
-    event = kernel!(pop, plank, inds)
-    wait(device(arch), event)
-    return nothing
-end
