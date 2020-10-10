@@ -1,6 +1,6 @@
 ##### update physiological attributes of each individual
 function plankton_update!(plank, rnd, plk, par, arch::Architecture, temp, pop, DOC, NH4, NO3, PO4,
-                          g::Grids, p, ΔT, t, plank_num::Int64)
+                          g::Grids, p, ΔT, t)
     NO3 = interior(NO3, g)
     NH4 = interior(NH4, g)
     PO4 = interior(PO4, g)
@@ -42,7 +42,7 @@ function plankton_update!(plank, rnd, plk, par, arch::Architecture, temp, pop, D
     if t%600 == 1
         ##### grazing
         if p.grz_P == 0
-            @inbounds plank[1:plank_num,31] .= 0.0
+            @inbounds plank[:,31] .= 0.0
         else
             if p.grz_stp == 0
                 calc_graz_quadratic!(plank, arch, p.grz_P)
@@ -72,9 +72,9 @@ function plankton_update!(plank, rnd, plk, par, arch::Architecture, temp, pop, D
 
         get_rands!(plank, rnd, arch)
     else
-        @inbounds plank[1:plank_num,31] .= 0.0
-        @inbounds plank[1:plank_num,32] .= 0.0
-        @inbounds plank[1:plank_num,33] .= 0.0
+        @inbounds plank[:,31] .= 0.0
+        @inbounds plank[:,32] .= 0.0
+        @inbounds plank[:,33] .= 0.0
     end
 end
 

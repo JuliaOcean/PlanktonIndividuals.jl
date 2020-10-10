@@ -39,8 +39,7 @@ end
 
 
 ##### record diagnostics at each time step
-@kernel function sum_diags_kernel!(diags, plank, inds::AbstractArray{Int64,2},
-                                   sp::Int64, g::Grids, diag_t)
+@kernel function diags_kernel!(diags, plank, inds::AbstractArray{Int64,2}, sp::Int64, diag_t)
     @unroll for i in 1:size(plank,1)
         if plank[i,58] == 1.0
             @inbounds xi = inds[i,1]
@@ -50,32 +49,30 @@ end
             @inbounds diags[xi, yi, zi, diag_t, sp, 1]  += 1 # individual count
             @inbounds diags[xi, yi, zi, diag_t, sp, 2]  += plank[i,31] # grazing
 
-            @inbounds diags[xi, yi, zi, diag_t, sp, 5]  += plank[i,22] # PS
-            @inbounds diags[xi, yi, zi, diag_t, sp, 6]  += plank[i,23] # VDOC
-            @inbounds diags[xi, yi, zi, diag_t, sp, 7]  += plank[i,24] # VNH4
-            @inbounds diags[xi, yi, zi, diag_t, sp, 8]  += plank[i,25] # VNO3
-            @inbounds diags[xi, yi, zi, diag_t, sp, 9]  += plank[i,26] # VPO4
-            @inbounds diags[xi, yi, zi, diag_t, sp, 10] += plank[i,28] # respir
-            @inbounds diags[xi, yi, zi, diag_t, sp, 11] += plank[i,29] # BS
-            @inbounds diags[xi, yi, zi, diag_t, sp, 12] += plank[i,30] # exu
-            @inbounds diags[xi, yi, zi, diag_t, sp, 13] += plank[i,6]  # Bm
-            @inbounds diags[xi, yi, zi, diag_t, sp, 14] += plank[i,7]  # Cq
-            @inbounds diags[xi, yi, zi, diag_t, sp, 15] += plank[i,8]  # Nq
-            @inbounds diags[xi, yi, zi, diag_t, sp, 16] += plank[i,9]  # Pq
-            @inbounds diags[xi, yi, zi, diag_t, sp, 17] += plank[i,10] # Chl
+            # @inbounds diags[xi, yi, zi, diag_t, sp, 5]  += plank[i,22] # PS
+            # @inbounds diags[xi, yi, zi, diag_t, sp, 6]  += plank[i,23] # VDOC
+            # @inbounds diags[xi, yi, zi, diag_t, sp, 7]  += plank[i,24] # VNH4
+            # @inbounds diags[xi, yi, zi, diag_t, sp, 8]  += plank[i,25] # VNO3
+            # @inbounds diags[xi, yi, zi, diag_t, sp, 9]  += plank[i,26] # VPO4
+            # @inbounds diags[xi, yi, zi, diag_t, sp, 10] += plank[i,28] # respir
+            # @inbounds diags[xi, yi, zi, diag_t, sp, 11] += plank[i,29] # BS
+            # @inbounds diags[xi, yi, zi, diag_t, sp, 12] += plank[i,30] # exu
+            # @inbounds diags[xi, yi, zi, diag_t, sp, 13] += plank[i,6]  # Bm
+            # @inbounds diags[xi, yi, zi, diag_t, sp, 14] += plank[i,7]  # Cq
+            # @inbounds diags[xi, yi, zi, diag_t, sp, 15] += plank[i,8]  # Nq
+            # @inbounds diags[xi, yi, zi, diag_t, sp, 16] += plank[i,9]  # Pq
+            # @inbounds diags[xi, yi, zi, diag_t, sp, 17] += plank[i,10] # Chl
         end
     end
 end
-function sum_diags!(diags, plank, inds::AbstractArray{Int64,2},
-                    sp::Int64, arch::Architecture, g::Grids, diag_t)
-    kernel! = sum_diags_kernel!(device(arch), 256, (1,))
-    event = kernel!(diags, plank, inds, sp, g, diag_t)
+function diags!(diags, plank, inds::AbstractArray{Int64,2}, sp::Int64, arch::Architecture, diag_t)
+    kernel! = diags_kernel!(device(arch), 256, (1,))
+    event = kernel!(diags, plank, inds, sp, diag_t)
     wait(device(arch), event)
     return nothing
 end
 
-@kernel function sum_diags_mort_kernel!(diags, plank, inds::AbstractArray{Int64,2},
-                                        sp::Int64, g::Grids, diag_t)
+@kernel function diags_mort_kernel!(diags, plank, inds::AbstractArray{Int64,2}, sp::Int64, diag_t)
     @unroll for i in 1:size(plank,1)
         if plank[i,58] == 1.0
             @inbounds xi = inds[i,1]
@@ -85,16 +82,14 @@ end
         end
     end
 end
-function sum_diags_mort!(diags, plank, inds::AbstractArray{Int64,2},
-                         sp::Int64, arch::Architecture, g::Grids, diag_t)
-    kernel! = sum_diags_mort_kernel!(device(arch), 256, (1,))
-    event = kernel!(diags, plank, inds, sp, g, diag_t)
+function diags_mort!(diags, plank, inds::AbstractArray{Int64,2}, sp::Int64, arch::Architecture, diag_t)
+    kernel! = diags_mort_kernel!(device(arch), 256, (1,))
+    event = kernel!(diags, plank, inds, sp, diag_t)
     wait(device(arch), event)
     return nothing
 end
 
-@kernel function sum_diags_dvid_kernel!(diags, plank, inds::AbstractArray{Int64,2},
-                                        sp::Int64, g::Grids, diag_t)
+@kernel function diags_dvid_kernel!(diags, plank, inds::AbstractArray{Int64,2}, sp::Int64, diag_t)
     @unroll for i in 1:size(plank,1)
         if plank[i,58] == 1.0
             @inbounds xi = inds[i,1]
@@ -104,10 +99,9 @@ end
         end
     end
 end
-function sum_diags_dvid!(diags, plank, inds::AbstractArray{Int64,2},
-                         sp::Int64, arch::Architecture, g::Grids, diag_t)
-    kernel! = sum_diags_dvid_kernel!(device(arch), 256, (1,))
-    event = kernel!(diags, plank, inds, sp, g, diag_t)
+function diags_dvid!(diags, plank, inds::AbstractArray{Int64,2}, sp::Int64, arch::Architecture, diag_t)
+    kernel! = diags_dvid_kernel!(device(arch), 256, (1,))
+    event = kernel!(diags, plank, inds, sp, diag_t)
     wait(device(arch), event)
     return nothing
 end
