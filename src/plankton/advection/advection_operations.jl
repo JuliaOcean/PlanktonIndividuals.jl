@@ -113,33 +113,30 @@ end
 ##### velocity interpolation for each individual
 @inline linear_itpl(u0, u1, xd) = u0 * (1.0 - xd) + u1 * xd
 
-function vel_interpolation!(plank, ind::Int64, active_num::Int64)
-    plank[1:active_num, 46+ind*3] .= linear_itpl.(plank[1:active_num,37], plank[1:active_num,38], plank[1:active_num,43])
-    plank[1:active_num, 47+ind*3] .= linear_itpl.(plank[1:active_num,39], plank[1:active_num,40], plank[1:active_num,44])
-    plank[1:active_num, 48+ind*3] .= linear_itpl.(plank[1:active_num,41], plank[1:active_num,42], plank[1:active_num,45])
+function vel_interpolation!(plank, ind::Int64, num::Int64)
+    plank[1:num, 46+ind*3] .= linear_itpl.(plank[1:num,37], plank[1:num,38], plank[1:num,43])
+    plank[1:num, 47+ind*3] .= linear_itpl.(plank[1:num,39], plank[1:num,40], plank[1:num,44])
+    plank[1:num, 48+ind*3] .= linear_itpl.(plank[1:num,41], plank[1:num,42], plank[1:num,45])
 end
 
 
 ##### calculate intermediate coordinates
-function calc_intermediate_coord!(plank, ΔT, weight::Float64, active_num::Int64)
-    plank[1:active_num,34] .= plank[1:active_num,1] .+ weight .* plank[1:active_num,46] .* ΔT
-    plank[1:active_num,35] .= plank[1:active_num,2] .+ weight .* plank[1:active_num,47] .* ΔT
-    plank[1:active_num,36] .= plank[1:active_num,3] .+ weight .* plank[1:active_num,48] .* ΔT
+function calc_intermediate_coord!(plank, ΔT, weight::Float64, num::Int64)
+    plank[1:num,34] .= plank[1:num,1] .+ weight .* plank[1:num,46] .* ΔT
+    plank[1:num,35] .= plank[1:num,2] .+ weight .* plank[1:num,47] .* ΔT
+    plank[1:num,36] .= plank[1:num,3] .+ weight .* plank[1:num,48] .* ΔT
 end
 
 ##### calculate final velocities by RK4
-function calc_vel_rk4!(plank, active_num::Int64)
-    plank[1:active_num,46] .= (plank[1:active_num,46] .+ 2 .* plank[1:active_num,49] .+
-                               2 .* plank[1:active_num,52] .+ plank[1:active_num,55]) ./ 6
-    plank[1:active_num,47] .= (plank[1:active_num,47] .+ 2 .* plank[1:active_num,50] .+
-                               2 .* plank[1:active_num,53] .+ plank[1:active_num,56]) ./ 6
-    plank[1:active_num,48] .= (plank[1:active_num,48] .+ 2 .* plank[1:active_num,51] .+
-                               2 .* plank[1:active_num,54] .+ plank[1:active_num,57]) ./ 6
+function calc_vel_rk4!(plank, num::Int64)
+    plank[1:num,46] .= (plank[1:num,46] .+ 2 .* plank[1:num,49] .+ 2 .* plank[1:num,52] .+ plank[1:num,55]) ./ 6
+    plank[1:num,47] .= (plank[1:num,47] .+ 2 .* plank[1:num,50] .+ 2 .* plank[1:num,53] .+ plank[1:num,56]) ./ 6
+    plank[1:num,48] .= (plank[1:num,48] .+ 2 .* plank[1:num,51] .+ 2 .* plank[1:num,54] .+ plank[1:num,57]) ./ 6
 end
 
 ##### calculate coordinates of each individual
-function calc_coord!(plank, ΔT, active_num::Int64)
-    plank[1:active_num,1] .= plank[1:active_num,1] .+ plank[1:active_num,46] .* ΔT
-    plank[1:active_num,2] .= plank[1:active_num,2] .+ plank[1:active_num,47] .* ΔT
-    plank[1:active_num,3] .= plank[1:active_num,3] .+ plank[1:active_num,48] .* ΔT
+function calc_coord!(plank, ΔT, num::Int64)
+    plank[1:num,1] .= plank[1:num,1] .+ plank[1:num,46] .* ΔT
+    plank[1:num,2] .= plank[1:num,2] .+ plank[1:num,47] .* ΔT
+    plank[1:num,3] .= plank[1:num,3] .+ plank[1:num,48] .* ΔT
 end

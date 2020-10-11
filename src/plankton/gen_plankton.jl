@@ -10,7 +10,7 @@ u0  u1  v0  v1  w0  w1  xd  yd  zd  u1  v1  w1  u2  v2  w2  u3  v3  w3  u4  v4  
 =#
 mutable struct plankton
     data::AbstractArray{Float64,2}
-    active_num::Int64
+    num::Int64
     sp::Int64
     p::NamedTuple
     rnd::AbstractArray{Float64,2}
