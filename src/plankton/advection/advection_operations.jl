@@ -113,93 +113,33 @@ end
 ##### velocity interpolation for each individual
 @inline linear_itpl(u0, u1, xd) = u0 * (1.0 - xd) + u1 * xd
 
-@kernel function vel_interpolation_kernel!(plank, ind::Int64)
-    i = @index(Global, Linear)
-    if plank[i,58] == 1.0
-        @inbounds plank[i, 46+ind*3] = linear_itpl(plank[i,37], plank[i,38], plank[i,43])
-        @inbounds plank[i, 47+ind*3] = linear_itpl(plank[i,39], plank[i,40], plank[i,44])
-        @inbounds plank[i, 48+ind*3] = linear_itpl(plank[i,41], plank[i,42], plank[i,45])
-    end
-end
-function vel_interpolation!(plank, arch::Architecture, ind::Int64)
-    kernel! = vel_interpolation_kernel!(device(arch), 256, (size(plank,1),))
-    event = kernel!(plank, ind)
-    wait(device(arch), event)
-    return nothing
+function vel_interpolation!(plank, ind::Int64, active_num::Int64)
+    plank[1:active_num, 46+ind*3] .= linear_itpl.(plank[1:active_num,37], plank[1:active_num,38], plank[1:active_num,43])
+    plank[1:active_num, 47+ind*3] .= linear_itpl.(plank[1:active_num,39], plank[1:active_num,40], plank[1:active_num,44])
+    plank[1:active_num, 48+ind*3] .= linear_itpl.(plank[1:active_num,41], plank[1:active_num,42], plank[1:active_num,45])
 end
 
+
 ##### calculate intermediate coordinates
-@kernel function calc_1st_intermediate_coord_kernel!(plank, ΔT)
-    i = @index(Global, Linear)
-    if plank[i,58] == 1.0
-        @inbounds plank[i,34] = plank[i,1] + 0.5 * plank[i,46] * ΔT
-        @inbounds plank[i,35] = plank[i,2] + 0.5 * plank[i,47] * ΔT
-        @inbounds plank[i,36] = plank[i,3] + 0.5 * plank[i,48] * ΔT
-    end
-end
-@kernel function calc_2nd_intermediate_coord_kernel!(plank, ΔT)
-    i = @index(Global, Linear)
-    if plank[i,58] == 1.0
-        @inbounds plank[i,34] = plank[i,34] + 0.5 * plank[i,49] * ΔT
-        @inbounds plank[i,35] = plank[i,35] + 0.5 * plank[i,50] * ΔT
-        @inbounds plank[i,36] = plank[i,36] + 0.5 * plank[i,51] * ΔT
-    end
-end
-@kernel function calc_3rd_intermediate_coord_kernel!(plank, ΔT)
-    i = @index(Global, Linear)
-    if plank[i,58] == 1.0
-        @inbounds plank[i,34] = plank[i,34] + 1.0 * plank[i,52] * ΔT
-        @inbounds plank[i,35] = plank[i,35] + 1.0 * plank[i,53] * ΔT
-        @inbounds plank[i,36] = plank[i,36] + 1.0 * plank[i,54] * ΔT
-    end
-end
-function calc_1st_intermediate_coord!(plank, arch::Architecture, ΔT)
-    kernel! = calc_1st_intermediate_coord_kernel!(device(arch), 256, (size(plank,1),))
-    event = kernel!(plank, ΔT)
-    wait(device(arch), event)
-    return nothing
-end
-function calc_2nd_intermediate_coord!(plank, arch::Architecture, ΔT)
-    kernel! = calc_2nd_intermediate_coord_kernel!(device(arch), 256, (size(plank,1),))
-    event = kernel!(plank, ΔT)
-    wait(device(arch), event)
-    return nothing
-end
-function calc_3rd_intermediate_coord!(plank, arch::Architecture, ΔT)
-    kernel! = calc_3rd_intermediate_coord_kernel!(device(arch), 256, (size(plank,1),))
-    event = kernel!(plank, ΔT)
-    wait(device(arch), event)
-    return nothing
+function calc_intermediate_coord!(plank, ΔT, weight::Float64, active_num::Int64)
+    plank[1:active_num,34] .= plank[1:active_num,1] .+ weight .* plank[1:active_num,46] .* ΔT
+    plank[1:active_num,35] .= plank[1:active_num,2] .+ weight .* plank[1:active_num,47] .* ΔT
+    plank[1:active_num,36] .= plank[1:active_num,3] .+ weight .* plank[1:active_num,48] .* ΔT
 end
 
 ##### calculate final velocities by RK4
-@kernel function calc_vel_rk4_kernel!(plank)
-    i = @index(Global, Linear)
-    if plank[i,58] == 1.0
-        @inbounds plank[i,46] = (plank[i,46] + 2*plank[i,49] + 2*plank[i,52] + plank[i,55]) /6
-        @inbounds plank[i,47] = (plank[i,47] + 2*plank[i,50] + 2*plank[i,53] + plank[i,56]) /6
-        @inbounds plank[i,48] = (plank[i,48] + 2*plank[i,51] + 2*plank[i,54] + plank[i,57]) /6
-    end
-end
-function calc_vel_rk4!(plank, arch::Architecture)
-    kernel! = calc_vel_rk4_kernel!(device(arch), 256, (size(plank,1),))
-    event = kernel!(plank)
-    wait(device(arch), event)
-    return nothing
+function calc_vel_rk4!(plank, active_num::Int64)
+    plank[1:active_num,46] .= (plank[1:active_num,46] .+ 2 .* plank[1:active_num,49] .+
+                               2 .* plank[1:active_num,52] .+ plank[1:active_num,55]) ./ 6
+    plank[1:active_num,47] .= (plank[1:active_num,47] .+ 2 .* plank[1:active_num,50] .+
+                               2 .* plank[1:active_num,53] .+ plank[1:active_num,56]) ./ 6
+    plank[1:active_num,48] .= (plank[1:active_num,48] .+ 2 .* plank[1:active_num,51] .+
+                               2 .* plank[1:active_num,54] .+ plank[1:active_num,57]) ./ 6
 end
 
 ##### calculate coordinates of each individual
-@kernel function calc_coord_kernel!(plank, ΔT)
-    i = @index(Global, Linear)
-    if plank[i,58] == 1.0
-        @inbounds plank[i,1] = plank[i,1] + plank[i,46] * ΔT
-        @inbounds plank[i,2] = plank[i,2] + plank[i,47] * ΔT
-        @inbounds plank[i,3] = plank[i,3] + plank[i,48] * ΔT
-    end
-end
-function calc_coord!(plank, arch::Architecture, ΔT)
-    kernel! = calc_coord_kernel!(device(arch), 256, (size(plank,1),))
-    event = kernel!(plank, ΔT)
-    wait(device(arch), event)
-    return nothing
+function calc_coord!(plank, ΔT, active_num::Int64)
+    plank[1:active_num,1] .= plank[1:active_num,1] .+ plank[1:active_num,46] .* ΔT
+    plank[1:active_num,2] .= plank[1:active_num,2] .+ plank[1:active_num,47] .* ΔT
+    plank[1:active_num,3] .= plank[1:active_num,3] .+ plank[1:active_num,48] .* ΔT
 end

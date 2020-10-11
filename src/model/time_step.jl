@@ -16,18 +16,21 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     model.timestepper.chl .= 0.0
     model.timestepper.pop .= 0.0
 
-    # for plank in model.individuals.phytos
-    #     plankton_advectionRK4!(plank.data, model.arch, model.grid,
-    #                           model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT)
+    for plank in model.individuals.phytos
+        plank.data[:,59] .= cumsum(plank.data[:,58])
+        CUDA.@allowscalar plank.active_num = Int(copy(plank.data[end,59]))
 
-    #     gen_rand_adv!(plank.rnd, model.arch)
-    #     plankton_diffusion!(plank.data, plank.rnd, model.arch, model.params["κhP"], ΔT)
-    #     in_domain!(plank.data, model.arch, model.grid)
+        plankton_advectionRK4!(plank.data, model.arch, model.grid, model.timestepper.vel₀,
+                               model.timestepper.vel½, model.timestepper.vel₁, ΔT, plank.active_num)
 
-    #     ##### calculate accumulated chla quantity (not concentration)
-    #     find_inds!(plank.data, model.arch, model.grid, 12, 0)
-    #     acc_chla_field!(model.timestepper.chl, model.timestepper.pop, plank.data, Int.(plank.data[:,13:15]), model.arch)
-    # end
+        gen_rand_adv!(plank.rnd, model.arch)
+        plankton_diffusion!(plank.data, plank.rnd, model.params["κhP"], ΔT, plank.active_num)
+        in_domain!(plank.data, model.arch, model.grid)
+
+        ##### calculate accumulated chla quantity (not concentration)
+        # find_inds!(plank.data, model.arch, model.grid, 12, 0)
+        # acc_chla_field!(model.timestepper.chl, model.timestepper.pop, plank.data, Int.(plank.data[:,13:15]), model.arch)
+    end
 
     # ##### calculate PAR
     # calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.input.PARF[:,:,clock],
@@ -83,7 +86,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
 
     #     # plank.data .= copy(model.timestepper.tmp)
     # end
-    # write_species_dynamics(model.t, model.individuals.phytos, resultspath)
+    write_species_dynamics(model.t, model.individuals.phytos, resultspath)
 
     ##### diagnostics for nutrients
     model.diags.tr[:,:,:,diag_t,1] += model.timestepper.par

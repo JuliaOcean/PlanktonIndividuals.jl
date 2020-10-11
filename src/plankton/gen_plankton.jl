@@ -10,6 +10,7 @@ u0  u1  v0  v1  w0  w1  xd  yd  zd  u1  v1  w1  u2  v2  w2  u3  v3  w3  u4  v4  
 =#
 mutable struct plankton
     data::AbstractArray{Float64,2}
+    active_num::Int64
     sp::Int64
     p::NamedTuple
     rnd::AbstractArray{Float64,2}
@@ -34,7 +35,7 @@ function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict)
         end
     end
     p = NamedTuple{param_names}(tmp)
-    return plankton(data, sp, p, rnd)
+    return plankton(data, N, sp, p, rnd)
 end
 
 const plank_names=(:sp1, :sp2, :sp3, :sp4, :sp5, :sp6, :sp7, :sp8, :sp9)
