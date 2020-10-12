@@ -1,19 +1,19 @@
 using KernelAbstractions.Extras.LoopInfo: @unroll
-##### calculate Chla field based on the status of plankton individuals
-@kernel function acc_chla_field_kernel!(chl, pop, plank, inds::AbstractArray{Int64,2})
-    @unroll for i in 1:size(plank,1)
-        if plank[i,58] == 1.0
-            @inbounds xi = inds[i,1]
-            @inbounds yi = inds[i,2]
-            @inbounds zi = inds[i,3]
-            @inbounds chl[xi, yi, zi] += plank[i,10]
-            @inbounds pop[xi, yi, zi] += 1.0
-        end
+##### calculate Chla and individual counts based on the status of plankton individuals
+@kernel function acc_counts_kernel!(counts, plank, inds::AbstractArray{Int64,2})
+    i = @index(Global)
+    gi = @index(Group)
+    if plank[i,58] == 1.0
+        @inbounds xi = inds[i,1]
+        @inbounds yi = inds[i,2]
+        @inbounds zi = inds[i,3]
+        @inbounds counts[xi, yi, zi, gi, 1] += plank[i,10]
+        @inbounds counts[xi, yi, zi, gi, 2] += 1.0
     end
 end
-function acc_chla_field!(chl, pop, plank, inds::AbstractArray{Int64,2}, arch::Architecture)
-    kernel! = acc_chla_field_kernel!(device(arch), 256, (1,))
-    event = kernel!(chl, pop, plank, inds)
+function acc_counts!(counts, plank, inds::AbstractArray{Int64,2}, arch::Architecture)
+    kernel! = acc_counts_kernel!(device(arch), 1, (size(plank,1),))
+    event = kernel!(counts, plank, inds)
     wait(device(arch), event)
     return nothing
 end
