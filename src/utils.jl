@@ -1,10 +1,17 @@
 ##### copy external velocities into the model
 function vel_copy!(vel::NamedTuple, u, v, w, arch::Architecture, g::Grids)
-    vel.u.data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] .= u
-    vel.v.data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] .= v
-    vel.w.data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] .= w
+    unsafe_copyto!(vel.u.data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺], 1, u, 1, g.Nx*g.Ny*g.Nz)
+    unsafe_copyto!(vel.v.data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺], 1, v, 1, g.Nx*g.Ny*g.Nz)
+    unsafe_copyto!(vel.w.data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺], 1, w, 1, g.Nx*g.Ny*g.Nz)
 
     fill_halo_vel!(vel, g)
+end
+
+##### sum up nutrient consumption counts into nutrient tendencies
+function cts_to_Gcs!(plk, cts, g::Grids)
+    for i in 1:length(nut_names)
+        @inbounds plk[i].data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺] .= sum(cts[:,:,:,:,i], dims=4)[:,:,:,1]
+    end
 end
 
 """
@@ -13,13 +20,13 @@ subtract one tendency from total tendencies
 """
 function sub_nut_tendency!(a, b, c)
     for i in 1:length(a)
-        a[i].data .= b[i].data .- c[i].data
+        @inbounds a[i].data .= b[i].data .- c[i].data
     end
 end
 
 function zero_fields!(a)
     for i in 1:length(a)
-        a[i].data .= 0.0
+        @inbounds a[i].data .= 0.0
     end
 end
 # """

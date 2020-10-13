@@ -93,7 +93,7 @@ function gen_individuals!(plank, N::Int64, g::Grids, arch::Architecture)
     plank.data[1:N,7] .= plank.data[1:N,7] .* plank.data[1:N,6]                                          # Cq
     plank.data[1:N,8] .= rand(rng_type(arch), N) .* (nqmax - nqmin)  .+ nqmin                            # Nq
     plank.data[1:N,8] .= plank.data[1:N,8] .* plank.data[1:N,6]                                          # Nq
-    plank.data[1:N,8] .= rand(rng_type(arch), N) .* (pqmax - pqmin)  .+ pqmin                            # Pq
+    plank.data[1:N,9] .= rand(rng_type(arch), N) .* (pqmax - pqmin)  .+ pqmin                            # Pq
     plank.data[1:N,9] .= plank.data[1:N,9] .* plank.data[1:N,6]                                          # Pq
     plank.data[1:N,10] .= plank.data[1:N,6] .* Chl2Cint                                                  # Chl
     plank.data[1:N,11] .= 1.0                                                                            # generation

@@ -105,15 +105,16 @@ Write a brief summary of each species at each time step into a txt file
 """
 function write_species_dynamics(t::Int64, phytos, filepath)
     for i in 1:length(phytos)
-        pop = phytos[i].active_num
-        gen_ave = mean(phytos[i].data[1:pop,11])
-        age_ave = mean(phytos[i].data[1:pop,12])
-        size_ave= mean(phytos[i].data[1:pop,5])
-        Bm_ave= mean(phytos[i].data[1:pop,6])
-        Cq_ave= mean(phytos[i].data[1:pop,7])
-        Nq_ave= mean(phytos[i].data[1:pop,8])
-        Pq_ave= mean(phytos[i].data[1:pop,9])
-        Chl_ave= mean(phytos[i].data[1:pop,10])
+        pop = phytos[i].num
+        aves = mean(phytos[i].data[1:pop,5:12], dims=1)[1,:]
+        CUDA.@allowscalar gen_ave =  aves[7]
+        CUDA.@allowscalar age_ave =  aves[8]
+        CUDA.@allowscalar size_ave=  aves[1]
+        CUDA.@allowscalar Bm_ave  =  aves[2]
+        CUDA.@allowscalar Cq_ave  =  aves[3]
+        CUDA.@allowscalar Nq_ave  =  aves[4]
+        CUDA.@allowscalar Pq_ave  =  aves[5]
+        CUDA.@allowscalar Chl_ave =  aves[6]
         io = open(filepath*"dynamic_species"*lpad(i,3,"0")*".txt","a");
         println(io,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E",t,pop,gen_ave,age_ave,size_ave,Bm_ave,Cq_ave,Nq_ave,Pq_ave,Chl_ave))
         close(io);

@@ -72,7 +72,7 @@ function PI_Model(arch::Architecture, grid, RunParam;
     par = zeros(grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
     chl = zeros(grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
     pop = zeros(grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
-    cts = zeros(grid.Nx, grid.Ny, grid.Nz, 3*params["Nind"], 2) |> array_type(arch)
+    cts = zeros(grid.Nx, grid.Ny, grid.Nz, 3*params["Nind"], 10) |> array_type(arch)
     tmp = zeros(3*params["Nind"],60) |> array_type(arch)
     ts = timestepper(Gcs, MD1, MD2, MD3, vel₀, vel½, vel₁, plk, par, chl, pop, cts, tmp)
 
