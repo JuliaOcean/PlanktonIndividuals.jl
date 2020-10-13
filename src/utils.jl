@@ -1,8 +1,8 @@
 ##### copy external velocities into the model
 function vel_copy!(vel::NamedTuple, u, v, w, arch::Architecture, g::Grids)
-    unsafe_copyto!(vel.u.data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺], 1, u, 1, g.Nx*g.Ny*g.Nz)
-    unsafe_copyto!(vel.v.data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺], 1, v, 1, g.Nx*g.Ny*g.Nz)
-    unsafe_copyto!(vel.w.data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺], 1, w, 1, g.Nx*g.Ny*g.Nz)
+    vel.u.data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺] .= u
+    vel.v.data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺] .= v
+    vel.w.data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺] .= w
 
     fill_halo_vel!(vel, g)
 end

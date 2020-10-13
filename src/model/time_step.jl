@@ -17,27 +17,27 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     @inbounds model.timestepper.pop .= 0.0
     @inbounds model.timestepper.cts .= 0.0
 
-    for plank in model.individuals.phytos
-        plankton_advectionRK4!(plank.data, model.arch, model.grid, model.timestepper.vel₀,
-                               model.timestepper.vel½, model.timestepper.vel₁, ΔT)
+    # for plank in model.individuals.phytos
+    #     plankton_advectionRK4!(plank.data, model.arch, model.grid, model.timestepper.vel₀,
+    #                            model.timestepper.vel½, model.timestepper.vel₁, ΔT)
 
-        gen_rand_adv!(plank.rnd, model.arch)
-        plankton_diffusion!(plank.data, plank.rnd, model.arch, model.params["κhP"], ΔT)
-        in_domain!(plank.data, model.arch, model.grid)
+    #     gen_rand_adv!(plank.rnd, model.arch)
+    #     plankton_diffusion!(plank.data, plank.rnd, model.arch, model.params["κhP"], ΔT)
+    #     in_domain!(plank.data, model.arch, model.grid)
 
-        ##### calculate accumulated chla quantity (not concentration)
-        find_inds!(plank.data, model.arch, model.grid, 0)
-        acc_counts!(model.timestepper.cts, plank.data, Int.(plank.data[:,13:15]), model.arch)
-    end
+    #     ##### calculate accumulated chla quantity (not concentration)
+    #     find_inds!(plank.data, model.arch, model.grid, 0)
+    #     acc_counts!(model.timestepper.cts, plank.data, Int.(plank.data[:,13:15]), model.arch)
+    # end
 
     ##### calculate PAR
-    @inbounds model.timestepper.chl .= sum(model.timestepper.cts[:,:,:,:,1], dims=4)[:,:,:,1]
-    @inbounds model.timestepper.pop .= sum(model.timestepper.cts[:,:,:,:,2], dims=4)[:,:,:,1]
-    calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.input.PARF[:,:,clock],
-              model.grid, model.params["kc"], model.params["kw"])
+    # @inbounds model.timestepper.chl .= sum(model.timestepper.cts[:,:,:,:,1], dims=4)[:,:,:,1]
+    # @inbounds model.timestepper.pop .= sum(model.timestepper.cts[:,:,:,:,2], dims=4)[:,:,:,1]
+    # calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.input.PARF[:,:,clock],
+    #           model.grid, model.params["kc"], model.params["kw"])
 
     ##### clear counts array for nutrient consumption
-    @inbounds model.timestepper.cts .= 0.0
+    # @inbounds model.timestepper.cts .= 0.0
 
     # for plank in model.individuals.phytos
     #     model.timestepper.tmp .= 0.0
@@ -77,20 +77,20 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     # write_species_dynamics(model.t, model.individuals.phytos, resultspath)
 
     ##### diagnostics for nutrients
-    @inbounds model.diags.tr[:,:,:,diag_t,1] .+= model.timestepper.par
-    @inbounds model.diags.tr[:,:,:,diag_t,2] .+= interior(model.nutrients.NO3.data, model.grid)
-    @inbounds model.diags.tr[:,:,:,diag_t,3] .+= interior(model.nutrients.NH4.data, model.grid)
-    @inbounds model.diags.tr[:,:,:,diag_t,4] .+= interior(model.nutrients.PO4.data, model.grid)
-    @inbounds model.diags.tr[:,:,:,diag_t,5] .+= interior(model.nutrients.DOC.data, model.grid)
+    # @inbounds model.diags.tr[:,:,:,diag_t,1] .+= model.timestepper.par
+    # @inbounds model.diags.tr[:,:,:,diag_t,2] .+= interior(model.nutrients.NO3.data, model.grid)
+    # @inbounds model.diags.tr[:,:,:,diag_t,3] .+= interior(model.nutrients.NH4.data, model.grid)
+    # @inbounds model.diags.tr[:,:,:,diag_t,4] .+= interior(model.nutrients.PO4.data, model.grid)
+    # @inbounds model.diags.tr[:,:,:,diag_t,5] .+= interior(model.nutrients.DOC.data, model.grid)
 
     ##### sum up nutrient consumption counts into nutrient tendencies
-    cts_to_Gcs!(model.timestepper.plk, model.timestepper.cts, model.grid)
+    # cts_to_Gcs!(model.timestepper.plk, model.timestepper.cts, model.grid)
 
-    # nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.MD1,
-    #             model.timestepper.MD2, model.timestepper.MD3, model.arch,
-    #             model.grid, model.params, model.timestepper.vel₁, model.timestepper.plk, ΔT)
+    nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.MD1,
+                model.timestepper.MD2, model.timestepper.MD3, model.arch,
+                model.grid, model.params, model.timestepper.vel₁, model.timestepper.plk, ΔT)
 
-    # write_nut_cons(model.grid, model.timestepper.Gcs, model.nutrients, model.t, resultspath)
+    write_nut_cons(model.grid, model.timestepper.Gcs, model.nutrients, model.t, resultspath)
 
     @inbounds model.timestepper.vel₀.u.data .= model.timestepper.vel₁.u.data
     @inbounds model.timestepper.vel₀.v.data .= model.timestepper.vel₁.v.data
