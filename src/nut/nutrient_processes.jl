@@ -1,13 +1,16 @@
 ##### update nutrient fields
 function nut_update!(nutrients, Gcs, MD1, MD2, MD3, arch::Architecture, g::Grids, params, vel, consume, ΔT)
     ##### compute advection tendency
+    zero_fields!(MD1)
     nut_advection!(Gcs, arch, g, nutrients, MD1, MD2, MD3, vel, ΔT)
 
     ##### compute nutrient diffusion,for each time step
     nut_diffusion!(Gcs, arch, g, nutrients, params["κh"], ΔT)
 
     ##### compute biogeochemical forcings of nutrients,for each time step
-    nut_forcing!(Gcs, arch, g, nutrients, params, ΔT)
+    # nut_forcing!(Gcs, arch, g, nutrients, params, ΔT)
+    zero_fields!(MD1)
+    nut_forcing!(Gcs, MD1, nutrients, params, ΔT)
 
     ##### apply diffusion and forcing tendency
     for name in nut_names
