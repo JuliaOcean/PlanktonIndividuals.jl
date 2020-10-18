@@ -4,6 +4,7 @@ using NCDatasets, Serialization
 using Random, Distributions, Statistics, Interpolations
 using Printf
 using CUDA, KernelAbstractions
+using StructArrays
 
 src=""
 
