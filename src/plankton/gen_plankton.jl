@@ -9,11 +9,10 @@ x  y  z  size_i  size  Bm  Cq  Nq  Pq  chl  gen  age  xi  yi  zi  NH4  NO3  PO4 
 u0  u1  v0  v1  w0  w1  xd  yd  zd  u1  v1  w1  u2  v2  w2  u3  v3  w3  u4  v4  w4  active tempo indx  pop
 =#
 mutable struct plankton
-    data::AbstractArray{Float64,2}
+    data::AbstractArray
     num::Int64
     sp::Int64
     p::NamedTuple
-    rnd::AbstractArray{Float64,2}
 end
 
 struct individuals
@@ -22,9 +21,13 @@ struct individuals
 end
 
 function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict)
-    data  = zeros(Float64, N*3, 60) |> array_type(arch)
-    rnd   = zeros(Float64, N*3, 3) |> array_type(arch)
+    rawdata = StructArray(x = zeros(4N), y = zeros(4N), z = zeros(4N),
+                          iS = zeros(4N), Sz = zeros(4N),
+                          Bm = zeros(4N), Cq = zeros(4N), Nq = zeros(4N), Pq = zeros(4N),
+                          chl = zeros(4N), gen = zeros(4N), age = zeros(4N),
+                          ac = zeros(4N), idx = zeros(4N))
 
+    data = replace_storage(array_type(arch), rawdata);
     pkeys = collect(keys(params))
     tmp = zeros(length(param_names))
     for i in 1:length(param_names)
@@ -35,7 +38,7 @@ function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict)
         end
     end
     p = NamedTuple{param_names}(tmp)
-    return plankton(data, N, sp, p, rnd)
+    return plankton(data, N, sp, p)
 end
 
 const plank_names=(:sp1, :sp2, :sp3, :sp4, :sp5, :sp6, :sp7, :sp8, :sp9)
@@ -83,22 +86,22 @@ function gen_individuals!(plank, N::Int64, g::Grids, arch::Architecture)
     pqmin = plank.p.Pqmin
     Chl2Cint = plank.p.Chl2Cint
 
-    plank.data[1:N,1] .= rand(rng_type(arch), N) .* (g.xF[g.Nx+g.Hx+1] - g.xF[g.Hx+1])                   # x
-    plank.data[1:N,2] .= rand(rng_type(arch), N) .* (g.yF[g.Ny+g.Hy+1] - g.yF[g.Hy+1])                   # y
-    plank.data[1:N,3] .= rand(rng_type(arch), N) .* (g.zF[g.Nz+g.Hz+1] - g.zF[g.Hz+1]) .+ g.zF[g.Hz+1]   # z
-    plank.data[1:N,4] .= max.(1.0, randn(rng_type(arch), N) .* var .+ mean)                              # init_size
-    plank.data[1:N,5] .= copy(plank.data[1:N,4])                                                         # size
-    plank.data[1:N,6] .= Cquota .* plank.data[1:N,5] .* Nsuper                                           # Bm
-    plank.data[1:N,7] .= rand(rng_type(arch), N) .* (cqmax - cqmin)  .+ cqmin                            # Cq
-    plank.data[1:N,7] .= plank.data[1:N,7] .* plank.data[1:N,6]                                          # Cq
-    plank.data[1:N,8] .= rand(rng_type(arch), N) .* (nqmax - nqmin)  .+ nqmin                            # Nq
-    plank.data[1:N,8] .= plank.data[1:N,8] .* plank.data[1:N,6]                                          # Nq
-    plank.data[1:N,9] .= rand(rng_type(arch), N) .* (pqmax - pqmin)  .+ pqmin                            # Pq
-    plank.data[1:N,9] .= plank.data[1:N,9] .* plank.data[1:N,6]                                          # Pq
-    plank.data[1:N,10] .= plank.data[1:N,6] .* Chl2Cint                                                  # Chl
-    plank.data[1:N,11] .= 1.0                                                                            # generation
-    plank.data[1:N,12] .= 1.0                                                                            # age
-    plank.data[1:N,58] .= 1.0                                                                            # active
+    plank.data.x[1:N]   .= rand(rng_type(arch), N) .* (g.xF[g.Nx+g.Hx+1] - g.xF[g.Hx+1])                   # x
+    plank.data.y[1:N]   .= rand(rng_type(arch), N) .* (g.yF[g.Ny+g.Hy+1] - g.yF[g.Hy+1])                   # y
+    plank.data.z[1:N]   .= rand(rng_type(arch), N) .* (g.zF[g.Nz+g.Hz+1] - g.zF[g.Hz+1]) .+ g.zF[g.Hz+1]   # z
+    plank.data.iS[1:N]  .= max.(1.0, randn(rng_type(arch), N) .* var .+ mean)                              # init_size
+    plank.data.Sz[1:N]  .= copy(plank.data.iS[1:N])                                                        # size
+    plank.data.Bm[1:N]  .= Cquota .* plank.data.Sz[1:N] .* Nsuper                                          # Bm
+    plank.data.Cq[1:N]  .= rand(rng_type(arch), N) .* (cqmax - cqmin)  .+ cqmin                            # Cq
+    plank.data.Cq[1:N]  .= plank.data.Cq[1:N] .* plank.data.Bm[1:N]                                        # Cq
+    plank.data.Nq[1:N]  .= rand(rng_type(arch), N) .* (nqmax - nqmin)  .+ nqmin                            # Nq
+    plank.data.Nq[1:N]  .= plank.data.Nq[1:N] .* plank.data.Bm[1:N]                                        # Nq
+    plank.data.Pq[1:N]  .= rand(rng_type(arch), N) .* (pqmax - pqmin)  .+ pqmin                            # Pq
+    plank.data.Pq[1:N]  .= plank.data.Pq[1:N] .* plank.data.Bm[1:N]                                        # Pq
+    plank.data.chl[1:N] .= plank.data.Bm[1:N] .* Chl2Cint                                                  # Chl
+    plank.data.gen[1:N] .= 1.0                                                                             # generation
+    plank.data.age[1:N] .= 1.0                                                                             # age
+    plank.data.ac[1:N]  .= 1.0                                                                             # active
 
     # if RunParam.Zoo == false
     #     return individuals(phyts0,nothing)
