@@ -14,9 +14,12 @@ mutable struct timestepper
     plk::NamedTuple     # a NamedTuple same as nutrients to store interactions with individuals
     par::AbstractArray  # a (Cu)Array to store PAR field of each timestep
     chl::AbstractArray  # a (Cu)Array to store Chl field of each timestep
-    pop::AbstractArray  # a (Cu)Array to store Chl field of each timestep
+    pop::AbstractArray  # a (Cu)Array to store population field of each timestep
     cts::AbstractArray  # a (Cu)Array to store counts of each timestep
     tmp::AbstractArray  # a (Cu)Array to store temporary individuals of each timestep
+    rnd::AbstractArray  # a StructArray of random numbers for plankton diffusion or grazing, mortality and division.
+    velos::AbstractArray# a StructArray of intermediate values for RK4 particle advection
+    coord::AbstractArray# a StructArray of coordinates of each individual
 end
 
 mutable struct Model_Struct
@@ -30,6 +33,46 @@ mutable struct Model_Struct
     diags::Diagnostics          # diagnostics
     timestepper::timestepper    # operating Tuples and arrays for timestep
 end
+
+function timestepper(arch::Architecture, g::Grids, N)
+    vel₀ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
+    vel½ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
+    vel₁ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
+
+    Gcs = nutrients_init(arch, g)
+    MD1 = nutrients_init(arch, g)
+    MD2 = nutrients_init(arch, g)
+    MD3 = nutrients_init(arch, g)
+    plk = nutrients_init(arch, g)
+
+    par = zeros(g.Nx, g.Ny, g.Nz) |> array_type(arch)
+    chl = zeros(g.Nx, g.Ny, g.Nz) |> array_type(arch)
+    pop = zeros(g.Nx, g.Ny, g.Nz) |> array_type(arch)
+    cts = zeros(g.Nx, g.Ny, g.Nz, 4N, 10) |> array_type(arch)
+    tmp = zeros(4N,60) |> array_type(arch)
+
+    rnd = StructArray(x = zeros(4N), y = zeros(4N), z = zeros(4N))
+    rnd_d = replace_storage(array_type(arch), rnd)
+
+    velos = StructArray(x = zeros(4N), y = zeros(4N), z = zeros(4N),
+                        u⁺= zeros(4N), v⁺= zeros(4N), w⁺= zeros(4N),
+                        u⁻= zeros(4N), v⁻= zeros(4N), w⁻= zeros(4N),
+                        u1= zeros(4N), v1= zeros(4N), w1= zeros(4N),
+                        u2= zeros(4N), v2= zeros(4N), w2= zeros(4N),
+                        u3= zeros(4N), v3= zeros(4N), w3= zeros(4N),
+                        u4= zeros(4N), v4= zeros(4N), w4= zeros(4N),
+                        xd= zeros(4N), yd= zeros(4N), zd= zeros(4N),
+                        )
+    velos_d = replace_storage(array_type(arch), velos)
+
+    coord = StructArray(x = zeros(4N), y = zeros(4N), z = zeros(4N))
+    coord_d = replace_storage(array_type(arch), coord)
+
+    ts = timestepper(Gcs, MD1, MD2, MD3, vel₀, vel½, vel₁, plk, par, chl, pop, cts, tmp, rnd_d, velos_d, coord_d)
+
+    return ts
+end
+
 """
     PI_model(grid, RunParam)
 Generate the model structure for time step
@@ -61,20 +104,7 @@ function PI_Model(arch::Architecture, grid, RunParam;
         gen_individuals!(plank, params["Nind"], grid, arch)
     end
 
-    vel₀ = (u = Field(arch, grid), v = Field(arch, grid), w = Field(arch, grid))
-    vel½ = (u = Field(arch, grid), v = Field(arch, grid), w = Field(arch, grid))
-    vel₁ = (u = Field(arch, grid), v = Field(arch, grid), w = Field(arch, grid))
-    Gcs = nutrients_init(arch, grid)
-    MD1 = nutrients_init(arch, grid)
-    MD2 = nutrients_init(arch, grid)
-    MD3 = nutrients_init(arch, grid)
-    plk = nutrients_init(arch, grid)
-    par = zeros(grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
-    chl = zeros(grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
-    pop = zeros(grid.Nx, grid.Ny, grid.Nz) |> array_type(arch)
-    cts = zeros(grid.Nx, grid.Ny, grid.Nz, 3*params["Nind"], 10) |> array_type(arch)
-    tmp = zeros(3*params["Nind"],60) |> array_type(arch)
-    ts = timestepper(Gcs, MD1, MD2, MD3, vel₀, vel½, vel₁, plk, par, chl, pop, cts, tmp)
+    ts = timestepper(arch, grid, params["Nind"])
 
     model = Model_Struct(arch, t, individuals, nutrients, grid, input, params, diags, ts)
 
