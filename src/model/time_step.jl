@@ -17,18 +17,21 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     @inbounds model.timestepper.pop .= 0.0
     @inbounds model.timestepper.cts .= 0.0
 
-    # for plank in model.individuals.phytos
-    #     plankton_advectionRK4!(plank.data, model.arch, model.grid, model.timestepper.vel₀,
-    #                            model.timestepper.vel½, model.timestepper.vel₁, ΔT)
+    for plank in model.individuals.phytos
+        gen_rand_adv!(model.timestepper.rnd, model.arch)
+        plankton_diffusion!(plank.data, model.timestepper.rnd, model.params["κhP"], ΔT)
+        periodic_domain!(plank.data, plank.data.ac, model.grid)
 
-    #     gen_rand_adv!(plank.rnd, model.arch)
-    #     plankton_diffusion!(plank.data, plank.rnd, model.arch, model.params["κhP"], ΔT)
-    #     in_domain!(plank.data, model.arch, model.grid)
+        plankton_advectionRK4!(plank.data, model.timestepper.coord, model.timestepper.velos, model.grid,
+                               model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT)
 
-    #     ##### calculate accumulated chla quantity (not concentration)
-    #     find_inds!(plank.data, model.arch, model.grid, 0)
+        # plankton_advection!(plank.data, model.timestepper.coord, model.timestepper.velos,
+        #                     model.grid, model.timestepper.vel₁, ΔT)
+
+        ##### calculate accumulated chla quantity (not concentration)
+        find_inds!(plank.data, model.timestepper.coord, plank.data.ac, model.grid)
     #     acc_counts!(model.timestepper.cts, plank.data, Int.(plank.data[:,13:15]), model.arch)
-    # end
+    end
 
     ##### calculate PAR
     # @inbounds model.timestepper.chl .= sum(model.timestepper.cts[:,:,:,:,1], dims=4)[:,:,:,1]
