@@ -8,9 +8,10 @@ function periodic_domain!(plank, ac, g::Grids)
                isequal.(plank.y, g.yF[g.y⁺]) .* plank.y .+
                isless.(g.yF[g.y⁺], plank.y) .* (plank.y .- (g.Ny*g.Δy))
 
+    # bounded for z direction
     plank.z .= isless.(plank.z, g.zF[g.z⁺]) .* plank.z .+
                isequal.(plank.z, g.zF[g.z⁺]) .* plank.z .+
-               isless.(g.zF[g.z⁺], plank.z) .* (plank.z .- (g.Nz*g.Δz))
+               isless.(g.zF[g.z⁺], plank.z) .* plank.z
 
     plank.x .= isless.(plank.x, g.xF[g.x⁻]) .* (plank.x .+ (g.Nx*g.Δx)) .+
                isequal.(plank.x, g.xF[g.x⁻]) .* plank.x .+
@@ -20,7 +21,8 @@ function periodic_domain!(plank, ac, g::Grids)
                isequal.(plank.y, g.yF[g.y⁻]) .* plank.y .+
                isless.(g.yF[g.y⁻], plank.y) .* plank.y
 
-    plank.z .= isless.(plank.z, g.zF[g.z⁻]) .* (plank.z .+ (g.Nz*g.Δz)) .+
+    # bounded for z direction
+    plank.z .= isless.(plank.z, g.zF[g.z⁻]) .* plank.z .+
                isequal.(plank.z, g.zF[g.z⁻]) .* plank.z .+
                isless.(g.zF[g.z⁻], plank.z) .* plank.z
 
