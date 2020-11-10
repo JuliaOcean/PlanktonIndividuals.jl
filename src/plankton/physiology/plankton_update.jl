@@ -1,9 +1,11 @@
 ##### update physiological attributes of each individual
-function plankton_update!(plank, tmp, rnd, cts, par, arch::Architecture, temp, pop, nut, g::Grids, p, ΔT, t, num::Int64)
+function plankton_update!(plank, nuts, coord, tmp, rnd, cts, par, arch::Architecture,
+                          temp, pop, nut, g::Grids, p, ΔT, t, num::Int64)
     ##### calculate the total active plankton numbers
     ##### find nutrient, temperature, and par values for each individual
-    find_NPT!(plank, Int.(plank[:,13:15]), arch, nut.NH4.data, nut.NO3.data, nut.PO4.data, nut.DOC.data,
-              par, temp, pop, g, p.α, p.Φ, p.TempAe, p.Tempref, p.TempCoeff)
+    find_NPT!(nuts, Int.(coord.x), Int.(coord.y), Int.(coord.z), plank.ac, g,
+              nut.NH4.data, nut.NO3.data, nut.PO4.data, nut.DOC.data,
+              par, temp, pop, p.α, p.Φ, p.TempAe, p.Tempref, p.TempCoeff)
 
     # ##### Carbon uptake
     # calc_PS!(plank, tmp, p.PCmax, p.PC_b, num)

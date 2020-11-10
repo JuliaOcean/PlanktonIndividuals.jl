@@ -1,220 +1,202 @@
 ##### find and calculate nutrients, αI, and tempfunc for each individual
-@kernel function find_NPT_kernel!(plank, inds::AbstractArray{Int64,2},
-                                  NH4, NO3, PO4, DOC, par, temp, pop, g::Grids,
-                                  α, Φ, TempAe, Tempref, TempCoeff)
-    i = @index(Global, Linear)
-    if plank[i,58] == 1.0
-        @inbounds xi = inds[i,1]
-        @inbounds yi = inds[i,2]
-        @inbounds zi = inds[i,3]
-        @inbounds plank[i,16] = max(1.0e-10, NH4[xi+g.Hx, yi+g.Hy, zi+g.Hz])
-        @inbounds plank[i,17] = max(1.0e-10, NO3[xi+g.Hx, yi+g.Hy, zi+g.Hz])
-        @inbounds plank[i,18] = max(1.0e-10, PO4[xi+g.Hx, yi+g.Hy, zi+g.Hz])
-        @inbounds plank[i,19] = max(1.0e-10, DOC[xi+g.Hx, yi+g.Hy, zi+g.Hz])
-        @inbounds plank[i,20] = α * par[xi, yi, zi] * Φ
-        @inbounds plank[i,21] = max(1.0e-10, exp(TempAe * (1.0 / (temp[xi, yi, zi] + 273.15)
-                                                           - 1.0 / Tempref))) * TempCoeff
-        @inbounds plank[i,60] = pop[xi, yi, zi]
-    end
-end
-function find_NPT!(plank, inds::AbstractArray{Int64,2}, arch::Architecture,
-                   NH4, NO3, PO4, DOC, par, temp, pop, g::Grids,
-                   α, Φ, TempAe, Tempref, TempCoeff)
-    kernel! = find_NPT_kernel!(device(arch), 256, (size(plank,1),))
+function find_NPT!(nuts, x, y, z, ac, g::Grids, NH4, NO3, PO4, DOC, par, temp, pop, α, Φ, TempAe, Tempref, TempCoeff)
+    @inbounds nuts.NH4 .= NH4[CartesianIndex.(x .+ g.Hx, y .+ g.Hy, z .+ g.Hz)] .* ac
+    @inbounds nuts.NO3 .= NO3[CartesianIndex.(x .+ g.Hx, y .+ g.Hy, z .+ g.Hz)] .* ac
+    @inbounds nuts.PO4 .= PO4[CartesianIndex.(x .+ g.Hx, y .+ g.Hy, z .+ g.Hz)] .* ac
+    @inbounds nuts.DOC .= DOC[CartesianIndex.(x .+ g.Hx, y .+ g.Hy, z .+ g.Hz)] .* ac
+    @inbounds nuts.αI  .= par[CartesianIndex.(x, y, z)] .* α .* Φ .* ac
+    @inbounds nuts.Tem .= temp[CartesianIndex.(x, y, z)] .* ac
+    @inbounds nuts.pop .= pop[CartesianIndex.(x, y, z)] .* ac
 
-    event = kernel!(plank, inds,  NH4, NO3, PO4, DOC, par, temp, pop, g,
-                    α, Φ, TempAe, Tempref, TempCoeff)
-    wait(device(arch), event)
-    return nothing
+    @inbounds nuts.NH4 .= max.(1.0e-10, nuts.NH4) .* ac
+    @inbounds nuts.NO3 .= max.(1.0e-10, nuts.NO3) .* ac
+    @inbounds nuts.PO4 .= max.(1.0e-10, nuts.PO4) .* ac
+    @inbounds nuts.DOC .= max.(1.0e-10, nuts.DOC) .* ac
+
+    @inbounds nuts.Tem .= max.(1.0e-10, exp.(TempAe .* (1.0 ./ (nuts.Tem .+ 273.15) .- (1.0/Tempref)))) .* TempCoeff
 end
 
 ##### calculate photosynthesis rate (mmolC/individual/second)
-function calc_PS!(plank, tmp, PCmax, PC_b, num::Int64)
-    @inbounds tmp[1:num,1] .= PCmax .* plank[1:num,5] .^ PC_b .* plank[1:num,21] # PCm
-    @inbounds tmp[1:num,2] .= exp.(-plank[1:num,20] .* plank[1:num,10] ./ plank[1:num,6] ./ tmp[1:num,1])
-
-    @inbounds plank[1:num,22] .= tmp[1:num,1] .* (1.0 .- tmp[1:num,2]) .* plank[1:num,6] # PS
+function calc_PS!(plank, proc, nuts, PCmax, PC_b)
+    @inbounds proc.PS .= max.(1.0e-10, PCmax .* plank.Sz .^ PC_b .* nuts.Tem)
+    @inbounds proc.PS .= proc.PS .* (1.0 .- exp.(-nuts.αI .* plank.chl ./ plank.Bm ./ proc.PS)) .* plank.Bm
+    @inbounds proc.PS .= proc.PS .* plank.ac
 end
 
-##### calculate DOC uptake rate (mmolC/individual/second)
-function calc_VDOC!(plank, tmp, g::Grids, ΔT, Cqmax, Cqmin, VDOCmax, VDOC_b, KsatDOC, num::Int64)
-    @inbounds tmp[1:num,3] .= plank[1:num,7] ./ (plank[1:num,6] .+ plank[1:num,7]) # Qc
-    @inbounds tmp[1:num,4] .= max.(0.0, min.(1.0, (Cqmax .- tmp[1:num,3]) ./ (Cqmax - Cqmin))) # inter regulation
-    @inbounds tmp[1:num,5] .= plank[1:num,19] ./ (plank[1:num,19] .+ KsatDOC) # KDOC
-
-    @inbounds plank[1:num,23] .= VDOCmax .* plank[1:num,5] .^ VDOC_b .*
-        tmp[1:num,4] .* tmp[1:num,5] .* plank[1:num,21] .* plank[1:num,6] # VDOC
-
-    @inbounds plank[1:num,23] .= min.(plank[1:num,19] .* g.V ./ 10.0 ./ ΔT, plank[1:num,23])
+##### calculate the intracellular regulations of nutrient uptake
+@inline function regQ(Nq, Bm, Cq, Nqmax, Nqmin, R_NC)
+    Qn = (Nq .+ Bm .* R_NC) ./ max.(1.0e-10, Bm .+ Cq)
+    return max.(0.0, min.(1.0, (Nqmax .- Qn) ./ (Nqmax - Nqmin)))
 end
 
 ##### calculate NH4 and NO3 uptake rate (mmolN/individual/second)
-function calc_VN!(plank, tmp, g::Grids, ΔT, Nqmax, Nqmin, VNH4max, VNO3max, VN_b, KsatNH4, KsatNO3, R_NC, num::Int64)
-    @inbounds tmp[1:num,6] .= (plank[1:num,8] .+ plank[1:num,6] .* R_NC) ./ (plank[1:num,6] .+ plank[1:num,7]) # Qn
-    @inbounds tmp[1:num,7] .= max.(0.0, min.(1.0, (Nqmax .- tmp[1:num,6]) ./ (Nqmax - Nqmin))) # inter regulation
-    @inbounds tmp[1:num,8] .= plank[1:num,16] ./ (plank[1:num,16] .+ KsatNH4) # KNH4
-    @inbounds tmp[1:num,9] .= plank[1:num,17] ./ (plank[1:num,17] .+ KsatNO3) # KNO3
+function calc_VN!(plank, proc, nuts, g::Grids, ΔT, Nqmax, Nqmin, VNH4max, VNO3max, VN_b, KsatNH4, KsatNO3, R_NC)
+    @inbounds proc.VNH4 .= VNH4max .* plank.Sz .^ VN_b .*
+        regQ(plank.Nq, plank.Bm, plank.Cq, Nqmax, Nqmin, R_NC) .*
+        nuts.NH4 ./ (nuts.NH4 .+ KsatNH4) .* nuts.Tem .* plank.Bm
+    @inbounds proc.VNH4 .= min.(nuts.NH4 .* g.V ./10.0 ./ ΔT, proc.VNH4) .* plank.ac
 
-    @inbounds plank[1:num,24] .= VNH4max .* plank[1:num,5] .^ VN_b .*
-        tmp[1:num,7] .* tmp[1:num,8] .* plank[1:num,21] .* plank[1:num,6] # VNH4
-
-    @inbounds plank[1:num,25] .= VNO3max .* plank[1:num,5] .^ VN_b .*
-        tmp[1:num,7] .* tmp[1:num,9] .* plank[1:num,21] .* plank[1:num,6] # VNO3
-
-    @inbounds plank[1:num,24] .= min.(plank[1:num,16] .* g.V ./ 10.0 ./ ΔT, plank[1:num,24])
-    @inbounds plank[1:num,25] .= min.(plank[1:num,17] .* g.V ./ 10.0 ./ ΔT, plank[1:num,25])
+    @inbounds proc.VNO3 .= VNO3max .* plank.Sz .^ VN_b .*
+        regQ(plank.Nq, plank.Bm, plank.Cq, Nqmax, Nqmin, R_NC) .*
+        nuts.NO3 ./ (nuts.NO3 .+ KsatNO3) .* nuts.Tem .* plank.Bm
+    @inbounds proc.VNO3 .= min.(nuts.NO3 .* g.V ./10.0 ./ ΔT, proc.VNO3) .* plank.ac
 end
 
 ##### calculate PO4 uptake rate (mmolP/individual/second)
-function calc_VP!(plank, tmp, g::Grids, ΔT, Pqmax, Pqmin, VPO4max, VP_b, KsatPO4, R_PC, num::Int64)
-    @inbounds tmp[1:num,10] .= (plank[1:num,9] .+ plank[1:num,6] .* R_PC) ./ (plank[1:num,6] .+ plank[1:num,7]) # Qp
-    @inbounds tmp[1:num,11] .= max.(0.0, min.(1.0, (Pqmax .- tmp[1:num,10]) ./ (Pqmax - Pqmin))) # inter regulation
-    @inbounds tmp[1:num,12] .= plank[1:num,18] ./ (plank[1:num,18] .+ KsatPO4) # KPO4
-
-    @inbounds plank[1:num,26] .= VPO4max .* plank[1:num,5] .^ VP_b .*
-        tmp[1:num,11] .* tmp[1:num,12] .* plank[1:num,21] .* plank[1:num,6] # VPO4
-
-    @inbounds plank[1:num,26] .= min.(plank[1:num,18] .* g.V ./ 10.0 ./ ΔT, plank[1:num,26])
+function calc_VP!(plank, tmp, g::Grids, ΔT, Pqmax, Pqmin, VPO4max, VP_b, KsatPO4, R_PC)
+    @inbounds proc.VPO4 .= VPO4max .* plank.Sz .^ VN_b .*
+        regQ(plank.Pq, plank.Bm, plank.Cq, Pqmax, Pqmin, R_PC) .*
+        nuts.PO4 ./ (nuts.PO4 .+ KsatPO4) .* nuts.Tem .* plank.Bm
+    @inbounds proc.VPO4 .= min.(nuts.PO4 .* g.V ./10.0 ./ ΔT, proc.VPO4) .* plank.ac
 end
 
 ##### calculate ρchl
-function calc_ρchl!(plank, tmp, Chl2N, num::Int64)
-    @inbounds tmp[1:num,13] .= max.(1.0e-10, plank[1:num,20]) .* plank[1:num,10] ./ plank[1:num,6]
-    @inbounds tmp[1:num,14] .= isless.(0.1, plank[1:num,20])
-    @inbounds plank[1:num,27] .= plank[1:num,22] ./ plank[1:num,6] .* Chl2N ./ tmp[1:num,13]
-    @inbounds plank[1:num,27] .= plank[1:num,27] .* tmp[1:num,14]
+function calc_ρchl!(plank, proc, nuts, Chl2N)
+    @inbounds proc.ρchl .= proc.PS ./ proc.Bm .* Chl2N ./ max.(1.0e-10, nuts.αI .* plank.chl ./ plank.Bm)
+    @inbounds proc.ρchl .= proc.ρchl .* isless.(0.1, nuts.αI)
 end
 
 ##### calculate respiration (mmolC/individual/second)
-function calc_respir!(plank, respir_a, respir_b, num::Int64)
-    @inbounds plank[1:num,28] .= respir_a .* plank[1:num,5] .^ respir_b .* plank[1:num,6] .* plank[1:num,21]
+function calc_respir!(plank, proc, nuts, respir_a, respir_b)
+    @inbounds proc.resp .= respir_a .* plank.Sz .^ respir_b .* plank.Bm .* nuts.Tem .* plank.ac
 end
 
-##### update C, N, P quotas
-function update_quotas!(plank, tmp, R_NC, R_PC, ΔT, num::Int64)
-    @inbounds plank[1:num,7] .= plank[1:num,7] .+ ΔT .* (plank[1:num,22] .+ plank[1:num,23] .- plank[1:num,28])
-    @inbounds plank[1:num,8] .= plank[1:num,8] .+ ΔT .* (plank[1:num,24] .+ plank[1:num,25])
-    @inbounds plank[1:num,9] .= plank[1:num,9] .+ ΔT .*  plank[1:num,26]
+##### update C, N, P quotas for the first time of each time step
+function update1_quotas!(plank, proc, ΔT)
+    @inbounds plank.Cq .= plank.Cq .+ ΔT .*  proc.PS
+    @inbounds plank.Nq .= plank.Nq .+ ΔT .* (proc.VNH4 .+ proc.VNO3)
+    @inbounds plank.Pq .= plank.Pq .+ ΔT .* proc.VPO4
+end
 
-    @inbounds tmp[1:num,15] .= 0.0 .- plank[1:num,7] # excess
-    @inbounds tmp[1:num,15] .= max.(0.0, tmp[1:num,15]) # excess
-    @inbounds plank[1:num,7] .= plank[1:num,7] .+ tmp[1:num,15]
-    @inbounds plank[1:num,6] .= plank[1:num,6] .- tmp[1:num,15]         # use biomass for respiration
-    @inbounds plank[1:num,8] .= plank[1:num,8] .+ tmp[1:num,15] .* R_NC # return N from function pool to N reserve
-    @inbounds plank[1:num,9] .= plank[1:num,9] .+ tmp[1:num,15] .* R_PC # return P from function pool to P reserve
+##### calculate DOC uptake rate (mmolC/individual/second)
+function calc_VDOC!(plank, proc, nuts, g::Grids, ΔT, Cqmax, Cqmin, VDOCmax, VDOC_b, KsatDOC)
+    @inbounds proc.VDOC .= VDOCmax .* plank.Sz .^ VDOC_b .*
+        regQ(plank.Cq, plank.Bm, plank.Cq, Cqmax, Cqmin, 0.0) .*
+        nuts.DOC ./ (nuts.DOC .+ KsatDOC) .* nuts.Tem .* plank.Bm
+    @inbounds proc.VDOC .= min.(nuts.DOC .* g.V ./10.0 ./ ΔT, proc.VDOC) .* plank.ac
+end
+
+##### update C, N, P quotas for the second time of each time step
+function update2_quotas!(plank, proc, ΔT, R_NC, R_PC)
+    @inbounds plank.Cq .= plank.Cq .+ ΔT .* (proc.VDOC .- proc.resp)
+    @inbounds plank.Cq .= plank.Cq .+ max.(0.0, (0.0 .- plank.Cq))
+    @inbounds plank.Bm .= plank.Bm .- max.(0.0, (0.0 .- plank.Cq))
+    @inbounds plank.Nq .= plank.Nq .+ max.(0.0, (0.0 .- plank.Cq)) .* R_NC
+    @inbounds plank.Pq .= plank.Pq .+ max.(0.0, (0.0 .- plank.Cq)) .* R_PC
 end
 
 ##### calculate biosynthesis and exudation (mmolC/individual/second)
-function calc_BS!(plank, tmp, k_mtb, b_k_mtb, R_NC, R_PC, num::Int64)
-    @inbounds tmp[1:num,16] .= k_mtb .* plank[1:num,5] .^ b_k_mtb .* plank[1:num,7]
-    @inbounds plank[1:num,29] .= min.(plank[1:num,7], plank[1:num,8] ./ R_NC, plank[1:num,9] ./ R_PC) .*
-        k_mtb .* plank[1:num,5] .^ b_k_mtb
-    @inbounds plank[1:num,30] .= max.(0.0, tmp[1:num,16] .- plank[1:num,29])
+function calc_BS!(plank, proc, k_mtb, b_k_mtb, R_NC, R_PC)
+    @inbounds proc.BS  .= min.(plank.Cq, plank.Nq ./ R_NC, plank.Pq ./ R_PC) .*
+        k_mtb .* plank.Sz .^ b_k_mtb .* plank.ac
+    @inbounds proc.exu .= max.(0.0, plank.Cq .- min.(plank.Cq, plank.Nq ./ R_NC, plank.Pq ./ R_PC)) .*
+        k_mtb .* plank.Sz .^ b_k_mtb .* plank.ac
 end
 
 ##### update C, N, P quotas, biomass, Chla, cell size
-function update_biomass!(plank, R_NC, R_PC, Cquota, Nsuper, ΔT, num::Int64)
-    @inbounds plank[1:num,6]  .= plank[1:num,6]  .+ ΔT .*  plank[1:num,29]
-    @inbounds plank[1:num,7]  .= plank[1:num,7]  .- ΔT .* (plank[1:num,29] .+ plank[1:num,30])
-    @inbounds plank[1:num,8]  .= plank[1:num,8]  .- ΔT .*  plank[1:num,29] .* R_NC
-    @inbounds plank[1:num,9]  .= plank[1:num,9]  .- ΔT .*  plank[1:num,29] .* R_PC
-    @inbounds plank[1:num,10] .= plank[1:num,10] .+ ΔT .*  plank[1:num,29] .* R_NC .* plank[1:num,27]
-    @inbounds plank[1:num,12] .= plank[1:num,12] .+ ΔT ./ 3600
-    @inbounds plank[1:num,5]  .=(plank[1:num,6]  .+ plank[1:num,7]) ./ Cquota ./ Nsuper
+function update_biomass!(plank, proc, R_NC, R_PC, Cquota, Nsuper, ΔT)
+    @inbounds plank.Bm  .= plank.Bm  .+ ΔT .*  proc.BS
+    @inbounds plank.Cq  .= plank.Cq  .- ΔT .* (proc.BS .+ proc.exu)
+    @inbounds plank.Nq  .= plank.Nq  .- ΔT .*  proc.BS .* R_NC
+    @inbounds plank.Pq  .= plank.Pq  .- ΔT .*  proc.BS .* R_PC
+    @inbounds plank.chl .= plank.chl .+ ΔT .*  proc.Bs .* R_NC .* proc.ρchl
+    @inbounds plank.age .= plank.age .+ ΔT ./ 3600.0 .* plank.ac
+    @inbounds plank.Sz  .= (plank.Bm .+ plank.Cq) ./ Cquota ./ Nsuper
 end
 
 ##### calculate probability of cell division
 ##### sizer
-function calc_dvid_size!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper, num::Int64)
-    @inbounds plank[1:num,33] .= dvid_P .* (tanh.(dvid_stp .* (plank[1:num,5] .- dvid_reg)) .+ 1)
-    @inbounds plank[1:num,33] .= plank[1:num,33] .* isless.(2*Cquota*Nsuper, plank[1:num,6])
+function calc_dvid_size!(plank, proc, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
+    @inbounds proc.dvid .= dvid_P .* (tanh.(dvid_stp .* (plank.Sz .- dvid_reg)) .+ 1.0)
+    @inbounds proc.dvid .= proc.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
 end
 ##### adder
-function calc_dvid_add!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper, num::Int64)
-    @inbounds plank[1:num,33] .= dvid_P .* (tanh.(dvid_stp .* (plank[1:num,5] .- plank[1:num,4] .- dvid_reg)) .+ 1)
-    @inbounds plank[1:num,33] .= plank[1:num,33] .* isless.(2*Cquota*Nsuper, plank[1:num,6])
+function calc_dvid_add!(plank, proc, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
+    @inbounds proc.dvid .= dvid_P .* (tanh.(dvid_stp .* (plank.Sz .- plank.iS .- dvid_reg)) .+ 1.0)
+    @inbounds proc.dvid .= proc.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
 end
 ##### age
-function calc_dvid_age!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper, num::Int64)
-    @inbounds plank[1:num,33] .= dvid_P .* (tanh.(dvid_stp .* (plank[1:num,12] .-  dvid_reg)) .+ 1)
-    @inbounds plank[1:num,33] .= plank[1:num,33] .* isless.(2*Cquota*Nsuper, plank[1:num,6])
+function calc_dvid_age!(plank, proc, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
+    @inbounds proc.dvid .= dvid_P .* (tanh.(dvid_stp .* (plank.age .- dvid_reg)) .+ 1.0)
+    @inbounds proc.dvid .= proc.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
 end
 ##### timer
-function calc_dvid_time!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper, t, num::Int64)
-    @inbounds plank[1:num,33] .= dvid_P * (tanh(dvid_stp * (t % 86400 ÷ 3600 -  dvid_reg)) + 1)
-    @inbounds plank[1:num,33] .= plank[1:num,33] .* isless.(2*Cquota*Nsuper, plank[1:num,6])
+function calc_dvid_time!(plank, proc, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper, t)
+    @inbounds proc.dvid .= dvid_P .* (tanh(dvid_stp * (t % 86400 ÷ 3600 - dvid_reg)) + 1.0)
+    @inbounds proc.dvid .= proc.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
 end
 ##### timer & sizer
-function calc_dvid_ts!(plank, dvid_stp, dvid_stp2, dvid_P, dvid_reg, dvid_reg2, Cquota, Nsuper, t, num::Int64)
-    @inbounds plank[1:num,33] .= dvid_P .* (tanh.(dvid_stp2 .* (plank[1:num,5] .- dvid_reg2)) .+ 1) .*
-                                  (tanh(dvid_stp   * (t % 86400 ÷ 3600 - dvid_reg)) + 1)
-    @inbounds plank[1:num,33] .= plank[1:num,33] .* isless.(2*Cquota*Nsuper, plank[1:num,6])
+function calc_dvid_ts!(plank, proc, dvid_stp, dvid_stp2, dvid_P, dvid_reg, dvid_reg2, Cquota, Nsuper, t)
+    @inbounds proc.dvid .= dvid_P .* (tanh(dvid_stp * (t % 86400 ÷ 3600 - dvid_reg)) + 1.0) .*
+                                     (tanh.(dvid_stp2 .* (plank.Sz .- dvid_reg2)) .+ 1.0)
+    @inbounds proc.dvid .= proc.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
 end
 
 ##### calculate the probability of grazing
 ##### quadratic grazing
-function calc_graz_quadratic!(plank, grz_P, num::Int64)
-    @inbounds plank[1:num,31] .= plank[1:num,60] ./ grz_P
+function calc_graz_quadratic!(nuts, proc, grz_P)
+    @inbounds proc.grz .= nuts.pop ./ grz_P
 end
 ##### linear grazing decrease with depth
-function calc_graz_linear!(plank, grz_P, grz_stp, num::Int64)
-    @inbounds plank[1:num,31] .= 1.0 ./ grz_P .* max.(0.15, 1 .- abs.(plank[1:num,3]) ./ grz_stp)
+function calc_graz_linear!(plank, proc, grz_P, grz_stp)
+    @inbounds proc.grz .= 1.0 ./ grz_P .* max.(0.15, 1.0 .- abs.(plank.x) ./ grz_stp)
 end
 
 ##### calculate the probability of mortality
-function calc_mort!(plank, mort_reg, mort_P, num::Int64)
-    @inbounds plank[1:num,32] .= mort_P .* (tanh.(6.0 .* (mort_reg .- plank[1:num,5])) .+ 1)
+function calc_mort!(plank, proc, mort_reg, mort_P)
+    @inbounds proc.mort .= mort_P .* (tanh.(6.0 .* (mort_reg .- plank.Sz)) .+ 1.0)
+end
+
+##### generate random numbers for grazing, mortality and division
+function gen_rand_plk!(rnd, arch)
+    rand!(rng_type(arch), rnd.x)
+    rand!(rng_type(arch), rnd.y)
+    rand!(rng_type(arch), rnd.z)
 end
 
 ##### generate the random results from probabilities of grazing, mortality and cell division
-function get_rands!(plank, rnd, num::Int64)
-    @inbounds plank[1:num,31] .= isless.(rnd[1:num,1], plank[1:num,31])
-    @inbounds plank[1:num,32] .= isless.(rnd[1:num,2], plank[1:num,32])
-    @inbounds plank[1:num,33] .= isless.(rnd[1:num,3], plank[1:num,33])
+function get_rands!(proc, rnd)
+    @inbounds proc.grz  .= isless.(rnd.x, proc.grz)
+    @inbounds proc.mort .= isless.(rnd.y, proc.mort)
+    @inbounds proc.dvid .= isless.(rnd.z, proc.dvid)
 end
 
 ##### deal with nutrients uptake
-@kernel function calc_consume_kernel!(cts, plank, inds::AbstractArray{Int64,2}, g::Grids, ΔT)
+@kernel function calc_consume_kernel!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT)
     i = @index(Global, Linear)
     gi = @index(Group)
-    if plank[i,58] == 1.0
-        @inbounds xi = inds[i,1]
-        @inbounds yi = inds[i,2]
-        @inbounds zi = inds[i,3]
-        @inbounds cts[xi, yi, zi, gi, 1] = cts[xi, yi, zi, gi, 1] + (plank[i,28] - plank[i,22]) * ΔT
-        @inbounds cts[xi, yi, zi, gi, 5] = cts[xi, yi, zi, gi, 5] + (plank[i,30] - plank[i,23]) * ΔT
-        @inbounds cts[xi, yi, zi, gi, 2] = cts[xi, yi, zi, gi, 2] -  plank[i,24] * ΔT
-        @inbounds cts[xi, yi, zi, gi, 3] = cts[xi, yi, zi, gi, 3] -  plank[i,25] * ΔT
-        @inbounds cts[xi, yi, zi, gi, 4] = cts[xi, yi, zi, gi, 4] -  plank[i,26] * ΔT
-    end
+    @inbounds ctsdic[x[i], y[i], z[i], gi] += (proc.resp[i] - proc.PS[i]) * ΔT .* ac[i]
+    @inbounds ctsdoc[x[i], y[i], z[i], gi] += (proc.exu[i] - proc.VDOC[i]) * ΔT .* ac[i]
+    @inbounds ctsnh4[x[i], y[i], z[i], gi] -= proc.VNH4[i] * ΔT .* ac[i]
+    @inbounds ctsno3[x[i], y[i], z[i], gi] -= proc.VNO3[i] * ΔT .* ac[i]
+    @inbounds ctspo4[x[i], y[i], z[i], gi] -= proc.VPO4[i] * ΔT .* ac[i]
+    # pay attention to ctspop[0,0,0,gi] for non-active individuals
 end
-function calc_consume!(cts, plank, inds::AbstractArray{Int64,2}, arch::Architecture, g::Grids, ΔT)
-    kernel! = calc_consume_kernel!(device(arch), 1, (size(plank,1),))
-    event = kernel!(cts, plank, inds, g, ΔT)
+function calc_consume!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT, arch::Architecture)
+    kernel! = calc_consume_kernel!(device(arch), 1, (size(ac,1),))
+    event = kernel!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT)
     wait(device(arch), event)
     return nothing
 end
 
 ##### deal with grazed or dead individuals
-@kernel function calc_loss_kernel!(cts, plank, inds::AbstractArray{Int64,2}, g::Grids,
-                                   lossFracC, lossFracN, lossFracP, R_NC, R_PC)
+@kernel function calc_loss_kernel!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank,
+                                   x, y, z, lossFracC, lossFracN, lossFracP, R_NC, R_PC)
     i = @index(Global, Linear)
-    if plank[i,58] == 1.0
-        @inbounds xi = inds[i,1]
-        @inbounds yi = inds[i,2]
-        @inbounds zi = inds[i,3]
-        @inbounds cts[xi, yi, zi, gi, 5] += (plank[i,6] + plank[i,7]) * lossFracC
-        @inbounds cts[xi, yi, zi, gi, 8] += (plank[i,6] + plank[i,7]) * (1.0 - lossFracC)
-        @inbounds cts[xi, yi, zi, gi, 6] += (plank[i,6] * R_NC + plank[i,8]) * lossFracN
-        @inbounds cts[xi, yi, zi, gi, 9] += (plank[i,6] * R_NC + plank[i,8]) * (1.0 - lossFracN)
-        @inbounds cts[xi, yi, zi, gi, 7] += (plank[i,6] * R_PC + plank[i,9]) * lossFracP
-        @inbounds cts[xi, yi, zi, gi,10] += (plank[i,6] * R_PC + plank[i,9]) * (1.0 - lossFracP)
-    end
+    gi = @index(Group)
+    @inbounds ctsdoc[x[i], y[i], z[i], gi] += (plank.Bm[i] + plank.Cq[i]) * lossFracC .* plank.ac[i]
+    @inbounds ctspoc[x[i], y[i], z[i], gi] += (plank.Bm[i] + plank.Cq[i]) * (1.0 - lossFracC) .* plank.ac[i]
+    @inbounds ctsdon[x[i], y[i], z[i], gi] += (plank.Bm[i] * R_NC + plank.Nq[i]) * lossFracN .* plank.ac[i]
+    @inbounds ctspon[x[i], y[i], z[i], gi] += (plank.Bm[i] * R_NC + plank.Nq[i]) * (1.0 - lossFracN) .* plank.ac[i]
+    @inbounds ctsdop[x[i], y[i], z[i], gi] += (plank.Bm[i] * R_PC + plank.Pq[i]) * lossFracP .* plank.ac[i]
+    @inbounds ctspop[x[i], y[i], z[i], gi] += (plank.Bm[i] * R_PC + plank.Pq[i]) * (1.0 - lossFracP) .* plank.ac[i]
+    # pay attention to ctspop[0,0,0,gi] for non-active individuals
 end
-function calc_loss!(cts, plank, inds::AbstractArray{Int64,2}, arch::Architecture, g::Grids,
-                    lossFracC, lossFracN, lossFracP, R_NC, R_PC)
+function calc_loss!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank,
+                    x, y, z, lossFracC, lossFracN, lossFracP, R_NC, R_PC, arch::Architecture)
     kernel! = calc_loss_kernel!(device(arch), 1, (size(plank,1),))
-    event = kernel!(cts, plank, inds, g, lossFracC, lossFracN, lossFracP, R_NC, R_PC)
+    event = kernel!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank,
+                    x, y, z, lossFracC, lossFracN, lossFracP, R_NC, R_PC)
     wait(device(arch), event)
     return nothing
 end

@@ -1,19 +1,15 @@
 using KernelAbstractions.Extras.LoopInfo: @unroll
 ##### calculate Chla and individual counts based on the status of plankton individuals
-@kernel function acc_counts_kernel!(cts, plank, inds::AbstractArray{Int64,2})
+@kernel function acc_counts_kernel!(ctschl, ctsppl, chl, ac, x, y, z)
     i = @index(Global)
     gi = @index(Group)
-    if plank[i,58] == 1.0
-        @inbounds xi = inds[i,1]
-        @inbounds yi = inds[i,2]
-        @inbounds zi = inds[i,3]
-        @inbounds cts[xi, yi, zi, gi, 1] += copy(plank[i,10])
-        @inbounds cts[xi, yi, zi, gi, 2] += 1.0
-    end
+    @inbounds ctschl[x[i], y[i], z[i], gi] += copy(chl[i]) * ac[i]
+    @inbounds ctsppl[x[i], y[i], z[i], gi] += 1.0 * ac[i]
+    # pay attention to cumpop[0,0,0,gi] for non-active individuals
 end
-function acc_counts!(cts, plank, inds::AbstractArray{Int64,2}, arch::Architecture)
-    kernel! = acc_counts_kernel!(device(arch), 1, (size(plank,1),))
-    event = kernel!(cts, plank, inds)
+function acc_counts!(ctschl, ctsppl, chl, ac, x, y, z, arch::Architecture)
+    kernel! = acc_counts_kernel!(device(arch), 1, (size(ac,1),))
+    event = kernel!(ctschl, ctsppl, chl, ac, x, y, z)
     wait(device(arch), event)
     return nothing
 end

@@ -15,7 +15,8 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     zero_fields!(model.timestepper.plk)
     @inbounds model.timestepper.chl .= 0.0
     @inbounds model.timestepper.pop .= 0.0
-    @inbounds model.timestepper.cts .= 0.0
+    @inbounds model.timestepper.cts.chl .= 0.0
+    @inbounds model.timestepper.cts.ppl .= 0.0
 
     for plank in model.individuals.phytos
         gen_rand_adv!(model.timestepper.rnd, model.arch)
@@ -30,53 +31,54 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
 
         ##### calculate accumulated chla quantity (not concentration)
         find_inds!(plank.data, model.timestepper.coord, plank.data.ac, model.grid)
-    #     acc_counts!(model.timestepper.cts, plank.data, Int.(plank.data[:,13:15]), model.arch)
+        acc_counts!(model.timestepper.cts.chl, model.timestepper.cts.pop,
+                    plank.data.chl, plank.data.ac, Int.(model.timestepper.coord.x),
+                    Int.(model.timestepper.coord.y), Int.(model.timestepper.coord.z), model.arch)
     end
 
     ##### calculate PAR
-    # @inbounds model.timestepper.chl .= sum(model.timestepper.cts[:,:,:,:,1], dims=4)[:,:,:,1]
-    # @inbounds model.timestepper.pop .= sum(model.timestepper.cts[:,:,:,:,2], dims=4)[:,:,:,1]
-    # calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.input.PARF[:,:,clock],
-    #           model.grid, model.params["kc"], model.params["kw"])
+    @inbounds sum!(model.timestepper.chl, model.timestepper.cts.chl)
+    @inbounds sum!(model.timestepper.pop, model.timestepper.cts.ppl)
+    calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.input.PARF[:,:,clock],
+              model.grid, model.params["kc"], model.params["kw"])
 
-    ##### clear counts array for nutrient consumption
-    # @inbounds model.timestepper.cts .= 0.0
 
-    # for plank in model.individuals.phytos
-    #     model.timestepper.tmp .= 0.0
-    #     rand!(rng_type(model.arch), plank.rnd)
-    #     plankton_update!(plank.data, model.timestepper.tmp, plank.rnd, model.timestepper.cts,
-    #                      model.timestepper.par, model.arch, model.input.temp[:,:,:,clock], model.timestepper.pop,
-    #                      model.nutrients, model.grid, plank.p, ΔT, model.t, plank.num)
+    for plank in model.individuals.phytos
+        model.timestepper.tmp .= 0.0
+        gen_rand_plk!(model.timestepper.rnd, model.arch)
+        plankton_update!(plank.data, model.timestepper.nuts, model.timestepper.coord,
+                         model.timestepper.tmp, model.timestepper.rnd, model.timestepper.cts,
+                         model.timestepper.par, model.arch, model.input.temp[:,:,:,clock], model.timestepper.pop,
+                         model.nutrients, model.grid, plank.p, ΔT, model.t, plank.num)
 
-    #     diagnostics for each species and grazing
-    #     diags!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch, diag_t)
+        # ##### diagnostics for each species and grazing
+        # diags!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch, diag_t)
 
-    #     ##### grazing
-    #     model.timestepper.tmp .= 0.0
-    #     grazing!(plank.data, model.timestepper.tmp, model.arch,
-    #             model.grid, model.timestepper.plk, plank.p)
+        # ##### grazing
+        # model.timestepper.tmp .= 0.0
+        # grazing!(plank.data, model.timestepper.tmp, model.arch,
+        #         model.grid, model.timestepper.plk, plank.p)
 
-    #     ###### mortality and its diagnostic
-    #     # diags_mort!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch, diag_t)
+        # ###### mortality and its diagnostic
+        # diags_mort!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch, diag_t)
 
-    #     model.timestepper.tmp .= 0.0
-    #     mortality!(plank.data, model.timestepper.tmp, model.arch,
-    #               model.grid, model.timestepper.plk, plank.p)
+        # model.timestepper.tmp .= 0.0
+        # mortality!(plank.data, model.timestepper.tmp, model.arch,
+        #           model.grid, model.timestepper.plk, plank.p)
 
-    #     ###### cell division and its diagnostic
-    #     # diags_dvid!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch, diag_t)
+        # ###### cell division and its diagnostic
+        # diags_dvid!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch, diag_t)
 
-    #     ##### tidy up plank.data
-    #     model.timestepper.tmp .= 0.0
-    #     CUDA.@allowscalar plank.active_num = floor(Int, sum(plank.data[:,58], dims=1)[1])
-    #     copyto_tmp!(plank.data, model.timestepper.tmp, plank.data[:,58], Int.(plank.data[:,59]), false, model.arch)
-    #     plank.data .= copy(model.timestepper.tmp)
+        # ##### tidy up plank.data
+        # model.timestepper.tmp .= 0.0
+        # CUDA.@allowscalar plank.active_num = floor(Int, sum(plank.data[:,58], dims=1)[1])
+        # copyto_tmp!(plank.data, model.timestepper.tmp, plank.data[:,58], Int.(plank.data[:,59]), false, model.arch)
+        # plank.data .= copy(model.timestepper.tmp)
 
-    #     ##### copy individuals which are ready to divide to the end of plank.data
-    #     divide!(plank.data, model.arch, plank.num)
-    #     CUDA.@allowscalar plank.num = floor(Int, sum(plank.data[:,58], dims=1)[1])
-    # end
+        # ##### copy individuals which are ready to divide to the end of plank.data
+        # divide!(plank.data, model.arch, plank.num)
+        # CUDA.@allowscalar plank.num = floor(Int, sum(plank.data[:,58], dims=1)[1])
+    end
     # write_species_dynamics(model.t, model.individuals.phytos, resultspath)
 
     ##### diagnostics for nutrients

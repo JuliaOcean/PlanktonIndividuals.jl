@@ -1,13 +1,3 @@
-#= index
-1  2  3  4       5     6   7   8   9   10   11   12   13  14  15  16   17   18   19
-x  y  z  size_i  size  Bm  Cq  Nq  Pq  chl  gen  age  xi  yi  zi  NH4  NO3  PO4  DOC
-
-20  21        22  23    24    25    26    27    28    29  30   31   32    33    34  35  36
-αI  TempFunc  PS  VDOC  VNH4  VNO3  VPO4  ρchl  resp  BS  exu  grz  mort  dvid  xt  yt  zt
-
-37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54  55  56  57  58     59          60
-u0  u1  v0  v1  w0  w1  xd  yd  zd  u1  v1  w1  u2  v2  w2  u3  v3  w3  u4  v4  w4  active tempo indx  pop
-=#
 mutable struct plankton
     data::AbstractArray
     num::Int64
