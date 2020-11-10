@@ -11,7 +11,7 @@ function periodic_domain!(plank, ac, g::Grids)
     # bounded for z direction
     plank.z .= isless.(plank.z, g.zF[g.z⁺]) .* plank.z .+
                isequal.(plank.z, g.zF[g.z⁺]) .* plank.z .+
-               isless.(g.zF[g.z⁺], plank.z) .* plank.z
+               isless.(g.zF[g.z⁺], plank.z) .* (plank.z .- 0.01)
 
     plank.x .= isless.(plank.x, g.xF[g.x⁻]) .* (plank.x .+ (g.Nx*g.Δx)) .+
                isequal.(plank.x, g.xF[g.x⁻]) .* plank.x .+
