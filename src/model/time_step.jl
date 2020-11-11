@@ -46,10 +46,10 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     for plank in model.individuals.phytos
         model.timestepper.tmp .= 0.0
         gen_rand_plk!(model.timestepper.rnd, model.arch)
-        plankton_update!(plank.data, model.timestepper.nuts, model.timestepper.coord,
-                         model.timestepper.tmp, model.timestepper.rnd, model.timestepper.cts,
+        plankton_update!(plank.data, model.timestepper.nuts, model.timestepper.proc,
+                         model.timestepper.coord, model.timestepper.rnd, model.timestepper.cts,
                          model.timestepper.par, model.arch, model.input.temp[:,:,:,clock], model.timestepper.pop,
-                         model.nutrients, model.grid, plank.p, ΔT, model.t, plank.num)
+                         model.nutrients, model.grid, plank.p, ΔT, model.t)
 
         # ##### diagnostics for each species and grazing
         # diags!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch, diag_t)
