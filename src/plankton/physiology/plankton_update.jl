@@ -1,6 +1,6 @@
 ##### update physiological attributes of each individual
-function plankton_update!(plank, nuts, proc, coord, rnd, cts, par, arch::Architecture,
-                          temp, pop, nut, g::Grids, p, ΔT, t)
+function plankton_update!(plank, nuts, proc, coord, rnd, par, pop,
+                          temp, nut, g::Grids, p, ΔT, t)
     ##### calculate the total active plankton numbers
     ##### find nutrient, temperature, and par values for each individual
     find_NPT!(nuts, Int.(coord.x), Int.(coord.y), Int.(coord.z), plank.ac, g,
@@ -36,10 +36,7 @@ function plankton_update!(plank, nuts, proc, coord, rnd, cts, par, arch::Archite
     calc_BS!(plank, proc, p.k_mtb, p.k_mtb_b, p.R_NC, p.R_PC)
     update_biomass!(plank, proc, p.R_NC, p.R_PC, p.Cquota, p.Nsuper, ΔT)
 
-    # calc_consume!(cts.dic, cts.doc, cts.nh4, cts.no3, cts.po4, proc,
-    #               plank.ac, Int.(coord.x), Int.(coord.y), Int.(coord.z), ΔT, arch)
-
-    # # ##### probabilities of grazing, mortality, and cell division
+    ##### probabilities of grazing, mortality, and cell division
     # if t%600 == 1
     #     ##### grazing
     #     if p.grz_P == 0

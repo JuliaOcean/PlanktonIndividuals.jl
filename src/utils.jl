@@ -8,9 +8,9 @@ function vel_copy!(vel::NamedTuple, u, v, w, arch::Architecture, g::Grids)
 end
 
 ##### sum up nutrient consumption counts into nutrient tendencies
-function cts_to_Gcs!(plk, cts, g::Grids)
-    for i in 1:length(nut_names)
-        @inbounds plk[i].data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺] .= sum(cts[:,:,:,:,i], dims=4)[:,:,:,1]
+function pcm_to_Gcs!(plk, pcm)
+    for n in nut_names
+        @inbounds sum!(plk[n].data, pcm[n])
     end
 end
 

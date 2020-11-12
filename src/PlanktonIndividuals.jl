@@ -24,7 +24,7 @@ include("$src"*"plankton/gen_plankton.jl")
 include("$src"*"plankton/advection/advection_operations.jl")
 include("$src"*"plankton/advection/plankton_advection.jl")
 include("$src"*"plankton/advection/plankton_diffusion.jl")
-include("$src"*"plankton/physiology/light.jl")
+include("$src"*"plankton/physiology/counts.jl")
 include("$src"*"plankton/physiology/process_operator.jl")
 include("$src"*"plankton/physiology/plankton_operator.jl")
 include("$src"*"plankton/physiology/plankton_update.jl")
@@ -32,6 +32,7 @@ include("$src"*"plankton/zooplankton.jl")
 include("$src"*"utils.jl")
 include("$src"*"output/output_writers.jl")
 include("$src"*"output/diagnostics.jl")
+include("$src"*"model/timestepper.jl")
 include("$src"*"model/models.jl")
 include("$src"*"model/time_step.jl")
 
@@ -52,6 +53,7 @@ export
 
     # Run the model
     RunParam, RunOption, vel_copy!, PI_TimeStep!,
+    zero_timestepper_flds!,
 
     # write output functions
     write_nut_nc_alltime, write_nut_nc_each_step,
