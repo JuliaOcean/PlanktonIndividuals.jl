@@ -105,17 +105,18 @@ Write a brief summary of each species at each time step into a txt file
 """
 function write_species_dynamics(t::Int64, phytos, filepath)
     for i in 1:length(phytos)
-        pop = size(phytos[i].data.ac, 1)
-        gen_ave =  sum(phytos[i].data.gen .* phytos[i].data.ac) / pop
-        age_ave =  sum(phytos[i].data.age .* phytos[i].data.ac) / pop
-        size_ave=  sum(phytos[i].data.Sz  .* phytos[i].data.ac) / pop
-        Bm_ave  =  sum(phytos[i].data.Bm  .* phytos[i].data.ac) / pop
-        Cq_ave  =  sum(phytos[i].data.Cq  .* phytos[i].data.ac) / pop
-        Nq_ave  =  sum(phytos[i].data.Nq  .* phytos[i].data.ac) / pop
-        Pq_ave  =  sum(phytos[i].data.Pq  .* phytos[i].data.ac) / pop
-        Chl_ave =  sum(phytos[i].data.chl .* phytos[i].data.ac) / pop
+        pop = dot(phytos[i].data.ac, phytos[i].data.ac)
+        gen_ave =  dot(phytos[i].data.gen, phytos[i].data.ac) / pop
+        age_ave =  dot(phytos[i].data.age, phytos[i].data.ac) / pop
+        size_ave=  dot(phytos[i].data.Sz,  phytos[i].data.ac) / pop
+        Bm_ave  =  dot(phytos[i].data.Bm,  phytos[i].data.ac) / pop
+        Cq_ave  =  dot(phytos[i].data.Cq,  phytos[i].data.ac) / pop
+        Nq_ave  =  dot(phytos[i].data.Nq,  phytos[i].data.ac) / pop
+        Pq_ave  =  dot(phytos[i].data.Pq,  phytos[i].data.ac) / pop
+        Chl_ave =  dot(phytos[i].data.chl, phytos[i].data.ac) / pop
         io = open(filepath*"dynamic_species"*lpad(i,3,"0")*".txt","a");
-        println(io,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E",t,pop,gen_ave,age_ave,size_ave,Bm_ave,Cq_ave,Nq_ave,Pq_ave,Chl_ave))
+        println(io,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E",
+                            t,pop,gen_ave,age_ave,size_ave,Bm_ave,Cq_ave,Nq_ave,Pq_ave,Chl_ave))
         close(io);
     end
 end

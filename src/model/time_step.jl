@@ -78,7 +78,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
         # divide!(plank.data, model.arch, plank.num)
         # CUDA.@allowscalar plank.num = floor(Int, sum(plank.data[:,58], dims=1)[1])
     end
-    # write_species_dynamics(model.t, model.individuals.phytos, resultspath)
+    write_species_dynamics(model.t, model.individuals.phytos, resultspath)
 
     ##### diagnostics for nutrients
     # @inbounds model.diags.tr[:,:,:,diag_t,1] .+= model.timestepper.par
