@@ -19,24 +19,12 @@ struct Grids{FT, A} <: AbstractGrid{FT, A}
     Hx::Int
     Hy::Int
     Hz::Int
-    x⁻::Int
-    x⁺::Int
-    y⁻::Int
-    y⁺::Int
-    z⁻::Int
-    z⁺::Int
 end
 
 function gen_Grid(;size, spacing, halo = (1, 1, 1),)
     Nx, Ny, Nz = size
     Hx, Hy, Hz = halo
     Δx, Δy, Δz = spacing
-    x⁻ = Hx + 1
-    x⁺ = Hx + Nx
-    y⁻ = Hy + 1
-    y⁺ = Hy + Ny
-    z⁻ = Hz + 1
-    z⁺ = Hz + Nz
 
     xF = range(-Hx * Δx, (Nx + Hx - 1) * Δx, length = Nx + 2 * Hx)
     yF = range(-Hy * Δy, (Ny + Hy - 1) * Δy, length = Ny + 2 * Hy)
@@ -51,7 +39,7 @@ function gen_Grid(;size, spacing, halo = (1, 1, 1),)
     Az = Δx*Δy
     V  = Δx*Δy*Δz
 
-    return Grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz, x⁻, x⁺, y⁻, y⁺, z⁻, z⁺)
+    return Grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz)
 end
 
 # """

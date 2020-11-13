@@ -105,16 +105,15 @@ Write a brief summary of each species at each time step into a txt file
 """
 function write_species_dynamics(t::Int64, phytos, filepath)
     for i in 1:length(phytos)
-        pop = phytos[i].num
-        aves = mean(phytos[i].data[1:pop,5:12], dims=1)[1,:]
-        CUDA.@allowscalar gen_ave =  aves[7]
-        CUDA.@allowscalar age_ave =  aves[8]
-        CUDA.@allowscalar size_ave=  aves[1]
-        CUDA.@allowscalar Bm_ave  =  aves[2]
-        CUDA.@allowscalar Cq_ave  =  aves[3]
-        CUDA.@allowscalar Nq_ave  =  aves[4]
-        CUDA.@allowscalar Pq_ave  =  aves[5]
-        CUDA.@allowscalar Chl_ave =  aves[6]
+        pop = size(phytos[i].data.ac, 1)
+        gen_ave =  sum(phytos[i].data.gen .* phytos[i].data.ac) / pop
+        age_ave =  sum(phytos[i].data.age .* phytos[i].data.ac) / pop
+        size_ave=  sum(phytos[i].data.Sz  .* phytos[i].data.ac) / pop
+        Bm_ave  =  sum(phytos[i].data.Bm  .* phytos[i].data.ac) / pop
+        Cq_ave  =  sum(phytos[i].data.Cq  .* phytos[i].data.ac) / pop
+        Nq_ave  =  sum(phytos[i].data.Nq  .* phytos[i].data.ac) / pop
+        Pq_ave  =  sum(phytos[i].data.Pq  .* phytos[i].data.ac) / pop
+        Chl_ave =  sum(phytos[i].data.chl .* phytos[i].data.ac) / pop
         io = open(filepath*"dynamic_species"*lpad(i,3,"0")*".txt","a");
         println(io,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E",t,pop,gen_ave,age_ave,size_ave,Bm_ave,Cq_ave,Nq_ave,Pq_ave,Chl_ave))
         close(io);

@@ -11,28 +11,30 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     @inbounds model.timestepper.vel½.v.data .= (model.timestepper.vel₀.v.data .+ model.timestepper.vel₁.v.data) .* 0.5
     @inbounds model.timestepper.vel½.w.data .= (model.timestepper.vel₀.w.data .+ model.timestepper.vel₁.w.data) .* 0.5
 
+    zero_fields!(model.timestepper.plk)
+    @inbounds model.timestepper.chl .= 0.0
+    @inbounds model.timestepper.pop .= 0.0
+
     ##### plankton advection
     for plank in model.individuals.phytos
         gen_rand_adv!(model.timestepper.rnd, model.arch)
         plankton_diffusion!(plank.data, model.timestepper.rnd, model.params["κhP"], ΔT)
         periodic_domain!(plank.data, plank.data.ac, model.grid)
 
-        plankton_advectionRK4!(plank.data, model.timestepper.coord, model.timestepper.velos, model.grid,
+        plankton_advectionRK4!(plank.data, plank.coord, model.timestepper.velos, model.grid,
                                model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT)
 
-        # plankton_advection!(plank.data, model.timestepper.coord, model.timestepper.velos,
+        # plankton_advection!(plank.data, plank.coord, model.timestepper.velos,
         #                     model.grid, model.timestepper.vel₁, ΔT)
 
         ##### calculate accumulated chla quantity (not concentration)
-        find_inds!(plank.data, model.timestepper.coord, plank.data.ac, model.grid)
-        acc_counts!(model.timestepper.cts.chl, model.timestepper.cts.pop,
-                    plank.data.chl, plank.data.ac, Int.(model.timestepper.coord.x),
-                    Int.(model.timestepper.coord.y), Int.(model.timestepper.coord.z), model.arch)
+        find_inds!(plank.data, plank.coord, plank.data.ac, model.grid)
+        acc_counts!(model.timestepper.chl, model.timestepper.pop,
+                    plank.data.chl, plank.data.ac, Int.(plank.coord.x),
+                    Int.(plank.coord.y), Int.(plank.coord.z), model.grid, model.arch)
     end
 
     ##### calculate PAR
-    @inbounds sum!(model.timestepper.chl, model.timestepper.cts.chl)
-    @inbounds sum!(model.timestepper.pop, model.timestepper.cts.pop)
     calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.input.PARF[:,:,clock],
               model.grid, model.params["kc"], model.params["kw"])
 
@@ -40,14 +42,14 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     for plank in model.individuals.phytos
         model.timestepper.tmp .= 0.0
         gen_rand_plk!(model.timestepper.rnd, model.arch)
-        plankton_update!(plank.data, model.timestepper.nuts, model.timestepper.proc, model.timestepper.coord, 
+        plankton_update!(plank.data, model.timestepper.nuts, plank.proc, plank.coord, 
                          model.timestepper.rnd, model.timestepper.par, model.timestepper.pop, 
                          model.input.temp[:,:,:,clock], model.nutrients, model.grid, plank.p, ΔT, model.t)
 
-        # calc_consume!(model.timestepper.cts.DIC, model.timestepper.cts.DOC, model.timestepper.cts.NH4, 
-        #               model.timestepper.cts.NO3, model.timestepper.cts.PO4, model.timestepper.proc, plank.data.ac, 
-        #               Int.(model.timestepper.coord.x), Int.(model.timestepper.coord.y), 
-        #               Int.(model.timestepper.coord.z), ΔT, model.arch)
+        calc_consume!(model.timestepper.plk.DIC.data, model.timestepper.plk.DOC.data, 
+                      model.timestepper.plk.NH4.data, model.timestepper.plk.NO3.data, 
+                      model.timestepper.plk.PO4.data, plank.proc, plank.data.ac, 
+                      Int.(plank.coord.x), Int.(plank.coord.y), Int.(plank.coord.z), ΔT, model.grid, model.arch)
         # ##### diagnostics for each species and grazing
         # diags!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch, diag_t)
 
@@ -85,9 +87,6 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     # @inbounds model.diags.tr[:,:,:,diag_t,4] .+= interior(model.nutrients.PO4.data, model.grid)
     # @inbounds model.diags.tr[:,:,:,diag_t,5] .+= interior(model.nutrients.DOC.data, model.grid)
 
-    ##### sum up nutrient consumption counts into nutrient tendencies
-    # pcm_to_Gcs!(model.timestepper.plk, model.timestepper.cts)
-
     nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.MD1,
                 model.timestepper.MD2, model.timestepper.MD3, model.arch,
                 model.grid, model.params, model.timestepper.vel₁, model.timestepper.plk, ΔT)
@@ -97,16 +96,4 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     @inbounds model.timestepper.vel₀.u.data .= model.timestepper.vel₁.u.data
     @inbounds model.timestepper.vel₀.v.data .= model.timestepper.vel₁.v.data
     @inbounds model.timestepper.vel₀.w.data .= model.timestepper.vel₁.w.data
-end
-
-function zero_timestepper_flds!(ts::timestepper)
-    zero_fields!(ts.plk)
-    @inbounds ts.chl .= 0.0
-    @inbounds ts.pop .= 0.0
-    @inbounds ts.cts.chl .= 0.0
-    @inbounds ts.cts.pop .= 0.0
-    # @inbounds ts.cts.DIC .= 0.0
-    # @inbounds ts.cts.NH4 .= 0.0
-    # @inbounds ts.cts.NO3 .= 0.0
-    # @inbounds ts.cts.PO4 .= 0.0
 end

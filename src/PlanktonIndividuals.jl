@@ -53,7 +53,6 @@ export
 
     # Run the model
     RunParam, RunOption, vel_copy!, PI_TimeStep!,
-    zero_timestepper_flds!,
 
     # write output functions
     write_nut_nc_alltime, write_nut_nc_each_step,

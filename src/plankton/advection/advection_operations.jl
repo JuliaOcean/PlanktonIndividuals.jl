@@ -1,30 +1,30 @@
 ##### deal with particles moved out of the domain
 function periodic_domain!(plank, ac, g::Grids)
-    plank.x .= isless.(plank.x, g.xF[g.x⁺]) .* plank.x .+
-               isequal.(plank.x, g.xF[g.x⁺]) .* plank.x .+
-               isless.(g.xF[g.x⁺], plank.x) .* (plank.x .- (g.Nx*g.Δx))
+    plank.x .= isless.(plank.x, g.xF[g.Nx+g.Hx+1]) .* plank.x .+
+               isequal.(plank.x, g.xF[g.Nx+g.Hx+1]) .* plank.x .+
+               isless.(g.xF[g.Nx+g.Hx+1], plank.x) .* (plank.x .- (g.Nx*g.Δx))
 
-    plank.y .= isless.(plank.y, g.yF[g.y⁺]) .* plank.y .+
-               isequal.(plank.y, g.yF[g.y⁺]) .* plank.y .+
-               isless.(g.yF[g.y⁺], plank.y) .* (plank.y .- (g.Ny*g.Δy))
-
-    # bounded for z direction
-    plank.z .= isless.(plank.z, g.zF[g.z⁺]) .* plank.z .+
-               isequal.(plank.z, g.zF[g.z⁺]) .* plank.z .+
-               isless.(g.zF[g.z⁺], plank.z) .* (plank.z .- 0.01)
-
-    plank.x .= isless.(plank.x, g.xF[g.x⁻]) .* (plank.x .+ (g.Nx*g.Δx)) .+
-               isequal.(plank.x, g.xF[g.x⁻]) .* plank.x .+
-               isless.(g.xF[g.x⁻], plank.x) .* plank.x
-
-    plank.y .= isless.(plank.y, g.yF[g.y⁻]) .* (plank.y .+ (g.Ny*g.Δy)) .+
-               isequal.(plank.y, g.yF[g.y⁻]) .* plank.y .+
-               isless.(g.yF[g.y⁻], plank.y) .* plank.y
+    plank.y .= isless.(plank.y, g.yF[g.Ny+g.Hy+1]) .* plank.y .+
+               isequal.(plank.y, g.yF[g.Ny+g.Hy+1]) .* plank.y .+
+               isless.(g.yF[g.Ny+g.Hy+1], plank.y) .* (plank.y .- (g.Ny*g.Δy))
 
     # bounded for z direction
-    plank.z .= isless.(plank.z, g.zF[g.z⁻]) .* plank.z .+
-               isequal.(plank.z, g.zF[g.z⁻]) .* plank.z .+
-               isless.(g.zF[g.z⁻], plank.z) .* plank.z
+    plank.z .= isless.(plank.z, g.zF[g.Nz+g.Hz+1]) .* plank.z .+
+               isequal.(plank.z, g.zF[g.Nz+g.Hz+1]) .* plank.z .+
+               isless.(g.zF[g.Nz+g.Hz+1], plank.z) .* (plank.z .- 0.01)
+
+    plank.x .= isless.(plank.x, g.xF[g.Hx+1]) .* (plank.x .+ (g.Nx*g.Δx)) .+
+               isequal.(plank.x, g.xF[g.Hx+1]) .* plank.x .+
+               isless.(g.xF[g.Hx+1], plank.x) .* plank.x
+
+    plank.y .= isless.(plank.y, g.yF[g.Hy+1]) .* (plank.y .+ (g.Ny*g.Δy)) .+
+               isequal.(plank.y, g.yF[g.Hy+1]) .* plank.y .+
+               isless.(g.yF[g.Hy+1], plank.y) .* plank.y
+
+    # bounded for z direction
+    plank.z .= isless.(plank.z, g.zF[g.Hz+1]) .* plank.z .+
+               isequal.(plank.z, g.zF[g.Hz+1]) .* plank.z .+
+               isless.(g.zF[g.Hz+1], plank.z) .* plank.z
 
     plank.x .*= ac
     plank.y .*= ac

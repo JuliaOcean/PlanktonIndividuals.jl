@@ -68,6 +68,8 @@ function read_temp_input(ΔT::Int64, grid, ∂T∂z=0.04,
     for j in grid.Nz-1:-1:1
         temp_domain[:,:,j,:] .= temp_domain[:,:,j+1,:] .- (∂T∂z*(grid.zC[j+1]-grid.zC[j]))
     end
-    return temp_domain
+    temp_d = zeros(grid.Nx+grid.Hx*2, grid.Ny+grid.Hy*2, grid.Nz+grid.Hz*2, size(temp,1))
+    temp_d[grid.Hx+1:grid.Nx+grid.Hx, grid.Hy+1:grid.Ny+grid.Hy, grid.Hz+1:grid.Nz+grid.Hz, :] .= temp_domain
+    return temp_d
 end
 

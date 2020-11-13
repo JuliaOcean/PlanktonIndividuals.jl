@@ -1,17 +1,10 @@
 ##### copy external velocities into the model
-function vel_copy!(vel::NamedTuple, u, v, w, arch::Architecture, g::Grids)
-    vel.u.data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺] .= u
-    vel.v.data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺] .= v
-    vel.w.data[g.x⁻:g.x⁺, g.y⁻:g.y⁺, g.z⁻:g.z⁺] .= w
+function vel_copy!(vel::NamedTuple, u, v, w, g::Grids)
+    copyto!(vel.u.data, u)
+    copyto!(vel.v.data, v)
+    copyto!(vel.w.data, w)
 
     fill_halo_vel!(vel, g)
-end
-
-##### sum up nutrient consumption counts into nutrient tendencies
-function pcm_to_Gcs!(plk, pcm)
-    for n in nut_names
-        @inbounds sum!(plk[n].data, pcm[n])
-    end
 end
 
 """

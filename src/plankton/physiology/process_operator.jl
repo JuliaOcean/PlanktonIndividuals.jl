@@ -4,9 +4,9 @@ function find_NPT!(nuts, x, y, z, ac, g::Grids, NH4, NO3, PO4, DOC, par, temp, p
     @inbounds nuts.NO3 .= NO3[CartesianIndex.(x .+ g.Hx, y .+ g.Hy, z .+ g.Hz)] .* ac
     @inbounds nuts.PO4 .= PO4[CartesianIndex.(x .+ g.Hx, y .+ g.Hy, z .+ g.Hz)] .* ac
     @inbounds nuts.DOC .= DOC[CartesianIndex.(x .+ g.Hx, y .+ g.Hy, z .+ g.Hz)] .* ac
-    @inbounds nuts.αI  .= par[CartesianIndex.(x, y, z)] .* α .* Φ .* ac
-    @inbounds nuts.Tem .= temp[CartesianIndex.(x, y, z)] .* ac
-    @inbounds nuts.pop .= pop[CartesianIndex.(x, y, z)] .* ac
+    @inbounds nuts.αI  .= par[CartesianIndex.(x .+ g.Hx, y .+ g.Hy, z .+ g.Hz)] .* α .* Φ .* ac
+    @inbounds nuts.Tem .= temp[CartesianIndex.(x .+ g.Hx, y .+ g.Hy, z .+ g.Hz)] .* ac
+    @inbounds nuts.pop .= pop[CartesianIndex.(x .+ g.Hx, y .+ g.Hy, z .+ g.Hz)] .* ac
 
     @inbounds nuts.NH4 .= max.(1.0e-10, nuts.NH4) .* ac
     @inbounds nuts.NO3 .= max.(1.0e-10, nuts.NO3) .* ac
