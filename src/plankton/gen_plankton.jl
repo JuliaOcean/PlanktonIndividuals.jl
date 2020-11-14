@@ -1,8 +1,6 @@
 mutable struct plankton
     data::AbstractArray
-    coord::AbstractArray
     proc::AbstractArray
-    num::Int64
     sp::Int64
     p::NamedTuple
 end
@@ -13,19 +11,17 @@ struct individuals
 end
 
 function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict)
-    rawdata = StructArray(x = zeros(4N), y = zeros(4N), z = zeros(4N),
-                          iS = zeros(4N), Sz = zeros(4N),
-                          Bm = zeros(4N), Cq = zeros(4N), Nq = zeros(4N), Pq = zeros(4N),
-                          chl = zeros(4N), gen = zeros(4N), age = zeros(4N),
-                          ac = zeros(4N), idx = zeros(4N))
+    rawdata = StructArray(x   = zeros(4N), y   = zeros(4N), z   = zeros(4N),
+                          xi  = zeros(4N), yi  = zeros(4N), zi  = zeros(4N), 
+                          iS  = zeros(4N), Sz  = zeros(4N), Bm  = zeros(4N), 
+                          Cq  = zeros(4N), Nq  = zeros(4N), Pq  = zeros(4N), 
+                          chl = zeros(4N), gen = zeros(4N), age = zeros(4N), 
+                          ac  = zeros(4N), idx = zeros(4N),
+                          graz= zeros(4N), mort= zeros(4N), dvid= zeros(4N))
     data = replace_storage(array_type(arch), rawdata)
 
-    coord = StructArray(x = zeros(4N), y = zeros(4N), z = zeros(4N))
-    coord_d = replace_storage(array_type(arch), coord)
-
     proc = StructArray(PS   = zeros(4N), VDOC = zeros(4N), VNH4 = zeros(4N), VNO3 = zeros(4N),
-                       VPO4 = zeros(4N), ρchl = zeros(4N), resp = zeros(4N), BS   = zeros(4N),
-                       exu  = zeros(4N), grz  = zeros(4N), mort = zeros(4N), dvid = zeros(4N))
+                       VPO4 = zeros(4N), ρchl = zeros(4N), resp = zeros(4N), BS   = zeros(4N), exu  = zeros(4N))
     proc_d = replace_storage(array_type(arch), proc)
 
     pkeys = collect(keys(params))
@@ -38,7 +34,7 @@ function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict)
         end
     end
     p = NamedTuple{param_names}(tmp)
-    return plankton(data, coord_d, proc_d, N, sp, p)
+    return plankton(data, proc_d, sp, p)
 end
 
 const plank_names=(:sp1, :sp2, :sp3, :sp4, :sp5, :sp6, :sp7, :sp8, :sp9)

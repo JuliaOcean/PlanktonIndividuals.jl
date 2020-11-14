@@ -61,7 +61,7 @@ end
 function calc_ρchl!(plank, proc, nuts, Chl2N)
     @inbounds proc.ρchl .= proc.PS ./ max.(1.0e-10, plank.Bm) .*
         Chl2N ./ max.(1.0e-10, nuts.αI .* plank.chl ./ plank.Bm)
-    @inbounds proc.ρchl .= proc.ρchl .* isless.(0.1, nuts.αI) .* plank.ac
+    @inbounds proc.ρchl .= proc.ρchl .* isless.(1.0e-8, nuts.αI) .* plank.ac
 
     return nothing
 end
@@ -128,59 +128,59 @@ end
 
 ##### calculate probability of cell division
 ##### sizer
-function calc_dvid_size!(plank, proc, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
-    @inbounds proc.dvid .= dvid_P .* (tanh.(dvid_stp .* (plank.Sz .- dvid_reg)) .+ 1.0)
-    @inbounds proc.dvid .= proc.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
+function calc_dvid_size!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
+    @inbounds plank.dvid .= dvid_P .* (tanh.(dvid_stp .* (plank.Sz .- dvid_reg)) .+ 1.0)
+    @inbounds plank.dvid .= plank.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
 
     return nothing
 end
 ##### adder
-function calc_dvid_add!(plank, proc, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
-    @inbounds proc.dvid .= dvid_P .* (tanh.(dvid_stp .* (plank.Sz .- plank.iS .- dvid_reg)) .+ 1.0)
-    @inbounds proc.dvid .= proc.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
+function calc_dvid_add!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
+    @inbounds plank.dvid .= dvid_P .* (tanh.(dvid_stp .* (plank.Sz .- plank.iS .- dvid_reg)) .+ 1.0)
+    @inbounds plank.dvid .= plank.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
 
     return nothing
 end
 ##### age
-function calc_dvid_age!(plank, proc, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
-    @inbounds proc.dvid .= dvid_P .* (tanh.(dvid_stp .* (plank.age .- dvid_reg)) .+ 1.0)
-    @inbounds proc.dvid .= proc.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
+function calc_dvid_age!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper)
+    @inbounds plank.dvid .= dvid_P .* (tanh.(dvid_stp .* (plank.age .- dvid_reg)) .+ 1.0)
+    @inbounds plank.dvid .= plank.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
 
     return nothing
 end
 ##### timer
-function calc_dvid_time!(plank, proc, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper, t)
-    @inbounds proc.dvid .= dvid_P .* (tanh(dvid_stp * (t % 86400 ÷ 3600 - dvid_reg)) + 1.0)
-    @inbounds proc.dvid .= proc.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
+function calc_dvid_time!(plank, dvid_stp, dvid_P, dvid_reg, Cquota, Nsuper, t)
+    @inbounds plank.dvid .= dvid_P .* (tanh(dvid_stp * (t % 86400 ÷ 3600 - dvid_reg)) + 1.0)
+    @inbounds plank.dvid .= plank.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
 
     return nothing
 end
 ##### timer & sizer
-function calc_dvid_ts!(plank, proc, dvid_stp, dvid_stp2, dvid_P, dvid_reg, dvid_reg2, Cquota, Nsuper, t)
-    @inbounds proc.dvid .= dvid_P .* (tanh(dvid_stp * (t % 86400 ÷ 3600 - dvid_reg)) + 1.0) .*
+function calc_dvid_ts!(plank, dvid_stp, dvid_stp2, dvid_P, dvid_reg, dvid_reg2, Cquota, Nsuper, t)
+    @inbounds plank.dvid .= dvid_P .* (tanh(dvid_stp * (t % 86400 ÷ 3600 - dvid_reg)) + 1.0) .*
                                      (tanh.(dvid_stp2 .* (plank.Sz .- dvid_reg2)) .+ 1.0)
-    @inbounds proc.dvid .= proc.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
+    @inbounds plank.dvid .= plank.dvid .* isless.(2*Cquota*Nsuper, plank.Bm) .* plank.ac
 
     return nothing
 end
 
 ##### calculate the probability of grazing
 ##### quadratic grazing
-function calc_graz_quadratic!(nuts, proc, grz_P)
-    @inbounds proc.grz .= nuts.pop ./ grz_P
+function calc_graz_quadratic!(nuts, plank, grz_P)
+    @inbounds plank.graz .= nuts.pop ./ grz_P .* plank.ac
 
     return nothing
 end
 ##### linear grazing decrease with depth
-function calc_graz_linear!(plank, proc, grz_P, grz_stp)
-    @inbounds proc.grz .= 1.0 ./ grz_P .* max.(0.15, 1.0 .- abs.(plank.x) ./ grz_stp)
+function calc_graz_linear!(plank, grz_P, grz_stp)
+    @inbounds plank.graz .= max.(0.15, 1.0 .- abs.(plank.x) ./ grz_stp) ./ grz_P .* plank.ac
 
     return nothing
 end
 
 ##### calculate the probability of mortality
-function calc_mort!(plank, proc, mort_reg, mort_P)
-    @inbounds proc.mort .= mort_P .* (tanh.(6.0 .* (mort_reg .- plank.Sz)) .+ 1.0)
+function calc_mort!(plank, mort_reg, mort_P)
+    @inbounds plank.mort .= mort_P .* (tanh.(6.0 .* (mort_reg .- plank.Sz)) .+ 1.0) .* plank.ac
 
     return nothing
 end
@@ -195,10 +195,10 @@ function gen_rand_plk!(rnd, arch)
 end
 
 ##### generate the random results from probabilities of grazing, mortality and cell division
-function get_rands!(proc, rnd)
-    @inbounds proc.grz  .= isless.(rnd.x, proc.grz)
-    @inbounds proc.mort .= isless.(rnd.y, proc.mort)
-    @inbounds proc.dvid .= isless.(rnd.z, proc.dvid)
+function get_rands!(plank, rnd)
+    @inbounds plank.graz .= isless.(rnd.x, plank.graz) .* plank.ac
+    @inbounds plank.mort .= isless.(rnd.y, plank.mort) .* plank.ac
+    @inbounds plank.dvid .= isless.(rnd.z, plank.dvid) .* plank.ac
 
     return nothing
 end

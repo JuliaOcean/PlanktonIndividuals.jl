@@ -21,17 +21,17 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
         plankton_diffusion!(plank.data, model.timestepper.rnd, model.params["κhP"], ΔT)
         periodic_domain!(plank.data, plank.data.ac, model.grid)
 
-        plankton_advectionRK4!(plank.data, plank.coord, model.timestepper.velos, model.grid,
+        plankton_advectionRK4!(plank.data, model.timestepper.velos, model.grid,
                                model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT)
 
-        # plankton_advection!(plank.data, plank.coord, model.timestepper.velos,
+        # plankton_advection!(plank.data, model.timestepper.velos,
         #                     model.grid, model.timestepper.vel₁, ΔT)
 
         ##### calculate accumulated chla quantity (not concentration)
-        find_inds!(plank.data, plank.coord, plank.data.ac, model.grid)
+        find_inds!(plank.data, plank.data.ac, model.grid)
         acc_counts!(model.timestepper.chl, model.timestepper.pop,
-                    plank.data.chl, plank.data.ac, Int.(plank.coord.x),
-                    Int.(plank.coord.y), Int.(plank.coord.z), model.grid, model.arch)
+                    plank.data.chl, plank.data.ac, Int.(plank.data.xi),
+                    Int.(plank.data.yi), Int.(plank.data.zi), model.grid, model.arch)
     end
 
     ##### calculate PAR
@@ -40,43 +40,44 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
 
     ##### plankton physiology
     for plank in model.individuals.phytos
-        model.timestepper.tmp .= 0.0
         gen_rand_plk!(model.timestepper.rnd, model.arch)
-        plankton_update!(plank.data, model.timestepper.nuts, plank.proc, plank.coord, 
-                         model.timestepper.rnd, model.timestepper.par, model.timestepper.pop, 
-                         model.input.temp[:,:,:,clock], model.nutrients, model.grid, plank.p, ΔT, model.t)
+        plankton_update!(plank.data, model.timestepper.nuts, plank.proc, model.timestepper.rnd, 
+                         model.timestepper.par, model.timestepper.pop, model.input.temp[:,:,:,clock], 
+                         model.nutrients, model.grid, plank.p, ΔT, model.t)
 
         calc_consume!(model.timestepper.plk.DIC.data, model.timestepper.plk.DOC.data, 
                       model.timestepper.plk.NH4.data, model.timestepper.plk.NO3.data, 
                       model.timestepper.plk.PO4.data, plank.proc, plank.data.ac, 
-                      Int.(plank.coord.x), Int.(plank.coord.y), Int.(plank.coord.z), ΔT, model.grid, model.arch)
+                      Int.(plank.data.xi), Int.(plank.data.yi), Int.(plank.data.zi), ΔT, model.grid, model.arch)
         # ##### diagnostics for each species and grazing
         # diags!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch, diag_t)
 
-        # ##### grazing
-        # model.timestepper.tmp .= 0.0
-        # grazing!(plank.data, model.timestepper.tmp, model.arch,
-        #         model.grid, model.timestepper.plk, plank.p)
+        ##### grazing
+        zero_tmp!(model.timestepper.tmp)
+        grazing!(plank.data, model.timestepper.tmp, model.arch, model.grid, model.timestepper.plk, plank.p)
 
-        # ###### mortality and its diagnostic
+        ###### mortality and its diagnostic
         # diags_mort!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch, diag_t)
 
-        # model.timestepper.tmp .= 0.0
-        # mortality!(plank.data, model.timestepper.tmp, model.arch,
-        #           model.grid, model.timestepper.plk, plank.p)
+        zero_tmp!(model.timestepper.tmp)
+        mortality!(plank.data, model.timestepper.tmp, model.arch, model.grid, model.timestepper.plk, plank.p)
 
-        # ###### cell division and its diagnostic
+        ###### cell division and its diagnostic
         # diags_dvid!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch, diag_t)
 
-        # ##### tidy up plank.data
-        # model.timestepper.tmp .= 0.0
-        # CUDA.@allowscalar plank.active_num = floor(Int, sum(plank.data[:,58], dims=1)[1])
-        # copyto_tmp!(plank.data, model.timestepper.tmp, plank.data[:,58], Int.(plank.data[:,59]), false, model.arch)
-        # plank.data .= copy(model.timestepper.tmp)
+        ##### tidy up plank.data, copy to tmp
+        zero_tmp!(model.timestepper.tmp)
+        plank.data.idx .= cumsum(plank.data.ac)
+        copyto_tmp!(plank.data, model.timestepper.tmp, plank.data.ac, Int.(plank.data.idx), false, model.arch)
 
-        # ##### copy individuals which are ready to divide to the end of plank.data
-        # divide!(plank.data, model.arch, plank.num)
-        # CUDA.@allowscalar plank.num = floor(Int, sum(plank.data[:,58], dims=1)[1])
+        ##### copy back to plank.data
+        zero_tmp!(plank.data)
+        model.timestepper.tmp.idx .= cumsum(model.timestepper.tmp.ac)
+        copyto_tmp!(model.timestepper.tmp, plank.data, model.timestepper.tmp.ac, 
+                    Int.(model.timestepper.tmp.idx), false, model.arch)
+
+        ##### division
+        divide!(plank.data, model.arch)
     end
     write_species_dynamics(model.t, model.individuals.phytos, resultspath)
 

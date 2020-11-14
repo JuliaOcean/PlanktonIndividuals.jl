@@ -1,9 +1,9 @@
 ##### update physiological attributes of each individual
-function plankton_update!(plank, nuts, proc, coord, rnd, par, pop,
+function plankton_update!(plank, nuts, proc, rnd, par, pop,
                           temp, nut, g::Grids, p, ΔT, t)
     ##### calculate the total active plankton numbers
     ##### find nutrient, temperature, and par values for each individual
-    find_NPT!(nuts, Int.(coord.x), Int.(coord.y), Int.(coord.z), plank.ac, g,
+    find_NPT!(nuts, Int.(plank.xi), Int.(plank.yi), Int.(plank.zi), plank.ac, g,
               nut.NH4.data, nut.NO3.data, nut.PO4.data, nut.DOC.data,
               par, temp, pop, p.α, p.Φ, p.TempAe, p.Tempref, p.TempCoeff)
 
@@ -40,39 +40,39 @@ function plankton_update!(plank, nuts, proc, coord, rnd, par, pop,
     if t%600 == 1
         ##### grazing
         if p.grz_P == 0
-            @inbounds proc.grz .= 0.0
+            @inbounds plank.graz .= 0.0
         else
             if p.grz_stp == 0
-                calc_graz_quadratic!(nuts, proc, p.grz_P)
+                calc_graz_quadratic!(nuts, plank, p.grz_P)
             else
-                calc_graz_linear!(plank, proc, p.grz_P, p.grz_stp)
+                calc_graz_linear!(plank, p.grz_P, p.grz_stp)
             end
         end
 
         ##### mortality
-        calc_mort!(plank, proc, p.mort_reg,  p.mort_P)
+        calc_mort!(plank, p.mort_reg,  p.mort_P)
 
         ##### cell division
         if p.dvid_type == 1
-            calc_dvid_size!(plank, proc, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
+            calc_dvid_size!(plank, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
         elseif p.dvid_type == 2
-            calc_dvid_add!(plank, proc, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
+            calc_dvid_add!(plank, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
         elseif p.dvid_type == 3
-            calc_dvid_age!(plank, proc, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
+            calc_dvid_age!(plank, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
         elseif p.dvid_type == 4
-            calc_dvid_time!(plank, proc, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper, t)
+            calc_dvid_time!(plank, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper, t)
         elseif p.dvid_type == 5
-            calc_dvid_ts!(plank, proc, p.dvid_type, p.dvid_stp, p.dvid_stp2, p.dvid_P,
+            calc_dvid_ts!(plank, p.dvid_type, p.dvid_stp, p.dvid_stp2, p.dvid_P,
                           p.dvid_reg, p.dvid_reg2, p.Cquota, p.Nsuper, t)
         else
             throw(ArgumentError("Wrong cell division type, must be in 1 to 5"))
         end
 
-        get_rands!(proc, rnd)
+        get_rands!(plank, rnd)
     else
-        @inbounds proc.grz  .= 0.0
-        @inbounds proc.mort .= 0.0
-        @inbounds proc.dvid .= 0.0
+        @inbounds plank.graz .= 0.0
+        @inbounds plank.mort .= 0.0
+        @inbounds plank.dvid .= 0.0
     end
 end
 

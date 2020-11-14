@@ -7,7 +7,7 @@ using KernelAbstractions.Extras.LoopInfo: @unroll
     end
 end
 function acc_counts!(ctschl, ctspop, chl, ac, x, y, z, g::Grids, arch::Architecture)
-    kernel! = acc_counts_kernel!(device(arch), 1, (size(ac,1),))
+    kernel! = acc_counts_kernel!(device(arch), 1, (1,))
     event = kernel!(ctschl, ctspop, chl, ac, x, y, z, g)
     wait(device(arch), event)
     return nothing
@@ -24,7 +24,7 @@ end
     end
 end
 function calc_consume!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT, g::Grids, arch::Architecture)
-    kernel! = calc_consume_kernel!(device(arch), 1, (size(ac,1),))
+    kernel! = calc_consume_kernel!(device(arch), 1, (1,))
     event = kernel!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT, g)
     wait(device(arch), event)
     return nothing
@@ -45,7 +45,7 @@ end
 end
 function calc_loss!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank,
                     x, y, z, lossFracC, lossFracN, lossFracP, R_NC, R_PC, g::Grids, arch::Architecture)
-    kernel! = calc_loss_kernel!(device(arch), 1, (size(plank,1),))
+    kernel! = calc_loss_kernel!(device(arch), 1, (1,))
     event = kernel!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank,
                     x, y, z, lossFracC, lossFracN, lossFracP, R_NC, R_PC, g)
     wait(device(arch), event)

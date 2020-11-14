@@ -31,19 +31,27 @@ function timestepper(arch::Architecture, g::Grids, N)
     chl = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     pop = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
 
-    tmp = zeros(4N,60) |> array_type(arch)
+    tmp = StructArray(x   = zeros(4N), y   = zeros(4N), z   = zeros(4N),
+                      xi  = zeros(4N), yi  = zeros(4N), zi  = zeros(4N), 
+                      iS  = zeros(4N), Sz  = zeros(4N), Bm  = zeros(4N), 
+                      Cq  = zeros(4N), Nq  = zeros(4N), Pq  = zeros(4N), 
+                      chl = zeros(4N), gen = zeros(4N), age = zeros(4N), 
+                      ac  = zeros(4N), idx = zeros(4N),
+                      graz= zeros(4N), mort= zeros(4N), dvid= zeros(4N))
+    tmp_d = replace_storage(array_type(arch), tmp)
 
     rnd = StructArray(x = zeros(4N), y = zeros(4N), z = zeros(4N))
     rnd_d = replace_storage(array_type(arch), rnd)
 
-    velos = StructArray(x = zeros(4N), y = zeros(4N), z = zeros(4N),
-                        u⁺= zeros(4N), v⁺= zeros(4N), w⁺= zeros(4N),
-                        u⁻= zeros(4N), v⁻= zeros(4N), w⁻= zeros(4N),
-                        u1= zeros(4N), v1= zeros(4N), w1= zeros(4N),
-                        u2= zeros(4N), v2= zeros(4N), w2= zeros(4N),
-                        u3= zeros(4N), v3= zeros(4N), w3= zeros(4N),
-                        u4= zeros(4N), v4= zeros(4N), w4= zeros(4N),
-                        xd= zeros(4N), yd= zeros(4N), zd= zeros(4N),
+    velos = StructArray(x  = zeros(4N), y  = zeros(4N), z  = zeros(4N),
+                        xi = zeros(4N), yi = zeros(4N), zi = zeros(4N),
+                        u⁺ = zeros(4N), v⁺ = zeros(4N), w⁺ = zeros(4N),
+                        u⁻ = zeros(4N), v⁻ = zeros(4N), w⁻ = zeros(4N),
+                        u1 = zeros(4N), v1 = zeros(4N), w1 = zeros(4N),
+                        u2 = zeros(4N), v2 = zeros(4N), w2 = zeros(4N),
+                        u3 = zeros(4N), v3 = zeros(4N), w3 = zeros(4N),
+                        u4 = zeros(4N), v4 = zeros(4N), w4 = zeros(4N),
+                        xd = zeros(4N), yd = zeros(4N), zd = zeros(4N),
                         )
     velos_d = replace_storage(array_type(arch), velos)
 
@@ -52,7 +60,7 @@ function timestepper(arch::Architecture, g::Grids, N)
     nuts_d = replace_storage(array_type(arch), nuts)
 
     ts = timestepper(Gcs, MD1, MD2, MD3, vel₀, vel½, vel₁, plk,
-                     par, chl, pop, tmp, rnd_d, velos_d, nuts_d)
+                     par, chl, pop, tmp_d, rnd_d, velos_d, nuts_d)
 
     return ts
 end

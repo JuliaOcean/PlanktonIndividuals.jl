@@ -36,14 +36,14 @@ end
 ##### find indices (halo points excluded)
 # indices of x and y must start from 0
 # indices of z must end at 0
-function find_inds!(plank, coord, ac, g::Grids)
-    coord.x .= plank.x .÷ g.Δx .+ 1
-    coord.y .= plank.y .÷ g.Δy .+ 1
-    coord.z .= (plank.z .+ (g.Nz*g.Δz)) .÷ g.Δz .+ 1
+function find_inds!(plank, ac, g::Grids)
+    plank.xi .= plank.x .÷ g.Δx .+ 1
+    plank.yi .= plank.y .÷ g.Δy .+ 1
+    plank.zi .= (plank.z .+ (g.Nz*g.Δz)) .÷ g.Δz .+ 1
 
-    coord.x .*= ac
-    coord.y .*= ac
-    coord.z .*= ac
+    plank.xi .*= ac
+    plank.yi .*= ac
+    plank.zi .*= ac
 
     return nothing
 end
