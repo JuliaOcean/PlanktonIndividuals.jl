@@ -32,10 +32,16 @@ function copyto_tmp!(plank, tmp, con, idx::AbstractArray{Int64,1}, b::Bool, arch
     wait(device(arch), event)
     return nothing
 end
+
+function get_tind!(idx, ac)
+    idx .= cumsum(ac)
+    return nothing
+end
+
 ##### grazing and grazing loss
 function grazing!(plank, tmp, arch::Architecture, g::Grids, plk, p)
     ##### calculate index for timestepper.tmp
-    plank.idx .= cumsum(plank.graz)
+    get_tind!(plank.idx, plank.graz)
     ##### copy grazed individuals to timestepper.tmp
     copyto_tmp!(plank, tmp, plank.graz, Int.(plank.idx), false, arch)
     ##### calculate grazing loss
@@ -47,7 +53,7 @@ end
 ##### mortality and mortality loss
 function mortality!(plank, tmp, arch::Architecture, g::Grids, plk, p)
     ##### calculate index for timestepper.tmp
-    plank.idx .= cumsum(plank.mort)
+    get_tind!(plank.idx, plank.mort)
     ##### copy dead individuals to timestepper.tmp
     copyto_tmp!(plank, tmp, plank.mort, Int.(plank.idx), false, arch)
     ##### calculate mortality loss
@@ -57,38 +63,29 @@ function mortality!(plank, tmp, arch::Architecture, g::Grids, plk, p)
 end
 
 ##### cell division
-@kernel function divide_half_kernel!(plank, con)
-    i = @index(Global, Linear)
-    if con[i] == 1.0
-        @inbounds plank.Sz[i]  *= 0.45
-        @inbounds plank.Bm[i]  *= 0.45
-        @inbounds plank.Cq[i]  *= 0.5
-        @inbounds plank.Nq[i]  *= 0.5
-        @inbounds plank.Pq[i]  *= 0.5
-        @inbounds plank.chl[i] *= 0.5
-        @inbounds plank.gen[i] += 1.0
-        @inbounds plank.age[i]  = 1.0
-        @inbounds plank.iS[i]   = copy(plank.Sz[i])
-    end
-end
-function divide_to_half!(plank, con, arch::Architecture)
-    kernel! = divide_half_kernel!(device(arch), 256, (size(plank.ac,1),))
-    event = kernel!(plank, con)
-    wait(device(arch), event)
+function divide_to_half!(plank)
+    @inbounds plank.Sz  .*= 0.45
+    @inbounds plank.Bm  .*= 0.45
+    @inbounds plank.Cq  .*= 0.5
+    @inbounds plank.Nq  .*= 0.5
+    @inbounds plank.Pq  .*= 0.5
+    @inbounds plank.chl .*= 0.5
+    @inbounds plank.gen .+= 1.0
+    @inbounds plank.age  .= 1.0
+    @inbounds plank.iS   .= copy(plank.Sz)
+
     return nothing
 end
-
-function divide!(plank, arch::Architecture)
+function divide!(plank, tmp, dvidnum::Float64, arch::Architecture)
+    ##### calculate index for timestepper.tmp
+    get_tind!(plank.idx, plank.dvid)
+    ##### copy ready to divide individuals to timestepper.tmp **twice**
+    copyto_tmp!(plank, tmp, plank.dvid, Int.(plank.idx), true, arch)
+    copyto_tmp!(plank, tmp, plank.dvid, Int.(plank.idx .+ dvidnum), false, arch)
     ##### perform cell division
-    divide_to_half!(plank, plank.dvid, arch)
+    divide_to_half!(tmp)
 
-    ##### calculate index for plank.data
-    plank.idx .= cumsum(plank.dvid)
-    plank.idx .+= dot(plank.ac, plank.ac)
-
-    ##### copy newly divided individuals to the end of active individuals in plank.data
-    copyto_tmp!(plank, plank, plank.dvid, Int.(plank.idx), true, arch)
-    plank.dvid .= 0.0
+    return nothing
 end
 
 ##### zero a StructArray of plank.data
@@ -115,3 +112,40 @@ function zero_tmp!(tmp)
     tmp.dvid .= 0.0
     return nothing
 end
+
+
+# @kernel function divide_half_kernel!(plank, con)
+#     i = @index(Global, Linear)
+#     if con[i] == 1.0
+#         @inbounds plank.Sz[i]  *= 0.45
+#         @inbounds plank.Bm[i]  *= 0.45
+#         @inbounds plank.Cq[i]  *= 0.5
+#         @inbounds plank.Nq[i]  *= 0.5
+#         @inbounds plank.Pq[i]  *= 0.5
+#         @inbounds plank.chl[i] *= 0.5
+#         @inbounds plank.gen[i] += 1.0
+#         @inbounds plank.age[i]  = 1.0
+#         @inbounds plank.iS[i]   = copy(plank.Sz[i])
+#     end
+# end
+# function divide_to_half!(plank, con, arch::Architecture)
+#     kernel! = divide_half_kernel!(device(arch), 256, (size(plank.ac,1),))
+#     event = kernel!(plank, con)
+#     wait(device(arch), event)
+#     return nothing
+# end
+
+# function divide!(plank, arch::Architecture)
+#     ##### perform cell division
+#     divide_to_half!(plank, plank.dvid, arch)
+
+#     ##### calculate index for plank.data
+#     plknum = dot(plank.ac, plank.ac)
+#     get_tind!(plank.idx, plank.dvid, plknum)
+
+#     ##### copy newly divided individuals to the end of active individuals in plank.data
+#     copyto_tmp!(plank, plank, plank.dvid, Int.(plank.idx), true, arch)
+#     plank.dvid .= 0.0
+
+#     return nothing
+# end

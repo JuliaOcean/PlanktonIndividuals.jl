@@ -65,19 +65,23 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
         ###### cell division and its diagnostic
         # diags_dvid!(model.diags.spcs, plank.data, Int.(plank.data[:,13:15]), plank.sp, model.arch, diag_t)
 
-        ##### tidy up plank.data, copy to tmp
+        ##### division
         zero_tmp!(model.timestepper.tmp)
-        plank.data.idx .= cumsum(plank.data.ac)
+        dvidnum = dot(plank.data.dvid, plank.data.ac)
+        divide!(plank.data, model.timestepper.tmp, dvidnum, model.arch)
+
+        ##### tidy up plank.data, copy to tmp, to the end of divided individuals
+        zero_tmp!(model.timestepper.tmp)
+        get_tind!(plank.data.idx, plank.data.ac)
+        plank.data.idx .= plank.data.idx .+ dvidnum*2
         copyto_tmp!(plank.data, model.timestepper.tmp, plank.data.ac, Int.(plank.data.idx), false, model.arch)
 
         ##### copy back to plank.data
         zero_tmp!(plank.data)
-        model.timestepper.tmp.idx .= cumsum(model.timestepper.tmp.ac)
+        get_tind!(model.timestepper.tmp.idx, model.timestepper.tmp.ac)
         copyto_tmp!(model.timestepper.tmp, plank.data, model.timestepper.tmp.ac, 
                     Int.(model.timestepper.tmp.idx), false, model.arch)
 
-        ##### division
-        divide!(plank.data, model.arch)
     end
     write_species_dynamics(model.t, model.individuals.phytos, resultspath)
 
