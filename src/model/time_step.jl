@@ -71,7 +71,6 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
         divide!(plank.data, model.timestepper.tmp, dvidnum, model.arch)
 
         ##### tidy up plank.data, copy to tmp, to the end of divided individuals
-        zero_tmp!(model.timestepper.tmp)
         get_tind!(plank.data.idx, plank.data.ac)
         plank.data.idx .= plank.data.idx .+ dvidnum*2
         copyto_tmp!(plank.data, model.timestepper.tmp, plank.data.ac, Int.(plank.data.idx), false, model.arch)
