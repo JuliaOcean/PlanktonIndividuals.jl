@@ -164,7 +164,7 @@ function phyt_update(model, ΔT::Int64)
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
                             cirT       = t % 86400 ÷ 3600 # in hour
                             reg_size   = params["dvid_stp"][sp]*(phyt[4] - params["dvid_size"][sp])
-                            reg_time   = max(0.0, -sin(2π/24*cirT))
+                            reg_time   = max(0.0, -sin(2π/24*cirT)*2) # ranging from 0 to 2
                             reg_divide = params["P_dvid"][sp]*(tanh(reg_size)+1) * reg_time
                             P_dvi      = rand(Bernoulli(reg_divide))
                         end
