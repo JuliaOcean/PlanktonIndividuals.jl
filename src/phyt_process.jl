@@ -160,11 +160,12 @@ function phyt_update(model, ΔT::Int64)
                             reg_divide = params["P_dvid"][sp]*(tanh(reg_cirT)+1)
                             P_dvi      = rand(Bernoulli(reg_divide))
                         end
-                    elseif params["dvid_type"][sp] == 5 # timer-like (circadian clock) cell division
+                    elseif params["dvid_type"][sp] == 5 # timer & sizer-like cell division
                         if phyt[5] ≥ 2*params["P_Cquota"][sp]*params["P_Nsuper"]
-                            # use light intensity to indicate circadian clock in the cell
-                            reg_par    = params["dvid_stp"][sp]*(params["dvid_par"][sp] - IR_t)
-                            reg_divide = params["P_dvid"][sp]*(tanh(reg_par)+1)
+                            cirT       = t % 86400 ÷ 3600 # in hour
+                            reg_size   = params["dvid_stp"][sp]*(phyt[4] - params["dvid_size"][sp])
+                            reg_time   = max(0.0, -sin(2π/24*cirT))
+                            reg_divide = params["P_dvid"][sp]*(tanh(reg_size)+1) * reg_time
                             P_dvi      = rand(Bernoulli(reg_divide))
                         end
                     elseif params["dvid_type"][sp] == 6 # timer & sizer-like cell division
