@@ -2,7 +2,7 @@ module PlanktonIndividuals
 
 using NCDatasets, Serialization
 using Random, Distributions, Statistics, Interpolations
-using Printf
+using Printf, JLD2
 using CUDA, KernelAbstractions, LinearAlgebra
 using StructArrays
 
@@ -58,5 +58,5 @@ export
     write_nut_nc_alltime, write_nut_nc_each_step,
     count_vertical_num, count_horizontal_num,
     write_species_dynamics, write_nut_cons,
-    write_output
+    write_individuals_to_bin, write_diags_to_jld2
 end # module

@@ -1,108 +1,128 @@
-#=
-Diagnostics of individual physiology processes
-Indices:
-1:  counts
-2:  grazing
-3:  mortality
-4:  division
-5:  PS
-6:  VDOC
-7:  VNO3
-8:  VHN4
-9:  VPO4
-10: Respiration
-11: BS
-12: Exudation
-13: Bm
-14: Cq
-15: Nq
-16: Pq
-17: Chl
-=#
 using KernelAbstractions.Extras.LoopInfo: @unroll
 
 mutable struct Diagnostics
-    spcs::AbstractArray{Float64,6}       # for each species
-    tr::AbstractArray{Float64,5}         # for tracers
+    spcs::NamedTuple       # for each species
+    tr::NamedTuple         # for tracers
 end
 
-function diags_setup(arch::Architecture, nTime::Int64, ΔT::Int64, grids, freq::Int64, Nsp::Int64, nTr::Int64)
-    ndiags = 17
-    nt = nTime*ΔT÷freq
-    if nTime*ΔT%freq ≠ 0
-        nt += 1
+function diags_setup(ntrs, nprocs, g::Grids, Nsp::Int64, arch::Architecture)
+    ntr   = length(ntrs)
+    nproc = length(nprocs)
+    trs   = []
+    procs = []
+
+    total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
+
+    for i in 1:ntr
+        tr = zeros(total_size) |> array_type(arch)
+        push!(trs, tr)
     end
-    diags_sp = zeros(grids.Nx, grids.Ny, grids.Nz, nt, Nsp, ndiags) |> array_type(arch)
-    diags = zeros(grids.Nx, grids.Ny, grids.Nz, nt, nTr) |> array_type(arch)
-    return Diagnostics(diags_sp, diags)
-end
 
+    diag_tr = NamedTuple{ntrs}(trs)
+
+    for j in 1:Nsp
+        procs_sp = []
+        for k in 1:nproc
+            proc = zeros(total_size) |> array_type(arch)
+            push!(procs_sp, proc)
+        end
+        diag_proc = NamedTuple{nprocs}(procs_sp)
+        push!(procs, diag_proc)
+    end
+    plank_name = plank_names[1:Nsp]
+    diag_sp = NamedTuple{plank_name}(procs)
+    return Diagnostics(diag_sp, diag_tr)
+end
 
 ##### record diagnostics at each time step
-@kernel function diags_kernel!(diags, plank, inds::AbstractArray{Int64,2}, sp::Int64, diag_t)
-    @unroll for i in 1:size(plank,1)
-        if plank[i,58] == 1.0
-            @inbounds xi = inds[i,1]
-            @inbounds yi = inds[i,2]
-            @inbounds zi = inds[i,3]
-
-            @inbounds diags[xi, yi, zi, diag_t, sp, 1]  += 1 # individual count
-            @inbounds diags[xi, yi, zi, diag_t, sp, 2]  += plank[i,31] # grazing
-
-            # @inbounds diags[xi, yi, zi, diag_t, sp, 5]  += plank[i,22] # PS
-            # @inbounds diags[xi, yi, zi, diag_t, sp, 6]  += plank[i,23] # VDOC
-            # @inbounds diags[xi, yi, zi, diag_t, sp, 7]  += plank[i,24] # VNH4
-            # @inbounds diags[xi, yi, zi, diag_t, sp, 8]  += plank[i,25] # VNO3
-            # @inbounds diags[xi, yi, zi, diag_t, sp, 9]  += plank[i,26] # VPO4
-            # @inbounds diags[xi, yi, zi, diag_t, sp, 10] += plank[i,28] # respir
-            # @inbounds diags[xi, yi, zi, diag_t, sp, 11] += plank[i,29] # BS
-            # @inbounds diags[xi, yi, zi, diag_t, sp, 12] += plank[i,30] # exu
-            # @inbounds diags[xi, yi, zi, diag_t, sp, 13] += plank[i,6]  # Bm
-            # @inbounds diags[xi, yi, zi, diag_t, sp, 14] += plank[i,7]  # Cq
-            # @inbounds diags[xi, yi, zi, diag_t, sp, 15] += plank[i,8]  # Nq
-            # @inbounds diags[xi, yi, zi, diag_t, sp, 16] += plank[i,9]  # Pq
-            # @inbounds diags[xi, yi, zi, diag_t, sp, 17] += plank[i,10] # Chl
-        end
+@kernel function diags_num_kernel!(diags_num, ac, x, y, z, g::Grids)
+    @unroll for i in 1:size(ac,1)
+        @inbounds diags_num[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += 1.0 * ac[i]
     end
 end
-function diags!(diags, plank, inds::AbstractArray{Int64,2}, sp::Int64, arch::Architecture, diag_t)
-    kernel! = diags_kernel!(device(arch), 256, (1,))
-    event = kernel!(diags, plank, inds, sp, diag_t)
+function diags_num!(diags_num, ac, x, y, z, g::Grids, arch::Architecture)
+    kernel! = diags_num_kernel!(device(arch), 1, (1,))
+    event = kernel!(diags_num, ac, x, y, z, g)
     wait(device(arch), event)
     return nothing
 end
 
-@kernel function diags_mort_kernel!(diags, plank, inds::AbstractArray{Int64,2}, sp::Int64, diag_t)
-    @unroll for i in 1:size(plank,1)
-        if plank[i,58] == 1.0
-            @inbounds xi = inds[i,1]
-            @inbounds yi = inds[i,2]
-            @inbounds zi = inds[i,3]
-            @inbounds diags[xi, yi, zi, diag_t, sp, 3] += plank[i,32]
-        end
+@kernel function diags_graz_kernel!(diags_graz, graz, ac, x, y, z, g::Grids)
+    @unroll for i in 1:size(ac,1)
+        @inbounds diags_graz[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += graz[i] * ac[i]
     end
 end
-function diags_mort!(diags, plank, inds::AbstractArray{Int64,2}, sp::Int64, arch::Architecture, diag_t)
-    kernel! = diags_mort_kernel!(device(arch), 256, (1,))
-    event = kernel!(diags, plank, inds, sp, diag_t)
+function diags_graz!(diags_graz, graz, ac, x, y, z, g::Grids, arch::Architecture)
+    kernel! = diags_graz_kernel!(device(arch), 1, (1,))
+    event = kernel!(diags_graz, graz, ac, x, y, z, g)
     wait(device(arch), event)
     return nothing
 end
 
-@kernel function diags_dvid_kernel!(diags, plank, inds::AbstractArray{Int64,2}, sp::Int64, diag_t)
-    @unroll for i in 1:size(plank,1)
-        if plank[i,58] == 1.0
-            @inbounds xi = inds[i,1]
-            @inbounds yi = inds[i,2]
-            @inbounds zi = inds[i,3]
-            @inbounds diags[xi, yi, zi, diag_t, sp, 4] += plank[i,33]
-        end
+@kernel function diags_mort_kernel!(diags_mort, mort, ac, x, y, z, g::Grids)
+    @unroll for i in 1:size(ac,1)
+        @inbounds diags_mort[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += mort[i] * ac[i]
     end
 end
-function diags_dvid!(diags, plank, inds::AbstractArray{Int64,2}, sp::Int64, arch::Architecture, diag_t)
-    kernel! = diags_dvid_kernel!(device(arch), 256, (1,))
-    event = kernel!(diags, plank, inds, sp, diag_t)
+function diags_mort!(diags_mort, mort, ac, x, y, z, g::Grids, arch::Architecture)
+    kernel! = diags_mort_kernel!(device(arch), 1, (1,))
+    event = kernel!(diags_mort, mort, ac, x, y, z, g)
     wait(device(arch), event)
     return nothing
 end
 
+@kernel function diags_dvid_kernel!(diags_dvid, dvid, ac, x, y, z, g::Grids)
+    @unroll for i in 1:size(ac,1)
+        @inbounds diags_dvid[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += dvid[i] * ac[i]
+    end
+end
+function diags_dvid!(diags_dvid, dvid, ac, x, y, z, g::Grids, arch::Architecture)
+    kernel! = diags_dvid_kernel!(device(arch), 1, (1,))
+    event = kernel!(diags_dvid, dvid, ac, x, y, z, g)
+    wait(device(arch), event)
+    return nothing
+end
+
+@kernel function diags_proc_kernel!(diags_proc, proc, ac, x, y, z, g::Grids)
+    @unroll for i in 1:size(ac,1)
+        @inbounds diags_proc[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += proc[i] * ac[i]
+    end
+end
+function diags_proc!(diags_proc, proc, ac, x, y, z, g::Grids, arch::Architecture)
+    kernel! = diags_proc_kernel!(device(arch), 1, (1,))
+    event = kernel!(diags_proc, proc, ac, x, y, z, g)
+    wait(device(arch), event)
+    return nothing
+end
+
+function diags_spec!(diags_sp, proc, plank, ac, x, y, z, g::Grids, arch::Architecture)
+    for diag in keys(diags_sp)
+        if diag == :PP
+            diags_proc!(diags_sp[diag], proc.PP, ac, x, y, z, g, arch)
+        elseif diag == :BS
+            diags_proc!(diags_sp[diag], proc.BS, ac, x, y, z, g, arch)
+        elseif diag == :VDOC
+            diags_proc!(diags_sp[diag], proc.VODC, ac, x, y, z, g, arch)
+        elseif diag == :VNH4
+            diags_proc!(diags_sp[diag], proc.VNH4, ac, x, y, z, g, arch)
+        elseif diag == :VNO3
+            diags_proc!(diags_sp[diag], proc.VNO3, ac, x, y, z, g, arch)
+        elseif diag == :VPO4
+            diags_proc!(diags_sp[diag], proc.VPO4, ac, x, y, z, g, arch)
+        elseif diag == :resp
+            diags_proc!(diags_sp[diag], proc.resp, ac, x, y, z, g, arch)
+        elseif diag == :exu
+            diags_proc!(diags_sp[diag], proc.exu, ac, x, y, z, g, arch)
+        elseif diag == :Bm
+            diags_proc!(diags_sp[diag], plank.Bm, ac, x, y, z, g, arch)
+        elseif diag == :Cq
+            diags_proc!(diags_sp[diag], plank.Cq, ac, x, y, z, g, arch)
+        elseif diag == :Nq
+            diags_proc!(diags_sp[diag], plank.Nq, ac, x, y, z, g, arch)
+        elseif diag == :Pq
+            diags_proc!(diags_sp[diag], plank.Pq, ac, x, y, z, g, arch)
+        elseif diag == :chl
+            diags_proc!(diags_sp[diag], plank.chl, ac, x, y, z, g, arch)
+        end
+    end
+end

@@ -23,13 +23,13 @@ Default PAR and temp are from ../samples
 """
 function PI_Model(arch::Architecture, grid, RunParam;
                   t = 1-RunParam.ΔT,
-                  individuals = individuals(RunParam.params, arch),
                   nutrients,
+                  individuals = individuals(RunParam.params, arch),
                   PARF = read_IR_input(RunParam.ΔT, grid),
                   temp = read_temp_input(RunParam.ΔT, grid),
                   params = RunParam.params,
-                  diags = diags_setup(arch, RunParam.nTime, RunParam.ΔT, grid,
-                                     RunParam.params["diag_freq"], RunParam.params["Nsp"], 5),
+                  diag_ntrs = (:PAR, :DOC, :NH4, :NO3),
+                  diag_nprocs = (:num, :graz, :mort, :dvid),
                   )
 
     if arch == GPUs() && !has_cuda()
@@ -47,6 +47,8 @@ function PI_Model(arch::Architecture, grid, RunParam;
     end
 
     ts = timestepper(arch, grid, params["Nind"])
+
+    diags = diags_setup(diag_ntrs, diag_nprocs, grid, params["Nsp"], arch)
 
     model = Model_Struct(arch, t, individuals, nutrients, grid, input, params, diags, ts)
 

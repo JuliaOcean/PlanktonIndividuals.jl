@@ -122,11 +122,11 @@ function write_species_dynamics(t::Int64, phytos, filepath)
 end
 
 """
-    write_output(individuals,filepath,time)
+    write_individuals_to_bin(individuals,filepath,time)
 write model output of individuals at each time step in a binary file
 time = model.t
 """
-function write_output(phytos::NamedTuple, filepath, time)
+function write_individuals_to_bin(phytos::NamedTuple, filepath, time)
     for i in 1:length(phytos)
         path = filepath*"planks/phy"*lpad(time, 10, "0")*"_"*lpad(i,2,"0")*".bin"
         open(path, "w") do io
@@ -134,6 +134,30 @@ function write_output(phytos::NamedTuple, filepath, time)
         end
     end
 end
+
+function write_diags_to_jld2(diags, filepath, time, ncounts)
+    t = time ÷ 3600 + 1 # time in hour from start
+    jldopen(filepath*"diags.jld2", "a+") do file
+        for key in keys(diags.tr)
+            file[lpad(t, 8, "0")*"/nut/"*string(key)] = Array(diags.tr[key]) ./ ncounts
+        end
+        for sp in keys(diags.spcs)
+            for proc in keys(diags.spcs[sp])
+                file[lpad(t, 8, "0")*"/"*string(sp)*"/"*string(proc)] = Array(diags.spcs[sp][proc]) ./ ncounts 
+            end
+        end
+    end
+    ##### zeros diags
+    for tr in diags.tr
+        tr .= 0.0
+    end
+    for sp in diags.spcs
+        for proc in sp
+            proc .= 0.0
+        end
+    end
+end
+
 
 """
     PrepRunDir(res::String="results/")
