@@ -95,10 +95,10 @@ function diags_proc!(diags_proc, proc, ac, x, y, z, g::Grids, arch::Architecture
     return nothing
 end
 
-function diags_spec!(diags_sp, proc, plank, ac, x, y, z, g::Grids, arch::Architecture)
+function diags_spcs!(diags_sp, proc, plank, ac, x, y, z, g::Grids, arch::Architecture)
     for diag in keys(diags_sp)
-        if diag == :PP
-            diags_proc!(diags_sp[diag], proc.PP, ac, x, y, z, g, arch)
+        if diag == :PS
+            diags_proc!(diags_sp[diag], proc.PS, ac, x, y, z, g, arch)
         elseif diag == :BS
             diags_proc!(diags_sp[diag], proc.BS, ac, x, y, z, g, arch)
         elseif diag == :VDOC

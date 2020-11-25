@@ -53,7 +53,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
                       Int.(model.individuals.phytos[sp].data.yi), Int.(model.individuals.phytos[sp].data.zi),
                       ΔT, model.grid, model.arch)
         ##### diagnostics of processes for each species
-        diags_spec!(model.diags.spec[sp], model.individuals.phytos[sp].proc, model.individuals.phytos[sp].data,
+        diags_spcs!(model.diags.spcs[sp], model.individuals.phytos[sp].proc, model.individuals.phytos[sp].data,
                     model.individuals.phytos[sp].data.ac, Int.(model.individuals.phytos[sp].data.xi), 
                     Int.(model.individuals.phytos[sp].data.yi), Int.(model.individuals.phytos[sp].data.zi), 
                     model.grid, model.arch)
