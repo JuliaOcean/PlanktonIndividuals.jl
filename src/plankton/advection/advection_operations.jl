@@ -34,63 +34,15 @@ function periodic_domain!(plank, ac, g::Grids)
 end
 
 ##### find indices (halo points excluded)
-# indices of x and y must start from 0
-# indices of z must end at 0
 function find_inds!(plank, ac, g::Grids)
-    plank.xi .= plank.x .÷ g.Δx .+ 1
-    plank.yi .= plank.y .÷ g.Δy .+ 1
-    plank.zi .= (plank.z .+ (g.Nz*g.Δz)) .÷ g.Δz .+ 1
+    plank.xi .= (plank.x .- g.xF[g.Hx+1]) .÷ g.Δx .+ 1
+    plank.yi .= (plank.y .- g.yF[g.Hy+1]) .÷ g.Δy .+ 1
+    plank.zi .= (plank.z .- g.zF[g.Hz+1]) .÷ g.Δz .+ 1
 
     plank.xi .*= ac
     plank.yi .*= ac
     plank.zi .*= ac
 
-    return nothing
-end
-
-##### find velocities around the individual to interpolate
-function find_vel!(velos, x, y, z, ac, g::Grids, u, v, w)
-    @inbounds velos.u⁻ .= u[CartesianIndex.(x .+ g.Hx,      y .+ g.Hy,      z .+ g.Hz     )] .* ac
-    @inbounds velos.u⁺ .= u[CartesianIndex.(x .+ g.Hx .+ 1, y .+ g.Hy,      z .+ g.Hz     )] .* ac
-    @inbounds velos.v⁻ .= v[CartesianIndex.(x .+ g.Hx,      y .+ g.Hy,      z .+ g.Hz     )] .* ac
-    @inbounds velos.v⁺ .= v[CartesianIndex.(x .+ g.Hx,      y .+ g.Hy .+ 1, z .+ g.Hz     )] .* ac
-    @inbounds velos.w⁻ .= w[CartesianIndex.(x .+ g.Hx,      y .+ g.Hy,      z .+ g.Hz     )] .* ac
-    @inbounds velos.w⁺ .= w[CartesianIndex.(x .+ g.Hx,      y .+ g.Hy,      z .+ g.Hz .+ 1)] .* ac
-    return nothing
-end
-
-function find_xᵈ!(velos, plank, g::Grids)
-    velos.xd .= plank.x .% g.Δx ./ g.Δx
-    velos.yd .= plank.y .% g.Δy ./ g.Δy
-    velos.zd .= plank.z .% g.Δz ./ g.Δz
-    return nothing
-end
-
-##### velocity interpolation for each individual
-@inline linear_itpl(u0, u1, xd) = u0 * (1.0 - xd) + u1 * xd
-
-function vel1_interpolation!(velos)
-    velos.u1 .= linear_itpl.(velos.u⁻, velos.u⁺, velos.xd)
-    velos.v1 .= linear_itpl.(velos.v⁻, velos.v⁺, velos.yd)
-    velos.w1 .= linear_itpl.(velos.w⁻, velos.w⁺, velos.zd)
-    return nothing
-end
-function vel2_interpolation!(velos)
-    velos.u2 .= linear_itpl.(velos.u⁻, velos.u⁺, velos.xd)
-    velos.v2 .= linear_itpl.(velos.v⁻, velos.v⁺, velos.yd)
-    velos.w2 .= linear_itpl.(velos.w⁻, velos.w⁺, velos.zd)
-    return nothing
-end
-function vel3_interpolation!(velos)
-    velos.u3 .= linear_itpl.(velos.u⁻, velos.u⁺, velos.xd)
-    velos.v3 .= linear_itpl.(velos.v⁻, velos.v⁺, velos.yd)
-    velos.w3 .= linear_itpl.(velos.w⁻, velos.w⁺, velos.zd)
-    return nothing
-end
-function vel4_interpolation!(velos)
-    velos.u4 .= linear_itpl.(velos.u⁻, velos.u⁺, velos.xd)
-    velos.v4 .= linear_itpl.(velos.v⁻, velos.v⁺, velos.yd)
-    velos.w4 .= linear_itpl.(velos.w⁻, velos.w⁺, velos.zd)
     return nothing
 end
 
@@ -129,4 +81,3 @@ function calc_coord!(plank, velos, ΔT)
     plank.z .= plank.z .+ velos.w1 .* ΔT .* plank.ac
     return nothing
 end
-

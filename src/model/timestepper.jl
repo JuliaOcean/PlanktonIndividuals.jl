@@ -44,14 +44,10 @@ function timestepper(arch::Architecture, g::Grids, N)
     rnd_d = replace_storage(array_type(arch), rnd)
 
     velos = StructArray(x  = zeros(4N), y  = zeros(4N), z  = zeros(4N),
-                        xi = zeros(4N), yi = zeros(4N), zi = zeros(4N),
-                        u⁺ = zeros(4N), v⁺ = zeros(4N), w⁺ = zeros(4N),
-                        u⁻ = zeros(4N), v⁻ = zeros(4N), w⁻ = zeros(4N),
                         u1 = zeros(4N), v1 = zeros(4N), w1 = zeros(4N),
                         u2 = zeros(4N), v2 = zeros(4N), w2 = zeros(4N),
                         u3 = zeros(4N), v3 = zeros(4N), w3 = zeros(4N),
                         u4 = zeros(4N), v4 = zeros(4N), w4 = zeros(4N),
-                        xd = zeros(4N), yd = zeros(4N), zd = zeros(4N),
                         )
     velos_d = replace_storage(array_type(arch), velos)
 

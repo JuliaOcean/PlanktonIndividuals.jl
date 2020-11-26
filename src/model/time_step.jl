@@ -21,10 +21,10 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
         periodic_domain!(model.individuals.phytos[sp].data, model.individuals.phytos[sp].data.ac, model.grid)
 
         plankton_advectionRK4!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
-                               model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT)
+                               model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT, model.arch)
 
         # plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos,
-        #                     model.grid, model.timestepper.vel₁, ΔT)
+        #                     model.grid, model.timestepper.vel₁, ΔT, model.arch)
 
         ##### calculate accumulated chla quantity (not concentration)
         find_inds!(model.individuals.phytos[sp].data, model.individuals.phytos[sp].data.ac, model.grid)
