@@ -54,8 +54,8 @@ end
 
 ##### calculate PAR field based on Chla field and depth
 @kernel function calc_par_kernel!(par, chl, PARF, g::Grids, kc, kw)
+    i, j = @index(Global, NTuple)
     @unroll for k in 1:g.Nz
-        i, j = @index(Global, NTuple)
         ii = i + g.Hx
         jj = j + g.Hy
         kk = g.Nz - k + 1 + g.Hz
