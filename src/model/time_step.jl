@@ -30,8 +30,8 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
         find_inds!(model.individuals.phytos[sp].data, model.individuals.phytos[sp].data.ac, model.grid)
         acc_counts!(model.timestepper.chl, model.timestepper.pop,
                     model.individuals.phytos[sp].data.chl, model.individuals.phytos[sp].data.ac, 
-                    Int.(model.individuals.phytos[sp].data.xi), Int.(model.individuals.phytos[sp].data.yi), 
-                    Int.(model.individuals.phytos[sp].data.zi), model.grid, model.arch)
+                    model.individuals.phytos[sp].data.xi, model.individuals.phytos[sp].data.yi, 
+                    model.individuals.phytos[sp].data.zi, model.grid, model.arch)
     end
 
     ##### calculate PAR
@@ -49,19 +49,19 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
         calc_consume!(model.timestepper.plk.DIC.data, model.timestepper.plk.DOC.data, 
                       model.timestepper.plk.NH4.data, model.timestepper.plk.NO3.data, 
                       model.timestepper.plk.PO4.data, model.individuals.phytos[sp].proc, 
-                      model.individuals.phytos[sp].data.ac, Int.(model.individuals.phytos[sp].data.xi), 
-                      Int.(model.individuals.phytos[sp].data.yi), Int.(model.individuals.phytos[sp].data.zi),
+                      model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
+                      model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
                       ΔT, model.grid, model.arch)
         ##### diagnostics of processes for each species
         diags_spcs!(model.diags.spcs[sp], model.individuals.phytos[sp].proc, model.individuals.phytos[sp].data,
-                    model.individuals.phytos[sp].data.ac, Int.(model.individuals.phytos[sp].data.xi), 
-                    Int.(model.individuals.phytos[sp].data.yi), Int.(model.individuals.phytos[sp].data.zi), 
+                    model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
+                    model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
                     model.grid, model.arch)
 
         ##### grazing and its diagnostic
         diags_graz!(model.diags.spcs[sp].graz, model.individuals.phytos[sp].data.graz,
-                    model.individuals.phytos[sp].data.ac, Int.(model.individuals.phytos[sp].data.xi), 
-                    Int.(model.individuals.phytos[sp].data.yi), Int.(model.individuals.phytos[sp].data.zi), 
+                    model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
+                    model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
                     model.grid, model.arch)
         zero_tmp!(model.timestepper.tmp)
         grazing!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
@@ -69,8 +69,8 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
 
         ###### mortality and its diagnostic
         diags_mort!(model.diags.spcs[sp].mort, model.individuals.phytos[sp].data.mort,
-                    model.individuals.phytos[sp].data.ac, Int.(model.individuals.phytos[sp].data.xi), 
-                    Int.(model.individuals.phytos[sp].data.yi), Int.(model.individuals.phytos[sp].data.zi), 
+                    model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
+                    model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
                     model.grid, model.arch)
 
         zero_tmp!(model.timestepper.tmp)
@@ -79,8 +79,8 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
 
         ###### cell division diagnostic
         diags_dvid!(model.diags.spcs[sp].dvid, model.individuals.phytos[sp].data.dvid,
-                    model.individuals.phytos[sp].data.ac, Int.(model.individuals.phytos[sp].data.xi), 
-                    Int.(model.individuals.phytos[sp].data.yi), Int.(model.individuals.phytos[sp].data.zi), 
+                    model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
+                    model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
                     model.grid, model.arch)
 
         ##### division

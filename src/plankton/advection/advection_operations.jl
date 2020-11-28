@@ -35,13 +35,9 @@ end
 
 ##### find indices (halo points excluded)
 function find_inds!(plank, ac, g::Grids)
-    plank.xi .= (plank.x .- g.xF[g.Hx+1]) .÷ g.Δx .+ 1
-    plank.yi .= (plank.y .- g.yF[g.Hy+1]) .÷ g.Δy .+ 1
-    plank.zi .= (plank.z .- g.zF[g.Hz+1]) .÷ g.Δz .+ 1
-
-    plank.xi .*= ac
-    plank.yi .*= ac
-    plank.zi .*= ac
+    @inbounds plank.xi .= unsafe_trunc.(Int, ((plank.x .- g.xF[g.Hx+1]) ./ g.Δx .+ 1) .* ac)
+    @inbounds plank.yi .= unsafe_trunc.(Int, ((plank.y .- g.yF[g.Hy+1]) ./ g.Δy .+ 1) .* ac)
+    @inbounds plank.zi .= unsafe_trunc.(Int, ((plank.z .- g.zF[g.Hz+1]) ./ g.Δz .+ 1) .* ac)
 
     return nothing
 end

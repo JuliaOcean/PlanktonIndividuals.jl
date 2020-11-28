@@ -12,12 +12,12 @@ end
 
 function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict)
     rawdata = StructArray(x   = zeros(4N), y   = zeros(4N), z   = zeros(4N),
-                          xi  = zeros(4N), yi  = zeros(4N), zi  = zeros(4N), 
                           iS  = zeros(4N), Sz  = zeros(4N), Bm  = zeros(4N), 
                           Cq  = zeros(4N), Nq  = zeros(4N), Pq  = zeros(4N), 
                           chl = zeros(4N), gen = zeros(4N), age = zeros(4N), 
                           ac  = zeros(4N), idx = zeros(4N),
-                          graz= zeros(4N), mort= zeros(4N), dvid= zeros(4N))
+                          graz= zeros(4N), mort= zeros(4N), dvid= zeros(4N),
+                          xi  = zeros(Int,4N), yi  = zeros(Int,4N), zi  = zeros(Int,4N)) 
     data = replace_storage(array_type(arch), rawdata)
 
     proc = StructArray(PS   = zeros(4N), VDOC = zeros(4N), VNH4 = zeros(4N), VNO3 = zeros(4N),
