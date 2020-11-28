@@ -86,7 +86,7 @@ end
 function calc_VDOC!(plank, proc, nuts, g::Grids, ΔT, Cqmax, Cqmin, VDOCmax, VDOC_b, KsatDOC)
     @inbounds proc.VDOC .= VDOCmax .* plank.Sz .^ VDOC_b .*
         regQ.(plank.Cq, plank.Bm, plank.Cq, Cqmax, Cqmin, 0.0) .*
-        nuts.DOC ./ (nuts.DOC .+ KsatDOC) .* nuts.Tem .* plank.Bm
+        nuts.DOC ./ max.(1.0e-10, (nuts.DOC .+ KsatDOC)) .* nuts.Tem .* plank.Bm
     @inbounds proc.VDOC .= min.(nuts.DOC .* g.V ./10.0 ./ ΔT, proc.VDOC) .* plank.ac
 
     return nothing
