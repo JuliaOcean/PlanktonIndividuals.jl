@@ -57,7 +57,7 @@ export
 
     # write output functions
     write_nut_nc_alltime, write_nut_nc_each_step,
-    count_vertical_num, count_horizontal_num,
     write_species_dynamics, write_nut_cons,
-    write_individuals_to_bin, write_diags_to_jld2
+    write_individuals_to_bin, write_diags_to_jld2,
+    interior
 end # module

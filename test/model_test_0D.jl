@@ -1,17 +1,26 @@
-using PlanktonIndividuals, Serialization
-samples=dirname(pathof(PlanktonIndividuals))*"/../samples/"
-RunOption=RunOptions(true, Dict(), true, Dict())
-g = deserialize(samples*"grid0D.bin");
-nut_init = [2.0, 0.05,0.05,0.01,20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
-model = PI_Model(g, RunParam; nutrients = setup_nutrients(g,nut_init));
-TP = sum((model.nutrients.PO4 .+ model.nutrients.DOP .+ model.nutrients.POP) .* g.V)
-TP = TP + sum(model.individuals.phytos[8,:] .+ model.individuals.phytos[5,:] .* model.params["R_PC"])
-for i in 1:10
-    model.t = model.t+RunParam.ΔT
-    phyts_b,consume_p=PlanktonIndividuals.phyt_update(model, RunParam.ΔT)
-    model.individuals.phytos = phyts_b
-    nutₜ,gtr = PlanktonIndividuals.nut_update(model, consume_p, RunParam.ΔT)
-    model.nutrients = nutₜ
+using PlanktonIndividuals
+
+grid = gen_Grid(size = (1, 1, 1), spacing = (32, 32, 32), halo = (2, 2, 2))
+
+nut_init = [2.0, 0.05,0.05,0.01,20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+model = PI_Model(CPUs(), grid, RunParam; nutrients = gen_nutrients(CPUs(), grid, nut_init))
+
+TP = sum((interior(model.nutrients.PO4.data, grid) .+ 
+          interior(model.nutrients.DOP.data, grid) .+ 
+          interior(model.nutrients.POP.data, grid)) .* grid.V)
+TP = TP + sum(model.individuals.phytos.sp1.data.Pq .+ 
+              model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC)
+
+vel_copy!(model.timestepper.vel₀, zeros(3,3,3), zeros(3,3,3), zeros(3,3,3), model.grid)
+
+for i in 1:RunParam.nTime
+    vel_copy!(model.timestepper.vel₁, zeros(3,3,3), zeros(3,3,3), zeros(3,3,3), model.grid)
+    PI_TimeStep!(model, RunParam.ΔT)
 end
-TPt = sum((model.nutrients.PO4 .+ model.nutrients.DOP .+ model.nutrients.POP) .* g.V)
-TPt = TPt + sum(model.individuals.phytos[8,:] .+ model.individuals.phytos[5,:] .* model.params["R_PC"])
+
+TPt = sum((interior(model.nutrients.PO4.data, grid) .+ 
+          interior(model.nutrients.DOP.data, grid) .+ 
+          interior(model.nutrients.POP.data, grid)) .* grid.V)
+TPt = TPt + sum(model.individuals.phytos.sp1.data.Pq .+ 
+                model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC)

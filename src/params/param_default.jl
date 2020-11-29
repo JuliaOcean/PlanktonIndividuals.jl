@@ -78,23 +78,12 @@ param_default=Dict(
     "v_zoo"    => 1.0e-5              # Velocity of zooplankton, m/s
 )
 
-mutable struct RunOptions
-    GridChoice::Bool      # `true` for use default grid
-    GridOfflineOpt::Dict  # include path to offline grid information and grid selection
-    VelChoice::Bool       # `true` for use default velocity fields
-    VelOfflineOpt::Dict   # include path to offline velocity fields, grid selection and vel time step information
-end
-
 mutable struct RunParams
     nTime::Int64                     # number of time steps
     ΔT::Int64                        # seconds of each time step
     params::Dict                     # model parameters
     Zoo::Bool                        # Whether include zooplankton
 end
-
-# Options
-#                    GridChoice, Gridoff, VelChoice, Veloff
-RunOption=RunOptions(false,      Dict(),  false,     Dict())
 
 #                  nTime, ΔT,   params,        Zoo
 RunParam=RunParams(12,    600,  param_default, false)
