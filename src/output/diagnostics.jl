@@ -102,7 +102,7 @@ function diags_spcs!(diags_sp, proc, plank, ac, x, y, z, g::Grids, arch::Archite
         elseif diag == :BS
             diags_proc!(diags_sp[diag], proc.BS, ac, x, y, z, g, arch)
         elseif diag == :VDOC
-            diags_proc!(diags_sp[diag], proc.VODC, ac, x, y, z, g, arch)
+            diags_proc!(diags_sp[diag], proc.VDOC, ac, x, y, z, g, arch)
         elseif diag == :VNH4
             diags_proc!(diags_sp[diag], proc.VNH4, ac, x, y, z, g, arch)
         elseif diag == :VNO3
