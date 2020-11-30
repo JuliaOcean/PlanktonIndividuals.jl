@@ -12,10 +12,10 @@ TP = sum((interior(model.nutrients.PO4.data, grid) .+
 TP = TP + sum(model.individuals.phytos.sp1.data.Pq .+ 
               model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC)
 
-vel_copy!(model.timestepper.vel₀, zeros(3,3,18), zeros(3,3,18), randn(3,3,18) .* 1e-4, model.grid)
+vel_copy!(model.timestepper.vel₀, zeros(5,5,20), zeros(5,5,20), randn(5,5,20) .* 1e-4, model.grid)
 
 for i in 1:RunParam.nTime
-    vel_copy!(model.timestepper.vel₁, zeros(3,3,18), zeros(3,3,18), randn(3,3,18) .* 1e-4, model.grid)
+    vel_copy!(model.timestepper.vel₁, zeros(5,5,20), zeros(5,5,20), randn(5,5,20) .* 1e-4, model.grid)
     PI_TimeStep!(model, RunParam.ΔT)
 end
 
