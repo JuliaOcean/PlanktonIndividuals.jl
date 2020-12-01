@@ -86,11 +86,17 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
         ##### division
         zero_tmp!(model.timestepper.tmp)
         dvidnum = dot(model.individuals.phytos[sp].data.dvid, model.individuals.phytos[sp].data.ac)
+        ##### check if the number of individuals exceeded 4N
+        popnum = dot(model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.ac)
+        if popnum+dvidnum > 4*model.params["Nind"]
+            throw(ArgumentError("number of individual exceeds the capacity (4N)"))
+        end
         divide!(model.individuals.phytos[sp].data, model.timestepper.tmp, dvidnum, model.arch)
 
         ##### tidy up model.individuals.phytos[sp].data, copy to tmp, to the end of divided individuals
         get_tind!(model.individuals.phytos[sp].data.idx, model.individuals.phytos[sp].data.ac)
         model.individuals.phytos[sp].data.idx .= model.individuals.phytos[sp].data.idx .+ dvidnum*2
+        
         copyto_tmp!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
                     model.individuals.phytos[sp].data.ac, Int.(model.individuals.phytos[sp].data.idx), 
                     false, model.arch)
@@ -218,4 +224,6 @@ function PI_TimeStep!(model::Model_Struct, ΔT)
     @inbounds model.timestepper.vel₀.u.data .= model.timestepper.vel₁.u.data
     @inbounds model.timestepper.vel₀.v.data .= model.timestepper.vel₁.v.data
     @inbounds model.timestepper.vel₀.w.data .= model.timestepper.vel₁.w.data
+
+    return nothing
 end
