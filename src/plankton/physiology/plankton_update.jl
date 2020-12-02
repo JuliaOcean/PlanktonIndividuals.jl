@@ -37,34 +37,41 @@ function plankton_update!(plank, nuts, proc, rnd, par, pop,
     update_biomass!(plank, proc, p.R_NC, p.R_PC, p.Cquota, p.Nsuper, ΔT)
 
     ##### probabilities of grazing, mortality, and cell division
-    ##### grazing
-    if p.grz_P == 0
-        @inbounds plank.graz .= 0.0
-    else
-        if p.grz_stp == 0
-            calc_graz_quadratic!(nuts, plank, p.grz_P)
+    ##### check the probabilities every 10 mins
+    if t%600 == 1
+        ##### grazing
+        if p.grz_P == 0
+            @inbounds plank.graz .= 0.0
         else
-            calc_graz_linear!(plank, p.grz_P, p.grz_stp)
+            if p.grz_stp == 0
+                calc_graz_quadratic!(nuts, plank, p.grz_P)
+            else
+                calc_graz_linear!(plank, p.grz_P, p.grz_stp)
+            end
         end
-    end
 
-    ##### mortality
-    calc_mort!(plank, p.mort_reg,  p.mort_P)
+        ##### mortality
+        calc_mort!(plank, p.mort_reg,  p.mort_P)
 
-    ##### cell division
-    if p.dvid_type == 1
-        calc_dvid_size!(plank, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
-    elseif p.dvid_type == 2
-        calc_dvid_add!(plank, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
-    elseif p.dvid_type == 3
-        calc_dvid_age!(plank, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
-    elseif p.dvid_type == 4
-        calc_dvid_time!(plank, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper, t)
-    elseif p.dvid_type == 5
-        calc_dvid_ts!(plank, p.dvid_type, p.dvid_stp, p.dvid_stp2, p.dvid_P,
-                        p.dvid_reg, p.dvid_reg2, p.Cquota, p.Nsuper, t)
+        ##### cell division
+        if p.dvid_type == 1
+            calc_dvid_size!(plank, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
+        elseif p.dvid_type == 2
+            calc_dvid_add!(plank, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
+        elseif p.dvid_type == 3
+            calc_dvid_age!(plank, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper)
+        elseif p.dvid_type == 4
+            calc_dvid_time!(plank, p.dvid_stp, p.dvid_P, p.dvid_reg, p.Cquota, p.Nsuper, t)
+        elseif p.dvid_type == 5
+            calc_dvid_ts!(plank, p.dvid_type, p.dvid_stp, p.dvid_stp2, p.dvid_P,
+                            p.dvid_reg, p.dvid_reg2, p.Cquota, p.Nsuper, t)
+        else
+            throw(ArgumentError("Wrong cell division type, must be in 1 to 5"))
+        end
     else
-        throw(ArgumentError("Wrong cell division type, must be in 1 to 5"))
+        plank.graz = 0.0
+        plank.mort = 0.0
+        plank.dvid = 0.0
     end
 
     get_rands!(plank, rnd)

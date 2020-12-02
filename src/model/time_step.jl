@@ -57,56 +57,58 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
                     model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
                     model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
                     model.grid, model.arch)
+        ##### check the probabilities every 10 mins
+        if model.t%600 == 1
+            ##### grazing and its diagnostic
+            diags_graz!(model.diags.spcs[sp].graz, model.individuals.phytos[sp].data.graz,
+                        model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
+                        model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
+                        model.grid, model.arch)
+            zero_tmp!(model.timestepper.tmp)
+            grazing!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
+                        model.arch, model.grid, model.timestepper.plk, model.individuals.phytos[sp].p)
 
-        ##### grazing and its diagnostic
-        diags_graz!(model.diags.spcs[sp].graz, model.individuals.phytos[sp].data.graz,
-                    model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
-                    model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
-                    model.grid, model.arch)
-        zero_tmp!(model.timestepper.tmp)
-        grazing!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
-                    model.arch, model.grid, model.timestepper.plk, model.individuals.phytos[sp].p)
+            ###### mortality and its diagnostic
+            diags_mort!(model.diags.spcs[sp].mort, model.individuals.phytos[sp].data.mort,
+                        model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
+                        model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
+                        model.grid, model.arch)
 
-        ###### mortality and its diagnostic
-        diags_mort!(model.diags.spcs[sp].mort, model.individuals.phytos[sp].data.mort,
-                    model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
-                    model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
-                    model.grid, model.arch)
+            zero_tmp!(model.timestepper.tmp)
+            mortality!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
+                        model.arch, model.grid, model.timestepper.plk, model.individuals.phytos[sp].p)
 
-        zero_tmp!(model.timestepper.tmp)
-        mortality!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
-                    model.arch, model.grid, model.timestepper.plk, model.individuals.phytos[sp].p)
+            ###### cell division diagnostic
+            diags_dvid!(model.diags.spcs[sp].dvid, model.individuals.phytos[sp].data.dvid,
+                        model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
+                        model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
+                        model.grid, model.arch)
 
-        ###### cell division diagnostic
-        diags_dvid!(model.diags.spcs[sp].dvid, model.individuals.phytos[sp].data.dvid,
-                    model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
-                    model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
-                    model.grid, model.arch)
+            ##### division
+            zero_tmp!(model.timestepper.tmp)
+            dvidnum = dot(model.individuals.phytos[sp].data.dvid, model.individuals.phytos[sp].data.ac)
+            ##### check if the number of individuals exceeded 4N
+            popnum = dot(model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.ac)
+            if popnum+dvidnum > 4*model.params["Nind"]
+                throw(ArgumentError("number of individual exceeds the capacity (4N)"))
+            end
+            divide!(model.individuals.phytos[sp].data, model.timestepper.tmp, dvidnum, model.arch)
 
-        ##### division
-        zero_tmp!(model.timestepper.tmp)
-        dvidnum = dot(model.individuals.phytos[sp].data.dvid, model.individuals.phytos[sp].data.ac)
-        ##### check if the number of individuals exceeded 4N
-        popnum = dot(model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.ac)
-        if popnum+dvidnum > 4*model.params["Nind"]
-            throw(ArgumentError("number of individual exceeds the capacity (4N)"))
+            ##### tidy up model.individuals.phytos[sp].data, copy to tmp, to the end of divided individuals
+            get_tind!(model.individuals.phytos[sp].data.idx, model.individuals.phytos[sp].data.ac)
+            model.individuals.phytos[sp].data.idx .= model.individuals.phytos[sp].data.idx .+ dvidnum*2
+            
+            copyto_tmp!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
+                        model.individuals.phytos[sp].data.ac, Int.(model.individuals.phytos[sp].data.idx), 
+                        false, model.arch)
+
+            ##### copy back to model.individuals.phytos[sp].data
+            zero_tmp!(model.individuals.phytos[sp].data)
+            get_tind!(model.timestepper.tmp.idx, model.timestepper.tmp.ac)
+            copyto_tmp!(model.timestepper.tmp, model.individuals.phytos[sp].data, 
+                        model.timestepper.tmp.ac, Int.(model.timestepper.tmp.idx), 
+                        false, model.arch)
         end
-        divide!(model.individuals.phytos[sp].data, model.timestepper.tmp, dvidnum, model.arch)
-
-        ##### tidy up model.individuals.phytos[sp].data, copy to tmp, to the end of divided individuals
-        get_tind!(model.individuals.phytos[sp].data.idx, model.individuals.phytos[sp].data.ac)
-        model.individuals.phytos[sp].data.idx .= model.individuals.phytos[sp].data.idx .+ dvidnum*2
-        
-        copyto_tmp!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
-                    model.individuals.phytos[sp].data.ac, Int.(model.individuals.phytos[sp].data.idx), 
-                    false, model.arch)
-
-        ##### copy back to model.individuals.phytos[sp].data
-        zero_tmp!(model.individuals.phytos[sp].data)
-        get_tind!(model.timestepper.tmp.idx, model.timestepper.tmp.ac)
-        copyto_tmp!(model.timestepper.tmp, model.individuals.phytos[sp].data, 
-                    model.timestepper.tmp.ac, Int.(model.timestepper.tmp.idx), 
-                    false, model.arch)
 
         ##### diagnostic for individual distribution
         diags_num!(model.diags.spcs[sp].num, model.individuals.phytos[sp].data.ac, 
@@ -186,34 +188,37 @@ function PI_TimeStep!(model::Model_Struct, ΔT)
                       model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
                       ΔT, model.grid, model.arch)
 
-        ##### grazing
-        zero_tmp!(model.timestepper.tmp)
-        grazing!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
-                    model.arch, model.grid, model.timestepper.plk, model.individuals.phytos[sp].p)
+        ##### check the probabilities every 10 mins
+        if model.t%600 == 1
+            ##### grazing
+            zero_tmp!(model.timestepper.tmp)
+            grazing!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
+                        model.arch, model.grid, model.timestepper.plk, model.individuals.phytos[sp].p)
 
-        ###### mortality
-        zero_tmp!(model.timestepper.tmp)
-        mortality!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
-                    model.arch, model.grid, model.timestepper.plk, model.individuals.phytos[sp].p)
+            ###### mortality
+            zero_tmp!(model.timestepper.tmp)
+            mortality!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
+                        model.arch, model.grid, model.timestepper.plk, model.individuals.phytos[sp].p)
 
-        ###### cell division
-        zero_tmp!(model.timestepper.tmp)
-        dvidnum = dot(model.individuals.phytos[sp].data.dvid, model.individuals.phytos[sp].data.ac)
-        divide!(model.individuals.phytos[sp].data, model.timestepper.tmp, dvidnum, model.arch)
+            ###### cell division
+            zero_tmp!(model.timestepper.tmp)
+            dvidnum = dot(model.individuals.phytos[sp].data.dvid, model.individuals.phytos[sp].data.ac)
+            divide!(model.individuals.phytos[sp].data, model.timestepper.tmp, dvidnum, model.arch)
 
-        ##### tidy up model.individuals.phytos[sp].data, copy to tmp, to the end of divided individuals
-        get_tind!(model.individuals.phytos[sp].data.idx, model.individuals.phytos[sp].data.ac)
-        model.individuals.phytos[sp].data.idx .= model.individuals.phytos[sp].data.idx .+ dvidnum*2
-        copyto_tmp!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
-                    model.individuals.phytos[sp].data.ac, Int.(model.individuals.phytos[sp].data.idx), 
-                    false, model.arch)
+            ##### tidy up model.individuals.phytos[sp].data, copy to tmp, to the end of divided individuals
+            get_tind!(model.individuals.phytos[sp].data.idx, model.individuals.phytos[sp].data.ac)
+            model.individuals.phytos[sp].data.idx .= model.individuals.phytos[sp].data.idx .+ dvidnum*2
+            copyto_tmp!(model.individuals.phytos[sp].data, model.timestepper.tmp, 
+                        model.individuals.phytos[sp].data.ac, Int.(model.individuals.phytos[sp].data.idx), 
+                        false, model.arch)
 
-        ##### copy back to model.individuals.phytos[sp].data
-        zero_tmp!(model.individuals.phytos[sp].data)
-        get_tind!(model.timestepper.tmp.idx, model.timestepper.tmp.ac)
-        copyto_tmp!(model.timestepper.tmp, model.individuals.phytos[sp].data, 
-                    model.timestepper.tmp.ac, Int.(model.timestepper.tmp.idx), 
-                    false, model.arch)
+            ##### copy back to model.individuals.phytos[sp].data
+            zero_tmp!(model.individuals.phytos[sp].data)
+            get_tind!(model.timestepper.tmp.idx, model.timestepper.tmp.ac)
+            copyto_tmp!(model.timestepper.tmp, model.individuals.phytos[sp].data, 
+                        model.timestepper.tmp.ac, Int.(model.timestepper.tmp.idx), 
+                        false, model.arch)
+        end
     end
 
 
