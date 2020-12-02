@@ -58,7 +58,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
                     model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
                     model.grid, model.arch)
         ##### check the probabilities every 10 mins
-        if model.t%600 == 1
+        if model.t%300 == 1
             ##### grazing and its diagnostic
             diags_graz!(model.diags.spcs[sp].graz, model.individuals.phytos[sp].data.graz,
                         model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 

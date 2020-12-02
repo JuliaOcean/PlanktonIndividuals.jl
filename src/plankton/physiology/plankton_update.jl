@@ -38,7 +38,7 @@ function plankton_update!(plank, nuts, proc, rnd, par, pop,
 
     ##### probabilities of grazing, mortality, and cell division
     ##### check the probabilities every 10 mins
-    if t%600 == 1
+    if t%300 == 1
         ##### grazing
         if p.grz_P == 0
             @inbounds plank.graz .= 0.0
