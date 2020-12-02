@@ -69,9 +69,9 @@ function plankton_update!(plank, nuts, proc, rnd, par, pop,
             throw(ArgumentError("Wrong cell division type, must be in 1 to 5"))
         end
     else
-        plank.graz = 0.0
-        plank.mort = 0.0
-        plank.dvid = 0.0
+        plank.graz .= 0.0
+        plank.mort .= 0.0
+        plank.dvid .= 0.0
     end
 
     get_rands!(plank, rnd)
