@@ -97,7 +97,9 @@ end
 
 function diags_spcs!(diags_sp, proc, plank, ac, x, y, z, g::Grids, arch::Architecture)
     for diag in keys(diags_sp)
-        if diag == :PS
+        if diag == :num || diag == :graz || diag == :mort || diag == :dvid
+            nothing
+        elseif diag == :PS
             diags_proc!(diags_sp[diag], proc.PS, ac, x, y, z, g, arch)
         elseif diag == :BS
             diags_proc!(diags_sp[diag], proc.BS, ac, x, y, z, g, arch)
@@ -123,6 +125,8 @@ function diags_spcs!(diags_sp, proc, plank, ac, x, y, z, g::Grids, arch::Archite
             diags_proc!(diags_sp[diag], plank.Pq, ac, x, y, z, g, arch)
         elseif diag == :chl
             diags_proc!(diags_sp[diag], plank.chl, ac, x, y, z, g, arch)
+        else
+            throw(ArgumentError("$(diag) is not one of the diagnostics"))
         end
     end
 end

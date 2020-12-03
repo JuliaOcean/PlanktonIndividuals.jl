@@ -2,7 +2,7 @@ using KernelAbstractions.Extras.LoopInfo: @unroll
 ##### calculate Chla and individual counts based on the status of plankton individuals
 @kernel function acc_counts_kernel!(ctschl, ctspop, chl, ac, x, y, z, g::Grids)
     @unroll for i in 1:size(ac,1)
-        @inbounds ctschl[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += copy(chl[i]) * ac[i]
+        @inbounds ctschl[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += chl[i] * ac[i]
         @inbounds ctspop[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += 1.0 * ac[i]
     end
 end
