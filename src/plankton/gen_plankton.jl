@@ -21,7 +21,8 @@ function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict)
     data = replace_storage(array_type(arch), rawdata)
 
     proc = StructArray(PS   = zeros(4N), VDOC = zeros(4N), VNH4 = zeros(4N), VNO3 = zeros(4N),
-                       VPO4 = zeros(4N), ρchl = zeros(4N), resp = zeros(4N), BS   = zeros(4N), exu  = zeros(4N))
+                       VPO4 = zeros(4N), ρchl = zeros(4N), resp = zeros(4N), BS   = zeros(4N), 
+                       exu  = zeros(4N), graz = zeros(4N), mort = zeros(4N), dvid = zeros(4N))
     proc_d = replace_storage(array_type(arch), proc)
 
     pkeys = collect(keys(params))
@@ -42,7 +43,7 @@ const param_names=(:Nsuper, :Cquota, :mean, :var, :Chl2Cint, :α, :Φ, :Tempref,
                    :PCmax, :PC_b, :VDOCmax, :VDOC_b, :VNO3max, :VNH4max, :VN_b, :VPO4max, :VP_b,
                    :KsatDOC, :KsatNH4, :KsatNO3, :KsatPO4, :Cqmax, :Cqmin, :Nqmax, :Nqmin, :Pqmax, :Pqmin,
                    :Chl2N, :R_NC, :R_PC, :k_mtb, :k_mtb_b, :respir_a, :respir_b,
-                   :grz_P, :grz_stp, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
+                   :grz_P, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
                    :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP)
 
 function individuals(params::Dict, arch::Architecture)
