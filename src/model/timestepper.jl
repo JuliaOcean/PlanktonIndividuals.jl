@@ -10,7 +10,6 @@ mutable struct timestepper
     par::AbstractArray  # a (Cu)Array to store PAR field of each timestep
     chl::AbstractArray  # a (Cu)Array to store Chl field of each timestep
     pop::AbstractArray  # a (Cu)Array to store population field of each timestep
-    tmp::AbstractArray  # a (Cu)Array to store temporary individuals of each timestep
     rnd::AbstractArray  # a StructArray of random numbers for plankton diffusion or grazing, mortality and division.
     velos::AbstractArray# a StructArray of intermediate values for RK4 particle advection
     nuts::AbstractArray # a StructArray of nutrients of each individual
@@ -31,15 +30,6 @@ function timestepper(arch::Architecture, g::Grids, N)
     chl = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     pop = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
 
-    tmp = StructArray(x   = zeros(4N), y   = zeros(4N), z   = zeros(4N),
-                      xi  = zeros(4N), yi  = zeros(4N), zi  = zeros(4N), 
-                      iS  = zeros(4N), Sz  = zeros(4N), Bm  = zeros(4N), 
-                      Cq  = zeros(4N), Nq  = zeros(4N), Pq  = zeros(4N), 
-                      chl = zeros(4N), gen = zeros(4N), age = zeros(4N), 
-                      ac  = zeros(4N), idx = zeros(4N),
-                      graz= zeros(4N), mort= zeros(4N), dvid= zeros(4N))
-    tmp_d = replace_storage(array_type(arch), tmp)
-
     rnd = StructArray(x = zeros(4N), y = zeros(4N), z = zeros(4N))
     rnd_d = replace_storage(array_type(arch), rnd)
 
@@ -55,8 +45,7 @@ function timestepper(arch::Architecture, g::Grids, N)
                        αI  = zeros(4N), Tem = zeros(4N), pop = zeros(4N))
     nuts_d = replace_storage(array_type(arch), nuts)
 
-    ts = timestepper(Gcs, MD1, MD2, MD3, vel₀, vel½, vel₁, plk,
-                     par, chl, pop, tmp_d, rnd_d, velos_d, nuts_d)
+    ts = timestepper(Gcs, MD1, MD2, MD3, vel₀, vel½, vel₁, plk, par, chl, pop, rnd_d, velos_d, nuts_d)
 
     return ts
 end
