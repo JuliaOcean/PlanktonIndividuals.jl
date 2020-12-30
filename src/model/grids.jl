@@ -118,9 +118,9 @@ end
 import Base: show
 
 function show(io::IO, g::Grids)
-    xL, xR = g.xF[2], g.xF[end]
-    yL, yR = g.yF[2], g.yF[end]
-    zL, zR = g.zF[2], g.zF[end-1]
+    xL, xR = g.xF[g.Hx+1], g.xF[g.Hx+1+g.Nx]
+    yL, yR = g.yF[g.Hy+1], g.yF[g.Hy+1+g.Ny]
+    zL, zR = g.zF[g.Hz+1], g.zF[g.Hz+1+g.Nz]
     print(io, "domain: x ∈ [$xL, $xR], y ∈ [$yL, $yR], z ∈ [$zL, $zR]\n",
               "resolution (Nx, Ny, Nz):   ", (g.Nx, g.Ny, g.Nz), '\n',
               "halo size (Hx, Hy, Hz):    ", (g.Hx, g.Hy, g.Hz), '\n',

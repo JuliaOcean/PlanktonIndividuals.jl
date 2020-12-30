@@ -123,6 +123,8 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     @inbounds model.timestepper.vel₀.u.data .= model.timestepper.vel₁.u.data
     @inbounds model.timestepper.vel₀.v.data .= model.timestepper.vel₁.v.data
     @inbounds model.timestepper.vel₀.w.data .= model.timestepper.vel₁.w.data
+
+    return nothing
 end
 
 function PI_TimeStep!(model::Model_Struct, ΔT)
@@ -209,4 +211,5 @@ function PI_TimeStep!(model::Model_Struct, ΔT)
     @inbounds model.timestepper.vel₀.u.data .= model.timestepper.vel₁.u.data
     @inbounds model.timestepper.vel₀.v.data .= model.timestepper.vel₁.v.data
     @inbounds model.timestepper.vel₀.w.data .= model.timestepper.vel₁.w.data
+    return nothing
 end
