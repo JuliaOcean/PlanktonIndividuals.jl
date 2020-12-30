@@ -1,53 +1,63 @@
 using KernelAbstractions.Extras.LoopInfo: @unroll
 ##### calculate Chla and individual counts based on the status of plankton individuals
-@kernel function acc_counts_kernel!(ctschl, ctspop, chl, ac, x, y, z, g::Grids)
+@kernel function acc_counts_kernel!(ctschl, ctspop, chl, ac, x, y, z)
     @unroll for i in 1:size(ac,1)
-        @inbounds ctschl[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += chl[i] * ac[i]
-        @inbounds ctspop[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += 1.0 * ac[i]
+        @inbounds ctschl[x[i], y[i], z[i]] += chl[i] * ac[i]
+        @inbounds ctspop[x[i], y[i], z[i]] += 1.0 * ac[i]
     end
 end
-function acc_counts!(ctschl, ctspop, chl, ac, x, y, z, g::Grids, arch::Architecture)
+function acc_counts!(ctschl, ctspop, chl, ac, x, y, z, arch::Architecture)
     kernel! = acc_counts_kernel!(device(arch), 1, (1,))
-    event = kernel!(ctschl, ctspop, chl, ac, x, y, z, g)
+    event = kernel!(ctschl, ctspop, chl, ac, x, y, z)
     wait(device(arch), event)
     return nothing
 end
 
 ##### deal with nutrients uptake
-@kernel function calc_consume_kernel!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT, g::Grids)
+@kernel function calc_consume_kernel!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT)
     @unroll for i in 1:size(ac,1)
-        @inbounds ctsdic[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += (proc.resp[i] - proc.PS[i]) * ΔT * ac[i]
-        @inbounds ctsdoc[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += (proc.exu[i] - proc.VDOC[i]) * ΔT * ac[i]
-        @inbounds ctsnh4[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] -= proc.VNH4[i] * ΔT * ac[i]
-        @inbounds ctsno3[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] -= proc.VNO3[i] * ΔT * ac[i]
-        @inbounds ctspo4[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] -= proc.VPO4[i] * ΔT * ac[i]
+        @inbounds ctsdic[x[i], y[i], z[i]] += (proc.resp[i] - proc.PS[i]) * ΔT * ac[i]
+        @inbounds ctsdoc[x[i], y[i], z[i]] += (proc.exu[i] - proc.VDOC[i]) * ΔT * ac[i]
+        @inbounds ctsnh4[x[i], y[i], z[i]] -= proc.VNH4[i] * ΔT * ac[i]
+        @inbounds ctsno3[x[i], y[i], z[i]] -= proc.VNO3[i] * ΔT * ac[i]
+        @inbounds ctspo4[x[i], y[i], z[i]] -= proc.VPO4[i] * ΔT * ac[i]
     end
 end
-function calc_consume!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT, g::Grids, arch::Architecture)
+function calc_consume!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT, arch::Architecture)
     kernel! = calc_consume_kernel!(device(arch), 1, (1,))
-    event = kernel!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT, g)
+    event = kernel!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT)
     wait(device(arch), event)
     return nothing
 end
 
 ##### deal with grazed or dead individuals
 @kernel function calc_loss_kernel!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank,
-                                   x, y, z, lossFracC, lossFracN, lossFracP, R_NC, R_PC, g::Grids)
+                                   loss, lossFracC, lossFracN, lossFracP, R_NC, R_PC)
     @unroll for i in 1:size(plank.ac,1)
-        @inbounds ctsdoc[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += (plank.Bm[i] + plank.Cq[i]) * lossFracC * plank.ac[i]
-        @inbounds ctspoc[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += (plank.Bm[i] + plank.Cq[i]) * (1.0 - lossFracC) * plank.ac[i]
-        @inbounds ctsdon[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += (plank.Bm[i] * R_NC + plank.Nq[i]) * lossFracN * plank.ac[i]
-        @inbounds ctspon[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += (plank.Bm[i] * R_NC + plank.Nq[i]) * (1.0 - lossFracN) * plank.ac[i]
-        @inbounds ctsdop[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += (plank.Bm[i] * R_PC + plank.Pq[i]) * lossFracP * plank.ac[i]
-        @inbounds ctspop[x[i]+g.Hx, y[i]+g.Hy, z[i]+g.Hz] += (plank.Bm[i] * R_PC + plank.Pq[i]) * (1.0 - lossFracP) * plank.ac[i]
+        @inbounds ctsdoc[plank.xi[i], plank.yi[i], plank.zi[i]] += (plank.Bm[i] + plank.Cq[i]) * 
+                                                                lossFracC * plank.ac[i] * loss[i]
+
+        @inbounds ctspoc[plank.xi[i], plank.yi[i], plank.zi[i]] += (plank.Bm[i] + plank.Cq[i]) * 
+                                                                (1.0 - lossFracC) * plank.ac[i] * loss[i]
+
+        @inbounds ctsdon[plank.xi[i], plank.yi[i], plank.zi[i]] += (plank.Bm[i] * R_NC + plank.Nq[i]) * 
+                                                                lossFracN * plank.ac[i] * loss[i]
+
+        @inbounds ctspon[plank.xi[i], plank.yi[i], plank.zi[i]] += (plank.Bm[i] * R_NC + plank.Nq[i]) * 
+                                                                (1.0 - lossFracN) * plank.ac[i] * loss[i]
+
+        @inbounds ctsdop[plank.xi[i], plank.yi[i], plank.zi[i]] += (plank.Bm[i] * R_PC + plank.Pq[i]) * 
+                                                                lossFracP * plank.ac[i] * loss[i]
+
+        @inbounds ctspop[plank.xi[i], plank.yi[i], plank.zi[i]] += (plank.Bm[i] * R_PC + plank.Pq[i]) * 
+                                                                (1.0 - lossFracP) * plank.ac[i] * loss[i]
     end
-    # pay attention to ctspop[0,0,0,gi] for non-active individuals
 end
 function calc_loss!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank,
-                    x, y, z, lossFracC, lossFracN, lossFracP, R_NC, R_PC, g::Grids, arch::Architecture)
+                    loss, lossFracC, lossFracN, lossFracP, R_NC, R_PC, arch::Architecture)
     kernel! = calc_loss_kernel!(device(arch), 1, (1,))
     event = kernel!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank,
-                    x, y, z, lossFracC, lossFracN, lossFracP, R_NC, R_PC, g)
+                    loss, lossFracC, lossFracN, lossFracP, R_NC, R_PC)
     wait(device(arch), event)
     return nothing
 end
