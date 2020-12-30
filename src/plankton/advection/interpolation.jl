@@ -1,13 +1,13 @@
 ##### convert the coordinates into fractional indices at grid cell center and face for a individual at (x,y,z) 
-##### including halo regions
-@inline get_xc_index(x, grid::Grids) = @inbounds (x - grid.xC[1]) / grid.Δx + 1
-@inline get_xf_index(x, grid::Grids) = @inbounds (x - grid.xF[1]) / grid.Δx + 1
+##### excluding halo regions
+@inline get_xc_index(x, grid::Grids) = @inbounds (x - grid.xC[grid.Hx+1]) / grid.Δx + 1
+@inline get_xf_index(x, grid::Grids) = @inbounds (x - grid.xF[grid.Hx+1]) / grid.Δx + 1
 
-@inline get_yc_index(y, grid::Grids) = @inbounds (y - grid.yC[1]) / grid.Δy + 1
-@inline get_yf_index(y, grid::Grids) = @inbounds (y - grid.yF[1]) / grid.Δy + 1
+@inline get_yc_index(y, grid::Grids) = @inbounds (y - grid.yC[grid.Hy+1]) / grid.Δy + 1
+@inline get_yf_index(y, grid::Grids) = @inbounds (y - grid.yF[grid.Hy+1]) / grid.Δy + 1
 
-@inline get_zc_index(z, grid::Grids) = @inbounds (z - grid.zC[1]) / grid.Δz + 1
-@inline get_zf_index(z, grid::Grids) = @inbounds (z - grid.zF[1]) / grid.Δz + 1
+@inline get_zc_index(z, grid::Grids) = @inbounds (z - grid.zC[grid.Hz+1]) / grid.Δz + 1
+@inline get_zf_index(z, grid::Grids) = @inbounds (z - grid.zF[grid.Hz+1]) / grid.Δz + 1
 
 ##### trilinear interpolation
 @inline ψ₀₀₀(xd, yd, zd) = (1 - xd) * (1 - yd) * (1 - zd)
@@ -29,35 +29,35 @@
                    ψ₁₁₀(xd, yd, zd) * vel[xi+1, yi+1, zi  ] +
                    ψ₁₁₁(xd, yd, zd) * vel[xi+1, yi+1, zi+1])
 
-@inline function u_itpl(u, x, y, z, g::Grids) 
-    xi = get_xc_index(x, g)
-    yi = get_yf_index(y, g)
-    zi = get_zc_index(z, g)
-    xd, xi = mod(xi, 1), unsafe_trunc(Int, xi)
-    yd, yi = mod(yi, 1), unsafe_trunc(Int, yi)
-    zd, zi = mod(zi, 1), unsafe_trunc(Int, zi)
+@inline function u_itpl(u, x, y, z, ac, g::Grids) 
+    xi = get_xc_index(x, g) * ac
+    yi = get_yf_index(y, g) * ac
+    zi = get_zc_index(z, g) * ac
+    xd, xi = mod(xi, 1), unsafe_trunc(Int, xi+g.Hx)
+    yd, yi = mod(yi, 1), unsafe_trunc(Int, yi+g.Hy)
+    zd, zi = mod(zi, 1), unsafe_trunc(Int, zi+g.Hz)
 
     return tri_interpolation(u, xd, yd, zd, xi, yi, zi)
 end
 
-@inline function v_itpl(v, x, y, z, g::Grids) 
-    xi = get_xf_index(x, g)
-    yi = get_yc_index(y, g)
-    zi = get_zc_index(z, g)
-    xd, xi = mod(xi, 1), unsafe_trunc(Int, xi)
-    yd, yi = mod(yi, 1), unsafe_trunc(Int, yi)
-    zd, zi = mod(zi, 1), unsafe_trunc(Int, zi)
+@inline function v_itpl(v, x, y, z, ac, g::Grids) 
+    xi = get_xf_index(x, g) * ac
+    yi = get_yc_index(y, g) * ac
+    zi = get_zc_index(z, g) * ac
+    xd, xi = mod(xi, 1), unsafe_trunc(Int, xi+g.Hx)
+    yd, yi = mod(yi, 1), unsafe_trunc(Int, yi+g.Hy)
+    zd, zi = mod(zi, 1), unsafe_trunc(Int, zi+g.Hz)
 
     return tri_interpolation(v, xd, yd, zd, xi, yi, zi)
 end
 
-@inline function w_itpl(w, x, y, z, g::Grids) 
-    xi = get_xc_index(x, g)
-    yi = get_yc_index(y, g)
-    zi = get_zf_index(z, g)
-    xd, xi = mod(xi, 1), unsafe_trunc(Int, xi)
-    yd, yi = mod(yi, 1), unsafe_trunc(Int, yi)
-    zd, zi = mod(zi, 1), unsafe_trunc(Int, zi)
+@inline function w_itpl(w, x, y, z, ac, g::Grids) 
+    xi = get_xc_index(x, g) * ac
+    yi = get_yc_index(y, g) * ac
+    zi = get_zf_index(z, g) * ac
+    xd, xi = mod(xi, 1), unsafe_trunc(Int, xi+g.Hx)
+    yd, yi = mod(yi, 1), unsafe_trunc(Int, yi+g.Hy)
+    zd, zi = mod(zi, 1), unsafe_trunc(Int, zi+g.Hz)
 
     return tri_interpolation(w, xd, yd, zd, xi, yi, zi)
 end
@@ -65,9 +65,9 @@ end
 ##### calculate uvw velocities at (x, y, z)
 @kernel function vel_interpolate_kernel!(uₜ, vₜ, wₜ, x, y, z, ac, u, v, w, g::Grids)
     i = @index(Global)
-    @inbounds uₜ[i] = u_itpl(u, x[i], y[i], z[i], g) * ac[i]
-    @inbounds vₜ[i] = v_itpl(v, x[i], y[i], z[i], g) * ac[i]
-    @inbounds wₜ[i] = w_itpl(w, x[i], y[i], z[i], g) * ac[i]
+    @inbounds uₜ[i] = u_itpl(u, x[i], y[i], z[i], ac[i], g) * ac[i]
+    @inbounds vₜ[i] = v_itpl(v, x[i], y[i], z[i], ac[i], g) * ac[i]
+    @inbounds wₜ[i] = w_itpl(w, x[i], y[i], z[i], ac[i], g) * ac[i]
 end
 
 function vel_interpolate!(uₜ, vₜ, wₜ, x, y, z, ac, u, v, w, g::Grids, arch::Architecture)
