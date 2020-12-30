@@ -30,19 +30,19 @@ function timestepper(arch::Architecture, g::Grids, N)
     chl = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     pop = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
 
-    rnd = StructArray(x = zeros(4N), y = zeros(4N), z = zeros(4N))
+    rnd = StructArray(x = zeros(λ*N), y = zeros(λ*N), z = zeros(λ*N))
     rnd_d = replace_storage(array_type(arch), rnd)
 
-    velos = StructArray(x  = zeros(4N), y  = zeros(4N), z  = zeros(4N),
-                        u1 = zeros(4N), v1 = zeros(4N), w1 = zeros(4N),
-                        u2 = zeros(4N), v2 = zeros(4N), w2 = zeros(4N),
-                        u3 = zeros(4N), v3 = zeros(4N), w3 = zeros(4N),
-                        u4 = zeros(4N), v4 = zeros(4N), w4 = zeros(4N),
+    velos = StructArray(x  = zeros(λ*N), y  = zeros(λ*N), z  = zeros(λ*N),
+                        u1 = zeros(λ*N), v1 = zeros(λ*N), w1 = zeros(λ*N),
+                        u2 = zeros(λ*N), v2 = zeros(λ*N), w2 = zeros(λ*N),
+                        u3 = zeros(λ*N), v3 = zeros(λ*N), w3 = zeros(λ*N),
+                        u4 = zeros(λ*N), v4 = zeros(λ*N), w4 = zeros(λ*N),
                         )
     velos_d = replace_storage(array_type(arch), velos)
 
-    nuts = StructArray(NH4 = zeros(4N), NO3 = zeros(4N), PO4 = zeros(4N), DOC = zeros(4N),
-                       αI  = zeros(4N), Tem = zeros(4N), pop = zeros(4N))
+    nuts = StructArray(NH4 = zeros(λ*N), NO3 = zeros(λ*N), PO4 = zeros(λ*N), DOC = zeros(λ*N),
+                       αI  = zeros(λ*N), Tem = zeros(λ*N), pop = zeros(λ*N))
     nuts_d = replace_storage(array_type(arch), nuts)
 
     ts = timestepper(Gcs, MD1, MD2, MD3, vel₀, vel½, vel₁, plk, par, chl, pop, rnd_d, velos_d, nuts_d)

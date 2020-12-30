@@ -10,19 +10,21 @@ struct individuals
     zoos::NamedTuple
 end
 
+const λ = 6
+
 function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict)
-    rawdata = StructArray(x   = zeros(4N), y   = zeros(4N), z   = zeros(4N),
-                          iS  = zeros(4N), Sz  = zeros(4N), Bm  = zeros(4N), 
-                          Cq  = zeros(4N), Nq  = zeros(4N), Pq  = zeros(4N), 
-                          chl = zeros(4N), gen = zeros(4N), age = zeros(4N), 
-                          ac  = zeros(4N), idx = zeros(4N),
-                          graz= zeros(4N), mort= zeros(4N), dvid= zeros(4N),
-                          xi  = zeros(Int,4N), yi  = zeros(Int,4N), zi  = zeros(Int,4N)) 
+    rawdata = StructArray(x   = zeros(λ*N), y   = zeros(λ*N), z   = zeros(λ*N),
+                          iS  = zeros(λ*N), Sz  = zeros(λ*N), Bm  = zeros(λ*N), 
+                          Cq  = zeros(λ*N), Nq  = zeros(λ*N), Pq  = zeros(λ*N), 
+                          chl = zeros(λ*N), gen = zeros(λ*N), age = zeros(λ*N), 
+                          ac  = zeros(λ*N), idx = zeros(λ*N),
+                          graz= zeros(λ*N), mort= zeros(λ*N), dvid= zeros(λ*N),
+                          xi  = zeros(Int,λ*N), yi  = zeros(Int,λ*N), zi  = zeros(Int,λ*N)) 
     data = replace_storage(array_type(arch), rawdata)
 
-    proc = StructArray(PS   = zeros(4N), VDOC = zeros(4N), VNH4 = zeros(4N), VNO3 = zeros(4N),
-                       VPO4 = zeros(4N), ρchl = zeros(4N), resp = zeros(4N), BS   = zeros(4N), 
-                       exu  = zeros(4N), graz = zeros(4N), mort = zeros(4N), dvid = zeros(4N))
+    proc = StructArray(PS   = zeros(λ*N), VDOC = zeros(λ*N), VNH4 = zeros(λ*N), VNO3 = zeros(λ*N),
+                       VPO4 = zeros(λ*N), ρchl = zeros(λ*N), resp = zeros(λ*N), BS   = zeros(λ*N), 
+                       exu  = zeros(λ*N), graz = zeros(λ*N), mort = zeros(λ*N), dvid = zeros(λ*N))
     proc_d = replace_storage(array_type(arch), proc)
 
     pkeys = collect(keys(params))
