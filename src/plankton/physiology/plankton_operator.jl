@@ -46,25 +46,25 @@ end
 @kernel function copy_daughter_individuals_kernel!(plank, con, idx)
     i = @index(Global, Linear)
     if con[i] == 1.0
-        @inbounds plank.x[idx[i]]    = copy(plank.x[i])
-        @inbounds plank.y[idx[i]]    = copy(plank.y[i])
-        @inbounds plank.z[idx[i]]    = copy(plank.z[i])
-        @inbounds plank.xi[idx[i]]   = copy(plank.xi[i])
-        @inbounds plank.yi[idx[i]]   = copy(plank.yi[i])
-        @inbounds plank.zi[idx[i]]   = copy(plank.zi[i])
-        @inbounds plank.iS[idx[i]]   = copy(plank.iS[i])
-        @inbounds plank.Sz[idx[i]]   = copy(plank.Sz[i])
-        @inbounds plank.Bm[idx[i]]   = copy(plank.Bm[i])
-        @inbounds plank.Cq[idx[i]]   = copy(plank.Cq[i])
-        @inbounds plank.Nq[idx[i]]   = copy(plank.Nq[i])
-        @inbounds plank.Pq[idx[i]]   = copy(plank.Pq[i])
-        @inbounds plank.chl[idx[i]]  = copy(plank.chl[i])
-        @inbounds plank.gen[idx[i]]  = copy(plank.gen[i])
-        @inbounds plank.age[idx[i]]  = copy(plank.age[i])
-        @inbounds plank.ac[idx[i]]   = copy(plank.ac[i])
-        @inbounds plank.graz[idx[i]] = copy(plank.graz[i])
-        @inbounds plank.mort[idx[i]] = copy(plank.mort[i])
-        @inbounds plank.dvid[idx[i]] = copy(plank.dvid[i])
+        @inbounds plank.x[idx[i]]    = plank.x[i]
+        @inbounds plank.y[idx[i]]    = plank.y[i]
+        @inbounds plank.z[idx[i]]    = plank.z[i]
+        @inbounds plank.xi[idx[i]]   = plank.xi[i]
+        @inbounds plank.yi[idx[i]]   = plank.yi[i]
+        @inbounds plank.zi[idx[i]]   = plank.zi[i]
+        @inbounds plank.Sz[idx[i]]   = plank.Sz[i]
+        @inbounds plank.Bm[idx[i]]   = plank.Bm[i]
+        @inbounds plank.Cq[idx[i]]   = plank.Cq[i]
+        @inbounds plank.Nq[idx[i]]   = plank.Nq[i]
+        @inbounds plank.Pq[idx[i]]   = plank.Pq[i]
+        @inbounds plank.chl[idx[i]]  = plank.chl[i]
+        @inbounds plank.gen[idx[i]]  = plank.gen[i]
+        @inbounds plank.ac[idx[i]]   = plank.ac[i]
+        @inbounds plank.dvid[idx[i]] = plank.dvid[i]
+        # @inbounds plank.iS[idx[i]]   = plank.iS[i]
+        # @inbounds plank.age[idx[i]]  = plank.age[i]
+        # @inbounds plank.graz[idx[i]] = plank.graz[i]
+        # @inbounds plank.mort[idx[i]] = plank.mort[i]
     end
 end
 function copy_daughter_individuals!(plank, con, idx::AbstractArray{Int64,1}, arch)
