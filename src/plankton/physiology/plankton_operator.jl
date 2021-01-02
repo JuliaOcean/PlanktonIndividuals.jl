@@ -7,7 +7,8 @@ end
 function grazing!(plank, arch::Architecture, plk, p)
     ##### calculate grazing loss
     calc_loss!(plk.DOC.data, plk.POC.data, plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
-               plank, plank.graz, p.grazFracC, p.grazFracN, p.grazFracP, p.R_NC, p.R_PC, arch)
+               plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.graz, 
+               p.grazFracC, p.grazFracN, p.grazFracP, p.R_NC, p.R_PC, arch)
     
     ##### deactivate grazed individuals
     deactivate!(plank, plank.graz)
@@ -19,7 +20,8 @@ end
 function mortality!(plank, arch::Architecture, plk, p)
     ##### calculate mortality loss
     calc_loss!(plk.DOC.data, plk.POC.data, plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
-               plank, plank.mort, p.mortFracC, p.mortFracN, p.mortFracP, p.R_NC, p.R_PC, arch)
+               plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.mort, 
+               p.mortFracC, p.mortFracN, p.mortFracP, p.R_NC, p.R_PC, arch)
     
     ##### deactivate dead individuals
     deactivate!(plank, plank.mort)
@@ -93,10 +95,9 @@ function divide_to_half!(plank, arch)
 end
 function divide!(plank, deactive_ind, arch::Architecture)
     plank.dvid .*= plank.ac
-    con_ind = Int.(cumsum(plank.dvid))
-    get_tind!(plank.idx, plank.dvid, con_ind, deactive_ind, arch)
+    con_ind = cumsum(plank.dvid)
+    get_tind!(plank.idx, plank.dvid, Int.(con_ind), deactive_ind, arch)
     copy_daughter_individuals!(plank, plank.dvid, Int.(plank.idx), arch)
     divide_to_half!(plank, arch)
-
     return nothing
 end

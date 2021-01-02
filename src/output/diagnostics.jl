@@ -1,5 +1,3 @@
-using KernelAbstractions.Extras.LoopInfo: @unroll
-
 mutable struct Diagnostics
     spcs::NamedTuple       # for each species
     tr::NamedTuple         # for tracers
@@ -35,64 +33,21 @@ function diags_setup(ntrs, nprocs, g::Grids, Nsp::Int64, arch::Architecture)
 end
 
 ##### record diagnostics at each time step
-@kernel function diags_num_kernel!(diags_num, ac, x, y, z)
-    @unroll for i in 1:size(ac,1)
-        @inbounds diags_num[x[i], y[i], z[i]] += 1.0 * ac[i]
+function gpu_diags_proc_kernel!(diags_proc, proc, ac, x, y, z)
+    index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    stride = blockDim().x * gridDim().x
+    for i = index:stride:size(ac,1)
+        @inbounds @atomic diags_proc[x[i], y[i], z[i]] += proc[i] * ac[i]
     end
 end
-function diags_num!(diags_num, ac, x, y, z, arch::Architecture)
-    kernel! = diags_num_kernel!(device(arch), 1, (1,))
-    event = kernel!(diags_num, ac, x, y, z)
-    wait(device(arch), event)
-    return nothing
+function diags_proc!(diags_proc, proc, ac, x, y, z, ::GPUs)
+    @cuda threads=256 blocks=ceil(Int, size(ac,1)/256) gpu_diags_proc_kernel!(diags_proc, proc, ac, x, y, z)
+    return nothing 
 end
-
-@kernel function diags_graz_kernel!(diags_graz, graz, ac, x, y, z)
-    @unroll for i in 1:size(ac,1)
-        @inbounds diags_graz[x[i], y[i], z[i]] += graz[i] * ac[i]
-    end
-end
-function diags_graz!(diags_graz, graz, ac, x, y, z, arch::Architecture)
-    kernel! = diags_graz_kernel!(device(arch), 1, (1,))
-    event = kernel!(diags_graz, graz, ac, x, y, z)
-    wait(device(arch), event)
-    return nothing
-end
-
-@kernel function diags_mort_kernel!(diags_mort, mort, ac, x, y, z)
-    @unroll for i in 1:size(ac,1)
-        @inbounds diags_mort[x[i], y[i], z[i]] += mort[i] * ac[i]
-    end
-end
-function diags_mort!(diags_mort, mort, ac, x, y, z, arch::Architecture)
-    kernel! = diags_mort_kernel!(device(arch), 1, (1,))
-    event = kernel!(diags_mort, mort, ac, x, y, z)
-    wait(device(arch), event)
-    return nothing
-end
-
-@kernel function diags_dvid_kernel!(diags_dvid, dvid, ac, x, y, z)
-    @unroll for i in 1:size(ac,1)
-        @inbounds diags_dvid[x[i], y[i], z[i]] += dvid[i] * ac[i]
-    end
-end
-function diags_dvid!(diags_dvid, dvid, ac, x, y, z, arch::Architecture)
-    kernel! = diags_dvid_kernel!(device(arch), 1, (1,))
-    event = kernel!(diags_dvid, dvid, ac, x, y, z)
-    wait(device(arch), event)
-    return nothing
-end
-
-@kernel function diags_proc_kernel!(diags_proc, proc, ac, x, y, z)
-    @unroll for i in 1:size(ac,1)
+function diags_proc!(diags_proc, proc, ac, x, y, z, ::CPUs)
+    for i in 1:size(ac,1)
         @inbounds diags_proc[x[i], y[i], z[i]] += proc[i] * ac[i]
     end
-end
-function diags_proc!(diags_proc, proc, ac, x, y, z, arch::Architecture)
-    kernel! = diags_proc_kernel!(device(arch), 1, (1,))
-    event = kernel!(diags_proc, proc, ac, x, y, z)
-    wait(device(arch), event)
-    return nothing
 end
 
 function diags_spcs!(diags_sp, proc, plank, ac, x, y, z, arch::Architecture)

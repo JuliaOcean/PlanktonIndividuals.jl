@@ -65,7 +65,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
         ##### check the probabilities every 10 mins
         if model.t%300 == 1
             ##### grazing and its diagnostic
-            diags_graz!(model.diags.spcs[sp].graz, model.individuals.phytos[sp].data.graz,
+            diags_proc!(model.diags.spcs[sp].graz, model.individuals.phytos[sp].data.graz,
                         model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
                         model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
                         model.arch)
@@ -74,7 +74,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
                      model.timestepper.plk, model.individuals.phytos[sp].p)
 
             ###### mortality and its diagnostic
-            diags_mort!(model.diags.spcs[sp].mort, model.individuals.phytos[sp].data.mort,
+            diags_proc!(model.diags.spcs[sp].mort, model.individuals.phytos[sp].data.mort,
                         model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
                         model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
                         model.arch)
@@ -83,7 +83,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
                        model.timestepper.plk, model.individuals.phytos[sp].p)
 
             ###### cell division diagnostic
-            diags_dvid!(model.diags.spcs[sp].dvid, model.individuals.phytos[sp].data.dvid,
+            diags_proc!(model.diags.spcs[sp].dvid, model.individuals.phytos[sp].data.dvid,
                         model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
                         model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
                         model.arch)
@@ -99,9 +99,10 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
         end
 
         ##### diagnostic for individual distribution
-        diags_num!(model.diags.spcs[sp].num, model.individuals.phytos[sp].data.ac, 
-                   model.individuals.phytos[sp].data.xi, model.individuals.phytos[sp].data.yi, 
-                   model.individuals.phytos[sp].data.zi, model.arch)
+        diags_proc!(model.diags.spcs[sp].num, model.individuals.phytos[sp].data.ac, 
+                    model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
+                    model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
+                    model.arch)
 
     end
     write_species_dynamics(model.t, model.individuals.phytos, resultspath)
@@ -198,7 +199,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT)
             dvidnum = dot(model.individuals.phytos[sp].data.dvid, model.individuals.phytos[sp].data.ac)
             deactive_ind = findall(x -> x == 0.0, model.individuals.phytos[sp].data.ac)
             if dvidnum > length(deactive_ind)
-                throw(ArgumentError("number of individual exceeds the capacity (4N)"))
+                throw(ArgumentError("number of individual exceeds the capacity ($λN)"))
             end
             divide!(model.individuals.phytos[sp].data, deactive_ind, model.arch)
         end
