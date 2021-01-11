@@ -30,7 +30,7 @@ function mortality!(plank, arch::Architecture, plk, p)
 end
 
 @kernel function get_tind_kernel!(idx, con, con_ind, de_ind)
-    i = @index(Global)
+    i = @index(Global, Linear)
     if con[i] == 1.0
         idx[i] = de_ind[con_ind[i]]
     end
@@ -45,13 +45,11 @@ end
 ##### copy ready to divide individuals to inactive rows
 @kernel function copy_daughter_individuals_kernel!(plank, con, idx)
     i = @index(Global, Linear)
-    if con[i] == 1.0
+    if (con[i] == 1.0) & (idx[i] ≠ 0)
+        # @print("index: $(idx[i]), $i \n")
         @inbounds plank.x[idx[i]]    = plank.x[i]
         @inbounds plank.y[idx[i]]    = plank.y[i]
         @inbounds plank.z[idx[i]]    = plank.z[i]
-        @inbounds plank.xi[idx[i]]   = plank.xi[i]
-        @inbounds plank.yi[idx[i]]   = plank.yi[i]
-        @inbounds plank.zi[idx[i]]   = plank.zi[i]
         @inbounds plank.Sz[idx[i]]   = plank.Sz[i]
         @inbounds plank.Bm[idx[i]]   = plank.Bm[i]
         @inbounds plank.Cq[idx[i]]   = plank.Cq[i]
@@ -63,8 +61,6 @@ end
         @inbounds plank.dvid[idx[i]] = plank.dvid[i]
         @inbounds plank.graz[idx[i]] = plank.graz[i]
         @inbounds plank.mort[idx[i]] = plank.mort[i]
-        # @inbounds plank.iS[idx[i]]   = plank.iS[i]
-        # @inbounds plank.age[idx[i]]  = plank.age[i]
     end
 end
 function copy_daughter_individuals!(plank, con, idx::AbstractArray{Int64,1}, arch)
@@ -94,10 +90,10 @@ function divide_to_half!(plank, arch)
     return nothing
 end
 function divide!(plank, deactive_ind, arch::Architecture)
-    plank.dvid .*= plank.ac
     con_ind = cumsum(plank.dvid)
     get_tind!(plank.idx, plank.dvid, Int.(con_ind), deactive_ind, arch)
     copy_daughter_individuals!(plank, plank.dvid, Int.(plank.idx), arch)
     divide_to_half!(plank, arch)
+    # println("time step ends")
     return nothing
 end
