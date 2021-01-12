@@ -101,41 +101,4 @@ function gen_individuals!(plank, N::Int64, g::Grids, arch::Architecture)
     plank.data.gen[1:N] .= 1.0                                                                             # generation
     plank.data.age[1:N] .= 1.0                                                                             # age
     plank.data.ac[1:N]  .= 1.0                                                                             # active
-
-    # if RunParam.Zoo == false
-    #     return individuals(phyts0,nothing)
-    # else
-    #     zoos0 = gen_zooplkt(params, grid)
-    #     return individuals(phyts0,zoos0)
-    # end
 end
-
-# """
-#     gen_zooplkt(ZooOpt, grid)
-# Set up zooplankton individuals according to 'RunParam'
-# """
-# function gen_zooplkt(params, grid)
-#     Nsp = params["Z_Nsp"]
-#     N = params["Z_Nind"]
-#     mean = params["Z_mean"]
-#     var = params["Z_var"]
-#     Cquota = params["Z_Cquota"]
-#     Nsuper = params["Z_Nsuper"]
-#     zoos0 = zeros(Real,10,N*Nsp)
-#     zoos0[:,1] .= rand(Uniform(grid.xF[2],grid.xF[end]), N*Nsp)  # x
-#     zoos0[:,2] .= rand(Uniform(grid.yF[2],grid.yF[end]), N*Nsp)  # y
-#     zoos0[:,3] .= rand(Uniform(grid.zF[2],grid.zF[end-1]), N*Nsp)# z
-#     zoos0[:,4] .= max.(1.0, rand(Normal(mean,var), N*Nsp))       # size
-#     for i in 1:Nsp
-#         lower = Int(1+(i-1)*N)
-#         upper = Int(N+(i-1)*N)
-#         zoos0[lower:upper,5] .= Cquota[i]*Nsuper                 # Bm
-#         zoos0[:,8] .= i                                          # species
-#     end
-#     zoos0[:,5] .= zoos0[:,5] .* zoos0[:,4]                       # Bm
-#     zoos0[:,6] .= 0.0                                            # Nq
-#     zoos0[:,7] .= 0.0                                            # Pq
-#     zoos0[:,9] .= 1.0                                            # generation
-#     zoos0[:,10] .= 1.0                                           # age
-#     return zoos0
-# end

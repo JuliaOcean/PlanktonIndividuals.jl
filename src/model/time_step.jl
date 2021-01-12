@@ -203,6 +203,8 @@ function PI_TimeStep!(model::Model_Struct, ΔT)
             if dvidnum > length(deactive_ind)
                 throw(ArgumentError("number of individual exceeds the capacity ($λN)"))
             end
+            ##### do not copy inactive individuals
+            model.individuals.phytos[sp].data.dvid .*= model.individuals.phytos[sp].data.ac
             divide!(model.individuals.phytos[sp].data, deactive_ind, model.arch)
         end
     end

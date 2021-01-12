@@ -4,6 +4,9 @@ grid = gen_Grid(size = (1, 1, 1), spacing = (32, 32, 32), halo = (2, 2, 2))
 
 nut_init = [2.0, 0.05,0.05,0.01,20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
 
+phy_params = deserialize("param5.bin")
+update_params!(RunParam.params,phy_params)
+
 model = PI_Model(CPUs(), grid, RunParam; nutrients = gen_nutrients(CPUs(), grid, nut_init))
 
 TP = sum((interior(model.nutrients.PO4.data, grid) .+ 

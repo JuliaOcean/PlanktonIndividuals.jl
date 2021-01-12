@@ -22,12 +22,3 @@ function zero_fields!(a)
         @inbounds a[i].data .= 0.0
     end
 end
-# """
-#     add_nut_tendency!(a, b)
-# add one tendency to another tendency
-# """
-# function add_nut_tendency!(a, b)
-#     for i in 1:length(a)
-#         a[i].data .= a[i].data .+ b[i].data
-#     end
-# end
