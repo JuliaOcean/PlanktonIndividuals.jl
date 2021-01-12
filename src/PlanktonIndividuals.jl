@@ -1,47 +1,63 @@
 module PlanktonIndividuals
 
 using NCDatasets, Serialization
-using Random, Distributions, Interpolations, Statistics
-using Printf
+using Random, Distributions, Statistics, Interpolations
+using Printf, JLD2
+using CUDA, KernelAbstractions, LinearAlgebra
+using StructArrays
 
 src=""
 
-include("$src"*"model_struct.jl")
-include("$src"*"model_setup.jl")
-include("$src"*"phyt_process.jl")
-include("$src"*"zooplankton.jl")
+include("$src"*"architecture.jl")
+include("$src"*"model/grids.jl")
+include("$src"*"params/param_default.jl")
+include("$src"*"params/param_update.jl")
+include("$src"*"nut/fields.jl")
+include("$src"*"nut/diffusivity.jl")
+include("$src"*"nut/forcing.jl")
+include("$src"*"nut/third_order_DSTFL.jl")
+include("$src"*"nut/multi_dim_adv.jl")
+include("$src"*"nut/halo_regions.jl")
+include("$src"*"nut/gen_nut_fields.jl")
+include("$src"*"nut/nutrient_processes.jl")
+include("$src"*"plankton/gen_plankton.jl")
+include("$src"*"plankton/advection/interpolation.jl")
+include("$src"*"plankton/advection/advection_operations.jl")
+include("$src"*"plankton/advection/plankton_advection.jl")
+include("$src"*"plankton/advection/plankton_diffusion.jl")
+include("$src"*"plankton/physiology/counts.jl")
+include("$src"*"plankton/physiology/uptake_processes.jl")
+include("$src"*"plankton/physiology/cell_division_loss.jl")
+include("$src"*"plankton/physiology/plankton_operator.jl")
+include("$src"*"plankton/physiology/plankton_update.jl")
 include("$src"*"utils.jl")
-include("$src"*"output_writers.jl")
-include("$src"*"agent_div.jl")
-include("$src"*"dst3fl.jl")
-include("$src"*"nutrient_processes.jl")
-include("$src"*"2nd_adv_diffu.jl")
-include("$src"*"param_default.jl")
-include("$src"*"diagnostics.jl")
-include("$src"*"models.jl")
-include("$src"*"time_step.jl")
+include("$src"*"output/output_writers.jl")
+include("$src"*"output/diagnostics.jl")
+include("$src"*"model/timestepper.jl")
+include("$src"*"model/models.jl")
+include("$src"*"model/time_step.jl")
 
 
 export
     # model structures
-    PI_Model, grids, nutrient_fields, velocity,
-    RunOptions, RunParams, read_Ogrids,
+    PI_Model, Grids, nutrient_fields,
+    RunOptions, RunParams, read_Ogrids, gen_Grid,
+    Architecture, GPUs, CPUs,
 
     # read input functions
     read_IR_input, read_temp_input,
-    update_params!, grid_offline, param_default,
-    PrepRunDir, generate_vel_itp, diags_setup,
+    update_params!, param_default,
+    PrepRunDir, diags_setup,
 
     # initialize nutrient field and individual sets
-    setup_agents, setup_nutrients, load_nut_initials,
+    gen_agents, gen_nutrients, load_nut_initials,
 
     # Run the model
-    RunParam, RunOption, PI_TimeStep!,
-    PI_advectRK4!, PI_advect!,
+    RunParam, RunOption, vel_copy!, PI_TimeStep!,
 
     # write output functions
     write_nut_nc_alltime, write_nut_nc_each_step,
-    count_vertical_num, count_horizontal_num,
     write_species_dynamics, write_nut_cons,
-    sort_species, write_output
+    write_individuals_to_bin, write_diags_to_jld2,
+    interior
 end # module
