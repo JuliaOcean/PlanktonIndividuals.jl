@@ -1,7 +1,7 @@
 name = "PlanktonIndividuals"
 uuid = "dfeb4ede-c75e-11e9-050d-41ab7a730e9e"
 authors = ["zhenwu0728 <zhenwu@mit.edu>", "gaelforget <gforget@mit.edu>"]
-version = "0.1.9"
+version = "0.2.0"
 
 [deps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
@@ -22,7 +22,7 @@ CUDA = "^1, ^2.0"
 Distributions = "^0.23"
 Interpolations = "^0.12"
 JLD2 = "^0.2, 0.3"
-KernelAbstractions = "0.3, 0.4"
+KernelAbstractions = "0.4, 0.5"
 NCDatasets = "^0.10"
 StructArrays = "^0.4"
 julia = "^1.5"
