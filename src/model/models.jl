@@ -72,7 +72,7 @@ end
 
 import Base: show
 
-function show(io::IO, model::Model_Struct)
+function show(io::IO, model::PI_Model)
     print(io, "grid: Nx = $(model.grid.Nx), Ny = $(model.grid.Ny), Nz = $(model.grid.Nz)\n",
               "individuals: $(model.params["Nsp"]) phytoplankton species each with $(model.params["Nind"]) individuals\n",
               "diagnostics of tracers: $(keys(model.diags.tr))\n",
