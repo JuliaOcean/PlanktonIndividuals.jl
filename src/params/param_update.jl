@@ -1,8 +1,11 @@
 """
     update_params!(parameters, tmp)
-Update parameter values based on .yaml file
-'parameters' is default parameter set
-'tmp' is the parameters need to update
+Update parameter values based on a .yaml file provided by user
+
+Keyword Arguments
+=================
+- `parameters` is default parameter set
+- `tmp` is the parameters read from .yaml file and needs to update
 """
 function update_params!(parameters::Dict, tmp::Dict)
     tmp_keys = collect(keys(tmp))
@@ -16,12 +19,6 @@ function update_params!(parameters::Dict, tmp::Dict)
     end
 end
 
-"""
-    read_default_IR_input(nTime, ΔT, grid)
-    'ΔT' -> length of each time step
-    'grid' -> grid information
-Read input of irradiance from default binary file
-"""
 function read_IR_input(ΔT::Int64,grid,
                        path = dirname(pathof(PlanktonIndividuals))*"/../samples/PAR.bin")
     # irradiance(μmol photons/s/m^2)
@@ -42,13 +39,6 @@ function read_IR_input(ΔT::Int64,grid,
     return PAR_domain
 end
 
-"""
-    read_default_temp_input(nTime, ΔT, grid, ∂T∂z)
-    'ΔT' -> length of each time step
-    'grid' -> grid information
-    '∂T∂z' -> linear vertical temp gradient
-Read input of temperature from default binary file
-"""
 function read_temp_input(ΔT::Int64, grid, ∂T∂z=0.04,
                          path = dirname(pathof(PlanktonIndividuals))*"/../samples/temp.bin")
     temp_hour = deserialize(path)

@@ -56,8 +56,7 @@ export
     RunParam, vel_copy!, PI_TimeStep!,
 
     # write output functions
-    write_nut_nc_alltime, write_nut_nc_each_step,
-    write_species_dynamics, write_nut_cons,
+    write_nut_nc_each_step,
     write_individuals_to_bin, write_diags_to_jld2,
     interior
 end # module

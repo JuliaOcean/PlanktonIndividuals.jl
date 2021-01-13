@@ -1,8 +1,14 @@
 """
     PI_TimeStep!(model, ΔT, resultpath)
-Update physiology part and nutrient field of 'model' one time step forward
+Update physiology processes and nutrient field of `PI_Model` one time step forward.
+
+Keyword Arguments
+=================
+- `model`: `PI_Model` to be updated one time step forward
+- `ΔT`: The length of a time step
+- `resultpath` (optional): The file path to store model output. 
 """
-function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
+function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
     model.t = model.t+ΔT
     clock = model.t % 86400 ÷ ΔT + 1
 
@@ -130,7 +136,7 @@ function PI_TimeStep!(model::Model_Struct, ΔT, resultspath::String)
     return nothing
 end
 
-function PI_TimeStep!(model::Model_Struct, ΔT)
+function PI_TimeStep!(model::PI_Model, ΔT)
     model.t = model.t+ΔT
     clock = model.t % 86400 ÷ ΔT + 1
 

@@ -10,9 +10,14 @@ function nutrients_init(arch, g)
 end
 
 """
-    gen_nutrients(arch, g, nut)
-Set up initial nutrient fields according to grid information
-'nut' is an array of 10 elements, each element is a kind of nutrient
+    gen_nutrients(arch, grid, nut)
+Set up initial nutrient fields according to `grid`.
+
+Keyword Arguments
+=================
+- `arch`: `CPUs()` or `GPUs()`. The computer architecture used to time-step `model`.
+- `grid`: The resolution and discrete geometry on which nutrient fields are solved.
+- `nut`: An 10-element array with each element representing the initial condition of a kind of nutrient.
 """
 function gen_nutrients(arch, g, nut)
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
@@ -28,8 +33,14 @@ function gen_nutrients(arch, g, nut)
 end
 
 """
-    load_nut_initials(arch, paths, g)
+    load_nut_initials(arch, paths, grid)
 Load nutrient initial conditions from files
+
+Keyword Arguments
+=================
+- `arch`: `CPUs()` or `GPUs()`. The computer architecture used to time-step `model`.
+- `paths`: `NamedTuple` containing the file paths pointing to the files of nutrient initial conditions.
+- `grid`: The resolution and discrete geometry on which nutrient fields are solved.
 """
 function load_nut_initials(arch, paths, g)
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)

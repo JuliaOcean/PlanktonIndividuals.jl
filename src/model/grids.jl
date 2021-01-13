@@ -21,7 +21,23 @@ struct Grids{FT, A} <: AbstractGrid{FT, A}
     Hz::Int
 end
 
-function gen_Grid(;size, spacing, halo = (1, 1, 1),)
+"""
+    gen_Grid(size = (Nx, Ny, Nz), spacing = (Δx, Δy, Δz), halo = (2, 2, 2))
+Creats a `Grids` struct with `size = (Nx, Ny, Nz)` grid points.
+
+Keyword Arguments
+=================
+- `size` (required): A tuple prescribing the number of grid points. 
+                        `size` is a 3-tuple no matter for 3D, 2D, or 1D model.
+
+- `spacing` (required): A tuple prescribing the length of each grid point in x, y, and z directions.
+                        `spacing` is a 3-tuple no matter for 3D, 2D, or 1D model.
+
+-  `halo` (optional): A tuple of integers that specifies the size of the halo region of cells
+                        surrounding the physical interior for each direction.
+                        `halo` is a 3-tuple no matter for 3D, 2D, or 1D model.
+"""
+function gen_Grid(;size, spacing, halo = (2, 2, 2))
     Nx, Ny, Nz = size
     Hx, Hy, Hz = halo
     Δx, Δy, Δz = spacing

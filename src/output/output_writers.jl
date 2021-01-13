@@ -1,7 +1,12 @@
 """
-    write_nut_nc_each_step(nut, filepath)
+    write_nut_nc_each_step(nut, t, filepath)
 Write a NetCDF file of nutrient fields at each time step
-Default filepath -> "results/nutrients/nut."*lpad(string(t),4,"0")*".nc"
+
+Keyword Arguments
+=================
+- `nut`: `NamedTuple` of nutrient tracers.
+- `t`: Current time of `model` in second, usually starting from 0.
+- `filepath`: The file path to store NetCDF files.
 """
 function write_nut_nc_each_step(nut::NamedTuple, t::Int64, filepath::String)
     C_attr = Dict("units" => "mmolC/m^3")
@@ -23,10 +28,7 @@ function write_nut_nc_each_step(nut::NamedTuple, t::Int64, filepath::String)
     close(ds)
 end
 
-"""
-    write_nut_cons(g, gtr, nutₜ, vel, t, filepath)
-Write a brief summary of nutrients at each time step into a txt file
-"""
+##### write a brief summary of nutrients at each time step into a txt file
 function write_nut_cons(g::Grids, gtr::NamedTuple, nutₜ::NamedTuple, t::Int64, filepath)
     Σgtrⁿ = sum(interior(gtr.NH4.data, g) .* g.V) +
             sum(interior(gtr.NO3.data, g) .* g.V) +
@@ -74,10 +76,7 @@ function write_nut_cons(g::Grids, nutₜ::NamedTuple, t::Int64, filepath)
     close(Cio);close(Nio);close(Pio);
 end
 
-"""
-    write_species_dynamics(t, phyts, filepath)
-Write a brief summary of each species at each time step into a txt file
-"""
+##### write a brief summary of each species at each time step into a txt file
 function write_species_dynamics(t::Int64, phytos, filepath)
     for i in 1:length(phytos)
         pop = dot(phytos[i].data.ac, phytos[i].data.ac)
@@ -97,9 +96,14 @@ function write_species_dynamics(t::Int64, phytos, filepath)
 end
 
 """
-    write_individuals_to_bin(individuals,filepath,time)
-write model output of individuals at each time step in a binary file
-time = model.t
+    write_individuals_to_bin(phytos, filepath, t)
+write model output of individuals at each time step to a binary file
+
+Keyword Arguments
+=================
+- `phytos`: `NamedTuple` of a list of `individual` species.
+- `filepath`: The file path to store NetCDF files.
+- `t`: Current time of `model` in second, usually starting from 0.
 """
 function write_individuals_to_bin(phytos::NamedTuple, filepath, time)
     for i in 1:length(phytos)
@@ -110,6 +114,17 @@ function write_individuals_to_bin(phytos::NamedTuple, filepath, time)
     end
 end
 
+"""
+    write_diags_to_jld2(diags, filepath, t, ncounts)
+write model output of individuals at each time step to a binary file
+
+Keyword Arguments
+=================
+- `diags`: `NamedTuple` of a list of diagnostics at current time step.
+- `filepath`: The file path to store NetCDF files.
+- `t`: Current time of `model` in second, usually starting from 0.
+- `ncounts`: the number of time steps included in each diagnostic
+"""
 function write_diags_to_jld2(diags, filepath, time, ncounts)
     t = time ÷ 3600 + 1 # time in hour from start
     jldopen(filepath*"diags.jld2", "a+") do file
