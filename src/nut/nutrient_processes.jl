@@ -8,7 +8,6 @@ function nut_update!(nutrients, Gcs, MD1, MD2, MD3, arch::Architecture, g::Grids
     nut_diffusion!(Gcs, arch, g, nutrients, params["κh"], ΔT)
 
     ##### compute biogeochemical forcings of nutrients,for each time step
-    # nut_forcing!(Gcs, arch, g, nutrients, params, ΔT)
     zero_fields!(MD1)
     nut_forcing!(Gcs, MD1, nutrients, params, ΔT)
 

@@ -7,10 +7,6 @@ function vel_copy!(vel::NamedTuple, u, v, w, g::Grids)
     fill_halo_vel!(vel, g)
 end
 
-"""
-    sub_nut_tendency!(a, b, c)
-subtract one tendency from total tendencies
-"""
 function sub_nut_tendency!(a, b, c)
     for i in 1:length(a)
         @inbounds a[i].data .= b[i].data .- c[i].data

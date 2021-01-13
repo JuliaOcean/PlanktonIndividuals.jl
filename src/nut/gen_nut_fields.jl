@@ -1,7 +1,3 @@
-"""
-    nutrients_init(arch, g)
-generate `Fields` with `0.0` in `Field.data`
-"""
 function nutrients_init(arch, g)
     fields = (Field(arch, g), Field(arch, g),
               Field(arch, g), Field(arch, g),

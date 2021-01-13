@@ -24,31 +24,6 @@ function write_nut_nc_each_step(nut::NamedTuple, t::Int64, filepath::String)
 end
 
 """
-    write_nut_nc_alltime(a, DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, nTime)
-Write a NetCDF file of nutrient fields for the whole run, especially for 0D configuration
-Default filepath -> "results/nutrients.nc"
-"""
-function write_nut_nc_alltime(DIC, NH4, NO3, PO4, DOC, DON, DOP, POC, PON, POP, nTime,
-                              filepath = "./results/nutrients.nc")
-    C_attr = Dict("units" => "mmolC/m^3")
-    N_attr = Dict("units" => "mmolN/m^3")
-    P_attr = Dict("units" => "mmolP/m^3")
-    isfile(filepath) && rm(filepath)
-    ds = NCDataset(filepath, "c")
-    v1 = defVar(ds, "DIC", DIC, ("xC", "yC", "zC", "T"), attrib = C_attr)
-    v2 = defVar(ds, "DOC", DOC, ("xC", "yC", "zC", "T"), attrib = C_attr)
-    v3 = defVar(ds, "POC", POC, ("xC", "yC", "zC", "T"), attrib = C_attr)
-    v4 = defVar(ds, "NH4", NH4, ("xC", "yC", "zC", "T"), attrib = N_attr)
-    v5 = defVar(ds, "NO3", NO3, ("xC", "yC", "zC", "T"), attrib = N_attr)
-    v6 = defVar(ds, "DON", DON, ("xC", "yC", "zC", "T"), attrib = N_attr)
-    v7 = defVar(ds, "PON", PON, ("xC", "yC", "zC", "T"), attrib = N_attr)
-    v8 = defVar(ds, "PO4", PO4, ("xC", "yC", "zC", "T"), attrib = P_attr)
-    v9 = defVar(ds, "DOP", DOP, ("xC", "yC", "zC", "T"), attrib = P_attr)
-    v10= defVar(ds, "POP", POP, ("xC", "yC", "zC", "T"), attrib = P_attr)
-    close(ds)
-end
-
-"""
     write_nut_cons(g, gtr, nutₜ, vel, t, filepath)
 Write a brief summary of nutrients at each time step into a txt file
 """

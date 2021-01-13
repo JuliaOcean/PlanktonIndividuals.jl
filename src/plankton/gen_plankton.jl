@@ -65,13 +65,6 @@ function individuals(params::Dict, arch::Architecture)
     end
 end
 
-"""
-    gen_didividuals!(plank, grid, arch)
-Set up a series of agents following a normal distribution (mean,var)
-'Nindivi' is agent number for each species, 'sp' is number of species, 'Nsuper' is the number of cells one agent represents,
-'Cquota' is the initial biomass for one cell
-'(x,y,z)' of an individual is the actual location not grid indices
-"""
 function gen_individuals!(plank, N::Int64, g::Grids, arch::Architecture)
     mean = plank.p.mean
     var = plank.p.var

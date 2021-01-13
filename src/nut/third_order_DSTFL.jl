@@ -1,15 +1,4 @@
-###################################################################################
-# Compute advective flux of tracers using 3rd order DST Scheme with flux limiting #
-# Due to free surface, tracers will not be conserved at each time step.           #
-# Surface flux(τⁿ[:,:,1]*Az*wFld[:,:,1]) need to be recorded to check tracer      #
-# conservation.                                                                   #
-# There will still be some tiny negative values in tracer field because of multi- #
-# dimensional advection.                                                          #
-# velocities should not be too high, otherwise big negative values will occur     #
-###################################################################################
-
 ##### halo points ≥ 2 NEEDED!!
-
 const θmax = 1.0e20
 
 ##### calculate CFL number: c=uΔt/Lx

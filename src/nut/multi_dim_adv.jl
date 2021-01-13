@@ -1,6 +1,5 @@
 ##### multi dimensional advection
 ##### For incompressible model only
-
 ##### calculate the divergence of the flux of tracer q only advected by u or v or w
 @inline div_flux_x(i, j, k, g::Grids, u, q, ΔT) = 1/g.V * δx⁺(i, j, k, g, adv_flux_x, u, q, ΔT)
 @inline div_flux_y(i, j, k, g::Grids, v, q, ΔT) = 1/g.V * δy⁺(i, j, k, g, adv_flux_y, v, q, ΔT)

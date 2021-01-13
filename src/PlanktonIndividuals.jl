@@ -41,19 +41,19 @@ include("$src"*"model/time_step.jl")
 export
     # model structures
     PI_Model, Grids, nutrient_fields,
-    RunOptions, RunParams, read_Ogrids, gen_Grid,
+    RunParams, gen_Grid,
     Architecture, GPUs, CPUs,
 
     # read input functions
     read_IR_input, read_temp_input,
     update_params!, param_default,
-    PrepRunDir, diags_setup,
+    PrepRunDir,
 
     # initialize nutrient field and individual sets
-    gen_agents, gen_nutrients, load_nut_initials,
+    gen_nutrients, load_nut_initials,
 
     # Run the model
-    RunParam, RunOption, vel_copy!, PI_TimeStep!,
+    RunParam, vel_copy!, PI_TimeStep!,
 
     # write output functions
     write_nut_nc_alltime, write_nut_nc_each_step,
