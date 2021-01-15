@@ -56,23 +56,28 @@ function write_nut_cons(g::Grids, gtr::NamedTuple, nutₜ::NamedTuple, t::Int64,
          sum(interior(nutₜ.DOP.data, g) .* g.V) +
          sum(interior(nutₜ.POP.data, g) .* g.V)
 
+    day = t÷86400
+    hour = t%86400/3600
+
     Cio = open(filepath*"cons_C.txt","a")
     Nio = open(filepath*"cons_N.txt","a")
     Pio = open(filepath*"cons_P.txt","a")
 
-    println(Cio,@sprintf("%4.0f  %.16E  %.16E  %.4f", t, Σgtrᶜ, TC, mean(interior(nutₜ.DOC.data, g))))
-    println(Nio,@sprintf("%4.0f  %.16E  %.16E  %.4f  %.4f",
-                         t, Σgtrⁿ, TN, mean(interior(nutₜ.NH4.data, g)), mean(interior(nutₜ.NO3.data, g))))
-    println(Pio,@sprintf("%4.0f  %.16E  %.16E  %.4f",t, Σgtrᵖ, TP, mean(interior(nutₜ.PO4.data, g))))
+    println(Cio,@sprintf("%3.0f  %2.2f  %.16E  %.16E  %.4f", day, hour, Σgtrᶜ, TC, mean(interior(nutₜ.DOC.data, g))))
+    println(Nio,@sprintf("%3.0f  %2.2f  %.16E  %.16E  %.4f  %.4f",
+                         day, hour, Σgtrⁿ, TN, mean(interior(nutₜ.NH4.data, g)), mean(interior(nutₜ.NO3.data, g))))
+    println(Pio,@sprintf("%3.0f  %2.2f  %.16E  %.16E  %.4f",day, hour, Σgtrᵖ, TP, mean(interior(nutₜ.PO4.data, g))))
     close(Cio);close(Nio);close(Pio);
 end
 function write_nut_cons(g::Grids, nutₜ::NamedTuple, t::Int64, filepath)
     Cio = open(filepath*"cons_C.txt","a")
     Nio = open(filepath*"cons_N.txt","a")
     Pio = open(filepath*"cons_P.txt","a")
-    println(Cio,@sprintf("%4.0f  %.4f",t, mean(interior(nutₜ.DOC.data, g))))
-    println(Nio,@sprintf("%4.0f  %.4f  %.4f",t, mean(interior(nutₜ.NH4.data, g)),mean(interior(nutₜ.NO3.data, g))))
-    println(Pio,@sprintf("%4.0f  %.4f",t, mean(interior(nutₜ.PO4.data, g))))
+    day = t÷86400
+    hour = t%86400/3600
+    println(Cio,@sprintf("%3.0f  %2.2f  %.4f",day, hour, mean(interior(nutₜ.DOC.data, g))))
+    println(Nio,@sprintf("%3.0f  %2.2f  %.4f  %.4f",day, hour, mean(interior(nutₜ.NH4.data, g)),mean(interior(nutₜ.NO3.data, g))))
+    println(Pio,@sprintf("%3.0f  %2.2f  %.4f",day, hour, mean(interior(nutₜ.PO4.data, g))))
     close(Cio);close(Nio);close(Pio);
 end
 
@@ -88,9 +93,11 @@ function write_species_dynamics(t::Int64, phytos, filepath)
         Nq_ave  =  dot(phytos[i].data.Nq,  phytos[i].data.ac) / pop
         Pq_ave  =  dot(phytos[i].data.Pq,  phytos[i].data.ac) / pop
         Chl_ave =  dot(phytos[i].data.chl, phytos[i].data.ac) / pop
+        day = t÷86400
+        hour = t%86400/3600
         io = open(filepath*"dynamic_species"*lpad(i,3,"0")*".txt","a");
-        println(io,@sprintf("%4.0f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E",
-                            t,pop,gen_ave,age_ave,size_ave,Bm_ave,Cq_ave,Nq_ave,Pq_ave,Chl_ave))
+        println(io,@sprintf("%3.0f  %2.2f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E",
+                            day,hour,pop,gen_ave,age_ave,size_ave,Bm_ave,Cq_ave,Nq_ave,Pq_ave,Chl_ave))
         close(io);
     end
 end
