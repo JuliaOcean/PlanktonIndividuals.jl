@@ -109,14 +109,18 @@ write model output of individuals at each time step to a binary file
 Keyword Arguments
 =================
 - `phytos`: `NamedTuple` of a list of `individual` species.
-- `filepath`: The file path to store NetCDF files.
+- `filepath`: The file path to store JLD2 files.
 - `t`: Current time of `model` in second, usually starting from 0.
+- `atts` (optional): attributes of individuals to save, default `(:x, :y, :z)`
 """
-function write_individuals_to_bin(phytos::NamedTuple, filepath, time)
-    for i in 1:length(phytos)
-        path = filepath*"planks/phy"*lpad(time, 10, "0")*"_"*lpad(i,2,"0")*".bin"
-        open(path, "w") do io
-            serialize(io, phytos[i].data[:,1:12])
+function write_individuals_to_jld2(phytos::NamedTuple, filepath, t; 
+                                   atts = (:x, :y, :z))
+    jldopen(filepath*"individuals.jld2", "a+") do file
+        for sp in keys(phytos)
+            spi = NamedTuple{atts}([getproperty(phytos[sp].data, att) for att in atts])
+            for att in atts
+                file[lpad(t, 8, "0")*"/"*string(sp)*"/"*string(att)] = Array(spi[att])
+            end
         end
     end
 end
@@ -128,7 +132,7 @@ write model output of individuals at each time step to a binary file
 Keyword Arguments
 =================
 - `diags`: `NamedTuple` of a list of diagnostics at current time step.
-- `filepath`: The file path to store NetCDF files.
+- `filepath`: The file path to store JLD2 files.
 - `t`: Current time of `model` in second, usually starting from 0.
 - `ncounts`: the number of time steps included in each diagnostic
 """

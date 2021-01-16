@@ -57,6 +57,6 @@ export
 
     # write output functions
     write_nut_nc_each_step,
-    write_individuals_to_bin, write_diags_to_jld2,
+    write_individuals_to_jld2, write_diags_to_jld2,
     interior
 end # module
