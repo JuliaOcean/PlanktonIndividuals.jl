@@ -56,7 +56,7 @@ function PI_Model(arch::Architecture, grid, RunParam;
         gen_individuals!(plank, params["Nind"], grid, arch)
     end
 
-    ts = timestepper(arch, grid, params["Nind"])
+    ts = timestepper(arch, grid, params["Nind"], params["λ"])
 
     diags = diags_setup(diag_ntrs, diag_nprocs, grid, params["Nsp"], arch)
 
@@ -75,6 +75,7 @@ import Base: show
 function show(io::IO, model::PI_Model)
     print(io, "grid: Nx = $(model.grid.Nx), Ny = $(model.grid.Ny), Nz = $(model.grid.Nz)\n",
               "individuals: $(model.params["Nsp"]) phytoplankton species each with $(model.params["Nind"]) individuals\n",
+              "capacity of individuals: $(model.params["Nind"]*model.params["λ"]) per species\n"
               "diagnostics of tracers: $(keys(model.diags.tr))\n",
-              "diagnostics of individuals: $(keys(model.diags.spcs.sp1))\n")
+              "diagnostics of individuals: $(keys(model.diags.spcs.sp1))")
 end

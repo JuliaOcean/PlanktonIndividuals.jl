@@ -10,9 +10,7 @@ struct individuals
     zoos::NamedTuple
 end
 
-const λ = 6
-
-function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict)
+function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict, λ)
     rawdata = StructArray(x   = zeros(λ*N), y   = zeros(λ*N), z   = zeros(λ*N),
                           iS  = zeros(λ*N), Sz  = zeros(λ*N), Bm  = zeros(λ*N), 
                           Cq  = zeros(λ*N), Nq  = zeros(λ*N), Pq  = zeros(λ*N), 
@@ -52,11 +50,12 @@ function individuals(params::Dict, arch::Architecture)
     plank_data=[]
     Nsp = params["Nsp"]
     N = params["Nind"]
+    λ = params["λ"]
     if Nsp > 9
         throw(ArgumentError("INDIVIDUALS: species must ≤ 9!"))
     else
         for i in 1:Nsp
-            plank = plankton(N,arch,i,params)
+            plank = plankton(N,arch,i,params, λ)
             push!(plank_data,plank)
         end
         plank_name = plank_names[1:Nsp]

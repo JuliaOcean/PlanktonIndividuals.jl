@@ -95,11 +95,11 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
                         model.arch)
 
             ##### division
-            ##### check if the number of individuals exceeded 4N
+            ##### check if the number of individuals exceeded
             dvidnum = dot(model.individuals.phytos[sp].data.dvid, model.individuals.phytos[sp].data.ac)
             deactive_ind = findall(x -> x == 0.0, model.individuals.phytos[sp].data.ac)
             if dvidnum > length(deactive_ind)
-                throw(ArgumentError("number of individual exceeds the capacity (4N)"))
+                throw(ArgumentError("number of individual exceeds the capacity $(model.params["λ"])N"))
             end
             ##### do not copy inactive individuals
             model.individuals.phytos[sp].data.dvid .*= model.individuals.phytos[sp].data.ac
@@ -203,11 +203,11 @@ function PI_TimeStep!(model::PI_Model, ΔT)
                        model.timestepper.plk, model.individuals.phytos[sp].p)
 
             ##### division
-            ##### check if the number of individuals exceeded 4N
+            ##### check if the number of individuals exceeded
             dvidnum = dot(model.individuals.phytos[sp].data.dvid, model.individuals.phytos[sp].data.ac)
             deactive_ind = findall(x -> x == 0.0, model.individuals.phytos[sp].data.ac)
             if dvidnum > length(deactive_ind)
-                throw(ArgumentError("number of individual exceeds the capacity ($λN)"))
+                throw(ArgumentError("number of individual exceeds the capacity $(model.params["λ"])N"))
             end
             ##### do not copy inactive individuals
             model.individuals.phytos[sp].data.dvid .*= model.individuals.phytos[sp].data.ac

@@ -1,6 +1,7 @@
 # Parameters
 param_default=Dict(
     "Nind"     => 1000,               # Number of phyto individuals of each species
+    "λ"        => 6,                  # The upper limit of the number of individuals of each species
     "Nsp"      => 1,                  # Number of phyto species
     "diag_freq"=> 3600,               # Frequency of diagnostics (second)
     "kw"       => 0.046,              # PAR attenuation (/m)
