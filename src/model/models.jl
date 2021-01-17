@@ -75,7 +75,7 @@ import Base: show
 function show(io::IO, model::PI_Model)
     print(io, "grid: Nx = $(model.grid.Nx), Ny = $(model.grid.Ny), Nz = $(model.grid.Nz)\n",
               "individuals: $(model.params["Nsp"]) phytoplankton species each with $(model.params["Nind"]) individuals\n",
-              "capacity of individuals: $(model.params["Nind"]*model.params["λ"]) per species\n"
+              "capacity of individuals: $(model.params["Nind"]*model.params["λ"]) per species\n",
               "diagnostics of tracers: $(keys(model.diags.tr))\n",
               "diagnostics of individuals: $(keys(model.diags.spcs.sp1))")
 end
