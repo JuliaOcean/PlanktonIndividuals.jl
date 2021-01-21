@@ -40,7 +40,7 @@ function setup_agents(RunParam::RunParams,grid)
         phyts0[9,lower:upper] .= copy(phyts0[5,lower:upper]) .* params["Chl2Cint"][i]              # Chl
     end
     phyts0[11,:] .= 1.0                                                        # generation
-    phyts0[12,:] .= 1.0                                                        # age
+    phyts0[12,:] .= 0.0                                                        # age
     phyts0[13,:] .= copy(phyts0[4,:])                                          # init_size
 
     if RunParam.Zoo == false
