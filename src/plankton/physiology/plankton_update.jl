@@ -14,6 +14,7 @@ function plankton_update!(plank, nuts, proc, rnd, p, ΔT, t, arch::Architecture)
 
     calc_BS!(plank, proc, p, arch)
     update_biomass!(plank, proc, p, ΔT, arch)
+    update_cellsize!(plank, p, arch)
 
     ##### probabilities of grazing, mortality, and cell division
     ##### check the probabilities every 5 mins

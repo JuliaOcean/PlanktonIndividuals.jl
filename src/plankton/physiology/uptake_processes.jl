@@ -149,7 +149,7 @@ function calc_BS!(plank, proc, p, arch)
     return nothing
 end
 
-##### update C, N, P quotas, biomass, Chla, cell size
+##### update C, N, P quotas, biomass, Chla
 @kernel function update_biomass_kernel!(plank, proc, p, ΔT)
     i = @index(Global)
     @inbounds plank.Bm[i]  += ΔT * proc.BS[i]
@@ -158,11 +158,22 @@ end
     @inbounds plank.Pq[i]  -= ΔT * proc.BS[i] * p.R_PC
     @inbounds plank.chl[i] += ΔT * proc.BS[i] * p.R_NC * proc.ρchl[i]
     @inbounds plank.age[i] += ΔT / 3600.0 * plank.ac[i]
-    @inbounds plank.Sz[i]   = (plank.Bm[i] + plank.Cq[i])/(p.Cquota * p.Nsuper)
 end
 function update_biomass!(plank, proc, p, ΔT, arch)
     kernel! = update_biomass_kernel!(device(arch), 256, (size(plank.ac,1)))
     event = kernel!(plank, proc, p, ΔT)
+    wait(device(arch), event)
+    return nothing
+end
+
+##### update cell size
+@kernel function update_cellsize_kernel!(plank, p)
+    i = @index(Global)
+    @inbounds plank.Sz[i] = (plank.Bm[i] + plank.Cq[i]) / (p.Cquota * p.Nsuper)
+end
+function update_cellsize!(plank, p, arch)
+    kernel! = update_cellsize_kernel!(device(arch), 256, (size(plank.ac,1)))
+    event = kernel!(plank, p)
     wait(device(arch), event)
     return nothing
 end
