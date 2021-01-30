@@ -37,9 +37,9 @@ Keyword Arguments
 - `res_dir` (optional): Create a directory to store results, `nothing` by default.
 - `save_diags` and `save_individuals` (optional): whether to save diagnostics or individuals.
 - `vels` (optional): The velocity fields for nutrient fields and individuals. `nothing` means no velocities
-will be applied in the simulation. Otherwise, `vels` mush be a `NamedTuple` containing all `u`, `v`, and `w`.
-Each of `u`, `v`, and `w` must be an 4D-`Array` of `(Nx+2Hx, Ny+2Hy, Nz+2Hz, nΔT+1)` elements, including halo
-points and initial conditions.
+                     will be applied in the simulation. Otherwise, `vels` mush be a `NamedTuple` containing
+                     all `u`, `v`, and `w`. Each of `u`, `v`, and `w` must be an 4D-`Array` of 
+                     `(Nx+2Hx, Ny+2Hy, Nz+2Hz, nΔT+1)` elements, including halo points and initial conditions.
 """
 function PI_simulation(model::PI_Model; ΔT, nΔT, diag_freq,
                        PARF_path = dirname(pathof(PlanktonIndividuals))*"/../samples/PAR.bin",

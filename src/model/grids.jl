@@ -29,10 +29,8 @@ Keyword Arguments
 =================
 - `size` (required): A tuple prescribing the number of grid points. 
                         `size` is a 3-tuple no matter for 3D, 2D, or 1D model.
-
 - `spacing` (required): A tuple prescribing the length of each grid point in x, y, and z directions.
                         `spacing` is a 3-tuple no matter for 3D, 2D, or 1D model.
-
 -  `halo` (optional): A tuple of integers that specifies the size of the halo region of cells
                         surrounding the physical interior for each direction.
                         `halo` is a 3-tuple no matter for 3D, 2D, or 1D model.

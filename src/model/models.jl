@@ -25,10 +25,12 @@ Keyword Arguments
 =================
 - `arch` (required): `CPUs()` or `GPUs()`. The computer architecture used to time-step `model`.
 - `grid` (required): The resolution and discrete geometry on which `model` is solved.
+- `individual_size` (optional): `NamedTuple` used to set number of species `Nsp`, number of individuals `N`,
+                                and max individual capacity `cap`.
 - `bgc_params` (optional): Parameter set for biogeochemical processes modeled in the model.
 - `phyt_params` (optional): Parameter set for physiological processes of individuals modeled in the model.
-- `nut_source` (optional): The source of initial conditions of nutrient fields, should be either a 10-element array
-or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
+- `nut_source` (optional): The source of initial conditions of nutrient fields, should be either a 10-element array 
+                           or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
 - `diag_ntrs` (optional): `NamedTuple` containing the names of nutrient fields to be diagnosed.
 - `diag_nprocs` (optional): `NamedTuple` containing the names of physiological processes to be diagnosed.
 - `t` (optional): Model time, start from 0 by default, in second.

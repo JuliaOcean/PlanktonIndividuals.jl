@@ -18,7 +18,7 @@ Keyword Arguments
 - `arch`: `CPUs()` or `GPUs()`. The computer architecture used to time-step `model`.
 - `grid`: The resolution and discrete geometry on which nutrient fields are solved.
 - `source`: An 10-element array with each element representing the initial condition of a kind of nutrient, 
-or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
+            or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
 """
 function generate_nutrients(arch, g, source::Array)
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
