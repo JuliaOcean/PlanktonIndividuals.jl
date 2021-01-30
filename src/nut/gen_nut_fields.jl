@@ -10,21 +10,22 @@ function nutrients_init(arch, g)
 end
 
 """
-    gen_nutrients(arch, grid, nut)
+    generate_nutrients(arch, grid, source)
 Set up initial nutrient fields according to `grid`.
 
 Keyword Arguments
 =================
 - `arch`: `CPUs()` or `GPUs()`. The computer architecture used to time-step `model`.
 - `grid`: The resolution and discrete geometry on which nutrient fields are solved.
-- `nut`: An 10-element array with each element representing the initial condition of a kind of nutrient.
+- `source`: An 10-element array with each element representing the initial condition of a kind of nutrient, 
+or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
 """
-function gen_nutrients(arch, g, nut)
+function generate_nutrients(arch, g, source::Array)
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
     nutrients = nutrients_init(arch, g)
 
     for i in 1:length(nut_names)
-        nutrients[i].data .= fill(nut[i],total_size) .* rand(Uniform(0.8,1.2), total_size) |> array_type(arch)
+        nutrients[i].data .= fill(source[i],total_size) .* rand(Uniform(0.8,1.2), total_size) |> array_type(arch)
     end
 
     fill_halo_nut!(nutrients,g)
@@ -32,22 +33,12 @@ function gen_nutrients(arch, g, nut)
     return nutrients
 end
 
-"""
-    load_nut_initials(arch, paths, grid)
-Load nutrient initial conditions from files
-
-Keyword Arguments
-=================
-- `arch`: `CPUs()` or `GPUs()`. The computer architecture used to time-step `model`.
-- `paths`: `NamedTuple` containing the file paths pointing to the files of nutrient initial conditions.
-- `grid`: The resolution and discrete geometry on which nutrient fields are solved.
-"""
-function load_nut_initials(arch, paths, g)
+function generate_nutrients(arch, g, source::Dict)
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
 
     nut = nutrients_init(arch, g)
 
-    pathkeys = collect(keys(paths))
+    pathkeys = collect(keys(source))
 
     tmps = []
 
@@ -55,7 +46,7 @@ function load_nut_initials(arch, paths, g)
         if length(findall(x->x==name, pathkeys)) == 0
             throw(ArgumentError("NUT_INIT: nutrient not found $(name)"))
         else
-            tmp = deserialize(paths[name]) |> array_type(arch)
+            tmp = deserialize(source[name]) |> array_type(arch)
             if size(tmp) == (g.Nx, g.Ny, g.Nz)
                 @views @. nut[name].data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] = tmp[:,:,:]
             else

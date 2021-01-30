@@ -36,24 +36,26 @@ include("$src"*"output/diagnostics.jl")
 include("$src"*"model/timestepper.jl")
 include("$src"*"model/models.jl")
 include("$src"*"model/time_step.jl")
+include("$src"*"model/simulations.jl")
 
 
 export
     # model structures
     PI_Model, Grids, nutrient_fields,
-    RunParams, gen_Grid,
+    gen_Grid,
     Architecture, GPUs, CPUs,
 
     # read input functions
     read_IR_input, read_temp_input,
-    update_params!, param_default,
+    update_bgc_params, update_phyt_params, 
+    bgc_params_default, phyt_params_default,
     PrepRunDir,
 
     # initialize nutrient field and individual sets
-    gen_nutrients, load_nut_initials,
+    generate_nutrients,
 
     # Run the model
-    RunParam, vel_copy!, PI_TimeStep!,
+    PI_simulation, update!, vel_copy!, PI_TimeStep!,
 
     # write output functions
     write_nut_nc_each_step,

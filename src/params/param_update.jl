@@ -1,13 +1,13 @@
 """
-    update_params!(parameters, tmp)
+    update_bgc_params(tmp)
 Update parameter values based on a .yaml file provided by user
 
 Keyword Arguments
 =================
-- `parameters` is default parameter set
-- `tmp` is the parameters read from .yaml file and needs to update
+- `tmp` is a `Dict` containing the parameters needed to be upadated
 """
-function update_params!(parameters::Dict, tmp::Dict)
+function update_bgc_params(tmp::Dict)
+    parameters = bgc_params_default()
     tmp_keys = collect(keys(tmp))
     pkeys = collect(keys(parameters))
     for key in tmp_keys
@@ -17,10 +17,32 @@ function update_params!(parameters::Dict, tmp::Dict)
             parameters[key] = tmp[key]
         end
     end
+    return parameters
 end
 
-function read_IR_input(ΔT::Int64,grid,
-                       path = dirname(pathof(PlanktonIndividuals))*"/../samples/PAR.bin")
+"""
+    update_phyt_params(tmp)
+Update parameter values based on a .yaml file provided by user
+
+Keyword Arguments
+=================
+- `tmp` is a `Dict` containing the parameters needed to be upadated
+"""
+function update_phyt_params(tmp::Dict)
+    parameters = phyt_params_default()
+    tmp_keys = collect(keys(tmp))
+    pkeys = collect(keys(parameters))
+    for key in tmp_keys
+        if length(findall(x->x==key, pkeys))==0
+            throw(ArgumentError("PARAM: parameter not found $key"))
+        else
+            parameters[key] = tmp[key]
+        end
+    end
+    return parameters
+end
+
+function read_IR_input(ΔT::Int64, grid; path)
     # irradiance(μmol photons/s/m^2)
     # start from mid-night
     PAR_hour = deserialize(path)
@@ -39,8 +61,7 @@ function read_IR_input(ΔT::Int64,grid,
     return PAR_domain
 end
 
-function read_temp_input(ΔT::Int64, grid, ∂T∂z=0.04,
-                         path = dirname(pathof(PlanktonIndividuals))*"/../samples/temp.bin")
+function read_temp_input(ΔT::Int64, grid; path, ∂T∂z=0.04)
     temp_hour = deserialize(path)
     # convert hour to second in a day
     t_htos = collect(0:1:24) .* 3600

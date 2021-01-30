@@ -10,7 +10,6 @@ Keyword Arguments
 """
 function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
     model.t = model.t+ΔT
-    clock = model.t % 86400 ÷ ΔT + 1
 
     @inbounds model.timestepper.vel½.u.data .= (model.timestepper.vel₀.u.data .+ model.timestepper.vel₁.u.data) .* 0.5
     @inbounds model.timestepper.vel½.v.data .= (model.timestepper.vel₀.v.data .+ model.timestepper.vel₁.v.data) .* 0.5
@@ -24,7 +23,7 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
     for sp in keys(model.individuals.phytos)
         gen_rand!(model.timestepper.rnd, model.arch)
         gen_rand_adv!(model.timestepper.rnd, model.arch)
-        plankton_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd, model.params["κhP"], ΔT, model.arch)
+        plankton_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd, model.bgc_params["κhP"], ΔT, model.arch)
         periodic_domain!(model.individuals.phytos[sp].data, model.individuals.phytos[sp].data.ac, model.grid, model.arch)
 
         plankton_advectionRK4!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
@@ -42,8 +41,8 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
     end
 
     ##### calculate PAR
-    calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.input.PARF[:,:,clock],
-              model.grid, model.params["kc"], model.params["kw"])
+    calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.timestepper.PARF,
+              model.grid, model.bgc_params["kc"], model.bgc_params["kw"])
 
     ##### plankton physiology
     for sp in keys(model.individuals.phytos)
@@ -51,7 +50,7 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
                   model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
                   model.individuals.phytos[sp].data.ac, model.nutrients.NH4.data, 
                   model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
-                  model.timestepper.par, model.input.temp[:,:,:,clock], model.timestepper.pop,
+                  model.timestepper.par, model.timestepper.temp, model.timestepper.pop,
                   model.individuals.phytos[sp].p)
 
         plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts, 
@@ -69,7 +68,7 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
                     model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
                     model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, model.arch)
         ##### check the probabilities every 10 mins
-        if model.t%300 == 1
+        if model.t%600 == 0
             ##### grazing and its diagnostic
             diags_proc!(model.diags.spcs[sp].graz, model.individuals.phytos[sp].data.graz,
                         model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
@@ -99,7 +98,7 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
             dvidnum = dot(model.individuals.phytos[sp].data.dvid, model.individuals.phytos[sp].data.ac)
             deactive_ind = findall(x -> x == 0.0, model.individuals.phytos[sp].data.ac)
             if dvidnum > length(deactive_ind)
-                throw(ArgumentError("number of individual exceeds the capacity $(model.params["λ"])N"))
+                throw(ArgumentError("number of individual exceeds the capacity"))
             end
             ##### do not copy inactive individuals
             model.individuals.phytos[sp].data.dvid .*= model.individuals.phytos[sp].data.ac
@@ -125,7 +124,7 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
 
     nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.MD1,
                 model.timestepper.MD2, model.timestepper.MD3, model.arch,
-                model.grid, model.params, model.timestepper.vel₁, model.timestepper.plk, ΔT)
+                model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT)
 
     write_nut_cons(model.grid, model.timestepper.Gcs, model.nutrients, model.t, resultspath)
 
@@ -138,7 +137,6 @@ end
 
 function PI_TimeStep!(model::PI_Model, ΔT)
     model.t = model.t+ΔT
-    clock = model.t % 86400 ÷ ΔT + 1
 
     @inbounds model.timestepper.vel½.u.data .= (model.timestepper.vel₀.u.data .+ model.timestepper.vel₁.u.data) .* 0.5
     @inbounds model.timestepper.vel½.v.data .= (model.timestepper.vel₀.v.data .+ model.timestepper.vel₁.v.data) .* 0.5
@@ -152,7 +150,7 @@ function PI_TimeStep!(model::PI_Model, ΔT)
     for sp in keys(model.individuals.phytos)
         gen_rand!(model.timestepper.rnd, model.arch)
         gen_rand_adv!(model.timestepper.rnd, model.arch)
-        plankton_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd, model.params["κhP"], ΔT, model.arch)
+        plankton_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd, model.bgc_params["κhP"], ΔT, model.arch)
         periodic_domain!(model.individuals.phytos[sp].data, model.individuals.phytos[sp].data.ac, model.grid, model.arch)
 
         plankton_advectionRK4!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
@@ -170,8 +168,8 @@ function PI_TimeStep!(model::PI_Model, ΔT)
     end
 
     ##### calculate PAR
-    calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.input.PARF[:,:,clock],
-              model.grid, model.params["kc"], model.params["kw"])
+    calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.timestepper.PARF,
+              model.grid, model.bgc_params["kc"], model.bgc_params["kw"])
 
     ##### plankton physiology
     for sp in keys(model.individuals.phytos)
@@ -179,7 +177,7 @@ function PI_TimeStep!(model::PI_Model, ΔT)
                   model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
                   model.individuals.phytos[sp].data.ac, model.nutrients.NH4.data, 
                   model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
-                  model.timestepper.par, model.input.temp[:,:,:,clock], model.timestepper.pop,
+                  model.timestepper.par, model.timestepper.temp, model.timestepper.pop,
                   model.individuals.phytos[sp].p)
 
         plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts, 
@@ -192,8 +190,9 @@ function PI_TimeStep!(model::PI_Model, ΔT)
                       model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
                       model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
                       ΔT, model.arch)
+
         ##### check the probabilities every 10 mins
-        if model.t%300 == 1
+        if model.t%600 == 0
             ##### grazing
             grazing!(model.individuals.phytos[sp].data, model.arch, 
                      model.timestepper.plk, model.individuals.phytos[sp].p)
@@ -207,7 +206,7 @@ function PI_TimeStep!(model::PI_Model, ΔT)
             dvidnum = dot(model.individuals.phytos[sp].data.dvid, model.individuals.phytos[sp].data.ac)
             deactive_ind = findall(x -> x == 0.0, model.individuals.phytos[sp].data.ac)
             if dvidnum > length(deactive_ind)
-                throw(ArgumentError("number of individual exceeds the capacity $(model.params["λ"])N"))
+                throw(ArgumentError("number of individual exceeds the capacity"))
             end
             ##### do not copy inactive individuals
             model.individuals.phytos[sp].data.dvid .*= model.individuals.phytos[sp].data.ac
@@ -217,10 +216,11 @@ function PI_TimeStep!(model::PI_Model, ΔT)
 
     nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.MD1,
                 model.timestepper.MD2, model.timestepper.MD3, model.arch,
-                model.grid, model.params, model.timestepper.vel₁, model.timestepper.plk, ΔT)
+                model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT)
 
     @inbounds model.timestepper.vel₀.u.data .= model.timestepper.vel₁.u.data
     @inbounds model.timestepper.vel₀.v.data .= model.timestepper.vel₁.v.data
     @inbounds model.timestepper.vel₀.w.data .= model.timestepper.vel₁.w.data
+
     return nothing
 end

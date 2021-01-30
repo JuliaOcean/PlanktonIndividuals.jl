@@ -168,6 +168,5 @@ function PrepRunDir(res::String="./results/")
     isdir(res) && rm(res, recursive=true)
     mkdir(res)
     mkdir("$res"*"nutrients/")
-    mkdir("$res"*"planks/")
     return res
 end

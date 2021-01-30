@@ -18,7 +18,7 @@ function plankton_update!(plank, nuts, proc, rnd, p, ΔT, t, arch::Architecture)
 
     ##### probabilities of grazing, mortality, and cell division
     ##### check the probabilities every 5 mins
-    if t%300 == 1
+    if t%600 == 0
         gen_rand!(rnd, arch)
         calc_graz_quadratic!(plank, proc, nuts, p.grz_P, arch)
 

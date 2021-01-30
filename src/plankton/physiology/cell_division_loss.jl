@@ -10,13 +10,13 @@ struct Adder_Timer <: division_type end
 
 @inline calc_division(::Adder, Sz, iS, t, stp, reg, stp2, reg2, P) = P * (tanh(stp*(Sz - iS - reg)) + 1.0)
 
-@inline calc_division(::Timer, Sz, iS, t, stp, reg, stp2, reg2, P) = P * (tanh(stp*(t%86400÷3600 - reg)) + 1.0)
+@inline calc_division(::Timer, Sz, iS, t, stp, reg, stp2, reg2, P) = P * (tanh(stp*(t%86400/3600 - reg)) + 1.0)
 
 @inline calc_division(::Sizer_Timer, Sz, iS, t, stp, reg, stp2, reg2, P) = 
-                        P * (tanh(stp*(Sz - reg)) + 1.0) * (tanh(stp2*(t%86400÷3600 - reg2)) + 1.0)
+                        P * (tanh(stp*(Sz - reg)) + 1.0) * (tanh(stp2*(t%86400/3600 - reg2)) + 1.0)
 
 @inline calc_division(::Adder_Timer, Sz, iS, t, stp, reg, stp2, reg2, P) = 
-                        P * (tanh(stp*(Sz - iS - reg)) + 1.0) * (tanh(stp2*(t%86400÷3600 - reg2)) + 1.0)
+                        P * (tanh(stp*(Sz - iS - reg)) + 1.0) * (tanh(stp2*(t%86400/3600 - reg2)) + 1.0)
 
 @inline function divide_type(dvid_type)
     if dvid_type == 1

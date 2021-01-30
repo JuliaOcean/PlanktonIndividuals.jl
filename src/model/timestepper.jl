@@ -6,6 +6,8 @@ mutable struct timestepper
     vel₀::NamedTuple    # a NamedTuple with u, v, w velocities
     vel½::NamedTuple    # a NamedTuple with u, v, w velocities
     vel₁::NamedTuple    # a NamedTuple with u, v, w velocities
+    PARF::AbstractArray # a (Cu)Array to store surface PAR field of each timestep 
+    temp::AbstractArray # a (Cu)Array to store temperature field of each timestep
     plk::NamedTuple     # a NamedTuple same as nutrients to store interactions with individuals
     par::AbstractArray  # a (Cu)Array to store PAR field of each timestep
     chl::AbstractArray  # a (Cu)Array to store Chl field of each timestep
@@ -15,7 +17,7 @@ mutable struct timestepper
     nuts::AbstractArray # a StructArray of nutrients of each individual
 end
 
-function timestepper(arch::Architecture, g::Grids, N, λ)
+function timestepper(arch::Architecture, g::Grids, N, cap)
     vel₀ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
     vel½ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
     vel₁ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
@@ -30,22 +32,25 @@ function timestepper(arch::Architecture, g::Grids, N, λ)
     chl = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     pop = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
 
-    rnd = StructArray(x = zeros(λ*N), y = zeros(λ*N), z = zeros(λ*N))
+    temp = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
+    PARF = zeros(g.Nx, g.Ny) |> array_type(arch)
+
+    rnd = StructArray(x = zeros(cap*N), y = zeros(cap*N), z = zeros(cap*N))
     rnd_d = replace_storage(array_type(arch), rnd)
 
-    velos = StructArray(x  = zeros(λ*N), y  = zeros(λ*N), z  = zeros(λ*N),
-                        u1 = zeros(λ*N), v1 = zeros(λ*N), w1 = zeros(λ*N),
-                        u2 = zeros(λ*N), v2 = zeros(λ*N), w2 = zeros(λ*N),
-                        u3 = zeros(λ*N), v3 = zeros(λ*N), w3 = zeros(λ*N),
-                        u4 = zeros(λ*N), v4 = zeros(λ*N), w4 = zeros(λ*N),
+    velos = StructArray(x  = zeros(cap*N), y  = zeros(cap*N), z  = zeros(cap*N),
+                        u1 = zeros(cap*N), v1 = zeros(cap*N), w1 = zeros(cap*N),
+                        u2 = zeros(cap*N), v2 = zeros(cap*N), w2 = zeros(cap*N),
+                        u3 = zeros(cap*N), v3 = zeros(cap*N), w3 = zeros(cap*N),
+                        u4 = zeros(cap*N), v4 = zeros(cap*N), w4 = zeros(cap*N),
                         )
     velos_d = replace_storage(array_type(arch), velos)
 
-    nuts = StructArray(NH4 = zeros(λ*N), NO3 = zeros(λ*N), PO4 = zeros(λ*N), DOC = zeros(λ*N),
-                       αI  = zeros(λ*N), Tem = zeros(λ*N), pop = zeros(λ*N))
+    nuts = StructArray(NH4 = zeros(cap*N), NO3 = zeros(cap*N), PO4 = zeros(cap*N), DOC = zeros(cap*N),
+                       αI  = zeros(cap*N), Tem = zeros(cap*N), pop = zeros(cap*N))
     nuts_d = replace_storage(array_type(arch), nuts)
 
-    ts = timestepper(Gcs, MD1, MD2, MD3, vel₀, vel½, vel₁, plk, par, chl, pop, rnd_d, velos_d, nuts_d)
+    ts = timestepper(Gcs, MD1, MD2, MD3, vel₀, vel½, vel₁, PARF, temp, plk, par, chl, pop, rnd_d, velos_d, nuts_d)
 
     return ts
 end

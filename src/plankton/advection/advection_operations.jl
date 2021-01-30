@@ -5,8 +5,8 @@
     return x
 end
 @inline function bounded_boundary(x, xl, xr)
-    x > xr && return xr - 0.01
-    x < xl && return xl + 0.01 
+    x > xr && return xr - (x - xr) * 2.0
+    x < xl && return xl + (xl - x) * 2.0
     return x
 end
 
