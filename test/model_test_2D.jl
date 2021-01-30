@@ -1,10 +1,8 @@
 using PlanktonIndividuals, Serialization
 
-grid = gen_Grid(size = (16, 16, 1), spacing = (2, 2, 32), halo = (2, 2, 2))
+grid = gen_Grid(size = (16, 16, 1), spacing = (2, 2, 2), halo = (2, 2, 2))
 
-nut_init = [2.0, 0.05,0.05,0.01,20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-
-model = PI_Model(CPUs(), grid, RunParam; nutrients = gen_nutrients(CPUs(), grid, nut_init))
+model = PI_Model(CPUs(), grid) 
 
 TP = sum((interior(model.nutrients.PO4.data, grid) .+ 
           interior(model.nutrients.DOP.data, grid) .+ 
@@ -12,12 +10,20 @@ TP = sum((interior(model.nutrients.PO4.data, grid) .+
 TP = TP + sum(model.individuals.phytos.sp1.data.Pq .+ 
               model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC)
 
-vel_copy!(model.timestepper.vel₀, randn(20,20,5) .* 1e-4, randn(20,20,5) .* 1e-4, zeros(20,20,5), model.grid)
+uvel = zeros(20,20,5,11)
+vvel = zeros(20,20,5,11)
+wvel = zeros(20,20,5,11)
 
-for i in 1:RunParam.nTime
-    vel_copy!(model.timestepper.vel₀, randn(20,20,5) .* 1e-4, randn(20,20,5) .* 1e-4, zeros(20,20,5), model.grid)
-    PI_TimeStep!(model, RunParam.ΔT)
+for i in 1:11
+    uvel[:,:,:,i] .= randn(20,20,5) .* 1e-4
+    vvel[:,:,:,i] .= randn(20,20,5) .* 1e-4
+    wvel[:,:,:,i] .= randn(20,20,5) .* 1e-4
 end
+
+sim = PI_simulation(model, ΔT = 60, nΔT = 10, diag_freq = 3600, 
+                    vels=(u=uvel, v=vvel, w=wvel)) 
+
+update!(sim)
 
 TPt = sum((interior(model.nutrients.PO4.data, grid) .+ 
           interior(model.nutrients.DOP.data, grid) .+ 

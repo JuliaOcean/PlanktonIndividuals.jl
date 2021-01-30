@@ -55,7 +55,7 @@ function PI_simulation(model::PI_Model; ΔT, nΔT, diag_freq,
         throw(ArgumentError("The frequency of diagnostics must be `Int` times of ΔT"))
     end
 
-    if vels ≠ nothing
+    if vels ≠ (;)
         grid_size = (model.grid.Nx+model.grid.Hx*2,
                      model.grid.Ny+model.grid.Hy*2, 
                      model.grid.Nz+model.grid.Hz*2)
@@ -99,7 +99,7 @@ end
 update the `PI_simulaiton` for `sim.nΔT` time steps.
 """
 function update!(sim::PI_simulation)
-    if sim.input.vels ≠ nothing
+    if sim.input.vels ≠ (;)
         if sim.vel_reuse
             ti = 1
             te = sim.nΔT
