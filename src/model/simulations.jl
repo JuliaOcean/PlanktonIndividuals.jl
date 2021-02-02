@@ -85,6 +85,7 @@ import Base: show
 
 function show(io::IO, sim::PI_simulation)
     print(io, "ΔT: $(sim.ΔT)s\n",
+              "model time: $(sim.model.t)s\n",
               "number of time steps: $(sim.nΔT)\n",
               "save averaged diagnostics every $(sim.diag_freq)s, $(sim.diag_freq/sim.ΔT) time steps\n",
               "results saved at $(sim.res_dir)\n",

@@ -137,7 +137,7 @@ Keyword Arguments
 - `ncounts`: the number of time steps included in each diagnostic
 """
 function write_diags_to_jld2(diags, filepath, time, ncounts)
-    t = time ÷ 3600 + 1 # time in hour from start
+    t = time ÷ 3600  # time in hour from start
     jldopen(filepath*"diags.jld2", "a+") do file
         for key in keys(diags.tr)
             file[lpad(t, 8, "0")*"/nut/"*string(key)] = Array(diags.tr[key]) ./ ncounts
