@@ -110,8 +110,8 @@ function update!(sim::PI_simulation)
         end
         for t in ti:te
             tc = sim.model.t % 86400 ÷ sim.ΔT + 1 # time of day in ΔT as Int index for temp and PAR
-            vel_copy!(sim.model.timestepper.vel₁, sim.input.vels.u[:,:,:,t+1],
-                      sim.input.vels.v[:,:,:,t+1], sim.input.vels.w[:,:,:,t+1], sim.model.grid)
+            vel_copy!(sim.model.timestepper.vel₁, sim.input.vels.u[:,:,:,t],
+                      sim.input.vels.v[:,:,:,t], sim.input.vels.w[:,:,:,t], sim.model.grid)
             copyto!(sim.model.timestepper.PARF, sim.input.PARF[:,:,tc])
             copyto!(sim.model.timestepper.temp, sim.input.temp[:,:,:,tc])
             if sim.res_dir ≠ nothing
