@@ -119,7 +119,7 @@ function write_individuals_to_jld2(phytos::NamedTuple, filepath, t;
         for sp in keys(phytos)
             spi = NamedTuple{atts}([getproperty(phytos[sp].data, att) for att in atts])
             for att in atts
-                file[lpad(t, 8, "0")*"/"*string(sp)*"/"*string(att)] = Array(spi[att])
+                file[lpad(t, 10, "0")*"/"*string(sp)*"/"*string(att)] = Array(spi[att])
             end
         end
     end
@@ -136,15 +136,14 @@ Keyword Arguments
 - `t`: Current time of `model` in second, usually starting from 0.
 - `ncounts`: the number of time steps included in each diagnostic
 """
-function write_diags_to_jld2(diags, filepath, time, ncounts)
-    t = time ÷ 3600  # time in hour from start
+function write_diags_to_jld2(diags, filepath, t, ncounts)
     jldopen(filepath*"diags.jld2", "a+") do file
         for key in keys(diags.tr)
-            file[lpad(t, 8, "0")*"/nut/"*string(key)] = Array(diags.tr[key]) ./ ncounts
+            file[lpad(t, 10, "0")*"/nut/"*string(key)] = Array(diags.tr[key]) ./ ncounts
         end
         for sp in keys(diags.spcs)
             for proc in keys(diags.spcs[sp])
-                file[lpad(t, 8, "0")*"/"*string(sp)*"/"*string(proc)] = Array(diags.spcs[sp][proc]) ./ ncounts 
+                file[lpad(t, 10, "0")*"/"*string(sp)*"/"*string(proc)] = Array(diags.spcs[sp][proc]) ./ ncounts 
             end
         end
     end
@@ -164,7 +163,7 @@ end
     PrepRunDir(res::String="results/")
 Create `res/` folder if needed. Remove old files from it if needed.
 """
-function PrepRunDir(res::String="./results/")
+function PrepRunDir(;res::String="./results/")
     isdir(res) && rm(res, recursive=true)
     mkdir(res)
     mkdir("$res"*"nutrients/")
