@@ -70,7 +70,7 @@ import Base: show
 
 function show(io::IO, model::PI_Model)
     Nsp = length(model.individuals.phytos)
-    N = dot(model.individuals.phytos.sp1.data.ac,model.individuals.phytos.sp1.data.ac)
+    N = Int(dot(model.individuals.phytos.sp1.data.ac,model.individuals.phytos.sp1.data.ac))
     cap = length(model.individuals.phytos.sp1.data.ac)
     print(io, "grid: Nx = $(model.grid.Nx), Ny = $(model.grid.Ny), Nz = $(model.grid.Nz)\n",
               "individuals: $(Nsp) phytoplankton species each with $(N) individuals\n",

@@ -56,9 +56,7 @@ function PI_simulation(model::PI_Model; ΔT, nΔT, diag_freq,
     end
 
     if vels ≠ (;)
-        grid_size = (model.grid.Nx+model.grid.Hx*2,
-                     model.grid.Ny+model.grid.Hy*2, 
-                     model.grid.Nz+model.grid.Hz*2)
+        grid_size = (model.grid.Nx, model.grid.Ny, model.grid.Nz)
         if size(vels.u)[1:3] == size(vels.v)[1:3] == size(vels.w)[1:3] == grid_size
             vel_copy!(model.timestepper.vel₀, vels.u[:,:,:,1],
                     vels.v[:,:,:,1], vels.w[:,:,:,1], model.grid)
@@ -87,7 +85,7 @@ function show(io::IO, sim::PI_simulation)
     print(io, "ΔT: $(sim.ΔT)s\n",
               "model time: $(sim.model.t)s\n",
               "number of time steps: $(sim.nΔT)\n",
-              "save averaged diagnostics every $(sim.diag_freq)s, $(sim.diag_freq/sim.ΔT) time steps\n",
+              "save averaged diagnostics every $(sim.diag_freq)s, $(Int(sim.diag_freq/sim.ΔT)) time steps\n",
               "results saved at $(sim.res_dir)\n",
               "save diags: $(sim.save_diags)\n",
               "save individuals: $(sim.save_individuals)\n",
@@ -113,7 +111,8 @@ function update!(sim::PI_simulation)
             vel_copy!(sim.model.timestepper.vel₁, sim.input.vels.u[:,:,:,t],
                       sim.input.vels.v[:,:,:,t], sim.input.vels.w[:,:,:,t], sim.model.grid)
             copyto!(sim.model.timestepper.PARF, sim.input.PARF[:,:,tc])
-            copyto!(sim.model.timestepper.temp, sim.input.temp[:,:,:,tc])
+            copy_interior!(sim.model.timestepper.temp, sim.input.temp[:,:,:,tc], sim.model.grid)
+
             if sim.res_dir ≠ nothing
                 PI_TimeStep!(sim.model, sim.ΔT, sim.res_dir)
                 if sim.save_diags
@@ -133,7 +132,7 @@ function update!(sim::PI_simulation)
         for t in 1:sim.nΔT
             tc = sim.model.t % 86400 ÷ sim.ΔT + 1 # time of day in ΔT as Int index for temp and PAR
             copyto!(sim.model.timestepper.PARF, sim.input.PARF[:,:,tc])
-            copyto!(sim.model.timestepper.temp, sim.input.temp[:,:,:,tc])
+            copy_interior!(sim.model.timestepper.temp, sim.input.temp[:,:,:,tc], sim.model.grid)
             if sim.res_dir ≠ nothing
                 PI_TimeStep!(sim.model, sim.ΔT, sim.res_dir)
                 if sim.save_diags
