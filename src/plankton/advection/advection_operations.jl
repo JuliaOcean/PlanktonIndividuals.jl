@@ -5,8 +5,8 @@
     return x
 end
 @inline function bounded_boundary(x, xl, xr)
-    x > xr && return xr - (x - xr) * 20.0
-    x < xl && return xl + (xl - x) * 20.0
+    x > xr && return xr - (x - xr) * 0.5
+    x < xl && return xl + (xl - x) * 0.5
     return x
 end
 
@@ -64,6 +64,20 @@ end
 function calc_vel_rk4!(velos, arch::Architecture)
     kernel! = calc_rk4_kernel!(device(arch), 256, (size(velos.u1,1)))
     event = kernel!(velos)
+    wait(device(arch), event)
+    return nothing
+end
+
+##### calculate final velocities by AB2
+@kernel function calc_ab2_kernel!(velos, χ)
+    i = @index(Global)
+    velos.u1[i] = (1.5 + χ) * velos.u1[i] - (0.5 + χ) * velos.u2[i] 
+    velos.v1[i] = (1.5 + χ) * velos.v1[i] - (0.5 + χ) * velos.v2[i] 
+    velos.w1[i] = (1.5 + χ) * velos.w1[i] - (0.5 + χ) * velos.w2[i] 
+end
+function calc_vel_ab2!(velos, χ, arch::Architecture)
+    kernel! = calc_ab2_kernel!(device(arch), 256, (size(velos.u1,1)))
+    event = kernel!(velos, χ)
     wait(device(arch), event)
     return nothing
 end
