@@ -10,14 +10,14 @@ TP = sum((interior(model.nutrients.PO4.data, grid) .+
 TP = TP + sum(model.individuals.phytos.sp1.data.Pq .+ 
               model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC)
 
-uvel = zeros(20,20,20,11)
-vvel = zeros(20,20,20,11)
-wvel = zeros(20,20,20,11)
+uvel = zeros(16,16,16,11)
+vvel = zeros(16,16,16,11)
+wvel = zeros(16,16,16,11)
 
 for i in 1:11
-    uvel[:,:,:,i] .= randn(20,20,20) .* 1e-4
-    vvel[:,:,:,i] .= randn(20,20,20) .* 1e-4
-    wvel[:,:,:,i] .= randn(20,20,20) .* 1e-4
+    uvel[:,:,:,i] .= randn(16,16,16) .* 1e-4
+    vvel[:,:,:,i] .= randn(16,16,16) .* 1e-4
+    wvel[:,:,:,i] .= randn(16,16,16) .* 1e-4
 end
 
 sim = PI_simulation(model, ΔT = 60, nΔT = 10, diag_freq = 3600, 
