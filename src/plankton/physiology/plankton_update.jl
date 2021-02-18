@@ -17,18 +17,15 @@ function plankton_update!(plank, nuts, proc, rnd, p, ΔT, t, arch::Architecture)
     update_cellsize!(plank, p, arch)
 
     ##### probabilities of grazing, mortality, and cell division
-    ##### check the probabilities every 5 mins
+    ##### check the probabilities every 10 mins
     if t%600 == 0
-        gen_rand!(rnd, arch)
         calc_graz_quadratic!(plank, proc, nuts, p.grz_P, arch)
-
         calc_mort!(plank, proc, p, arch)
-
         calc_dvid!(plank, proc, divide_type(p.dvid_type), p, t, arch)
-        get_probability!(plank, proc, rnd)
+        get_probability!(plank, proc, arch)
     else
-        plank.graz .= 0.0
-        plank.mort .= 0.0
-        plank.dvid .= 0.0
+        @inbounds plank.graz .= 0.0
+        @inbounds plank.mort .= 0.0
+        @inbounds plank.dvid .= 0.0
     end
 end

@@ -88,6 +88,6 @@ function gen_individuals!(plank, N::Int64, g::Grids, arch::Architecture)
     plank.data.Pq[1:N]  .= plank.data.Pq[1:N] .* plank.data.Bm[1:N]                                        # Pq
     plank.data.chl[1:N] .= plank.data.Bm[1:N] .* Chl2Cint                                                  # Chl
     plank.data.gen[1:N] .= 1.0                                                                             # generation
-    plank.data.age[1:N] .= 1.0                                                                             # age
+    plank.data.age[1:N] .= 0.0                                                                             # age
     plank.data.ac[1:N]  .= 1.0                                                                             # active
 end
