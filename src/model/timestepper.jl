@@ -1,8 +1,6 @@
 mutable struct timestepper
     Gcs::NamedTuple     # a NamedTuple same as nutrients to store tendencies
-    MD1::NamedTuple     # a NamedTuple same as nutrients to store nutrients fields in multi-dims advection scheme
-    MD2::NamedTuple     # a NamedTuple same as nutrients to store nutrients fields in multi-dims advection scheme
-    MD3::NamedTuple     # a NamedTuple same as nutrients to store nutrients fields in multi-dims advection scheme
+    nut_temp::NamedTuple# a NamedTuple same as nutrients to store nutrients fields in multi-dims advection scheme
     vel₀::NamedTuple    # a NamedTuple with u, v, w velocities
     vel½::NamedTuple    # a NamedTuple with u, v, w velocities
     vel₁::NamedTuple    # a NamedTuple with u, v, w velocities
@@ -23,9 +21,7 @@ function timestepper(arch::Architecture, g::Grids, N, cap)
     vel₁ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
 
     Gcs = nutrients_init(arch, g)
-    MD1 = nutrients_init(arch, g)
-    MD2 = nutrients_init(arch, g)
-    MD3 = nutrients_init(arch, g)
+    nut_temp = nutrients_init(arch, g)
     plk = nutrients_init(arch, g)
 
     par = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
@@ -50,7 +46,7 @@ function timestepper(arch::Architecture, g::Grids, N, cap)
                        αI  = zeros(cap*N), Tem = zeros(cap*N), pop = zeros(cap*N))
     nuts_d = replace_storage(array_type(arch), nuts)
 
-    ts = timestepper(Gcs, MD1, MD2, MD3, vel₀, vel½, vel₁, PARF, temp, plk, par, chl, pop, rnd_d, velos_d, nuts_d)
+    ts = timestepper(Gcs, nut_temp, vel₀, vel½, vel₁, PARF, temp, plk, par, chl, pop, rnd_d, velos_d, nuts_d)
 
     return ts
 end

@@ -1,93 +1,159 @@
 ##### multi dimensional advection
 ##### For incompressible model only
-##### calculate the divergence of the flux of tracer q only advected by u or v or w
-@inline div_flux_x(i, j, k, g::Grids, u, q, ΔT) = 1/g.V * δx⁺(i, j, k, g, adv_flux_x, u, q, ΔT)
-@inline div_flux_y(i, j, k, g::Grids, v, q, ΔT) = 1/g.V * δy⁺(i, j, k, g, adv_flux_y, v, q, ΔT)
-@inline div_flux_z(i, j, k, g::Grids, w, q, ΔT) = 1/g.V * δz⁺(i, j, k, g, adv_flux_z, w, q, ΔT)
-
-##### apply the tendency of by multi-dimensional advection for tracer q
-@kernel function calc_qˣ!(qtemp, g::Grids, u, q, ΔT)
+##### calculate tendencies in x direction
+@kernel function calc_Gcˣ_kernel!(Gc, c, u, g::Grids, ΔT)
     i, j, k = @index(Global, NTuple)
     ### offset index for halo points
     ii = i + g.Hx
     jj = j + g.Hy
     kk = k + g.Hz
-    @inbounds qtemp[ii, jj, kk] = q[ii, jj, kk] - ΔT * div_flux_x(ii, jj, kk, g, u, q, ΔT)
+    @inbounds Gc[ii, jj, kk] = adv_flux_x(ii, jj, kk, g, u, c, ΔT) / g.V
 end
-@kernel function calc_qʸ!(qtemp, g::Grids, v, q, ΔT)
+function calc_Gcsˣ!(Gcs, nut, u, g::Grids, ΔT, arch::Architecture)
+    kernel! = calc_Gcˣ_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
+    barrier = Event(device(arch))
+    events = []
+    for name in nut_names
+        event = kernel!(Gcs[name].data, nut[name].data, u, g, ΔT, dependencies=barrier)
+        push!(events,event)
+    end
+    wait(device(arch), MultiEvent(Tuple(events)))
+    return nothing
+end
+
+##### calculate tendencies in y direction
+@kernel function calc_Gcʸ_kernel!(Gc, c, v, g::Grids, ΔT)
     i, j, k = @index(Global, NTuple)
     ### offset index for halo points
     ii = i + g.Hx
     jj = j + g.Hy
     kk = k + g.Hz
-    @inbounds qtemp[ii, jj, kk] = q[ii, jj, kk] - ΔT * div_flux_y(ii, jj, kk, g, v, q, ΔT)
+    @inbounds Gc[ii, jj, kk] = adv_flux_y(ii, jj, kk, g, v, c, ΔT) / g.V
 end
-@kernel function calc_qᶻ!(qtemp, g::Grids, w, q, ΔT)
+function calc_Gcsʸ!(Gcs, nut, v, g::Grids, ΔT, arch::Architecture)
+    kernel! = calc_Gcʸ_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
+    barrier = Event(device(arch))
+    events = []
+    for name in nut_names
+        event = kernel!(Gcs[name].data, nut[name].data, v, g, ΔT, dependencies=barrier)
+        push!(events,event)
+    end
+    wait(device(arch), MultiEvent(Tuple(events)))
+    return nothing
+end
+
+##### calculate tendencies in z direction
+@kernel function calc_Gcᶻ_kernel!(Gc, c, w, g::Grids, ΔT)
     i, j, k = @index(Global, NTuple)
     ### offset index for halo points
     ii = i + g.Hx
     jj = j + g.Hy
     kk = k + g.Hz
-    @inbounds qtemp[ii, jj, kk] = q[ii, jj, kk] - ΔT * div_flux_z(ii, jj, kk, g, w, q, ΔT)
+    @inbounds Gc[ii, jj, kk] = adv_flux_z(ii, jj, kk, g, w, c, ΔT) / g.V
 end
-
-function nut_advectionˣ!(nutₜ, arch::Architecture, g, nutrients, u, ΔT)
-    calc_qˣ_kernel! = calc_qˣ!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
+function calc_Gcsᶻ!(Gcs, nut, w, g::Grids, ΔT, arch::Architecture)
+    kernel! = calc_Gcᶻ_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
     barrier = Event(device(arch))
-
-    events_x = []
+    events = []
     for name in nut_names
-        event = calc_qˣ_kernel!(nutₜ[name].data, g, u, nutrients[name].data, ΔT, dependencies=barrier)
-        push!(events_x,event)
+        event = kernel!(Gcs[name].data, nut[name].data, w, g, ΔT, dependencies=barrier)
+        push!(events,event)
     end
-
-    wait(device(arch), MultiEvent(Tuple(events_x)))
-
+    wait(device(arch), MultiEvent(Tuple(events)))
     return nothing
 end
 
-function nut_advectionʸ!(nutₜ, arch::Architecture, g, nutrients, v, ΔT)
-    calc_qʸ_kernel! = calc_qʸ!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
+##### apply the tendency in x direction to tracer c
+@kernel function multi_dim_x_kernel!(ctemp, Gc, g::Grids, ΔT)
+    i, j, k = @index(Global, NTuple)
+    ### offset index for halo points
+    ii = i + g.Hx
+    jj = j + g.Hy
+    kk = k + g.Hz
+    @inbounds ctemp[ii, jj, kk] -= ΔT * δx⁺(ii, jj, kk, Gc)
+end
+function multi_dim_x!(nut, Gcs, g::Grids, ΔT, arch::Architecture)
+    kernel! = multi_dim_x_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
     barrier = Event(device(arch))
-
-    events_y = []
+    events = []
     for name in nut_names
-        event = calc_qʸ_kernel!(nutₜ[name].data, g, v, nutrients[name].data, ΔT, dependencies=barrier)
-        push!(events_y,event)
+        event = kernel!(nut[name].data, Gcs[name].data, g, ΔT, dependencies=barrier)
+        push!(events,event)
     end
-
-    wait(device(arch), MultiEvent(Tuple(events_y)))
-
+    wait(device(arch), MultiEvent(Tuple(events)))
     return nothing
 end
 
-function nut_advectionᶻ!(nutₜ, arch::Architecture, g, nutrients, w, ΔT)
-    calc_qᶻ_kernel! = calc_qᶻ!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
+##### apply the tendency in y direction to tracer c
+@kernel function multi_dim_y_kernel!(ctemp, Gc, g::Grids, ΔT)
+    i, j, k = @index(Global, NTuple)
+    ### offset index for halo points
+    ii = i + g.Hx
+    jj = j + g.Hy
+    kk = k + g.Hz
+    @inbounds ctemp[ii, jj, kk] -= ΔT * δy⁺(ii, jj, kk, Gc)
+end
+function multi_dim_y!(nut, Gcs, g::Grids, ΔT, arch::Architecture)
+    kernel! = multi_dim_y_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
     barrier = Event(device(arch))
-
-    events_z = []
+    events = []
     for name in nut_names
-        event = calc_qᶻ_kernel!(nutₜ[name].data, g, w, nutrients[name].data, ΔT, dependencies=barrier)
-        push!(events_z,event)
+        event = kernel!(nut[name].data, Gcs[name].data, g, ΔT, dependencies=barrier)
+        push!(events,event)
     end
-
-    wait(device(arch), MultiEvent(Tuple(events_z)))
-
+    wait(device(arch), MultiEvent(Tuple(events)))
     return nothing
 end
 
-function nut_advection!(Gc, arch::Architecture, g, nut, nut₁, nut₂, nut₃, vel, ΔT)
-    nut_advectionˣ!(nut₁, arch::Architecture, g, nut, vel.u.data, ΔT)
-
-    fill_halo_nut!(nut₁, g)
-
-    nut_advectionʸ!(nut₂, arch::Architecture, g, nut₁, vel.v.data, ΔT)
-
-    fill_halo_nut!(nut₂, g)
-
-    nut_advectionᶻ!(nut₃, arch::Architecture, g, nut₂, vel.w.data, ΔT)
-
-    sub_nut_tendency!(Gc, nut₃, nut)
-
+##### apply the tendency in z direction to tracer c
+@kernel function multi_dim_z_kernel!(ctemp, Gc, g::Grids, ΔT)
+    i, j, k = @index(Global, NTuple)
+    ### offset index for halo points
+    ii = i + g.Hx
+    jj = j + g.Hy
+    kk = k + g.Hz
+    @inbounds ctemp[ii, jj, kk] -= ΔT * δz⁺(ii, jj, kk, Gc)
+end
+function multi_dim_z!(nut, Gcs, g::Grids, ΔT, arch::Architecture)
+    kernel! = multi_dim_z_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
+    barrier = Event(device(arch))
+    events = []
+    for name in nut_names
+        event = kernel!(nut[name].data, Gcs[name].data, g, ΔT, dependencies=barrier)
+        push!(events,event)
+    end
+    wait(device(arch), MultiEvent(Tuple(events)))
+    return nothing
 end
 
+function calc_nut_tendency!(a, b, c, ΔT)
+    for name in nut_names
+        @inbounds a[name].data .= (b[name].data .- c[name].data) ./ ΔT
+    end
+end
+
+function nut_advection!(nut, nut_temp, Gcs, vel, g::Grids, ΔT, arch::Architecture)
+    for name in nut_names
+        @inbounds nut_temp[name].data .= nut[name].data
+    end
+    ##### x direction
+    calc_Gcsˣ!(Gcs, nut_temp, vel.u.data, g, ΔT, arch)
+    fill_halo_Gcs!(Gcs, g)
+    multi_dim_x!(nut_temp, Gcs, g, ΔT, arch)
+    fill_halo_nut!(nut_temp, g)
+
+    ##### y direction
+    calc_Gcsʸ!(Gcs, nut_temp, vel.v.data, g, ΔT, arch)
+    fill_halo_Gcs!(Gcs, g)
+    multi_dim_y!(nut_temp, Gcs, g, ΔT, arch)
+    fill_halo_nut!(nut_temp, g)
+
+    ##### z direction
+    calc_Gcsᶻ!(Gcs, nut_temp, vel.w.data, g, ΔT, arch)
+    fill_halo_Gcs!(Gcs, g)
+    multi_dim_z!(nut_temp, Gcs, g, ΔT, arch)
+    fill_halo_nut!(nut_temp, g)
+
+    calc_nut_tendency!(Gcs, nut_temp, nut, ΔT)
+
+end

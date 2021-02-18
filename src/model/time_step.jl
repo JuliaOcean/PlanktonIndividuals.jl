@@ -18,19 +18,20 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
     zero_fields!(model.timestepper.plk)
     @inbounds model.timestepper.chl .= 0.0
     @inbounds model.timestepper.pop .= 0.0  # may add an option of self grazing, besides shared grazing
-
-    ##### plankton advection
+    ##### plankton advection and diffusion
     for sp in keys(model.individuals.phytos)
-        gen_rand!(model.timestepper.rnd, model.arch)
-        gen_rand_adv!(model.timestepper.rnd, model.arch)
-        plankton_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd, model.bgc_params["κhP"], ΔT, model.arch)
-        periodic_domain!(model.individuals.phytos[sp].data, model.individuals.phytos[sp].data.ac, model.grid, model.arch)
-
-        plankton_advectionRK4!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
+        ##### RK4
+        plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
                                model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT, model.arch)
-
+        ##### AB2 only for 1 species setup
+        # plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos,
+        #                     model.grid, 0.1, model.timestepper.vel₁, ΔT, model.arch)
+        ##### Euler-forward
         # plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos,
         #                     model.grid, model.timestepper.vel₁, ΔT, model.arch)
+        ##### Diffusion
+        plankton_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd,
+                            model.bgc_params["κhP"], ΔT, model.grid, model.arch)
 
         #### calculate accumulated chla quantity (not concentration)
         find_inds!(model.individuals.phytos[sp].data, model.grid, model.arch)
@@ -122,8 +123,7 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
         end
     end
 
-    nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.MD1,
-                model.timestepper.MD2, model.timestepper.MD3, model.arch,
+    nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.nut_temp, model.arch,
                 model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT)
 
     write_nut_cons(model.grid, model.timestepper.Gcs, model.nutrients, model.t, resultspath)
@@ -148,16 +148,18 @@ function PI_TimeStep!(model::PI_Model, ΔT)
 
     ##### plankton advection
     for sp in keys(model.individuals.phytos)
-        gen_rand!(model.timestepper.rnd, model.arch)
-        gen_rand_adv!(model.timestepper.rnd, model.arch)
-        plankton_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd, model.bgc_params["κhP"], ΔT, model.arch)
-        periodic_domain!(model.individuals.phytos[sp].data, model.individuals.phytos[sp].data.ac, model.grid, model.arch)
-
-        plankton_advectionRK4!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
+        ##### RK4
+        plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
                                model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT, model.arch)
-
+        ##### AB2 only for 1 species setup
+        # plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos,
+        #                     model.grid, 0.1, model.timestepper.vel₁, ΔT, model.arch)
+        ##### Euler-forward
         # plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos,
         #                     model.grid, model.timestepper.vel₁, ΔT, model.arch)
+        ##### Diffusion
+        plankton_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd,
+                            model.bgc_params["κhP"], ΔT, model.grid, model.arch)
 
         #### calculate accumulated chla quantity (not concentration)
         find_inds!(model.individuals.phytos[sp].data, model.grid, model.arch)
@@ -214,8 +216,7 @@ function PI_TimeStep!(model::PI_Model, ΔT)
         end
     end
 
-    nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.MD1,
-                model.timestepper.MD2, model.timestepper.MD3, model.arch,
+    nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.nut_temp, model.arch,
                 model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT)
 
     @inbounds model.timestepper.vel₀.u.data .= model.timestepper.vel₁.u.data

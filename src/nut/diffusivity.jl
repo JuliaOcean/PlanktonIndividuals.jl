@@ -35,8 +35,6 @@
                        δz⁺(i, j, k, grid, diffusive_flux_z, κᶻ, c))
 end
 
-@inline κ∇²(i, j, k, grid, κ, c) = κ∇²(i, j, k, grid, κ, κ, κ, c)
-
 ##### calculate the tendency by diffusion for tracer c
 @kernel function calc_diffusion!(Gc, grid, κˣ, κʸ, κᶻ, c, ΔT)
     i, j, k = @index(Global, NTuple)

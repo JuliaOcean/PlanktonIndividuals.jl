@@ -1,80 +1,33 @@
-@inline function zero_halo_west!(c::AbstractArray, grid)
-    @views @. c[1:grid.Hx, :, :] = 0 # west
-    return nothing
-end
-@inline function zero_halo_east!(c::AbstractArray, grid)
-    @views @. c[grid.Nx+grid.Hx+1:grid.Nx+2*grid.Hx, :, :] = 0   # east
-    return nothing
-end
-@inline function zero_halo_south!(c::AbstractArray, grid)
-    @views @. c[:, 1:grid.Hy, :] = 0 # south
-    return nothing
-end
-@inline function zero_halo_north!(c::AbstractArray, grid)
-    @views @. c[:, grid.Ny+grid.Hy+1:grid.Ny+2*grid.Hy, :] = 0   # north
-    return nothing
-end
-@inline function zero_halo_bottom!(c::AbstractArray, grid)
-    @views @. c[:, :, 1:grid.Hz] = 0 # bottom
-    return nothing
-end
-@inline function zero_halo_top!(c::AbstractArray, grid)
-    @views @. c[:, :, grid.Nz+grid.Hz+1:grid.Nz+2*grid.Hz] = 0   # top
-    return nothing
-end
-
-@inline function fill_halo_west!(c::AbstractArray, grid)
-    @views @. c[1:grid.Hx, :, :] = c[grid.Nx+1:grid.Nx+grid.Hx, :, :] # west
-    return nothing
-end
-@inline function fill_halo_east!(c::AbstractArray, grid)
-    @views @. c[grid.Nx+grid.Hx+1:grid.Nx+2*grid.Hx, :, :] = c[1+grid.Hx:2*grid.Hx, :, :] # east
-    return nothing
-end
-@inline function fill_halo_south!(c::AbstractArray, grid)
-    @views @. c[:, 1:grid.Hy, :] = c[:, grid.Ny+1:grid.Ny+grid.Hy, :] # south
-    return nothing
-end
-@inline function fill_halo_north!(c::AbstractArray, grid)
-    @views @. c[:, grid.Ny+grid.Hy+1:grid.Ny+2*grid.Hy, :] = c[:, 1+grid.Hy:2*grid.Hy, :] # north
-    return nothing
-end
-@inline function fill_halo_bottom!(c::AbstractArray, grid)
-    @views @. c[:, :, 1:grid.Hz] = c[:, :, grid.Hz+1:grid.Hz+1] # bottom
-    return nothing
-end
-@inline function fill_halo_top!(c::AbstractArray, grid)
-    @views @. c[:, :, grid.Nz+grid.Hz+1:grid.Nz+2*grid.Hz] = c[:, :, grid.Nz+grid.Hz:grid.Nz+grid.Hz] # top
-    return nothing
-end
-
-@inline function fill_halo_nut!(nuts::NamedTuple, grid)
+@inline function fill_halo_nut!(nuts::NamedTuple, g::Grids)
     for nut in nuts
-        fill_halo_west!(nut.data, grid)
-        fill_halo_east!(nut.data, grid)
-        fill_halo_south!(nut.data, grid)
-        fill_halo_north!(nut.data, grid)
-        fill_halo_bottom!(nut.data, grid)
-        fill_halo_top!(nut.data, grid)
+        @views @. nut.data[1:g.Hx, :, :] = nut.data[g.Nx+1:g.Nx+g.Hx, :, :] # west
+        @views @. nut.data[:, 1:g.Hy, :] = nut.data[:, g.Ny+1:g.Ny+g.Hy, :] # south
+        @views @. nut.data[:, :, 1:g.Hz] = nut.data[:, :, g.Hz+1:g.Hz+1] # bottom
+
+        @views @. nut.data[g.Nx+g.Hx+1:g.Nx+2*g.Hx, :, :] = nut.data[1+g.Hx:2*g.Hx, :, :] # east
+        @views @. nut.data[:, g.Ny+g.Hy+1:g.Ny+2*g.Hy, :] = nut.data[:, 1+g.Hy:2*g.Hy, :] # north
+        @views @. nut.data[:, :, g.Nz+g.Hz+1:g.Nz+2*g.Hz] = nut.data[:, :, g.Nz+g.Hz:g.Nz+g.Hz] # top
     end
     return nothing
 end
-@inline function fill_halo_vel!(vels::NamedTuple, grid)
+@inline function fill_halo_vel!(vels::NamedTuple, g::Grids)
     for vel in vels
-        fill_halo_west!(vel.data, grid)
-        fill_halo_east!(vel.data, grid)
-        fill_halo_south!(vel.data, grid)
-        fill_halo_north!(vel.data, grid)
-        zero_halo_bottom!(vel.data, grid)
-        zero_halo_top!(vel.data, grid)
+        @views @. vel.data[1:g.Hx, :, :] = vel.data[g.Nx+1:g.Nx+g.Hx, :, :] # west
+        @views @. vel.data[:, 1:g.Hy, :] = vel.data[:, g.Ny+1:g.Ny+g.Hy, :] # south
+        @views @. vel.data[:, :, 1:g.Hz] = vel.data[:, :, g.Hz+1:g.Hz+1] # bottom
+
+        @views @. vel.data[g.Nx+g.Hx+1:g.Nx+2*g.Hx, :, :] = vel.data[1+g.Hx:2*g.Hx, :, :] # east
+        @views @. vel.data[:, g.Ny+g.Hy+1:g.Ny+2*g.Hy, :] = vel.data[:, 1+g.Hy:2*g.Hy, :] # north
+        @views @. vel.data[:, :, g.Nz+g.Hz+1:g.Nz+2*g.Hz] = vel.data[:, :, g.Nz+g.Hz:g.Nz+g.Hz] * 0.4 # top
     end
     return nothing
 end
 
-@inline function zero_halo!(nuts::NamedTuple, grid)
+@inline function fill_halo_Gcs!(nuts::NamedTuple, g::Grids)
     for nut in nuts
-        zero_halo!(nut.data, grid)
+        @views @. nut.data[g.Nx+g.Hx+1:g.Nx+2*g.Hx, :, :] = nut.data[1+g.Hx:2*g.Hx, :, :] # east
+        @views @. nut.data[:, g.Ny+g.Hy+1:g.Ny+2*g.Hy, :] = nut.data[:, 1+g.Hy:2*g.Hy, :] # north
+        @views @. nut.data[:, :, g.Nz+g.Hz+1:g.Nz+2*g.Hz] = 0.0 # top
     end
-
     return nothing
 end
