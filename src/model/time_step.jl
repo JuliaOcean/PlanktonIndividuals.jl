@@ -54,64 +54,9 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
                   model.timestepper.par, model.timestepper.temp, model.timestepper.pop,
                   model.individuals.phytos[sp].p)
 
-        plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts, 
-                         model.individuals.phytos[sp].proc, model.timestepper.rnd, 
-                         model.individuals.phytos[sp].p, ΔT, model.t, model.arch)
-
-        calc_consume!(model.timestepper.plk.DIC.data, model.timestepper.plk.DOC.data, 
-                      model.timestepper.plk.NH4.data, model.timestepper.plk.NO3.data, 
-                      model.timestepper.plk.PO4.data, model.individuals.phytos[sp].proc, 
-                      model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
-                      model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
-                      ΔT, model.arch)
-        ##### diagnostics of processes for each species
-        diags_spcs!(model.diags.spcs[sp], model.individuals.phytos[sp].proc, model.individuals.phytos[sp].data,
-                    model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
-                    model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, model.arch)
-        ##### check the probabilities every 10 mins
-        if model.t%600 == 0
-            ##### grazing and its diagnostic
-            diags_proc!(model.diags.spcs[sp].graz, model.individuals.phytos[sp].data.graz,
-                        model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
-                        model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
-                        model.arch)
-
-            grazing!(model.individuals.phytos[sp].data, model.arch, 
-                     model.timestepper.plk, model.individuals.phytos[sp].p)
-
-            ###### mortality and its diagnostic
-            diags_proc!(model.diags.spcs[sp].mort, model.individuals.phytos[sp].data.mort,
-                        model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
-                        model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
-                        model.arch)
-
-            mortality!(model.individuals.phytos[sp].data, model.arch, 
-                       model.timestepper.plk, model.individuals.phytos[sp].p)
-
-            ###### cell division diagnostic
-            diags_proc!(model.diags.spcs[sp].dvid, model.individuals.phytos[sp].data.dvid,
-                        model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
-                        model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
-                        model.arch)
-
-            ##### division
-            ##### check if the number of individuals exceeded
-            dvidnum = dot(model.individuals.phytos[sp].data.dvid, model.individuals.phytos[sp].data.ac)
-            deactive_ind = findall(x -> x == 0.0, model.individuals.phytos[sp].data.ac)
-            if dvidnum > length(deactive_ind)
-                throw(ArgumentError("number of individual exceeds the capacity"))
-            end
-            ##### do not copy inactive individuals
-            model.individuals.phytos[sp].data.dvid .*= model.individuals.phytos[sp].data.ac
-            divide!(model.individuals.phytos[sp].data, deactive_ind, model.arch)
-        end
-
-        ##### diagnostic for individual distribution
-        diags_proc!(model.diags.spcs[sp].num, model.individuals.phytos[sp].data.ac, 
-                    model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
-                    model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
-                    model.arch)
-
+        plankton_physiology!(model.individuals.phytos[sp].data, model.timestepper.nuts,
+                             model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,
+                             model.timestepper.plk, model.diags.spcs[sp], ΔT, model.t, model.arch)
     end
     write_species_dynamics(model.t, model.individuals.phytos, resultspath)
 
@@ -182,38 +127,9 @@ function PI_TimeStep!(model::PI_Model, ΔT)
                   model.timestepper.par, model.timestepper.temp, model.timestepper.pop,
                   model.individuals.phytos[sp].p)
 
-        plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts, 
-                         model.individuals.phytos[sp].proc, model.timestepper.rnd, 
-                         model.individuals.phytos[sp].p, ΔT, model.t, model.arch)
-
-        calc_consume!(model.timestepper.plk.DIC.data, model.timestepper.plk.DOC.data, 
-                      model.timestepper.plk.NH4.data, model.timestepper.plk.NO3.data, 
-                      model.timestepper.plk.PO4.data, model.individuals.phytos[sp].proc, 
-                      model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi, 
-                      model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
-                      ΔT, model.arch)
-
-        ##### check the probabilities every 10 mins
-        if model.t%600 == 0
-            ##### grazing
-            grazing!(model.individuals.phytos[sp].data, model.arch, 
-                     model.timestepper.plk, model.individuals.phytos[sp].p)
-
-            ###### mortality
-            mortality!(model.individuals.phytos[sp].data, model.arch, 
-                       model.timestepper.plk, model.individuals.phytos[sp].p)
-
-            ##### division
-            ##### check if the number of individuals exceeded
-            dvidnum = dot(model.individuals.phytos[sp].data.dvid, model.individuals.phytos[sp].data.ac)
-            deactive_ind = findall(x -> x == 0.0, model.individuals.phytos[sp].data.ac)
-            if dvidnum > length(deactive_ind)
-                throw(ArgumentError("number of individual exceeds the capacity"))
-            end
-            ##### do not copy inactive individuals
-            model.individuals.phytos[sp].data.dvid .*= model.individuals.phytos[sp].data.ac
-            divide!(model.individuals.phytos[sp].data, deactive_ind, model.arch)
-        end
+        plankton_physiology!(model.individuals.phytos[sp].data, model.timestepper.nuts,
+                             model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,
+                             model.timestepper.plk, model.diags.spcs[sp], ΔT, model.t, model.arch)
     end
 
     nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.nut_temp, model.arch,
