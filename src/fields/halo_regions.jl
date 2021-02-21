@@ -14,11 +14,11 @@ end
     for vel in vels
         @views @. vel.data[1:g.Hx, :, :] = vel.data[g.Nx+1:g.Nx+g.Hx, :, :] # west
         @views @. vel.data[:, 1:g.Hy, :] = vel.data[:, g.Ny+1:g.Ny+g.Hy, :] # south
-        @views @. vel.data[:, :, 1:g.Hz] = vel.data[:, :, g.Hz+1:g.Hz+1] # bottom
+        @views @. vel.data[:, :, 1:g.Hz] = vel.data[:, :, g.Hz+1:g.Hz+1] * 0.0 # bottom
 
         @views @. vel.data[g.Nx+g.Hx+1:g.Nx+2*g.Hx, :, :] = vel.data[1+g.Hx:2*g.Hx, :, :] # east
         @views @. vel.data[:, g.Ny+g.Hy+1:g.Ny+2*g.Hy, :] = vel.data[:, 1+g.Hy:2*g.Hy, :] # north
-        @views @. vel.data[:, :, g.Nz+g.Hz+1:g.Nz+2*g.Hz] = vel.data[:, :, g.Nz+g.Hz:g.Nz+g.Hz] * 0.4 # top
+        @views @. vel.data[:, :, g.Nz+g.Hz+1:g.Nz+2*g.Hz] = vel.data[:, :, g.Nz+g.Hz:g.Nz+g.Hz] * 0.0 # top
     end
     return nothing
 end
