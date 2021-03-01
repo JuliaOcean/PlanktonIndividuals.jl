@@ -51,8 +51,7 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
                   model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, 
                   model.individuals.phytos[sp].data.ac, model.nutrients.NH4.data, 
                   model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
-                  model.timestepper.par, model.timestepper.temp, model.timestepper.pop,
-                  model.individuals.phytos[sp].p)
+                  model.timestepper.par, model.timestepper.temp, model.timestepper.pop, model.arch)
 
         plankton_physiology!(model.individuals.phytos[sp].data, model.timestepper.nuts,
                              model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,

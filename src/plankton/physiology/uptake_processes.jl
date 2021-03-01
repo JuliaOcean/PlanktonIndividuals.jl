@@ -12,21 +12,36 @@ function find_inds!(plank, g::Grids, arch::Architecture)
     return nothing
 end
 
-function find_NPT!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop, p)
-    @inbounds nuts.NH4 .= NH4[CartesianIndex.(x, y, z)] .* ac
-    @inbounds nuts.NO3 .= NO3[CartesianIndex.(x, y, z)] .* ac
-    @inbounds nuts.PO4 .= PO4[CartesianIndex.(x, y, z)] .* ac
-    @inbounds nuts.DOC .= DOC[CartesianIndex.(x, y, z)] .* ac
-    @inbounds nuts.αI  .= par[CartesianIndex.(x, y, z)] .* p.α .* p.Φ .* ac
-    @inbounds nuts.Tem .=temp[CartesianIndex.(x, y, z)] .* ac
-    @inbounds nuts.pop .= pop[CartesianIndex.(x, y, z)] .* ac
+@kernel function find_NPT_kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop)
+    i = @index(Global)
+    @inbounds nuts.NH4[i] = NH4[x[i], y[i], z[i]] * ac[i]
+    @inbounds nuts.NO3[i] = NO3[x[i], y[i], z[i]] * ac[i]
+    @inbounds nuts.PO4[i] = PO4[x[i], y[i], z[i]] * ac[i]
+    @inbounds nuts.DOC[i] = DOC[x[i], y[i], z[i]] * ac[i]
+    @inbounds nuts.αI[i]  = par[x[i], y[i], z[i]] * ac[i]
+    @inbounds nuts.Tem[i] =temp[x[i], y[i], z[i]] * ac[i]
+    @inbounds nuts.pop[i] = pop[x[i], y[i], z[i]] * ac[i]
+end
+function find_NPT!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop, arch::Architecture)
+    kernel! = find_NPT_kernel!(device(arch), 256, (size(ac,1)))
+    event = kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop)
+    wait(device(arch), event)
+    return nothing
+end
 
-    @inbounds nuts.NH4 .= max.(1.0e-10, nuts.NH4) .* ac
-    @inbounds nuts.NO3 .= max.(1.0e-10, nuts.NO3) .* ac
-    @inbounds nuts.PO4 .= max.(1.0e-10, nuts.PO4) .* ac
-    @inbounds nuts.DOC .= max.(1.0e-10, nuts.DOC) .* ac
-    @inbounds nuts.Tem .= max.(1.0e-10, exp.(p.TempAe .* (1.0 ./ (nuts.Tem .+ 273.15) .-
-                                                        (1.0/p.Tempref)))) .* p.TempCoeff .* ac
+@kernel function update_NPT_kernel!(nuts, ac, p)
+    i = @index(Global)
+    @inbounds nuts.NH4[i] = max(1.0e-10, nuts.NH4[i]) * ac[i]
+    @inbounds nuts.NO3[i] = max(1.0e-10, nuts.NO3[i]) * ac[i]
+    @inbounds nuts.PO4[i] = max(1.0e-10, nuts.PO4[i]) * ac[i]
+    @inbounds nuts.DOC[i] = max(1.0e-10, nuts.DOC[i]) * ac[i]
+    @inbounds nuts.αI[i]  = nuts.αI[i] * p.α * p.Φ *ac[i]
+    @inbounds nuts.Tem[i] = max(1.0e-10, exp(p.TempAe * (1.0/(nuts.Tem[i]+273.15) - (1.0/p.Tempref)))) * p.TempCoeff * ac[i]
+end
+function update_NPT!(nuts, ac, p, arch::Architecture)
+    kernel! = update_NPT_kernel!(device(arch), 256, (size(ac,1)))
+    event = kernel!(nuts, ac, p)
+    wait(device(arch), event)
     return nothing
 end
 
