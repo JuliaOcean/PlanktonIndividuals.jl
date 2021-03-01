@@ -74,20 +74,26 @@ function gen_individuals!(plank, N::Int64, g::Grids, arch::Architecture)
     pqmin = plank.p.Pqmin
     Chl2Cint = plank.p.Chl2Cint
 
-    plank.data.x[1:N]   .= rand(rng_type(arch), N) .* (g.xF[g.Nx+g.Hx+1] - g.xF[g.Hx+1])                   # x
-    plank.data.y[1:N]   .= rand(rng_type(arch), N) .* (g.yF[g.Ny+g.Hy+1] - g.yF[g.Hy+1])                   # y
-    plank.data.z[1:N]   .= rand(rng_type(arch), N) .* (g.zF[g.Nz+g.Hz+1] - g.zF[g.Hz+1]) .+ g.zF[g.Hz+1]   # z
-    plank.data.iS[1:N]  .= max.(1.0, randn(rng_type(arch), N) .* var .+ mean)                              # init_size
-    plank.data.Sz[1:N]  .= copy(plank.data.iS[1:N])                                                        # size
-    plank.data.Bm[1:N]  .= Cquota .* plank.data.Sz[1:N] .* Nsuper                                          # Bm
-    plank.data.Cq[1:N]  .= rand(rng_type(arch), N) .* (cqmax - cqmin)  .+ cqmin                            # Cq
-    plank.data.Cq[1:N]  .= plank.data.Cq[1:N] .* plank.data.Bm[1:N]                                        # Cq
-    plank.data.Nq[1:N]  .= rand(rng_type(arch), N) .* (nqmax - nqmin)  .+ nqmin                            # Nq
-    plank.data.Nq[1:N]  .= plank.data.Nq[1:N] .* plank.data.Bm[1:N]                                        # Nq
-    plank.data.Pq[1:N]  .= rand(rng_type(arch), N) .* (pqmax - pqmin)  .+ pqmin                            # Pq
-    plank.data.Pq[1:N]  .= plank.data.Pq[1:N] .* plank.data.Bm[1:N]                                        # Pq
-    plank.data.chl[1:N] .= plank.data.Bm[1:N] .* Chl2Cint                                                  # Chl
+    plank.data.ac[1:N]  .= 1.0                                                                             # activity
     plank.data.gen[1:N] .= 1.0                                                                             # generation
     plank.data.age[1:N] .= 0.0                                                                             # age
-    plank.data.ac[1:N]  .= 1.0                                                                             # active
+
+    randn!(rng_type(arch), plank.data.iS)
+    rand!(rng_type(arch), plank.data.x)
+    rand!(rng_type(arch), plank.data.y)
+    rand!(rng_type(arch), plank.data.z)
+    rand!(rng_type(arch), plank.data.Cq)
+    rand!(rng_type(arch), plank.data.Nq)
+    rand!(rng_type(arch), plank.data.Pq)
+
+    plank.data.x   .=(plank.data.x .* (g.xF[g.Nx+g.Hx+1] - g.xF[g.Hx+1]) .+ g.xF[g.Hx+1]) .* plank.data.ac   # x
+    plank.data.y   .=(plank.data.y .* (g.yF[g.Ny+g.Hy+1] - g.yF[g.Hy+1]) .+ g.yF[g.Hy+1]) .* plank.data.ac   # y
+    plank.data.z   .=(plank.data.z .* (g.zF[g.Nz+g.Hz+1] - g.zF[g.Hz+1]) .+ g.zF[g.Hz+1]) .* plank.data.ac   # z
+    plank.data.iS  .= max.(1.0, plank.data.iS .* var .+ mean) .* plank.data.ac                               # init_size
+    plank.data.Sz  .= copy(plank.data.iS)                                                                    # size
+    plank.data.Bm  .= Cquota .* plank.data.Sz .* Nsuper                                                      # Bm
+    plank.data.Cq  .=(plank.data.Cq .* (cqmax - cqmin)  .+ cqmin) .* plank.data.Bm                           # Cq
+    plank.data.Nq  .=(plank.data.Nq .* (nqmax - nqmin)  .+ nqmin) .* plank.data.Bm                           # Nq
+    plank.data.Pq  .=(plank.data.Pq .* (pqmax - pqmin)  .+ pqmin) .* plank.data.Bm                           # Pq
+    plank.data.chl .= plank.data.Bm .* Chl2Cint                                                              # Chl
 end
