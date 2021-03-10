@@ -65,7 +65,7 @@ end
     yd, yi = mod(yi, 1), unsafe_trunc(Int, yi)
     zd, zi = mod(zi, 1), unsafe_trunc(Int, zi)
     ##### shift to 1-based indexing and include halo points
-    zi == g.Nz-1 && return tri_interpolation_surface(w, xd, yd, zd, xi+g.Hx+1, yi+g.Hy+1, zi+g.Hz+1)
+    # zi == g.Nz-1 && return tri_interpolation_surface(w, xd, yd, zd, xi+g.Hx+1, yi+g.Hy+1, zi+g.Hz+1)
     return tri_interpolation(w, xd, yd, zd, xi+g.Hx+1, yi+g.Hy+1, zi+g.Hz+1)
 end
 
