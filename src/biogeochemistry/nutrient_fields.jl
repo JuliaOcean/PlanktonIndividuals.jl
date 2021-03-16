@@ -25,7 +25,7 @@ function generate_nutrients(arch, g, source::Array)
     nutrients = nutrients_init(arch, g)
 
     for i in 1:length(nut_names)
-        nutrients[i].data .= fill(source[i],total_size) .* (rand(total_size) .* 0.4 .+ 0.8) |> array_type(arch)
+        nutrients[i].data .= fill(source[i],total_size) .* rand(0.8:1e-4:1.2, total_size) |> array_type(arch)
     end
 
     fill_halo_nut!(nutrients,g)

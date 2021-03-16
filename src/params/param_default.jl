@@ -4,24 +4,24 @@ function bgc_params_default()
         "kw"       => 0.046,              # PAR attenuation (/m)
         "kc"       => 0.04,               # PAR attenuation (m²/mgChl)
         "kDOC"     => 1/30/86400,         # Remineralization rate for DOC, turn over time: a month (per second)
-        "Nit"      => 1/10/86400,         # Nitrification rate for NH4
+        "Nit"      => 1/30/86400,         # Nitrification rate for NH4
         "kDON"     => 1/30/86400,         # Remineralization rate for DON, turn over time: a month (per second)
         "kDOP"     => 1/30/86400,         # Remineralization rate for DON, turn over time: a month (per second)
         "kPOC"     => 1/30/86400,         # Remineralization rate for POC, turn over time: a month (per second)
         "kPON"     => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
         "kPOP"     => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
-        "κh"       => 1.0e-5,             # Horizontal diffusion
-        "κv"       => 1.0e-5,             # Vertical diffusion
-        "κhP"      => 1.0e-6,             # Horizontal diffusion for individuals
-        "κvP"      => 0,                  # Vertical diffusion for individuals
+        "κh"       => 1.0e-6,             # Horizontal diffusion
+        "κv"       => 1.0e-6,             # Vertical diffusion
+        "κhP"      => 0.0e-6,             # Horizontal diffusion for individuals
+        "κvP"      => 0.0e-6,             # Vertical diffusion for individuals
     )
     return params
 end
 
 function phyt_params_default()
     params=Dict(
-        "Nsuper"   => [1e10, 1e10],       # Number of phyto cells each super individual represents
-        "Cquota"   => [1.8e-11, 1.8e-10], # C quota of phyto cells at size = 1.0
+        "Nsuper"   => [1e1, 1e1],         # Number of phyto cells each super individual represents
+        "Cquota"   => [1.8e-11, 1.8e-11], # C quota of phyto cells at size = 1.0
         "mean"     => [1.5, 1.5],         # Mean of the normal distribution of initial phyto individuals
         "var"      => [0.3, 0.3],         # Variance of the normal distribution of initial phyto individuals
         "Chl2Cint" => [0.16, 0.16],       # Initial Chla:C ratio in phytoplankton (mgChl/mmolC)
