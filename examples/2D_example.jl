@@ -16,14 +16,14 @@ grid = gen_Grid(size=(32, 32, 1), spacing=(1, 1, 1))
 
 # Then we use a stream function to generate the flow fields
 
-f(x, y, z) = sin(x/8) + cos(y/8) #stream function
-u(x, y, z) = -sin(y/8)/8
-v(x, y, z) = -cos(x/8)/8
+f(x, y, z) = sin(x*π/16) + cos(y*π/16) #stream function
+u(x, y, z) = -sin(y*π/16)*π/16
+v(x, y, z) = -cos(x*π/16)*π/16
 scal = 2e-2
 ϕ  = [f(x, y, z) for x in grid.xC[3:34], y in grid.yC[3:34], z in grid.zC[3]] .* scal
 uC = [u(x, y, z) for x in grid.xC[3:34], y in grid.yC[3:34], z in grid.zC[3]] .* scal
 vC = [v(x, y, z) for x in grid.xC[3:34], y in grid.yC[3:34], z in grid.zC[3]] .* scal
-wC = zeros(32,32,1)
+wC = zeros(32,32,2)
 
 uF=0.5*(circshift(uC, (1,0))+uC)
 vF=0.5*(circshift(vC, (0,1))+vC)
@@ -77,7 +77,6 @@ trac1 = Plots.heatmap(xC, yC, Array(model.nutrients.DOC.data)[3:34,3:34,3]', cli
 
 ## Arrange the plots side-by-side.
 plt = plot(fl_plot, trac1, size=(800, 400), title=["Individuals" "DOC (mmolC/L)"])
-# display(plt)
 
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
