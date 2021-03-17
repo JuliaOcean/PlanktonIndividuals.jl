@@ -57,11 +57,16 @@ function PI_simulation(model::PI_Model; ΔT, nΔT, diag_freq,
 
     if vels ≠ (;)
         grid_size = (model.grid.Nx, model.grid.Ny, model.grid.Nz)
-        if size(vels.u)[1:3] == size(vels.v)[1:3] == size(vels.w)[1:3] == grid_size
-            vel_copy!(model.timestepper.vel₀, vels.u[:,:,:,1],
-                    vels.v[:,:,:,1], vels.w[:,:,:,1], model.grid)
+        grid_size_w = (model.grid.Nx, model.grid.Ny, model.grid.Nz+1)
+        if size(vels.u)[1:3] == size(vels.v)[1:3] == grid_size
+            if size(vels.w)[1:3] == grid_size_w
+                vel_copy!(model.timestepper.vel₀, vels.u[:,:,:,1],
+                        vels.v[:,:,:,1], vels.w[:,:,:,1], model.grid)
+            else
+                throw(ArgumentError("Dimension mismatch: the size of w must be $(grid_size_w), Nz+1 layers for bounded direction."))
+            end
         else
-            throw(ArgumentError("Dimension mismatch: the size of u, v, and w must be $(grid_size)."))
+            throw(ArgumentError("Dimension mismatch: the size of u and v must be $(grid_size)."))
         end
 
         if size(vels.u)[4] < nΔT

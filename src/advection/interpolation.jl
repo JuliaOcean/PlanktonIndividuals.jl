@@ -29,12 +29,6 @@
                    ψ₁₁₀(xd, yd, zd) * vel[xi+1, yi+1, zi  ] +
                    ψ₁₁₁(xd, yd, zd) * vel[xi+1, yi+1, zi+1])
 
-@inline tri_interpolation_surface(vel, xd, yd, zd, xi, yi, zi) = 
-        @inbounds ((ψ₀₀₀(xd, yd, zd) * vel[xi,   yi,   zi] +
-                    ψ₀₁₀(xd, yd, zd) * vel[xi,   yi+1, zi] +
-                    ψ₁₀₀(xd, yd, zd) * vel[xi+1, yi,   zi] +
-                    ψ₁₁₀(xd, yd, zd) * vel[xi+1, yi+1, zi]) / (1 - zd))
-
 @inline function u_itpl(u, x, y, z, ac, g::Grids) 
     xi = get_xf_index(x, g) * ac
     yi = get_yc_index(y, g) * ac
@@ -65,7 +59,6 @@ end
     yd, yi = mod(yi, 1), unsafe_trunc(Int, yi)
     zd, zi = mod(zi, 1), unsafe_trunc(Int, zi)
     ##### shift to 1-based indexing and include halo points
-    # zi == g.Nz-1 && return tri_interpolation_surface(w, xd, yd, zd, xi+g.Hx+1, yi+g.Hy+1, zi+g.Hz+1)
     return tri_interpolation(w, xd, yd, zd, xi+g.Hx+1, yi+g.Hy+1, zi+g.Hz+1)
 end
 

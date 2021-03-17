@@ -77,7 +77,7 @@ trac1 = Plots.heatmap(xC, yC, Array(model.nutrients.DOC.data)[3:34,3:34,3]', cli
 
 ## Arrange the plots side-by-side.
 plt = plot(fl_plot, trac1, size=(800, 400), title=["Individuals" "DOC (mmolC/L)"])
-display(plt)
+# display(plt)
 
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}

@@ -12,12 +12,12 @@ TP = TP + sum(model.individuals.phytos.sp1.data.Pq .+
 
 uvel = zeros(1,1,16,11)
 vvel = zeros(1,1,16,11)
-wvel = zeros(1,1,16,11)
+wvel = zeros(1,1,17,11)
 
 for i in 1:11
     uvel[:,:,:,i] .= randn(1,1,16) .* 1e-4
     vvel[:,:,:,i] .= randn(1,1,16) .* 1e-4
-    wvel[:,:,:,i] .= randn(1,1,16) .* 1e-4
+    wvel[:,:,:,i] .= randn(1,1,17) .* 1e-4
 end
 
 sim = PI_simulation(model, ΔT = 60, nΔT = 10, diag_freq = 3600, 
