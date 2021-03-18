@@ -24,6 +24,7 @@ end
 """
     gen_Grid(size = (Nx, Ny, Nz), spacing = (Δx, Δy, Δz), halo = (2, 2, 2))
 Creats a `Grids` struct with `size = (Nx, Ny, Nz)` grid points.
+The topology is fixes as (Periodic, Periodic, Bounded)
 
 Keyword Arguments
 =================
@@ -34,6 +35,7 @@ Keyword Arguments
 -  `halo` (optional): A tuple of integers that specifies the size of the halo region of cells
                         surrounding the physical interior for each direction.
                         `halo` is a 3-tuple no matter for 3D, 2D, or 1D model.
+                        At least 2 halo points are needed for DST3FL advection scheme.
 """
 function gen_Grid(;size, spacing, halo = (2, 2, 2))
     Nx, Ny, Nz = size
