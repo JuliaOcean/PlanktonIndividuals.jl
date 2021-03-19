@@ -1,4 +1,4 @@
-using Documenter
+using Documenter, Literate
 using PlanktonIndividuals
 
 EXAMPLE = joinpath(@__DIR__, "..", "examples", "vertical_2D_example.jl")
