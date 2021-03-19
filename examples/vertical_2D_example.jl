@@ -16,19 +16,20 @@ grid = gen_Grid(size=(128, 1, 128), spacing=(1, 1, 1))
 
 # Then we use a stream function to generate the flow fields
 
-f(x, y, z) = cos(x*2π/128)*cos(z*2π/128) #stream function
-u(x, y, z) = -sin(z*2π/128)*2π/128
-w(x, y, z) = sin(x*2π/128)*2π/128
 scal = 2e-2
-ϕ  = [f(x, y, z) for x in grid.xC[3:130], y in grid.yC[3:3], z in grid.zC[3:130]] .* scal
+f(x, y, z) = scal*cos(x*2π/128)*cos(z*2π/128) #stream function
 
-uF = [u(x, y, z) for x in grid.xF[3:131], y in grid.yF[3:3], z in grid.zF[3:131]] .* scal # array size is (129,1,129)
-wF = [w(x, y, z) for x in grid.xF[3:131], y in grid.yF[3:3], z in grid.zF[3:131]] .* scal # array size is (129,1,129)
-vF = zeros(128,1,128)
+ϕcorners=[f(x,0.,z) for x in 0:128, z=0:128]
+ϕcenters=[f(x,0.,z) for x in 0.5:128, z=0.5:128]
 
-uvels = fill(uF[1:128,1:1,1:128], 2)
-vvels = fill(vF, 2)
-wvels = fill(wF[1:128,1:1,1:129], 2)
+uu=-diff(ϕcorners,dims=2)[1:end-1,:]
+ww=diff(ϕcorners,dims=1)
+uu=reshape(uu,(128,1,128))
+ww=reshape(ww,(128,1,129))
+
+uvels = fill(uu, 2)
+vvels = fill(0*uu, 2)
+wvels = fill(ww, 2)
 uvels = cat(uvels..., dims=4)
 vvels = cat(vvels..., dims=4)
 wvels = cat(wvels..., dims=4)
@@ -61,25 +62,38 @@ for i in 1:60
     update!(sim)
 end
 
+function plot(model::PI_Model)
 ## Coordinate arrays for plotting
 xC, zC = collect(model.grid.xC)[3:130], collect(model.grid.zC)[3:130]
 
 ## heatmap of the flow field
-fl_plot = heatmap(xC, zC, ϕ', xlabel="x (m)", ylabel="z (m)", color=:balance, fmt=:png)
+fl_plot = contourf(xC, zC, ϕcenters', xlabel="x (m)", ylabel="z (m)", color=:balance, fmt=:png, c=:delta, colorbar=false)
 
 ## a scatter plot embeded in the flow fields
 px = Array(model.individuals.phytos.sp1.data.x)
 pz = Array(model.individuals.phytos.sp1.data.z)
 Plots.scatter!(fl_plot, px, pz, ms=5, color = :red, legend=:none)
 
+return fl_plot
+end
+
+plot(model)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # Or you can use the following code to generate an animation
 #
 # ```
 # anim = @animate for i in 1:100
-#     update!(sim)
+#    update!(sim)
+#    plot(model)
+# end
+# gif(anim, "anim_fps15.gif", fps = 15)
+# ```
 
+#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
+# ## Older code that may need updating?
+#
+# ```
 #   ## Coordinate arrays for plotting
 #     xC, zC = collect(model.grid.xC)[3:130], collect(model.grid.zC)[3:130]
 
