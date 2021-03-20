@@ -89,7 +89,7 @@ end
 plot(model)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# Or you can use the following code to generate an animation
+# Or you can use the following code to generate an animation like below
 #
 # ```
 # anim = @animate for i in 1:120
@@ -98,3 +98,4 @@ plot(model)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)
 # ```
+# ![animation](https://github.com/JuliaOcean/PlanktonIndividuals.jl/raw/master/examples/figures/anim_vertical_2D.gif)
