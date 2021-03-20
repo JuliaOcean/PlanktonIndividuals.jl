@@ -1,6 +1,8 @@
 .DS_Store
 src/.ipynb_checkpoints/
 src/model_update.ipynb
+docs/Manifest.toml
+test/Manifest.toml
 devel/
 notes/
 results/
