@@ -16,11 +16,11 @@ grid = gen_Grid(size=(128, 1, 128), spacing=(1, 1, 1))
 
 # Then we use a stream function to generate the flow fields
 
-scal = 2e-2
-f(x, y, z) = scal*cos(x*2π/128)*cos(z*2π/128) #stream function
+scal = 2e-1
+f(x, y, z) = scal*sin(x*2π/128)*sin(z*2π/128) #stream function
 
-ϕcorners=[f(x,0.,z) for x in 0:128, z=0:128]
-ϕcenters=[f(x,0.,z) for x in 0.5:128, z=0.5:128]
+ϕcorners=[f(x,0.,z) for x in 0:128, z in -128:0]
+ϕcenters=[f(x,0.,z) for x in 0.5:128, z in -128:-0.5]
 
 uu=-diff(ϕcorners,dims=2)[1:end-1,:]
 ww=diff(ϕcorners,dims=1)
@@ -56,25 +56,34 @@ sim = PI_simulation(model, ΔT = 60, nΔT = 1, diag_freq = 3600,
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Run the Model
 #
-# Finally, we run the model for 60 time steps (1 hour) and plot the individuals and DOC field.
-
-for i in 1:60
-    update!(sim)
-end
-
+# Finaly, we run the model and plot the distribution of individuals as well as nutrient fields
+# We use Plots.jl to plot individuals and nutrient fields.
+#
 function plot(model::PI_Model)
-## Coordinate arrays for plotting
-xC, zC = collect(model.grid.xC)[3:130], collect(model.grid.zC)[3:130]
+    ## Coordinate arrays for plotting
+    xC, zC = collect(model.grid.xC)[3:130], collect(model.grid.zC)[3:130]
 
-## heatmap of the flow field
-fl_plot = contourf(xC, zC, ϕcenters', xlabel="x (m)", ylabel="z (m)", color=:balance, fmt=:png, c=:delta, colorbar=false)
+    ## heatmap of the flow field
+    fl_plot = Plots.contourf(xC, zC, ϕcenters', xlabel="x (m)", ylabel="z (m)", color=:balance, fmt=:png, colorbar=false)
 
-## a scatter plot embeded in the flow fields
-px = Array(model.individuals.phytos.sp1.data.x)
-pz = Array(model.individuals.phytos.sp1.data.z)
-Plots.scatter!(fl_plot, px, pz, ms=5, color = :red, legend=:none)
+    ## a scatter plot embeded in the flow fields
+    px = Array(model.individuals.phytos.sp1.data.x)
+    pz = Array(model.individuals.phytos.sp1.data.z)
+    Plots.scatter!(fl_plot, px, pz, ms=5, color = :red, legend=:none)
 
-return fl_plot
+    ## DOC field
+    trac1 = Plots.contourf(xC, zC, Array(model.nutrients.DOC.data)[3:130,3,3:130]', xlabel="x (m)", ylabel="z (m)", clims=(0.5, 1.1), fmt=:png)
+
+    ## Arrange the plots side-by-side.
+    plt = Plots.plot(fl_plot, trac1, size=(800, 400),
+        title=[lpad(model.t÷86400,2,"0")*"day "*lpad(model.t÷3600-24*(model.t÷86400),2,"0")*"hour" "DOC (mmolC/L)"])
+
+    return plt
+end
+#
+# We run the model for 120 time steps (2 hour) and plot the individuals and DOC field.
+for i in 1:120
+    update!(sim)
 end
 
 plot(model)
@@ -83,34 +92,9 @@ plot(model)
 # Or you can use the following code to generate an animation
 #
 # ```
-# anim = @animate for i in 1:100
+# anim = @animate for i in 1:120
 #    update!(sim)
 #    plot(model)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)
-# ```
-
-#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## Older code that may need updating?
-#
-# ```
-#   ## Coordinate arrays for plotting
-#     xC, zC = collect(model.grid.xC)[3:130], collect(model.grid.zC)[3:130]
-
-#     ## heatmap of the flow field
-#     fl_plot = heatmap(xC, zC, ϕ[:,1,:], xlabel="x (m)", ylabel="y (m)", color=:balance, clims=(-5e-2, 5e-2))
-
-#     ## a scatter plot embeded in the flow fields
-#     px = Array(model.individuals.phytos.sp1.data.x)
-#     pz = Array(model.individuals.phytos.sp1.data.z)
-#     Plots.scatter!(fl_plot, px, pz, ms=5, color = :red, legend=:none)
-
-#     ## DOC field
-#     trac1 = Plots.heatmap(xC, zC, Array(model.nutrients.DOC.data)[3:130,3,3:130]', clims=(0.10,1.05), xlabel="x (m)", ylabel="z (m)")
-
-#     ## Arrange the plots side-by-side.
-#     plot(fl_plot, trac1, size=(1200, 400),
-#          title=[lpad(i÷1440,2,"0")*"day "*lpad(i÷60-24*(i÷1440),2,"0")*"hour" "DOC (mmolC/L)"])
-# end
-# gif(anim, "anim.gif", fps = 15)
 # ```
