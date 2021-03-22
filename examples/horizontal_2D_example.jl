@@ -12,29 +12,28 @@ using PlanktonIndividuals, Plots
 # ## 2. Generate Flow Fields
 #
 # First we'll generate grid information
-grid = gen_Grid(size=(32, 32, 1), spacing=(1, 1, 1))
+grid = gen_Grid(size=(128, 128, 1), spacing=(1, 1, 1))
 
-# Then we use a stream function to generate the flow fields
+# Then we use a stream function to generate the flow field which is a double-gyre configuration
+scal = 3e-1
+f(x, y, z) = scal*(0.3*sin(x*1π/128)*sin(y*2π/128)+0.7*sin(x*2π/128)*sin(y*1π/128)) #stream function
 
-f(x, y, z) = sin(x*π/16) + cos(y*π/16) #stream function
-u(x, y, z) = -sin(y*π/16)*π/16
-v(x, y, z) = -cos(x*π/16)*π/16
-scal = 2e-2
-ϕ  = [f(x, y, z) for x in grid.xC[3:34], y in grid.yC[3:34], z in grid.zC[3]] .* scal
-uC = [u(x, y, z) for x in grid.xC[3:34], y in grid.yC[3:34], z in grid.zC[3]] .* scal
-vC = [v(x, y, z) for x in grid.xC[3:34], y in grid.yC[3:34], z in grid.zC[3]] .* scal
-wC = zeros(32,32,2)
+ϕcorners=[f(x,y,0.) for x in 0:128, y in 0:128]
+ϕcenters=[f(x,y,0.) for x in 0.5:128, y in 0.5:128]
 
-uF=0.5*(circshift(uC, (1,0))+uC)
-vF=0.5*(circshift(vC, (0,1))+vC)
-wF=0.5*(circshift(wC, (0,0))+wC)
+uu=-diff(ϕcorners,dims=2)[1:end-1,:]
+vv=diff(ϕcorners,dims=1)[:,1:end-1]
+uu=reshape(uu,(128,128,1))
+vv=reshape(vv,(128,128,1))
+ww=zeros(128,128,2)
 
-uvels = fill(uF, 2)
-vvels = fill(vF, 2)
-wvels = fill(wF, 2)
+uvels = fill(uu, 2)
+vvels = fill(vv, 2)
+wvels = fill(ww, 2)
 uvels = cat(uvels..., dims=4)
 vvels = cat(vvels..., dims=4)
 wvels = cat(wvels..., dims=4)
+
 nothing
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
@@ -57,49 +56,46 @@ sim = PI_simulation(model, ΔT = 60, nΔT = 1, diag_freq = 3600,
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Run the Model
 #
-# Finally, we run the model for 60 time steps (1 hour) and plot the individuals and DOC field.
+# Finaly, we run the model and plot the distribution of individuals as well as nutrient fields
+# We use Plots.jl to plot individuals and nutrient fields.
+#
+function plot(model::PI_Model)
+    ## Coordinate arrays for plotting
+    xC, yC = collect(model.grid.xC)[3:130], collect(model.grid.yC)[3:130]
 
-for i in 1:60
+    ## heatmap of the flow field
+    fl_plot = Plots.contourf(xC, yC, ϕcenters', xlabel="x (m)", ylabel="y (m)", color=:balance, fmt=:png, colorbar=false)
+
+    ## a scatter plot embeded in the flow fields
+    px = Array(model.individuals.phytos.sp1.data.x)
+    py = Array(model.individuals.phytos.sp1.data.y)
+    Plots.scatter!(fl_plot, px, py, ms=5, color = :red, legend=:none)
+
+    ## DOC field
+    trac1 = Plots.contourf(xC, yC, Array(model.nutrients.DOC.data)[3:130,3:130,3]', xlabel="x (m)", ylabel="y (m)", clims=(0.5, 1.1), fmt=:png)
+
+    ## Arrange the plots side-by-side.
+    plt = Plots.plot(fl_plot, trac1, size=(800, 400),
+        title=[lpad(model.t÷86400,2,"0")*"day "*lpad(model.t÷3600-24*(model.t÷86400),2,"0")*"hour" "DOC (mmolC/L)"])
+
+    return plt
+end
+#
+# We run the model for 120 time steps (2 hour) and plot the individuals and DOC field.
+for i in 1:120
     update!(sim)
 end
 
-## Coordinate arrays for plotting
-xC, yC = collect(model.grid.xC)[3:34], collect(model.grid.yC)[3:34]
-
-## heatmap of the flow field
-fl_plot = heatmap(xC, yC, ϕ', xlabel="x (m)", ylabel="y (m)", color=:balance, xlims=(0,32), ylims=(0,32), clims=(-5e-2, 5e-2), fmt=:png)
-
-## a scatter plot embeded in the flow fields
-px = Array(model.individuals.phytos.sp1.data.x)
-py = Array(model.individuals.phytos.sp1.data.y)
-Plots.scatter!(fl_plot, px, py, ms=5, color = :red, legend=:none)
-
+plot(model)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# Or you can use the following code to generate an animation
+# Or you can use the following code to generate an animation like below
 #
 # ```
-# anim = @animate for i in 1:100
-#     update!(sim)
-#   
-#     ## Coordinate arrays for plotting
-#     xC, yC = collect(model.grid.xC)[3:34], collect(model.grid.yC)[3:34]
-#
-#     ## heatmap of the flow field
-#     fl_plot = heatmap(xC, yC, ϕ', xlabel="x (m)", ylabel="y (m)", color=:balance, xlims=(0,32), ylims=(0,32), clims=(-5e-2, 5e-2))
-#
-#     ## a scatter plot embeded in the flow fields
-#     px = Array(model.individuals.phytos.sp1.data.x)
-#     py = Array(model.individuals.phytos.sp1.data.y)
-#     Plots.scatter!(fl_plot, px, py, ms=5, color = :red, legend=:none)
-#
-#     ## DOC field
-#     trac1 = Plots.heatmap(xC, yC, Array(model.nutrients.DOC.data)[3:34,3:34,3]', clims=(0.10,1.05), xlabel="x (m)", ylabel="y (m)")
-#
-#     ## Arrange the plots side-by-side.
-#     plot(fl_plot, trac1, size=(1200, 400),
-#          title=[lpad(i÷1440,2,"0")*"day "*lpad(i÷60-24*(i÷1440),2,"0")*"hour" "DOC (mmolC/L)"])
+# anim = @animate for i in 1:120
+#    update!(sim)
+#    plot(model)
 # end
-#
-# gif(anim, "anim.gif", fps = 15)
+# gif(anim, "anim_fps15.gif", fps = 15)
 # ```
+# ![animation](https://github.com/JuliaOcean/PlanktonIndividuals.jl/raw/master/examples/figures/anim_horizontal_2D.gif)
