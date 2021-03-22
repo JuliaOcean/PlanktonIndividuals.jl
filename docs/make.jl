@@ -11,15 +11,19 @@ for i in 1:length(examples)
     # Literate.notebook(INPUT, OUTPUT, execute = true)
 end
 
+example_pages = [
+    "Vertical Two-Dimensional Example" => "generated/vertical_2D_example.md",
+    "Horizontal Two-Dimensional Example" => "generated/horizontal_2D_example.md"
+]
+
 makedocs(;
          modules = [PlanktonIndividuals],
          format = Documenter.HTML(),
          pages = [
-             "Home" => "home.md",
+             "Home" => "index.md",
             #  "Various" => "various.md",
              "Equations" => "equations.md",
-             "generated/vertical_2D_example.md",
-             "generated/horizontal_2D_example.md",
+             "Examples"  => example_pages
              ],
          repo="https://github.com/JuliaOcean/PlanktonIndividuals.jl/blob/{commit}{path}#L{line}",
          sitename = "PlanktonIndividuals.jl",

@@ -63,7 +63,7 @@ function plot(model::PI_Model)
     ## Coordinate arrays for plotting
     xC, zC = collect(model.grid.xC)[3:130], collect(model.grid.zC)[3:130]
 
-    ## heatmap of the flow field
+    ## contour of the flow field
     fl_plot = Plots.contourf(xC, zC, ϕcenters', xlabel="x (m)", ylabel="z (m)", color=:balance, fmt=:png, colorbar=false)
 
     ## a scatter plot embeded in the flow fields
