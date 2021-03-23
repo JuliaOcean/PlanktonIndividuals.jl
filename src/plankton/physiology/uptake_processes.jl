@@ -95,10 +95,13 @@ function update_quotas_1!(plank, proc, ΔT, arch)
 end
 
 ##### calculate DOC uptake rate (mmolC/individual/second)
+##### DOC uptake needs support of photosynthesis for at least 5% of total C acquisition.
 @kernel function calc_organic_uptake_kernel!(plank, proc, nuts, p)
     i = @index(Global)
     @inbounds proc.VDOC[i] = calc_uptake(nuts.DOC[i], nuts.Tem[i], plank.Cq[i], plank.Cq[i], plank.Bm[i], plank.Sz[i],
                                          p.Cqmax, p.Cqmin, p.VDOCmax, p.VDOC_b, p.KsatDOC, 0.0) * plank.ac[i]
+
+    @inbounds proc.VDOC[i] = proc.VDOC[i] * isless(0.05, proc.VDOC[i]/(proc.VDOC[i]+proc.PS[i]))
 end
 function calc_organic_uptake!(plank, proc, nuts, p, arch::Architecture)
     kernel! = calc_organic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
