@@ -6,40 +6,10 @@ Documentation for `PlanktonIndividuals.jl` which simulates the behavior of an en
 
 Here's the introduction of `PlanktonIndividuals.jl`
 
-<!-- ## Use Example
+## Geting help
 
-Here we use [Oceananigans.jl](https://github.com/climate-machine/Oceananigans.jl) to generate velocity fields and then use those to drive the individual-based model.
-
-```
-Pkg.develop(PackageSpec(path="PlanktonIndividuals.jl"))
-using PlanktonIndividuals
-p = dirname(pathof(PlanktonIndividuals))
-include(joinpath(p,"Oceananigans_PlanktonIndividuals.jl"))
-``` -->
-
-## Unit Testing
-
-The tests use input files from `samples/`. The test suite includes zero-, one-, two-, and three-dimensional simulations.
-
-```
-Pkg.develop(PackageSpec(path="PlanktonIndividuals.jl"))
-Pkg.test("PlanktonIndividuals")
-```
-
-_Contents:_
-
-```@contents
-Pages = ["home.md", "equations.md"]
-Depth = 3
-```
-
-## API Guide
-
-```@index
-```
-
-```@autodocs
-Modules = [PlanktonIndividuals]
-Order   = [:type,:function]
-```
-
+If you are interested in using `PlanktonIndividuals.jl` or are trying to figure out how to use it,
+please feel free to ask us questions and get in touch!  
+If you're trying to set up a model then check out the examples and model setup documentation.
+Please feel free to [open an issue](https://github.com/JuliaOcean/PlanktonIndividuals.jl/issues)
+if you have any questions, comments, suggestions, etc!  
