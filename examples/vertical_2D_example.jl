@@ -17,7 +17,7 @@ grid = gen_Grid(size=(128, 1, 128), spacing=(1, 1, 1))
 # Then we use a stream function to generate the flow fields
 
 scal = 2e-1
-f(x, y, z) = scal*sin(x*2π/128)*sin(z*2π/128) #stream function
+f(x, y, z) = scal*sin(x*2π/128)*sin(z*π/128) #stream function
 
 ϕcorners=[f(x,0.,z) for x in 0:128, z in -128:0]
 ϕcenters=[f(x,0.,z) for x in 0.5:128, z in -128:-0.5]
