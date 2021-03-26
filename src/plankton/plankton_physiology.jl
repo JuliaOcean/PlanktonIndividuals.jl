@@ -1,3 +1,10 @@
+
+function plankton_without_physiology!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture)
+    update_NPT!(nuts, plank.ac, p, arch)
+    ##### diagnostic for individual distribution
+    diags_proc!(diags_spcs.num, plank.ac, plank.ac, plank.xi, plank.yi, plank.zi, arch)
+end
+
 function plankton_physiology!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture)
     update_NPT!(nuts, plank.ac, p, arch)
     plankton_update!(plank, nuts, proc, p, ΔT, t, arch)
