@@ -91,7 +91,7 @@ using KernelAbstractions.Extras.LoopInfo: @unroll
     @unroll for k in 1:g.Nz
         ii = i + g.Hx
         jj = j + g.Hy
-        kk = g.Nz - k + 1 + g.Hz
+        kk = k + g.Hz
         atten = (chl[ii,jj,kk,1]/g.V * kc + kw) * g.Δz
         par[ii,jj,kk] = PARF[i,j] * (1.0 - exp(-atten)) / atten
         PARF[i,j] = PARF[i,j] * exp(-atten)

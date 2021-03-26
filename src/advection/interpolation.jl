@@ -6,8 +6,8 @@
 @inline get_yc_index(y, grid::RegularRectilinearGrid) = @inbounds (y - grid.yC[grid.Hy+1]) / grid.Δy 
 @inline get_yf_index(y, grid::RegularRectilinearGrid) = @inbounds (y - grid.yF[grid.Hy+1]) / grid.Δy 
 
-@inline get_zc_index(z, grid::RegularRectilinearGrid) = @inbounds (z - grid.zC[grid.Hz+1]) / grid.Δz 
-@inline get_zf_index(z, grid::RegularRectilinearGrid) = @inbounds (z - grid.zF[grid.Hz+1]) / grid.Δz 
+@inline get_zc_index(z, grid::RegularRectilinearGrid) = @inbounds (grid.zC[grid.Hz+1] - z) / grid.Δz 
+@inline get_zf_index(z, grid::RegularRectilinearGrid) = @inbounds (grid.zF[grid.Hz+1] - z) / grid.Δz 
 
 ##### trilinear interpolation
 @inline ψ₀₀₀(xd, yd, zd) = (1 - xd) * (1 - yd) * (1 - zd)

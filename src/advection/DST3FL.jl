@@ -69,5 +69,5 @@ end
     0.5 * (Trans_y(i, j, k, g, v) - abs(Trans_y(i, j, k, g, v))) * (c[i, j,   k] - Ψy⁻(i, j, k, g, v, c, ΔT) * δy⁰(i, j, k, c))
 
 @inline adv_flux_z(i, j, k, g::RegularRectilinearGrid, w, c, ΔT) =
-    0.5 * (Trans_z(i, j, k, g, w) + abs(Trans_z(i, j, k, g, w))) * (c[i, j, k-1] + Ψz⁺(i, j, k, g, w, c, ΔT) * δz⁰(i, j, k, c)) +
-    0.5 * (Trans_z(i, j, k, g, w) - abs(Trans_z(i, j, k, g, w))) * (c[i, j,   k] - Ψz⁻(i, j, k, g, w, c, ΔT) * δz⁰(i, j, k, c))
+    0.5 * (Trans_z(i, j, k, g, w) + abs(Trans_z(i, j, k, g, w))) * (c[i, j, k  ] + Ψz⁻(i, j, k, g, w, c, ΔT) * δz⁰(i, j, k, c)) +
+    0.5 * (Trans_z(i, j, k, g, w) - abs(Trans_z(i, j, k, g, w))) * (c[i, j, k-1] - Ψz⁺(i, j, k, g, w, c, ΔT) * δz⁰(i, j, k, c))
