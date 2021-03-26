@@ -10,13 +10,13 @@ end
     return x
 end
 
-@kernel function periodic_domain_kernel!(plank, ac, g::Grids)
+@kernel function periodic_domain_kernel!(plank, ac, g::RegularRectilinearGrid)
     i = @index(Global)
     plank.x[i] = periodic_boundary(plank.x[i], g.xF[g.Hx+1], g.xF[g.Hx+1+g.Nx]) * ac[i]
     plank.y[i] = periodic_boundary(plank.y[i], g.yF[g.Hy+1], g.yF[g.Hy+1+g.Ny]) * ac[i]
     plank.z[i] =  bounded_boundary(plank.z[i], g.zF[g.Hz+1], g.zF[g.Hz+1+g.Nz]) * ac[i]
 end
-function periodic_domain!(plank, ac, g::Grids, arch::Architecture)
+function periodic_domain!(plank, ac, g::RegularRectilinearGrid, arch::Architecture)
     kernel! = periodic_domain_kernel!(device(arch), 256, (size(ac,1)))
     event = kernel!(plank, ac, g)
     wait(device(arch), event)

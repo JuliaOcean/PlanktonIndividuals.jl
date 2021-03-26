@@ -3,7 +3,7 @@ mutable struct Diagnostics
     tr::NamedTuple         # for tracers
 end
 
-function diags_setup(ntrs, nprocs, g::Grids, Nsp::Int64, arch::Architecture)
+function diags_setup(ntrs, nprocs, g::RegularRectilinearGrid, Nsp::Int64, arch::Architecture)
     ntr   = length(ntrs)
     nproc = length(nprocs)
     trs   = []

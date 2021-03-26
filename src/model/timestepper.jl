@@ -15,7 +15,7 @@ mutable struct timestepper
     nuts::AbstractArray # a StructArray of nutrients of each individual
 end
 
-function timestepper(arch::Architecture, g::Grids, N, cap)
+function timestepper(arch::Architecture, g::RegularRectilinearGrid, N, cap)
     vel₀ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
     vel½ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
     vel₁ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))

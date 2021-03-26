@@ -86,7 +86,7 @@ end
 
 using KernelAbstractions.Extras.LoopInfo: @unroll
 ##### calculate PAR field based on Chla field and depth
-@kernel function calc_par_kernel!(par, chl, PARF, g::Grids, kc, kw)
+@kernel function calc_par_kernel!(par, chl, PARF, g::RegularRectilinearGrid, kc, kw)
     i, j = @index(Global, NTuple)
     @unroll for k in 1:g.Nz
         ii = i + g.Hx
@@ -97,7 +97,7 @@ using KernelAbstractions.Extras.LoopInfo: @unroll
         PARF[i,j] = PARF[i,j] * exp(-atten)
     end
 end
-function calc_par!(par, arch::Architecture, chl, PARF, g::Grids, kc, kw)
+function calc_par!(par, arch::Architecture, chl, PARF, g::RegularRectilinearGrid, kc, kw)
     kernel! = calc_par_kernel!(device(arch), (16,16), (g.Nx, g.Ny))
     event = kernel!(par, chl, PARF, g, kc, kw)
     wait(device(arch), event)

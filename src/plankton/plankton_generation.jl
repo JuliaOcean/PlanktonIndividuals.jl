@@ -61,7 +61,7 @@ function individuals(params::Dict, arch::Architecture, Nsp, N, cap)
     end
 end
 
-function gen_individuals!(plank, N::Int64, g::Grids, arch::Architecture)
+function gen_individuals!(plank, N::Int64, g::RegularRectilinearGrid, arch::Architecture)
     mean = plank.p.mean
     var = plank.p.var
     Cquota = plank.p.Cquota

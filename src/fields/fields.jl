@@ -1,9 +1,9 @@
 struct Field
     data::AbstractArray{Float64,3}
-    grid::Grids
+    grid::RegularRectilinearGrid
 end
 
-function Field(arch::Architecture, g::Grids)
+function Field(arch::Architecture, g::RegularRectilinearGrid)
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
     data = zeros(total_size) |> array_type(arch)
     return Field(data,g)

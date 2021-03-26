@@ -1,5 +1,5 @@
 ##### update nutrient fields
-function nut_update!(nutrients, Gcs, nut_temp, arch::Architecture, g::Grids, params, vel, consume, ΔT)
+function nut_update!(nutrients, Gcs, nut_temp, arch::Architecture, g::RegularRectilinearGrid, params, vel, consume, ΔT)
     ##### compute advection tendency
     nut_advection!(nutrients, nut_temp, Gcs, vel, g, ΔT, arch)
 
@@ -18,7 +18,7 @@ function nut_update!(nutrients, Gcs, nut_temp, arch::Architecture, g::Grids, par
     fill_halo_nut!(nutrients, g)
 end
 
-function nut_update!(nutrients, Gcs, nut_temp, g::Grids, params, consume, ΔT)
+function nut_update!(nutrients, Gcs, nut_temp, g::RegularRectilinearGrid, params, consume, ΔT)
     # compute biogeochemical forcings of nutrients,for each time step
     nut_forcing!(Gcs, nut_temp, nutrients, params, ΔT)
 

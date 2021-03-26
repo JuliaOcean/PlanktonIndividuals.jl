@@ -1,11 +1,11 @@
 ##### find indices (halo points included)
-@kernel function find_inds_kernel!(plank, g::Grids)
+@kernel function find_inds_kernel!(plank, g::RegularRectilinearGrid)
     i = @index(Global)
     @inbounds plank.xi[i] = unsafe_trunc(Int, get_xf_index(plank.x[i], g) * plank.ac[i]) + g.Hx + 1
     @inbounds plank.yi[i] = unsafe_trunc(Int, get_yf_index(plank.y[i], g) * plank.ac[i]) + g.Hy + 1
     @inbounds plank.zi[i] = unsafe_trunc(Int, get_zf_index(plank.z[i], g) * plank.ac[i]) + g.Hz + 1
 end
-function find_inds!(plank, g::Grids, arch::Architecture)
+function find_inds!(plank, g::RegularRectilinearGrid, arch::Architecture)
     kernel! = find_inds_kernel!(device(arch), 256, (size(plank.ac,1)))
     event = kernel!(plank, g)
     wait(device(arch), event)

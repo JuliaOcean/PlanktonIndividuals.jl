@@ -29,7 +29,7 @@ function write_nut_nc_each_step(nut::NamedTuple, t::Int64, filepath::String)
 end
 
 ##### write a brief summary of nutrients at each time step into a txt file
-function write_nut_cons(g::Grids, gtr::NamedTuple, nutₜ::NamedTuple, t::Int64, filepath)
+function write_nut_cons(g::RegularRectilinearGrid, gtr::NamedTuple, nutₜ::NamedTuple, t::Int64, filepath)
     Σgtrⁿ = sum(interior(gtr.NH4.data, g) .* g.V) +
             sum(interior(gtr.NO3.data, g) .* g.V) +
             sum(interior(gtr.DON.data, g) .* g.V) +
@@ -69,7 +69,7 @@ function write_nut_cons(g::Grids, gtr::NamedTuple, nutₜ::NamedTuple, t::Int64,
     println(Pio,@sprintf("%3.0f  %2.2f  %.16E  %.16E  %.4f",day, hour, Σgtrᵖ, TP, mean(interior(nutₜ.PO4.data, g))))
     close(Cio);close(Nio);close(Pio);
 end
-function write_nut_cons(g::Grids, nutₜ::NamedTuple, t::Int64, filepath)
+function write_nut_cons(g::RegularRectilinearGrid, nutₜ::NamedTuple, t::Int64, filepath)
     Cio = open(filepath*"cons_C.txt","a")
     Nio = open(filepath*"cons_N.txt","a")
     Pio = open(filepath*"cons_P.txt","a")

@@ -1,5 +1,5 @@
 abstract type AbstractGrid{FT, A} end
-struct Grids{FT, A} <: AbstractGrid{FT, A}
+struct RegularRectilinearGrid{FT, A} <: AbstractGrid{FT, A}
     xC::A
     yC::A
     zC::A
@@ -37,30 +37,30 @@ Keyword Arguments
                         `halo` is a 3-tuple no matter for 3D, 2D, or 1D model.
                         At least 2 halo points are needed for DST3FL advection scheme.
 """
-function gen_Grid(;size, spacing, halo = (2, 2, 2))
+function RegularRectilinearGrid(;size, spacing, halo = (2, 2, 2))
     Nx, Ny, Nz = size
     Hx, Hy, Hz = halo
     Δx, Δy, Δz = spacing
 
     xF = range(-Hx * Δx, (Nx + Hx - 1) * Δx, length = Nx + 2 * Hx)
     yF = range(-Hy * Δy, (Ny + Hy - 1) * Δy, length = Ny + 2 * Hy)
-    zF = range(-(Hz + Nz) * Δz, (Hz -1) * Δz, length = Nz + 2 * Hz)
+    zF = -range(-Hz * Δz, (Nz + Hz - 1) * Δz, length = Nz + 2 * Hz)
 
     xC = range((0.5 - Hx) * Δx, (Nx + Hx - 0.5) * Δx, length = Nx + 2 * Hx)
     yC = range((0.5 - Hy) * Δy, (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy)
-    zC = range((0.5 - Hz - Nz) * Δz, (Hz - 0.5) * Δz, length = Nz + 2 * Hz)
+    zC = -range((0.5 - Hz) * Δz, (Nz + Hz - 0.5) * Δz, length = Nz + 2 * Hz)
 
     Ax = Δy*Δz
     Ay = Δx*Δz
     Az = Δx*Δy
     V  = Δx*Δy*Δz
 
-    return Grids(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz)
+    return RegularRectilinearGrid(xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz)
 end
 
 import Base: show
 
-function show(io::IO, g::Grids)
+function show(io::IO, g::RegularRectilinearGrid)
     xL, xR = g.xF[g.Hx+1], g.xF[g.Hx+1+g.Nx]
     yL, yR = g.yF[g.Hy+1], g.yF[g.Hy+1+g.Ny]
     zL, zR = g.zF[g.Hz+1], g.zF[g.Hz+1+g.Nz]
