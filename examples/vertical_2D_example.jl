@@ -12,7 +12,7 @@ using PlanktonIndividuals, Plots
 # ## 2. Generate Flow Fields
 #
 # First we'll generate grid information
-grid = gen_Grid(size=(128, 1, 128), spacing=(1, 1, 1))
+grid = RegularRectilinearGrid(size=(128, 1, 128), spacing=(1, 1, 1))
 
 # Then we use a stream function to generate the flow fields
 
@@ -26,6 +26,8 @@ uu=-diff(ϕcorners,dims=2)[1:end-1,:]
 ww=diff(ϕcorners,dims=1)
 uu=reshape(uu,(128,1,128))
 ww=reshape(ww,(128,1,129))
+uu = reverse(uu, dims=3)
+ww = reverse(ww, dims=3)
 
 uvels = fill(uu, 2)
 vvels = fill(0*uu, 2)
@@ -64,7 +66,7 @@ function plot(model::PI_Model)
     xC, zC = collect(model.grid.xC)[3:130], collect(model.grid.zC)[3:130]
 
     ## contour of the flow field
-    fl_plot = Plots.contourf(xC, zC, ϕcenters', xlabel="x (m)", ylabel="z (m)", color=:balance, fmt=:png, colorbar=false)
+    fl_plot = Plots.contourf(xC, reverse(zC), ϕcenters', xlabel="x (m)", ylabel="z (m)", color=:balance, fmt=:png, colorbar=false)
 
     ## a scatter plot embeded in the flow fields
     px = Array(model.individuals.phytos.sp1.data.x)
@@ -72,7 +74,7 @@ function plot(model::PI_Model)
     Plots.scatter!(fl_plot, px, pz, ms=5, color = :red, legend=:none)
 
     ## DOC field
-    trac1 = Plots.contourf(xC, zC, Array(model.nutrients.DOC.data)[3:130,3,3:130]', xlabel="x (m)", ylabel="z (m)", clims=(0.5, 1.1), fmt=:png)
+    trac1 = Plots.contourf(xC, reverse(zC), Array(model.nutrients.DOC.data)[3:130,3,3:130]', xlabel="x (m)", ylabel="z (m)", clims=(0.5, 1.1), fmt=:png)
 
     ## Arrange the plots side-by-side.
     plt = Plots.plot(fl_plot, trac1, size=(800, 400),

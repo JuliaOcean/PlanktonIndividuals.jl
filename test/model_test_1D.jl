@@ -1,6 +1,6 @@
 using PlanktonIndividuals, Serialization
 
-grid = gen_Grid(size = (1, 1, 16), spacing = (32, 32, 2), halo = (2, 2, 2))
+grid = RegularRectilinearGrid(size = (1, 1, 16), spacing = (32, 32, 2), halo = (2, 2, 2))
 
 model = PI_Model(CPUs(), grid) 
 

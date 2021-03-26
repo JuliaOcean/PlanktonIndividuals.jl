@@ -42,8 +42,7 @@ include("$src"*"model/simulations.jl")
 
 export
     # model structures
-    PI_Model, Grids, nutrient_fields,
-    gen_Grid,
+    PI_Model, RegularRectilinearGrid, nutrient_fields,
     Architecture, GPUs, CPUs,
 
     # read input functions

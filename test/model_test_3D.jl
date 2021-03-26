@@ -1,6 +1,6 @@
 using PlanktonIndividuals
 
-grid = gen_Grid(size = (16, 16, 16), spacing = (2, 2, 2), halo = (2, 2, 2))
+grid = RegularRectilinearGrid(size = (16, 16, 16), spacing = (2, 2, 2), halo = (2, 2, 2))
 
 model = PI_Model(CPUs(), grid) 
 

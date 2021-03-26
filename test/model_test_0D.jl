@@ -1,6 +1,6 @@
 using PlanktonIndividuals, Serialization
 
-grid = gen_Grid(size = (1, 1, 1), spacing = (32, 32, 32), halo = (2, 2, 2))
+grid = RegularRectilinearGrid(size = (1, 1, 1), spacing = (32, 32, 32), halo = (2, 2, 2))
 
 
 phyt_params = deserialize(dirname(pathof(PlanktonIndividuals))*"/../test/param5.bin")

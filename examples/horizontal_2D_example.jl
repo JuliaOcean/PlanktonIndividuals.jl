@@ -12,7 +12,7 @@ using PlanktonIndividuals, Plots
 # ## 2. Generate Flow Fields
 #
 # First we'll generate grid information
-grid = gen_Grid(size=(128, 128, 1), spacing=(1, 1, 1))
+grid = RegularRectilinearGrid(size=(128, 128, 1), spacing=(1, 1, 1))
 
 # Then we use a stream function to generate the flow field which is a double-gyre configuration
 scal = 3e-1
