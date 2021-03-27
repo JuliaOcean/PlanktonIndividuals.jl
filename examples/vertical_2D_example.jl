@@ -66,7 +66,7 @@ function plot(model::PI_Model)
     xC, zC = collect(model.grid.xC)[3:130], collect(model.grid.zC)[3:130]
 
     ## contour of the flow field
-    fl_plot = Plots.contourf(xC, reverse(zC), ϕcenters', xlabel="x (m)", ylabel="z (m)", color=:balance, fmt=:png, colorbar=false)
+    fl_plot = Plots.contourf(xC, reverse(zC), rotl90(ϕcenters), xlabel="x (m)", ylabel="z (m)", color=:balance, fmt=:png, colorbar=false)
 
     ## a scatter plot embeded in the flow fields
     px = Array(model.individuals.phytos.sp1.data.x)
@@ -74,7 +74,7 @@ function plot(model::PI_Model)
     Plots.scatter!(fl_plot, px, pz, ms=5, color = :red, legend=:none)
 
     ## DOC field
-    trac1 = Plots.contourf(xC, reverse(zC), Array(model.nutrients.DOC.data)[3:130,3,3:130]', xlabel="x (m)", ylabel="z (m)", clims=(0.5, 1.1), fmt=:png)
+    trac1 = Plots.contourf(xC, reverse(zC), rotl90(Array(model.nutrients.DOC.data)[3:130,3,3:130]), xlabel="x (m)", ylabel="z (m)", clims=(0.5, 1.1), fmt=:png)
 
     ## Arrange the plots side-by-side.
     plt = Plots.plot(fl_plot, trac1, size=(800, 400),
