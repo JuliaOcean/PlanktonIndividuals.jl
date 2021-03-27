@@ -1,13 +1,13 @@
 ##### convert the coordinates into fractional indices at grid cell center and face for a individual at (x,y,z) 
-##### 0-based indexing and excluding halo regions
-@inline get_xc_index(x, grid::RegularRectilinearGrid) = @inbounds (x - grid.xC[grid.Hx+1]) / grid.Δx 
-@inline get_xf_index(x, grid::RegularRectilinearGrid) = @inbounds (x - grid.xF[grid.Hx+1]) / grid.Δx 
+##### 1-based indexing for grid faces (excluding halo regions)
+@inline get_xf_index(x, grid::RegularRectilinearGrid) = @inbounds (x - grid.xF[grid.Hx]) / grid.Δx 
+@inline get_yf_index(y, grid::RegularRectilinearGrid) = @inbounds (y - grid.yF[grid.Hy]) / grid.Δy 
+@inline get_zf_index(z, grid::RegularRectilinearGrid) = @inbounds (grid.zF[grid.Hz] - z) / grid.Δz 
 
-@inline get_yc_index(y, grid::RegularRectilinearGrid) = @inbounds (y - grid.yC[grid.Hy+1]) / grid.Δy 
-@inline get_yf_index(y, grid::RegularRectilinearGrid) = @inbounds (y - grid.yF[grid.Hy+1]) / grid.Δy 
-
-@inline get_zc_index(z, grid::RegularRectilinearGrid) = @inbounds (grid.zC[grid.Hz+1] - z) / grid.Δz 
-@inline get_zf_index(z, grid::RegularRectilinearGrid) = @inbounds (grid.zF[grid.Hz+1] - z) / grid.Δz 
+##### 1-based indexing for grid centers (excluding halo regions)
+@inline get_xc_index(x, grid::RegularRectilinearGrid) = @inbounds (x - grid.xC[grid.Hx]) / grid.Δx 
+@inline get_yc_index(y, grid::RegularRectilinearGrid) = @inbounds (y - grid.yC[grid.Hy]) / grid.Δy 
+@inline get_zc_index(z, grid::RegularRectilinearGrid) = @inbounds (grid.zC[grid.Hz] - z) / grid.Δz 
 
 ##### trilinear interpolation
 @inline ψ₀₀₀(xd, yd, zd) = (1 - xd) * (1 - yd) * (1 - zd)
@@ -37,7 +37,7 @@
     yd, yi = mod(yi, 1), unsafe_trunc(Int, yi)
     zd, zi = mod(zi, 1), unsafe_trunc(Int, zi)
     ##### shift to 1-based indexing and include halo points
-    return tri_interpolation(u, xd, yd, zd, xi+g.Hx+1, yi+g.Hy+1, zi+g.Hz+1)
+    return tri_interpolation(u, xd, yd, zd, xi+g.Hx, yi+g.Hy, zi+g.Hz)
 end
 
 @inline function v_itpl(v, x, y, z, ac, g::RegularRectilinearGrid) 
@@ -48,7 +48,7 @@ end
     yd, yi = mod(yi, 1), unsafe_trunc(Int, yi)
     zd, zi = mod(zi, 1), unsafe_trunc(Int, zi)
     ##### shift to 1-based indexing and include halo points
-    return tri_interpolation(v, xd, yd, zd, xi+g.Hx+1, yi+g.Hy+1, zi+g.Hz+1)
+    return tri_interpolation(v, xd, yd, zd, xi+g.Hx, yi+g.Hy, zi+g.Hz)
 end
 
 @inline function w_itpl(w, x, y, z, ac, g::RegularRectilinearGrid) 
@@ -59,7 +59,7 @@ end
     yd, yi = mod(yi, 1), unsafe_trunc(Int, yi)
     zd, zi = mod(zi, 1), unsafe_trunc(Int, zi)
     ##### shift to 1-based indexing and include halo points
-    return tri_interpolation(w, xd, yd, zd, xi+g.Hx+1, yi+g.Hy+1, zi+g.Hz+1)
+    return tri_interpolation(w, xd, yd, zd, xi+g.Hx, yi+g.Hy, zi+g.Hz)
 end
 
 ##### calculate uvw velocities at (x, y, z)
