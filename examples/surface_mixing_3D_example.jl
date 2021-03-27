@@ -13,11 +13,23 @@ using PlanktonIndividuals, Plots, JLD2
 # ## 2. Generate Flow Fields
 #
 # First we'll generate grid information
-grid = gen_Grid(size=(32, 32, 32), spacing=(4, 4, 4))
+grid = RegularRectilinearGrid(size=(32, 32, 32), spacing=(4, 4, 4))
 
-# Then we use [Oceananigans.jl](https://github.com/climate-machine/Oceananigans.jl) to generate flow fields.
-# [Script used here]()
-
+# We use [Oceananigans.jl](https://github.com/climate-machine/Oceananigans.jl) to generate flow fields.
+# Script used [here](https://github.com/JuliaOcean/PlanktonIndividuals.jl/blob/master/examples/generate_flow_fields.jl)
+# Then we read in the velocity fields
+#
+vels_file = jldopen(PlanktonIndividuals.surface_mixing_vels,"r")
+iterations = parse.(Int, keys(vels_file["timeseries/t"]))
+times = [vels_file["timeseries/t/$iter"] for iter in iterations]
+u = zeros(32,32,32,length(iterations))
+v = zeros(32,32,32,length(iterations))
+w = zeros(32,32,33,length(iterations))
+for (i, iter) in enumerate(iterations)
+    u[:,:,:,i] .= reverse(vels_file["timeseries/u/$iter"], dims=3)
+    v[:,:,:,i] .= reverse(vels_file["timeseries/v/$iter"], dims=3)
+    w[:,:,:,i] .= reverse(vels_file["timeseries/w/$iter"], dims=3)
+end
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Model Setup
@@ -25,7 +37,7 @@ grid = gen_Grid(size=(32, 32, 32), spacing=(4, 4, 4))
 # Next we setup the individual-based model by specifying the architecture, grid,
 # number of individuals, parameters, and nutrient initial conditions.
 
-model = PI_Model(CPUs(), grid; individual_size = (Nsp = 1, N = 2^7, cap = 8),
+model = PI_Model(CPUs(), grid; individual_size = (Nsp = 1, N = 2^8, cap = 8),
                  nut_source = [1.0, 0.02, 0.05, 0.01, 1.0, 0.1, 0.02, 0.2, 0.02, 0.001])
 
 # We also need to setup a runtime simulation to run the model.
@@ -33,7 +45,7 @@ model = PI_Model(CPUs(), grid; individual_size = (Nsp = 1, N = 2^7, cap = 8),
 # will be used etc.
 
 sim = PI_simulation(model, ΔT = 60, nΔT = 1, diag_freq = 3600, 
-                    vels=(u=uvels, v=vvels, w=wvels))
+                    vels=(u=u, v=v, w=w))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Run the Model
@@ -47,11 +59,12 @@ function plot(model::PI_Model)
 
     ## a scatter plot embeded in the flow fields
     px = Array(model.individuals.phytos.sp1.data.x)
+    py = Array(model.individuals.phytos.sp1.data.y)
     pz = Array(model.individuals.phytos.sp1.data.z)
-    p_plot = Plots.scatter(px, pz, xlims=(0,128), ylims=(-128,1), ms=5, color = :red, legend=:none)
+    p_plot = Plots.scatter(px, py, pz, xlims=(0,128), ylims=(0,128), zlims=(-128,1), ms=5, color = :red, legend=:none)
 
     ## the middle slice of DOC field
-    trac1 = Plots.contourf(xC, zC, Array(model.nutrients.DOC.data)[3:33,18,3:33]', xlabel="x (m)", ylabel="z (m)", clims=(0.5, 1.1), fmt=:png)
+    trac1 = Plots.heatmap(xC, reverse(zC), rotl90(Array(model.nutrients.DOC.data)[3:34,18,3:34]), xlabel="x (m)", ylabel="z (m)", clims=(0.5, 1.1), fmt=:png)
 
     ## Arrange the plots side-by-side.
     plt = Plots.plot(p_plot, trac1, size=(800, 400),
@@ -60,8 +73,8 @@ function plot(model::PI_Model)
     return plt
 end
 #
-# We run the model for 120 time steps (2 hour) and plot the individuals and DOC field.
-for i in 1:120
+# We run the model for 60 time steps (1 hour) and plot the individuals and DOC field.
+for i in 1:60
     update!(sim)
 end
 
@@ -71,10 +84,10 @@ plot(model)
 # Or you can use the following code to generate an animation like below
 #
 # ```
-# anim = @animate for i in 1:120
+# anim = @animate for i in 1:60
 #    update!(sim)
 #    plot(model)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)
 # ```
-# ![animation](https://github.com/JuliaOcean/PlanktonIndividuals.jl/raw/master/examples/figures/anim_vertical_2D.gif)
+# ![animation](https://github.com/JuliaOcean/PlanktonIndividuals.jl/raw/master/examples/figures/anim_surface_mixing_3D.gif)
