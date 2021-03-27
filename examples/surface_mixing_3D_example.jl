@@ -16,7 +16,8 @@ using PlanktonIndividuals, Plots, JLD2
 grid = RegularRectilinearGrid(size=(32, 32, 32), spacing=(4, 4, 4))
 
 # We use [Oceananigans.jl](https://github.com/climate-machine/Oceananigans.jl) to generate flow fields.
-# Script used [here](https://github.com/JuliaOcean/PlanktonIndividuals.jl/blob/master/examples/generate_flow_fields.jl)
+# Script used [here](https://github.com/JuliaOcean/PlanktonIndividuals.jl/blob/master/examples/generate_flow_fields.jl).
+#
 # Then we read in the velocity fields
 #
 vels_file = jldopen(PlanktonIndividuals.surface_mixing_vels,"r")
@@ -61,7 +62,7 @@ function plot(model::PI_Model)
     px = Array(model.individuals.phytos.sp1.data.x)
     py = Array(model.individuals.phytos.sp1.data.y)
     pz = Array(model.individuals.phytos.sp1.data.z)
-    p_plot = Plots.scatter(px, py, pz, xlims=(0,128), ylims=(0,128), zlims=(-128,1), ms=5, color = :red, legend=:none)
+    p_plot = Plots.scatter(px, py, pz, xlims=(0,128), ylims=(0,128), zlims=(-128,1), ms=5, color = :red, legend=:none, fmt=:png)
 
     ## the middle slice of DOC field
     trac1 = Plots.heatmap(xC, reverse(zC), rotl90(Array(model.nutrients.DOC.data)[3:34,18,3:34]), xlabel="x (m)", ylabel="z (m)", clims=(0.5, 1.1), fmt=:png)
