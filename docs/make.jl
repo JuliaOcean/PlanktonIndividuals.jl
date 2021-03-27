@@ -13,7 +13,7 @@ end
 
 example_pages = [
     "Vertical Two-Dimensional Example" => "generated/vertical_2D_example.md",
-    "Horizontal Two-Dimensional Example" => "generated/horizontal_2D_example.md"
+    "Horizontal Two-Dimensional Example" => "generated/horizontal_2D_example.md",
     "Surface Mixing Three-Dimensional Example" => "generated/surface_mixing_3D_example.md"
 ]
 
