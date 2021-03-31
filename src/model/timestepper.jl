@@ -43,7 +43,7 @@ function timestepper(arch::Architecture, g::RegularRectilinearGrid, N, cap)
     velos_d = replace_storage(array_type(arch), velos)
 
     nuts = StructArray(NH4 = zeros(cap*N), NO3 = zeros(cap*N), PO4 = zeros(cap*N), DOC = zeros(cap*N),
-                       αI  = zeros(cap*N), Tem = zeros(cap*N), pop = zeros(cap*N))
+                       par = zeros(cap*N), T   = zeros(cap*N), pop = zeros(cap*N))
     nuts_d = replace_storage(array_type(arch), nuts)
 
     ts = timestepper(Gcs, nut_temp, vel₀, vel½, vel₁, PARF, temp, plk, par, chl, pop, rnd_d, velos_d, nuts_d)

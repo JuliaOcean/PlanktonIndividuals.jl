@@ -27,9 +27,9 @@ function phyt_params_default()
         "Chl2Cint" => [0.16, 0.16],       # Initial Chla:C ratio in phytoplankton (mgChl/mmolC)
         "α"        => [2.0e-2,2.0e-2],    # Irradiance absorption coeff (m²/mgChl)
         "Φ"        => [4.0e-5,4.0e-5],    # Maximum quantum yield (mmolC/μmol photon)
-        "Tempref"  => [293.15, 293.15],   # Reference temperature in K
-        "TempAe"   => [-4000.0, -4000.0], # Arrenhius equation
-        "TempCoeff"=> [0.8, 0.8],         # Arrenhius equation
+        "TRef"  => [293.15, 293.15],      # Reference temperature in K
+        "TAe"   => [-4000.0, -4000.0],    # Arrenhius equation
+        "TCoeff"=> [0.8, 0.8],            # Arrenhius equation
         "PCmax"    => [2.1e-5, 2.1e-5],   # Maximum primary production rate (per second)
         "VDOCmax"  => [0.0, 1.2e-5],      # Maximum DOC uptake rate (mmol C/mmol C/second)
         "VNH4max"  => [6.9e-6, 6.9e-6],   # Maximum N uptake rate (mmol N/mmol C/second)
