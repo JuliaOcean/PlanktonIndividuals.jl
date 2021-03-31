@@ -1,4 +1,3 @@
-
 function plankton_physiology!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture)
     update_NPT!(nuts, plank.ac, p, arch)
     plankton_update!(plank, nuts, proc, p, ΔT, t, arch)
