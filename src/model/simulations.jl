@@ -32,7 +32,7 @@ Keyword Arguments
 =================
 - `ΔT` (required): `model` time step in second.
 - `nΔT` (required): The number of time steps to run in `simulation`.
-- `diag_freq` (required): The frequency of diagnostics in second.
+- `diag_freq` (required): The frequency of diagnostics (in number of time steps).
 - `PARF_path` and `temp_path` (optional): External forcings of PAR and temperature.
 - `res_dir` (optional): Create a directory to store results, `nothing` by default.
 - `save_diags` and `save_individuals` (optional): whether to save diagnostics or individuals.
@@ -41,7 +41,7 @@ Keyword Arguments
                      all `u`, `v`, and `w`. Each of `u`, `v`, and `w` must be an 4D-`Array` of 
                      `(Nx+2Hx, Ny+2Hy, Nz+2Hz, nΔT+1)` elements, including halo points and initial conditions.
 """
-function PI_simulation(model::PI_Model; ΔT, nΔT, diag_freq,
+function PI_simulation(model::PI_Model; ΔT::Int64, nΔT::Int64, diag_freq::Int64,
                        PARF_path = dirname(pathof(PlanktonIndividuals))*"/../samples/PAR.bin",
                        temp_path = dirname(pathof(PlanktonIndividuals))*"/../samples/temp.bin",
                        vels = (;),
@@ -50,10 +50,6 @@ function PI_simulation(model::PI_Model; ΔT, nΔT, diag_freq,
                        save_individuals = false,
                        vel_reuse = false
                        )
-
-    if (diag_freq/ΔT)%1 ≠ 0.0
-        throw(ArgumentError("The frequency of diagnostics must be `Int` times of ΔT"))
-    end
 
     if vels ≠ (;)
         grid_size = (model.grid.Nx, model.grid.Ny, model.grid.Nz)
@@ -121,8 +117,8 @@ function update!(sim::PI_simulation)
             if sim.res_dir ≠ nothing
                 PI_TimeStep!(sim.model, sim.ΔT, sim.res_dir)
                 if sim.save_diags
-                    if sim.model.t % sim.diag_freq == 0.0
-                        write_diags_to_jld2(sim.model.diags, sim.res_dir, sim.model.t, sim.diag_freq /sim.ΔT)
+                    if sim.model.t % (sim.diag_freq*sim.ΔT) == 0.0
+                        write_diags_to_jld2(sim.model.diags, sim.res_dir, sim.model.t, sim.diag_freq)
                     end
                 end
                 if sim.save_individuals
@@ -141,8 +137,8 @@ function update!(sim::PI_simulation)
             if sim.res_dir ≠ nothing
                 PI_TimeStep!(sim.model, sim.ΔT, sim.res_dir)
                 if sim.save_diags
-                    if sim.model.t % sim.diag_freq == 0.0
-                        write_diags_to_jld2(sim.model.diags, sim.res_dir, sim.model.t, sim.diag_freq /sim.ΔT)
+                    if sim.model.t % (sim.diag_freq*sim.ΔT) == 0.0
+                        write_diags_to_jld2(sim.model.diags, sim.res_dir, sim.model.t, sim.diag_freq)
                     end
                 end
                 if sim.save_individuals
