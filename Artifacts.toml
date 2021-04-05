@@ -1,6 +1,7 @@
 [surface_mixing_vels]
-git-tree-sha1 = "9250fab78dba60d526522b96dce03a9f1a947290"
+git-tree-sha1 = "c7588b1d10755dd0577576fed2f71e88c05bbfb7"
 
     [[surface_mixing_vels.download]]
-    sha256 = "6a1a33d129d06abe5da3089d285662f89825f3300c0e476157d810d298800dd9"
-    url = "https://zenodo.org/record/4642031/files/surface_mixing_vel.tar.gz"
+    sha256 = "33e16a70c4b5f63e6a7b49ab2542622739907ca32c03be4dc6030149a4397120"
+    url = "https://zenodo.org/record/4662959/files/surface_mixing_vel.tar.gz"
+    

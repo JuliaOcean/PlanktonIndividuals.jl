@@ -42,8 +42,8 @@ Keyword Arguments
                      `(Nx+2Hx, Ny+2Hy, Nz+2Hz, nΔT+1)` elements, including halo points and initial conditions.
 """
 function PI_simulation(model::PI_Model; ΔT::Int64, nΔT::Int64, diag_freq::Int64,
-                       PARF_path = dirname(pathof(PlanktonIndividuals))*"/../samples/PAR.bin",
-                       temp_path = dirname(pathof(PlanktonIndividuals))*"/../samples/temp.bin",
+                       PARF_path = PlanktonIndividuals.default_PAR,
+                       temp_path = PlanktonIndividuals.default_temperature,
                        vels = (;),
                        res_dir = nothing,
                        save_diags = false,

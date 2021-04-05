@@ -11,6 +11,8 @@ p=dirname(pathof(PlanktonIndividuals))
 artifact_toml = joinpath(p, "../Artifacts.toml")
 surface_mixing_vels_hash = artifact_hash("surface_mixing_vels", artifact_toml)
 surface_mixing_vels = joinpath(artifact_path(surface_mixing_vels_hash)*"/velocities.jld2")
+default_temperature = joinpath(artifact_path(surface_mixing_vels_hash)*"/temp.bin")
+default_PAR = joinpath(artifact_path(surface_mixing_vels_hash)*"/PAR.bin")
 
 include("architecture.jl")
 include("model/grids.jl")
