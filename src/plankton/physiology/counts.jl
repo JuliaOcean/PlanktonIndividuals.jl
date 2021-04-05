@@ -8,11 +8,11 @@
     end
     return nothing
 end
-function acc_counts!(ctschl, ctspop, chl, ac, x, y, z, ::GPUs)
+function acc_counts!(ctschl, ctspop, chl, ac, x, y, z, ::GPU)
     @cuda threads=256 blocks=ceil(Int, size(ac,1)/256) gpu_acc_counts_kernel!(ctschl, ctspop, chl, ac, x, y, z)
     return nothing 
 end
-function acc_counts!(ctschl, ctspop, chl, ac, x, y, z, ::CPUs)
+function acc_counts!(ctschl, ctspop, chl, ac, x, y, z, ::CPU)
     for i in 1:size(ac,1)
         @inbounds ctschl[x[i], y[i], z[i]] += chl[i] * ac[i]
         @inbounds ctspop[x[i], y[i], z[i]] += ac[i]
@@ -33,12 +33,12 @@ function gpu_calc_consume_kernel!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, 
     end
     return nothing
 end
-function calc_consume!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT, ::GPUs)
+function calc_consume!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT, ::GPU)
     @cuda threads=256 blocks=ceil(Int, size(ac,1)/256) gpu_calc_consume_kernel!(ctsdic, ctsdoc, ctsnh4, 
                                                         ctsno3, ctspo4, proc, ac, x, y, z, ΔT)
     return nothing 
 end
-function calc_consume!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT, ::CPUs)
+function calc_consume!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, ac, x, y, z, ΔT, ::CPU)
     for i in 1:size(ac,1)
         @inbounds ctsdic[x[i], y[i], z[i]] += (proc.resp[i] - proc.PS[i]) * ΔT * ac[i]
         @inbounds ctsdoc[x[i], y[i], z[i]] += (proc.exu[i] - proc.VDOC[i]) * ΔT * ac[i]
@@ -65,14 +65,14 @@ function gpu_calc_loss_kernel!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, p
     return nothing
 end
 function calc_loss!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank, ac, x, y, z,
-                    loss, lossFracC, lossFracN, lossFracP, R_NC, R_PC, ::GPUs)
+                    loss, lossFracC, lossFracN, lossFracP, R_NC, R_PC, ::GPU)
     @cuda threads=256 blocks=ceil(Int, size(ac,1)/256) gpu_calc_loss_kernel!(ctsdoc, ctspoc, ctsdon, ctspon, 
                                                         ctsdop, ctspop, plank, ac, x, y, z, loss, 
                                                         lossFracC, lossFracN, lossFracP, R_NC, R_PC)
     return nothing 
 end
 function calc_loss!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank, ac, x, y, z,
-                           loss, lossFracC, lossFracN, lossFracP, R_NC, R_PC, ::CPUs)
+                           loss, lossFracC, lossFracN, lossFracP, R_NC, R_PC, ::CPU)
     for i in 1:size(ac,1)
         @inbounds ctsdoc[x[i], y[i], z[i]] += (plank.Bm[i] + plank.Cq[i]) * lossFracC * ac[i] * loss[i]
         @inbounds ctsdon[x[i], y[i], z[i]] += (plank.Bm[i]*R_NC + plank.Nq[i]) * lossFracN * ac[i] * loss[i]

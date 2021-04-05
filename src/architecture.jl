@@ -1,18 +1,18 @@
 abstract type Architecture end
 
-struct CPUs <: Architecture end
+struct CPU <: Architecture end
 
-struct GPUs <: Architecture end
+struct GPU <: Architecture end
 
 macro hascuda(expr)
     return has_cuda() ? :($(esc(expr))) : :(nothing)
 end
 
-device(::CPUs) = KernelAbstractions.CPU()
-device(::GPUs) = KernelAbstractions.CUDADevice()
+device(::CPU) = KernelAbstractions.CPU()
+device(::GPU) = KernelAbstractions.CUDADevice()
 
-array_type(::CPUs) = Array
-@hascuda array_type(::GPUs) = CuArray
+array_type(::CPU) = Array
+@hascuda array_type(::GPU) = CuArray
 
-rng_type(::CPUs) = MersenneTwister()
-@hascuda rng_type(::GPUs) = CURAND.default_rng()
+rng_type(::CPU) = MersenneTwister()
+@hascuda rng_type(::GPU) = CURAND.default_rng()

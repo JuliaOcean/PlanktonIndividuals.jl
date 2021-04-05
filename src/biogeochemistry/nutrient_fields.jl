@@ -15,7 +15,7 @@ Set up initial nutrient fields according to `grid`.
 
 Keyword Arguments
 =================
-- `arch`: `CPUs()` or `GPUs()`. The computer architecture used to time-step `model`.
+- `arch`: `CPU()` or `GPU()`. The computer architecture used to time-step `model`.
 - `grid`: The resolution and discrete geometry on which nutrient fields are solved.
 - `source`: An 10-element array with each element representing the initial condition of a kind of nutrient, 
             or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.

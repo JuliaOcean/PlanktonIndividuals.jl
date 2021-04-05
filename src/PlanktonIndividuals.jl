@@ -49,7 +49,7 @@ include("model/simulations.jl")
 export
     # model structures
     PI_Model, RegularRectilinearGrid, nutrient_fields,
-    Architecture, GPUs, CPUs,
+    Architecture, GPU, CPU,
 
     # read input functions
     read_IR_input, read_temp_input,

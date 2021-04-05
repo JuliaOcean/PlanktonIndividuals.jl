@@ -2,7 +2,7 @@ using PlanktonIndividuals, Serialization
 
 grid = RegularRectilinearGrid(size = (16, 16, 1), spacing = (2, 2, 2), halo = (2, 2, 2))
 
-model = PI_Model(CPUs(), grid) 
+model = PI_Model(CPU(), grid) 
 
 TP = sum((interior(model.nutrients.PO4.data, grid) .+ 
           interior(model.nutrients.DOP.data, grid) .+ 

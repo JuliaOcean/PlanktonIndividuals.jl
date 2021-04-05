@@ -12,7 +12,7 @@ using PlanktonIndividuals, Plots, IndividualDisplacements, MeshArrays, OceanStat
 # ## 2. Generate Flow Fields
 #
 # First we'll generate grid information
-grid = gen_Grid(size=(360, 160, 1), spacing=(1, 1, 1))
+grid = RegularRectilinearGrid(size=(360, 160, 1), spacing=(1, 1, 1))
 
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/helper_functions.jl"))
@@ -39,7 +39,7 @@ nothing
 # Next we setup the individual-based model by specifying the architecture, grid,
 # number of individuals, parameters, and nutrient initial conditions.
 
-model = PI_Model(CPUs(), grid; individual_size = (Nsp = 1, N = 360, cap = 8),
+model = PI_Model(CPU(), grid; individual_size = (Nsp = 1, N = 360, cap = 8),
                  nut_source = [1.0, 0.02, 0.05, 0.01, 1.0, 0.1, 0.02, 0.2, 0.02, 0.001])
 
 # We also need to setup a runtime simulation to run the model.

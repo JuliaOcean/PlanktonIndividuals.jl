@@ -5,7 +5,7 @@ grid = RegularRectilinearGrid(size = (1, 1, 1), spacing = (32, 32, 32), halo = (
 
 phyt_params = deserialize(dirname(pathof(PlanktonIndividuals))*"/../test/param5.bin")
 
-model = PI_Model(CPUs(), grid;
+model = PI_Model(CPU(), grid;
                  individual_size = (Nsp = 5, N = 1024, cap = 10),
                  phyt_params = update_phyt_params(phyt_params))
 

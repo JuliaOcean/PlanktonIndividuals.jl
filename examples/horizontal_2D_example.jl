@@ -42,7 +42,7 @@ nothing
 # Next we setup the individual-based model by specifying the architecture, grid,
 # number of individuals, parameters, and nutrient initial conditions.
 
-model = PI_Model(CPUs(), grid; individual_size = (Nsp = 1, N = 2^7, cap = 8),
+model = PI_Model(CPU(), grid; individual_size = (Nsp = 1, N = 2^7, cap = 8),
                  nut_source = [1.0, 0.02, 0.05, 0.01, 1.0, 0.1, 0.02, 0.2, 0.02, 0.001])
 
 # We also need to setup a runtime simulation to run the model.

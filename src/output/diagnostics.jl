@@ -40,11 +40,11 @@ function gpu_diags_proc_kernel!(diags_proc, proc, ac, x, y, z)
         @inbounds @atomic diags_proc[x[i], y[i], z[i]] += proc[i] * ac[i]
     end
 end
-function diags_proc!(diags_proc, proc, ac, x, y, z, ::GPUs)
+function diags_proc!(diags_proc, proc, ac, x, y, z, ::GPU)
     @cuda threads=256 blocks=ceil(Int, size(ac,1)/256) gpu_diags_proc_kernel!(diags_proc, proc, ac, x, y, z)
     return nothing 
 end
-function diags_proc!(diags_proc, proc, ac, x, y, z, ::CPUs)
+function diags_proc!(diags_proc, proc, ac, x, y, z, ::CPU)
     for i in 1:size(ac,1)
         @inbounds diags_proc[x[i], y[i], z[i]] += proc[i] * ac[i]
     end

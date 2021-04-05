@@ -23,7 +23,7 @@ Generate the `PI_Model` struct on `grid`.
 
 Keyword Arguments
 =================
-- `arch` (required): `CPUs()` or `GPUs()`. The computer architecture used to time-step `model`.
+- `arch` (required): `CPU()` or `GPU()`. The computer architecture used to time-step `model`.
 - `grid` (required): The resolution and discrete geometry on which `model` is solved.
 - `individual_size` (optional): `NamedTuple` used to set number of species `Nsp`, number of individuals `N`,
                                 and max individual capacity `cap`.
@@ -45,7 +45,7 @@ function PI_Model(arch::Architecture, grid::RegularRectilinearGrid;
                   t = 0.0,
                   )
 
-    if arch == GPUs() && !has_cuda()
+    if arch == GPU() && !has_cuda()
         throw(ArgumentError("Cannot create a GPU model. No CUDA-enabled GPU was detected!"))
     end
 
