@@ -25,6 +25,7 @@ makedocs(;
             #  "Various" => "various.md",
              "Equations" => "equations.md",
              "Examples"  => example_pages,
+             "Benchmarks"  => "benchmarks.md",
              "Function index" => "function_index.md"
              ],
          repo="https://github.com/JuliaOcean/PlanktonIndividuals.jl/blob/{commit}{path}#L{line}",
