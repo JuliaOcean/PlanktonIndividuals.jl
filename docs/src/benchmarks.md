@@ -22,7 +22,6 @@ Platform Info:
 ```
 
 | Arch |     N |        min |     median |       mean |        max |     memory | allocs | samples |
-|  Any |   Any |        Any |        Any |        Any |        Any |        Any |    Any |     Any |
 |------|-------|------------|------------|------------|------------|------------|--------|---------|
 |  CPU |     2 |   1.066 ms |   1.143 ms |   1.231 ms |   2.018 ms | 610.95 KiB |   4385 |      10 |
 |  CPU |    32 |   1.238 ms |   1.340 ms |   1.390 ms |   1.977 ms | 610.95 KiB |   4385 |      10 |
@@ -51,7 +50,6 @@ Platform Info:
 ```
 
 | Arch |     N |  Ns |        min |     median |       mean |        max |    memory | allocs | samples |
-|  Any |   Any | Any |        Any |        Any |        Any |        Any |       Any |    Any |     Any |
 |------|-------|-----|------------|------------|------------|------------|-----------|--------|---------|
 |  CPU |     2 |  32 |   4.996 ms |   5.754 ms |   5.649 ms |   5.808 ms |  2.83 MiB |   4438 |      10 |
 |  CPU |     2 |  64 |  14.257 ms |  17.671 ms |  16.509 ms |  17.855 ms |  8.82 MiB |   4438 |      10 |
@@ -96,7 +94,6 @@ Platform Info:
 ```
 
 | Arch |     N |  Ns |        min |     median |       mean |        max |   memory | allocs | samples |
-|  Any |   Any | Any |        Any |        Any |        Any |        Any |      Any |    Any |     Any |
 |------|-------|-----|------------|------------|------------|------------|----------|--------|---------|
 |  CPU |     2 |  32 |  39.864 ms |  39.963 ms |  40.277 ms |  43.291 ms | 1.51 MiB |   4206 |      10 |
 |  CPU |     2 |  64 | 351.139 ms | 352.293 ms | 353.212 ms | 361.829 ms | 8.56 MiB |   4207 |      10 |
