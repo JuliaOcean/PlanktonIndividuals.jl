@@ -1,14 +1,14 @@
 # Performace benchmarks
 
 Here we benchmark the model performance in two `Architecture`s.
-The number of individuals used in the benchmark are (2, 2^5, 2^10, 2^15).
+The number of individuals used in the benchmark are `(2, 2^5, 2^10, 2^15)`.
 And we also use different grid resolutions in 2-Dimensional and 3-Dimensional model setup.
 
 ## 0-Dimensional model
 
 This is a benchmark of a simple 0-Dimensional model setup without advection of Eulerian tracers. However, the advection of individuals still take the same amount of time whether the velocity field is provided or not.
 
-```
+```julia
 PlanktonIndividuals v0.2.0
 Julia Version 1.6.0
 Commit f9720dc2eb (2021-03-24 12:55 UTC)
@@ -19,6 +19,7 @@ Platform Info:
   LIBM: libopenlibm
   LLVM: libLLVM-11.0.1 (ORCJIT, broadwell)
   GPU: Tesla P100-PCIE-12GB
+```
 
 | Arch |     N |        min |       mean |        max |     memory | allocs |
 |------|-------|------------|------------|------------|------------|--------|
@@ -30,13 +31,12 @@ Platform Info:
 |  GPU |    32 |   7.274 ms |   7.624 ms |   8.229 ms |   1.57 MiB |  21471 |
 |  GPU |  1024 |   7.305 ms |   7.647 ms |   8.606 ms |   1.57 MiB |  21471 |
 |  GPU | 32768 |   7.871 ms |  12.539 ms |  24.820 ms |   1.57 MiB |  21547 |
-```
 
 ## 2-Dimensional model
 
 This is the benchmark of a 2-Dimensional model setup with `(Ns, 1, Ns)` grid cells. Here `Ns = [32, 64, 128]`.
 
-```
+```julia
 PlanktonIndividuals v0.2.0
 Julia Version 1.6.0
 Commit f9720dc2eb (2021-03-24 12:55 UTC)
@@ -47,6 +47,7 @@ Platform Info:
   LIBM: libopenlibm
   LLVM: libLLVM-11.0.1 (ORCJIT, broadwell)
   GPU: Tesla P100-PCIE-12GB
+```
 
 | Arch |     N |  Ns |        min |       mean |        max |    memory | allocs |
 |------|-------|-----|------------|------------|------------|-----------|--------|
@@ -74,13 +75,12 @@ Platform Info:
 |  GPU | 32768 |  32 |   8.120 ms |  10.474 ms |  18.289 ms |  1.60 MiB |  21079 |
 |  GPU | 32768 |  64 |   8.214 ms |  11.399 ms |  21.621 ms |  1.69 MiB |  21083 |
 |  GPU | 32768 | 128 |   9.314 ms |  12.102 ms |  20.027 ms |  2.07 MiB |  21083 |
-```
 
 ## 3-Dimensional model
 
 This is the benchmark of a 3-Dimensional model setup with `(Ns, Ns, Ns)` grid cells. Here `Ns = [32, 64]`.
 
-```
+```julia
 PlanktonIndividuals v0.2.0
 Julia Version 1.6.0
 Commit f9720dc2eb (2021-03-24 12:55 UTC)
@@ -91,6 +91,7 @@ Platform Info:
   LIBM: libopenlibm
   LLVM: libLLVM-11.0.1 (ORCJIT, broadwell)
   GPU: Tesla P100-PCIE-12GB
+```
 
 | Arch |     N |  Ns |        min |       mean |        max |   memory | allocs |
 |------|-------|-----|------------|------------|------------|----------|--------|
@@ -110,4 +111,3 @@ Platform Info:
 |  GPU |  1024 |  64 |   9.996 ms |  13.269 ms |  20.624 ms | 9.61 MiB |  20016 |
 |  GPU | 32768 |  32 |   7.491 ms |  10.591 ms |  18.827 ms | 2.56 MiB |  20155 |
 |  GPU | 32768 |  64 |  12.336 ms |  16.536 ms |  20.237 ms | 9.61 MiB |  20156 |
-```
