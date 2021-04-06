@@ -19,7 +19,7 @@ Platform Info:
   LIBM: libopenlibm
   LLVM: libLLVM-11.0.1 (ORCJIT, broadwell)
   GPU: Tesla P100-PCIE-12GB
-
+```
 
 | Arch |     N |        min |     median |       mean |        max |     memory | allocs | samples |
 |  Any |   Any |        Any |        Any |        Any |        Any |        Any |    Any |     Any |
@@ -32,7 +32,6 @@ Platform Info:
 |  GPU |    32 |   7.274 ms |   7.548 ms |   7.624 ms |   8.229 ms |   1.57 MiB |  21471 |      10 |
 |  GPU |  1024 |   7.305 ms |   7.472 ms |   7.647 ms |   8.606 ms |   1.57 MiB |  21471 |      10 |
 |  GPU | 32768 |   7.871 ms |  12.022 ms |  12.539 ms |  24.820 ms |   1.57 MiB |  21547 |      10 |
-```
 
 ## 2-Dimensional model
 
@@ -49,7 +48,7 @@ Platform Info:
   LIBM: libopenlibm
   LLVM: libLLVM-11.0.1 (ORCJIT, broadwell)
   GPU: Tesla P100-PCIE-12GB
-
+```
 
 | Arch |     N |  Ns |        min |     median |       mean |        max |    memory | allocs | samples |
 |  Any |   Any | Any |        Any |        Any |        Any |        Any |       Any |    Any |     Any |
@@ -78,7 +77,6 @@ Platform Info:
 |  GPU | 32768 |  32 |   8.120 ms |   9.702 ms |  10.474 ms |  18.289 ms |  1.60 MiB |  21079 |      10 |
 |  GPU | 32768 |  64 |   8.214 ms |  10.524 ms |  11.399 ms |  21.621 ms |  1.69 MiB |  21083 |      10 |
 |  GPU | 32768 | 128 |   9.314 ms |  11.749 ms |  12.102 ms |  20.027 ms |  2.07 MiB |  21083 |      10 |
-```
 
 ## 3-Dimensional model
 
@@ -95,7 +93,7 @@ Platform Info:
   LIBM: libopenlibm
   LLVM: libLLVM-11.0.1 (ORCJIT, broadwell)
   GPU: Tesla P100-PCIE-12GB
-
+```
 
 | Arch |     N |  Ns |        min |     median |       mean |        max |   memory | allocs | samples |
 |  Any |   Any | Any |        Any |        Any |        Any |        Any |      Any |    Any |     Any |
@@ -116,4 +114,3 @@ Platform Info:
 |  GPU |  1024 |  64 |   9.996 ms |  11.551 ms |  13.269 ms |  20.624 ms | 9.61 MiB |  20016 |      10 |
 |  GPU | 32768 |  32 |   7.491 ms |  10.202 ms |  10.591 ms |  18.827 ms | 2.56 MiB |  20155 |      10 |
 |  GPU | 32768 |  64 |  12.336 ms |  15.806 ms |  16.536 ms |  20.237 ms | 9.61 MiB |  20156 |      10 |
-```
