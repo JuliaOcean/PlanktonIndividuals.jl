@@ -86,7 +86,7 @@ function show(io::IO, sim::PI_simulation)
     print(io, "ΔT: $(sim.ΔT)s\n",
               "model time: $(sim.model.t)s\n",
               "number of time steps: $(sim.nΔT)\n",
-              "save averaged diagnostics every $(sim.diag_freq)s, $(Int(sim.diag_freq/sim.ΔT)) time steps\n",
+              "save averaged diagnostics every $(sim.diag_freq*sim.ΔT)s, $(sim.diag_freq) time steps\n",
               "results saved at $(sim.res_dir)\n",
               "save diags: $(sim.save_diags)\n",
               "save individuals: $(sim.save_individuals)\n",

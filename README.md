@@ -21,7 +21,11 @@ include(joinpath(p,"../examples/horizontal_2D_example.jl"))
 
 ### 2. Closer Look Into One Grid Box
 
-Coming soon ...
+```julia
+using PlanktonIndividuals
+p = dirname(pathof(PlanktonIndividuals))
+include(joinpath(p,"../examples/0D_experiment.jl"))
+```
 
 ### 3. Turbulent Flow Fields In Three Dimensions
 
@@ -30,7 +34,7 @@ Here [Oceananigans.jl](https://github.com/climate-machine/Oceananigans.jl) is us
 ```julia
 using PlanktonIndividuals
 p = dirname(pathof(PlanktonIndividuals))
-include(joinpath(p,"../examples/Oceananigans_PlanktonIndividuals.jl"))
+include(joinpath(p,"../examples/surface_mixing_3D_example.jl"))
 ```
 
 ## Unit Testing

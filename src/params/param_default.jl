@@ -20,17 +20,17 @@ end
 
 function phyt_params_default()
     params=Dict(
-        "Nsuper"   => [1e1, 1e1],         # Number of phyto cells each super individual represents
+        "Nsuper"   => [1, 1],             # Number of phyto cells each super individual represents
         "Cquota"   => [1.8e-11, 1.8e-11], # C quota of phyto cells at size = 1.0
-        "mean"     => [1.5, 1.5],         # Mean of the normal distribution of initial phyto individuals
+        "mean"     => [1.2, 1.2],         # Mean of the normal distribution of initial phyto individuals
         "var"      => [0.3, 0.3],         # Variance of the normal distribution of initial phyto individuals
-        "Chl2Cint" => [0.16, 0.16],       # Initial Chla:C ratio in phytoplankton (mgChl/mmolC)
+        "Chl2Cint" => [0.10, 0.10],       # Initial Chla:C ratio in phytoplankton (mgChl/mmolC)
         "α"        => [2.0e-2,2.0e-2],    # Irradiance absorption coeff (m²/mgChl)
         "Φ"        => [4.0e-5,4.0e-5],    # Maximum quantum yield (mmolC/μmol photon)
-        "TRef"  => [293.15, 293.15],      # Reference temperature in K
-        "TAe"   => [-4000.0, -4000.0],    # Arrenhius equation
-        "TCoeff"=> [0.8, 0.8],            # Arrenhius equation
-        "PCmax"    => [2.1e-5, 2.1e-5],   # Maximum primary production rate (per second)
+        "TRef"     => [293.15, 293.15],   # Reference temperature in K
+        "TAe"      => [-4000.0, -4000.0], # Arrenhius equation
+        "TCoeff"   => [0.8, 0.8],         # Arrenhius equation
+        "PCmax"    => [4.2e-5, 4.2e-5],   # Maximum primary production rate (per second)
         "VDOCmax"  => [0.0, 1.2e-5],      # Maximum DOC uptake rate (mmol C/mmol C/second)
         "VNH4max"  => [6.9e-6, 6.9e-6],   # Maximum N uptake rate (mmol N/mmol C/second)
         "VNO3max"  => [6.9e-6, 6.9e-6],   # Maximum N uptake rate (mmol N/mmol C/second)
@@ -47,17 +47,17 @@ function phyt_params_default()
         "Nqmin"    => [0.05,0.05],        # Minimum N quota in cell (mmol N/mmol C)
         "Pqmax"    => [0.01,0.01],        # Maximum P quota in cell (mmol P/mmol C)
         "Pqmin"    => [0.004,0.004],      # Minimum P quota in cell (mmol P/mmol C)
-        "Cqmax"    => [0.2,0.2],          # Maximum C quota in cell (mmol C/mmol C)
+        "Cqmax"    => [0.4,0.4],          # Maximum C quota in cell (mmol C/mmol C)
         "Cqmin"    => [0.1,0.1],          # Minimum C quota in cell (mmol C/mmol C)
-        "k_mtb"    => [1.2e-5,1.2e-5],    # Metabolic rate (per second)
-        "k_mtb_b"  => [0.5,0.5],          # Metabolic rate
-        "respir_a" => [3.5e-5,3.5e-5],    # Respiration rate(per second)
-        "respir_b" => [0.13,0.13],        # Shape parameter for size
+        "k_mtb"    => [3.5e-5,3.5e-5],    # Metabolic rate (per second)
+        "k_mtb_b"  => [0.25,0.25],        # Metabolic rate
+        "respir_a" => [1.2e-6,1.2e-6],    # Respiration rate(per second)
+        "respir_b" => [0.6,0.6],          # Shape parameter for size
         "Chl2N"    => [3.0, 3.0],         # Maximum Chla:N ratio in phytoplankton
         "R_NC"     => [16/106, 16/106],   # N:C ratio in cell biomass
         "R_PC"     => [1/106, 1/106],     # N:C ratio in cell biomass
-        "grz_P"    => [3.0e-4, 3.0e-4],   # Grazing probability scalar
-        "dvid_P"   => [0.2,0.2],          # Probability scaler of cell division.
+        "grz_P"    => [0.0, 0.0],         # Grazing probability scalar
+        "dvid_P"   => [0.1,0.1],          # Probability scaler of cell division.
         "dvid_type"=> [1,5],              # The type of cell division, 1:sizer, 2:adder.
         "dvid_stp" => [6.0,6.0],          # Steepness of sigmoidal function
         "dvid_reg" => [1.9,1.9],          # Regulations of cell division (sizer)
