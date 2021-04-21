@@ -1,6 +1,6 @@
 """
-    update_bgc_params(tmp)
-Update parameter values based on a .yaml file provided by user
+    update_bgc_params(tmp::Ditc)
+Update parameter values based on a `Dict` provided by user
 
 Keyword Arguments
 =================
@@ -21,8 +21,8 @@ function update_bgc_params(tmp::Dict)
 end
 
 """
-    update_phyt_params(tmp)
-Update parameter values based on a .yaml file provided by user
+    update_phyt_params(tmp::Dict)
+Update parameter values based on a `Dict` provided by user
 
 Keyword Arguments
 =================

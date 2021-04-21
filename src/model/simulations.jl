@@ -39,7 +39,7 @@ Keyword Arguments
 - `vels` (optional): The velocity fields for nutrient fields and individuals. `nothing` means no velocities
                      will be applied in the simulation. Otherwise, `vels` mush be a `NamedTuple` containing
                      all `u`, `v`, and `w`. Each of `u`, `v`, and `w` must be an 4D-`Array` of 
-                     `(Nx+2Hx, Ny+2Hy, Nz+2Hz, nΔT+1)` elements, including halo points and initial conditions.
+                     `(Nx, Ny, Nz+1, nΔT+1)` elements, excluding halo points, but bounded in `z` direction.
 """
 function PI_simulation(model::PI_Model; ΔT::Int64, nΔT::Int64, diag_freq::Int64,
                        PARF_path = PlanktonIndividuals.default_PAR,

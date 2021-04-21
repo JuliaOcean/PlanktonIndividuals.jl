@@ -23,9 +23,9 @@ makedocs(;
          format = Documenter.HTML(),
          pages = [
              "Home" => "index.md",
-            #  "Various" => "various.md",
-             "Equations" => "equations.md",
              "Examples"  => example_pages,
+             "Model Setup" => "model_setup.md",
+             "Equations" => "equations.md",
              "Benchmarks"  => "benchmarks.md",
              "Function index" => "function_index.md"
              ],

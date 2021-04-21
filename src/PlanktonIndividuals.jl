@@ -55,7 +55,7 @@ export
     read_IR_input, read_temp_input,
     update_bgc_params, update_phyt_params, 
     bgc_params_default, phyt_params_default,
-    PrepRunDir,
+    default_nut_init, PrepRunDir,
 
     # initialize nutrient field and individual sets
     generate_nutrients,

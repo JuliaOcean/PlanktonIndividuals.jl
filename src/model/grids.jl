@@ -24,7 +24,7 @@ end
 """
     gen_Grid(size = (Nx, Ny, Nz), spacing = (Δx, Δy, Δz), halo = (2, 2, 2))
 Creats a `Grids` struct with `size = (Nx, Ny, Nz)` grid points.
-The topology is fixes as (Periodic, Periodic, Bounded)
+The topology is fixed as (Periodic, Periodic, Bounded)
 
 Keyword Arguments
 =================

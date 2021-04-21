@@ -14,7 +14,7 @@ end
             individual_size = (Nsp = 1, N = 1024, cap = 8),
             bgc_params = bgc_params_default(), 
             phyt_params = phyt_params_default(),
-            nut_source = [20.0, 0.20, 0.50, 0.03, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            nut_source = default_nut_init(),
             diag_ntrs = (:PAR, :DOC, :NH4, :NO3),
             diag_nprocs = (:num, :graz, :mort, :dvid),
             t = 0.0,
@@ -29,17 +29,17 @@ Keyword Arguments
                                 and max individual capacity `cap`.
 - `bgc_params` (optional): Parameter set for biogeochemical processes modeled in the model.
 - `phyt_params` (optional): Parameter set for physiological processes of individuals modeled in the model.
-- `nut_source` (optional): The source of initial conditions of nutrient fields, should be either a 10-element array 
+- `nut_source` (optional): The source of initial conditions of nutrient fields, should be either a `NamedTuple` 
                            or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
-- `diag_ntrs` (optional): `NamedTuple` containing the names of nutrient fields to be diagnosed.
-- `diag_nprocs` (optional): `NamedTuple` containing the names of physiological processes to be diagnosed.
+- `diag_ntrs` (optional): a `Tuple` containing the names of nutrient fields to be diagnosed.
+- `diag_nprocs` (optional): a `Tuple` containing the names of physiological processes to be diagnosed.
 - `t` (optional): Model time, start from 0 by default, in second.
 """
 function PI_Model(arch::Architecture, grid::RegularRectilinearGrid;
                   individual_size = (Nsp = 1, N = 1024, cap = 8),
                   bgc_params = bgc_params_default(), 
                   phyt_params = phyt_params_default(),
-                  nut_source = [20.0, 0.20, 0.50, 0.03, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                  nut_source = default_nut_init(),
                   diag_ntrs = (:PAR, :DOC, :NH4, :NO3),
                   diag_nprocs = (:num, :graz, :mort, :dvid),
                   t = 0.0,
