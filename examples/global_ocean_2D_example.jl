@@ -39,8 +39,7 @@ nothing
 # Next we setup the individual-based model by specifying the architecture, grid,
 # number of individuals, parameters, and nutrient initial conditions.
 
-model = PI_Model(CPU(), grid; individual_size = (Nsp = 1, N = 360, cap = 8),
-                 nut_source = [1.0, 0.02, 0.05, 0.01, 1.0, 0.1, 0.02, 0.2, 0.02, 0.001])
+model = PI_Model(CPU(), grid; individual_size = (Nsp = 1, N = 360, cap = 8))
 
 # We also need to setup a runtime simulation to run the model.
 # The simulation includes time step, number of time steps, flow fields that

@@ -23,7 +23,6 @@ grid = RegularRectilinearGrid(size=(1,1,1), spacing=(128, 128, 256))
 #
 model = PI_Model(CPU(), grid; 
                  individual_size = (Nsp = 1, N = 2^10, cap = 16),
-                 nut_source = [20.0, 0.20, 0.50, 0.08, 10.0, 0.1, 0.1, 1.0, 0.1, 0.1],
                  diag_nprocs = (:num, :graz, :mort, :dvid, :PS, :BS, :Cq, :chl, :Bm))
 
 # We also need to setup a runtime simulation to run the model.
