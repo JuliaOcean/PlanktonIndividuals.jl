@@ -18,8 +18,8 @@ end
 
 """
     PI_simulation(model; ΔT, nΔT, diag_freq,
-                  PARF_path = dirname(pathof(PlanktonIndividuals))*"/../samples/PAR.bin",
-                  temp_path = dirname(pathof(PlanktonIndividuals))*"/../samples/temp.bin",
+                  PARF_path = PlanktonIndividuals.default_PAR,
+                  temp_path = PlanktonIndividuals.default_temperature,
                   vels = (;),
                   res_dir = nothing
                   save_diags = false,
@@ -33,7 +33,7 @@ Keyword Arguments
 - `ΔT` (required): `model` time step in second.
 - `nΔT` (required): The number of time steps to run in `simulation`.
 - `diag_freq` (required): The frequency of diagnostics (in number of time steps).
-- `PARF_path` and `temp_path` (optional): External forcings of PAR and temperature.
+- `PARF_path` and `temp_path` (optional): External forcings of PAR and temperature. Hourly data of a single day is required (25 data points in total).
 - `res_dir` (optional): Create a directory to store results, `nothing` by default.
 - `save_diags` and `save_individuals` (optional): whether to save diagnostics or individuals.
 - `vels` (optional): The velocity fields for nutrient fields and individuals. `nothing` means no velocities
