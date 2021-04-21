@@ -6,7 +6,7 @@ Below are all the options or keyword arguments that can be passed to `PI_Model`.
 Checkout different sections for more details and examples for each keyword argument.
 
 ```@docs
-PI_model
+PI_Model
 ```
 
 ## Architecture
