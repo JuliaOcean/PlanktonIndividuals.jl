@@ -24,6 +24,7 @@ Keyword Arguments
 - `grid`: The resolution and discrete geometry on which nutrient fields are solved.
 - `source`: An 10-element `NamedTuple` with each element representing the initial condition of a kind of nutrient, 
             or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
+- `mask` (optional): Mask out the tracers generated out of the domain, a 3D array with size `(Nx, Ny, Nz)`.
 """
 function generate_nutrients(arch, g, source::NamedTuple; mask=nothing)
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)

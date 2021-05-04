@@ -34,7 +34,7 @@ Keyword Arguments
 - `diag_ntrs` (optional): a `Tuple` containing the names of nutrient fields to be diagnosed.
 - `diag_nprocs` (optional): a `Tuple` containing the names of physiological processes to be diagnosed.
 - `t` (optional): Model time, start from 0 by default, in second.
-- `mask` (optional): Mask out the individuals and tracers generated out of the domain.
+- `mask` (optional): Mask out the individuals and tracers generated out of the domain, a 3D array with size `(Nx, Ny, Nz)`.
 """
 function PI_Model(arch::Architecture, grid::RegularRectilinearGrid;
                   individual_size = (Nsp = 1, N = 1024, cap = 8),
