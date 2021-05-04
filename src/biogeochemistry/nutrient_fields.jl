@@ -15,7 +15,7 @@ function default_nut_init()
 end
 
 """
-    generate_nutrients(arch, grid, source)
+    generate_nutrients(arch, grid, source; mask = nothing)
 Set up initial nutrient fields according to `grid`.
 
 Keyword Arguments

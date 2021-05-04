@@ -18,6 +18,7 @@ end
             diag_ntrs = (:PAR, :DOC, :NH4, :NO3),
             diag_nprocs = (:num, :graz, :mort, :dvid),
             t = 0.0,
+            mask = nothing,
             )
 Generate the `PI_Model` struct on `grid`. 
 
