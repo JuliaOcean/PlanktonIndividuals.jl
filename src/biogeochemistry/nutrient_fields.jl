@@ -25,12 +25,19 @@ Keyword Arguments
 - `source`: An 10-element `NamedTuple` with each element representing the initial condition of a kind of nutrient, 
             or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
 """
-function generate_nutrients(arch, g, source::NamedTuple)
+function generate_nutrients(arch, g, source::NamedTuple; mask=nothing)
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
     nut = nutrients_init(arch, g)
 
     for name in nut_names
         nut[name].data .= fill(source[name],total_size) .* rand(0.8:1e-4:1.2, total_size) |> array_type(arch)
+        if mask ≠ nothing
+            if size(mask) == (g.Nx, g.Ny, g.Nz)
+                @views @. nut[name].data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] *= mask
+            else
+                throw(ArgumentError("nut_mask: grid mismatch, size(mask) must equal to (grid.Nx, grid.Ny, grid.Nz)."))
+            end
+        end
     end
 
     fill_halo_nut!(nut,g)
@@ -38,7 +45,7 @@ function generate_nutrients(arch, g, source::NamedTuple)
     return nut
 end
 
-function generate_nutrients(arch, g, source::Dict)
+function generate_nutrients(arch, g, source::Dict; mask=nothing)
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
 
     nut = nutrients_init(arch, g)
@@ -56,6 +63,13 @@ function generate_nutrients(arch, g, source::Dict)
                 @views @. nut[name].data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] = tmp[:,:,:]
             else
                 throw(ArgumentError("NUT_INIT:  grid mismatch"))
+            end
+        end
+        if mask ≠ nothing
+            if size(mask) == (g.Nx, g.Ny, g.Nz)
+                @views @. nut[name].data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] *= mask
+            else
+                throw(ArgumentError("nut_mask: grid mismatch, size(mask) must equal to (grid.Nx, grid.Ny, grid.Nz)."))
             end
         end
     end

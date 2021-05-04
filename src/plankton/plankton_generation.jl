@@ -61,7 +61,7 @@ function individuals(params::Dict, arch::Architecture, Nsp, N, cap)
     end
 end
 
-function gen_individuals!(plank, N::Int64, g::RegularRectilinearGrid, arch::Architecture)
+function gen_individuals!(plank, N::Int64, g::RegularRectilinearGrid, arch::Architecture; mask = nothing)
     mean = plank.p.mean
     var = plank.p.var
     Cquota = plank.p.Cquota
@@ -96,4 +96,27 @@ function gen_individuals!(plank, N::Int64, g::RegularRectilinearGrid, arch::Arch
     plank.data.Nq  .=(plank.data.Nq .* (nqmax - nqmin)  .+ nqmin) .* plank.data.Bm                           # Nq
     plank.data.Pq  .=(plank.data.Pq .* (pqmax - pqmin)  .+ pqmin) .* plank.data.Bm                           # Pq
     plank.data.chl .= plank.data.Bm .* Chl2Cint                                                              # Chl
+
+    if mask ≠ nothing
+        if size(mask) == (g.Nx, g.Ny, g.Nz)
+            find_inds!(plank.data, g, arch)
+            mask_individuals!(plank.data, mask, N, arch)
+        else
+            throw(ArgumentError("nut_mask: grid mismatch, size(mask) must equal to (grid.Nx, grid.Ny, grid.Nz)."))
+        end
+    end
+end
+
+@kernel function mask_individuals_kernel!(plank, mask)
+    i = @index(Global)
+    xi = plank.xi[i] - 2
+    yi = plank.yi[i] - 2
+    zi = plank.zi[i] - 2
+    plank.ac[i] = mask[xi, yi, zi] * plank.ac[i]
+end
+function mask_individuals!(plank, mask, N, arch)
+    kernel! = mask_individuals_kernel!(device(arch), 256, (N,))
+    event = kernel!(plank, mask)
+    wait(device(arch), event)
+    return nothing
 end
