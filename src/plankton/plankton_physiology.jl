@@ -6,8 +6,8 @@ function plankton_physiology!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arc
     ##### diagnostics of processes for each species
     diags_spcs!(diags_spcs, proc, plank, plank.ac, plank.xi, plank.yi, plank.zi, arch)
 
-    ##### check the probabilities every 10 mins
-    if t%600 == 0
+    ##### check the probabilities every 10 time steps or 1 hour whichever is shorter
+    if t%(ΔT*(min(10,3600÷ΔT))) == 0 
         ##### grazing and its diagnostic
         diags_proc!(diags_spcs.graz, plank.graz, plank.ac, plank.xi, plank.yi, plank.zi, arch)
 

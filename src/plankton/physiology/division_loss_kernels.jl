@@ -73,15 +73,16 @@ function calc_mort!(plank, proc, p, arch)
 end
 
 ##### generate the random results from probabilities of grazing, mortality and cell division
-function get_probability!(plank, proc, arch)
+function get_probability!(plank, proc, ΔT, arch)
     ##### generate random numbers (0,1) 
     rand!(rng_type(arch), plank.graz)
     rand!(rng_type(arch), plank.mort)
     rand!(rng_type(arch), plank.dvid)
 
-    ##### compare the random number with the given probability, return 1 if random number is smaller
-    @inbounds plank.graz .= isless.(plank.graz, proc.graz) .* plank.ac
-    @inbounds plank.mort .= isless.(plank.mort, proc.mort) .* plank.ac
-    @inbounds plank.dvid .= isless.(plank.dvid, proc.dvid) .* plank.ac
+    ##### compare the random number with the given probability (per time step or per hour whichever is shorter)
+    ##### return 1 if random number is smaller
+    @inbounds plank.graz .= isless.(plank.graz, proc.graz .* ΔT .* min(10,3600÷ΔT)) .* plank.ac
+    @inbounds plank.mort .= isless.(plank.mort, proc.mort .* ΔT .* min(10,3600÷ΔT)) .* plank.ac
+    @inbounds plank.dvid .= isless.(plank.dvid, proc.dvid .* ΔT .* min(10,3600÷ΔT)) .* plank.ac
     return nothing
 end

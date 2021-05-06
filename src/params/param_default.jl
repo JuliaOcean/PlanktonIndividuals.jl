@@ -56,14 +56,14 @@ function phyt_params_default()
         "Chl2N"    => [3.0, 3.0],         # Maximum Chla:N ratio in phytoplankton
         "R_NC"     => [16/106, 16/106],   # N:C ratio in cell biomass
         "R_PC"     => [1/106, 1/106],     # N:C ratio in cell biomass
-        "grz_P"    => [0.0, 0.0],         # Grazing probability scalar
-        "dvid_P"   => [0.1,0.1],          # Probability scaler of cell division.
+        "grz_P"    => [0.0, 0.0],         # Grazing probability per second
+        "dvid_P"   => [5e-5,5e-5],        # Probability of cell division per second.
         "dvid_type"=> [1,5],              # The type of cell division, 1:sizer, 2:adder.
         "dvid_stp" => [6.0,6.0],          # Steepness of sigmoidal function
         "dvid_reg" => [1.9,1.9],          # Regulations of cell division (sizer)
         "dvid_stp2"=> [2.0,2.0],          # Steepness of sigmoidal function
         "dvid_reg2"=> [12.0,12.0],        # Regulations of cell division (sizer)
-        "mort_P"   => [0.3,0.3],          # Probability scaler of cell natural death
+        "mort_P"   => [5e-5,5e-5],        # Probability of cell natural death per second
         "mort_reg" => [0.5,0.5],          # Regulation of cell natural death
         "grazFracC"=> [0.7, 0.7],         # Fraction goes into dissolved organic pool
         "grazFracN"=> [0.7, 0.7],         # Fraction goes into dissolved organic pool
