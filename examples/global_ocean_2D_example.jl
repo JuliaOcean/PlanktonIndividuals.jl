@@ -19,9 +19,16 @@ include(joinpath(p,"../examples/helper_functions.jl"))
 IndividualDisplacements.get_occa_velocity_if_needed()
 𝑃,𝐷,Γ=OCCA_FlowFields(backward_in_time=false)
 
+# Next, we generate a mask from  the land shape information 
+landshape = findall(x -> x == 0.0 ,Γ["Depth"][1])
+mask = ones(360,160)
+mask[landshape] .= 0.0
+mask = reshape(mask,360,160,1)
+nothing
+
 # Then we use a stream function to generate the flow field which is a double-gyre configuration
-uu=reshape(𝑃.u0[1][2:end-1,2:end-1,1],(360,160,1))
-vv=reshape(𝑃.v0[1][2:end-1,2:end-1,1],(360,160,1))
+uu=reshape(𝑃.u0[1][2:end-1,2:end-1,1],(360,160,1)) .* mask
+vv=reshape(𝑃.v0[1][2:end-1,2:end-1,1],(360,160,1)) .* mask
 ww=zeros(360,160,2)
 
 uvels = fill(uu, 2)
@@ -39,13 +46,13 @@ nothing
 # Next we setup the individual-based model by specifying the architecture, grid,
 # number of individuals, parameters, and nutrient initial conditions.
 
-model = PI_Model(CPU(), grid; individual_size = (Nsp = 1, N = 360, cap = 8))
+model = PI_Model(CPU(), grid; individual_size = (Nsp = 1, N = 360, cap = 8), mask = mask)
 
 # We also need to setup a runtime simulation to run the model.
 # The simulation includes time step, number of time steps, flow fields that
 # will be used etc.
 
-sim = PI_simulation(model, ΔT = 3600, nΔT = 1, diag_freq = 86400, 
+sim = PI_simulation(model, ΔT = 3600, nΔT = 1, diag_freq = 60, 
                     vels=(u=uvels, v=vvels, w=wvels), 
                     vel_reuse = true)
 
@@ -55,12 +62,12 @@ sim = PI_simulation(model, ΔT = 3600, nΔT = 1, diag_freq = 86400,
 # Finaly, we run the model and plot the distribution of individuals as well as nutrient fields
 # We use Plots.jl to plot individuals and nutrient fields.
 #
-function plot(model::PI_Model)
+function plot(model::PI_Model, uu)
     ## Coordinate arrays for plotting
     xC, yC = collect(model.grid.xC)[3:end-2], collect(model.grid.yC)[3:end-2]
 
     ## heatmap of the flow field
-    fl_plot = Plots.contourf(xC, yC, uu[:,:,1]', xlabel="x (m)", ylabel="y (m)", color=:balance, fmt=:png, colorbar=false)
+    fl_plot = Plots.contourf(xC, yC, uu', xlabel="x (m)", ylabel="y (m)", color=:balance, fmt=:png, colorbar=false)
 
     ## a scatter plot embeded in the flow fields
     px = Array(model.individuals.phytos.sp1.data.x)
@@ -83,7 +90,11 @@ for i in 1:24
     update!(sim)
 end
 
-plot(model)
+#
+# We plot the current state of the model
+u_plot = uu[:,:,1]
+u_plot[landshape] .= NaN
+plot(model, u_plot)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # Or you can use the following code to generate an animation like below
