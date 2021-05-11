@@ -8,6 +8,7 @@
 Pages = [
     "equations.md",
     "model_setup.md",    
+    "model_run.md",    
     "examples.md",
     "benchmarks.md",
     "function_index.md",    
