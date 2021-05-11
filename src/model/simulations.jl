@@ -26,17 +26,20 @@ end
                   save_individuals = false,
                   vel_reuse = false
                   )
-Generate the `PI_simulation` struct for a `model` with time step `ΔT`. 
+Generate a `PI_simulation` data structure.
 
-Keyword Arguments
-=================
-- `ΔT` (required): `model` time step in second, maximum is 1 hour (3600 seconds).
-- `nΔT` (required): The number of time steps to run in `simulation`.
-- `diag_freq` (required): The frequency of diagnostics (in number of time steps).
-- `PARF_path` and `temp_path` (optional): External forcings of PAR and temperature. Hourly data of a single day is required (25 data points in total).
-- `res_dir` (optional): Create a directory to store results, `nothing` by default.
-- `save_diags` and `save_individuals` (optional): whether to save diagnostics or individuals.
-- `vels` (optional): The velocity fields for nutrient fields and individuals. `nothing` means no velocities
+Keyword Arguments (Required)
+============================
+- `ΔT` : time step in second.
+- `nΔT` : number of time steps.
+- `diag_freq` : frequency of diagnostics (in number of time steps).
+
+Keyword Arguments (Optional)
+============================
+- `PARF_path` and `temp_path` : External forcings of PAR and temperature. Hourly data of a single day is required (25 data points in total).
+- `res_dir` : Create a directory to store results, `nothing` by default.
+- `save_diags` and `save_individuals` : whether to save diagnostics or individuals.
+- `vels` : The velocity fields for nutrient fields and individuals. `nothing` means no velocities
                      will be applied in the simulation. Otherwise, `vels` mush be a `NamedTuple` containing
                      all `u`, `v`, and `w`. Each of `u`, `v`, and `w` must be an 4D-`Array` of 
                      `(Nx, Ny, Nz+1, nΔT+1)` elements, excluding halo points, but bounded in `z` direction.

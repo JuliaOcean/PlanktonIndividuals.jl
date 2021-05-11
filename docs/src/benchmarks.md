@@ -1,4 +1,5 @@
-# Performace benchmarks
+
+# Benchmarks
 
 Here we benchmark the model performance in two `Architecture`s.
 The number of individuals used in the benchmark are `(2, 2^5, 2^10, 2^15)`.
