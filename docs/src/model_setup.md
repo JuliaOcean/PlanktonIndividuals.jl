@@ -1,4 +1,4 @@
-# Model Setup
+# Model Configuration
 
 This section describes all the options and features that can be used to set up a `PI_Model`.
 

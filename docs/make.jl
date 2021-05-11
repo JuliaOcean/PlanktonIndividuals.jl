@@ -12,10 +12,11 @@ for i in 1:length(examples)
 end
 
 example_pages = [
+    "Table Of Content" => "examples.md",
+    "Zero-Dimensional Experiment" => "generated/0D_experiment.md",
     "Vertical Two-Dimensional Example" => "generated/vertical_2D_example.md",
     "Horizontal Two-Dimensional Example" => "generated/horizontal_2D_example.md",
     "Surface Mixing Three-Dimensional Example" => "generated/surface_mixing_3D_example.md",
-    "Zero-Dimensional Experiment" => "generated/0D_experiment.md"
 ]
 
 makedocs(;
@@ -23,9 +24,9 @@ makedocs(;
          format = Documenter.HTML(),
          pages = [
              "Home" => "index.md",
-             "Examples"  => example_pages,
+             "Model Equations" => "equations.md",
              "Model Setup" => "model_setup.md",
-             "Equations" => "equations.md",
+             "Examples"  => example_pages,
              "Benchmarks"  => "benchmarks.md",
              "Function index" => "function_index.md"
              ],
