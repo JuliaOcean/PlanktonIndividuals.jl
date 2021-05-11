@@ -20,22 +20,26 @@ end
             t = 0.0,
             mask = nothing,
             )
-Generate the `PI_Model` struct on `grid`. 
 
-Keyword Arguments
-=================
-- `arch` (required): `CPU()` or `GPU()`. The computer architecture used to time-step `model`.
-- `grid` (required): The resolution and discrete geometry on which `model` is solved.
-- `individual_size` (optional): `NamedTuple` used to set number of species `Nsp`, number of individuals `N`,
+Generate a `PI_Model` data structure. 
+
+Keyword Arguments (Required)
+============================
+- `arch` : `CPU()` or `GPU()`. Computer architecture being used to run the model.
+- `grid` : a `AbstractGrid` structure. Discrete grid for the model (resolution and geometry).
+
+Keyword Arguments (Optional)
+============================
+- `individual_size` : `NamedTuple` used to set number of species `Nsp`, number of individuals `N`,
                                 and max individual capacity `cap`.
-- `bgc_params` (optional): Parameter set for biogeochemical processes modeled in the model.
-- `phyt_params` (optional): Parameter set for physiological processes of individuals modeled in the model.
-- `nut_source` (optional): The source of initial conditions of nutrient fields, should be either a `NamedTuple` 
+- `bgc_params` : Parameter set for biogeochemical processes modeled in the model.
+- `phyt_params` : Parameter set for physiological processes of individuals modeled in the model.
+- `nut_source` : The source of initial conditions of nutrient fields, should be either a `NamedTuple` 
                            or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
-- `diag_ntrs` (optional): a `Tuple` containing the names of nutrient fields to be diagnosed.
-- `diag_nprocs` (optional): a `Tuple` containing the names of physiological processes to be diagnosed.
-- `t` (optional): Model time, start from 0 by default, in second.
-- `mask` (optional): Mask out the individuals and tracers generated out of the domain, a 3D array with size `(Nx, Ny, Nz)`.
+- `diag_ntrs` : a `Tuple` containing the names of nutrient fields to be diagnosed.
+- `diag_nprocs` : a `Tuple` containing the names of physiological processes to be diagnosed.
+- `t` : Model time, start from 0 by default, in second.
+- `mask` : Mask out the individuals and tracers generated out of the domain, a 3D array with size `(Nx, Ny, Nz)`.
 """
 function PI_Model(arch::Architecture, grid::RegularRectilinearGrid;
                   individual_size = (Nsp = 1, N = 1024, cap = 8),

@@ -25,7 +25,8 @@ makedocs(;
          pages = [
              "Home" => "index.md",
              "Model Equations" => "equations.md",
-             "Model Setup" => "model_setup.md",
+             "Model Configuration" => "model_setup.md",
+             "Model Simulation" => "model_run.md",
              "Examples"  => example_pages,
              "Benchmarks"  => "benchmarks.md",
              "Function index" => "function_index.md"
