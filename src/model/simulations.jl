@@ -30,7 +30,7 @@ Generate the `PI_simulation` struct for a `model` with time step `ΔT`.
 
 Keyword Arguments
 =================
-- `ΔT` (required): `model` time step in second.
+- `ΔT` (required): `model` time step in second, maximum is 1 hour (3600 seconds).
 - `nΔT` (required): The number of time steps to run in `simulation`.
 - `diag_freq` (required): The frequency of diagnostics (in number of time steps).
 - `PARF_path` and `temp_path` (optional): External forcings of PAR and temperature. Hourly data of a single day is required (25 data points in total).

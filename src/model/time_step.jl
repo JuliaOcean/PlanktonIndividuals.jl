@@ -10,6 +10,7 @@ Keyword Arguments
 """
 function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
     model.t = model.t+ΔT
+    model.iteration = model.iteration+1
 
     @inbounds model.timestepper.vel½.u.data .= (model.timestepper.vel₀.u.data .+ model.timestepper.vel₁.u.data) .* 0.5
     @inbounds model.timestepper.vel½.v.data .= (model.timestepper.vel₀.v.data .+ model.timestepper.vel₁.v.data) .* 0.5
@@ -68,7 +69,7 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
     end
 
     nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.nut_temp, model.arch,
-                model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT)
+                model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT, model.iteration)
 
     write_nut_cons(model.grid, model.timestepper.Gcs, model.nutrients, model.t, resultspath)
 
@@ -81,6 +82,7 @@ end
 
 function PI_TimeStep!(model::PI_Model, ΔT)
     model.t = model.t+ΔT
+    model.iteration = model.iteration+1
 
     @inbounds model.timestepper.vel½.u.data .= (model.timestepper.vel₀.u.data .+ model.timestepper.vel₁.u.data) .* 0.5
     @inbounds model.timestepper.vel½.v.data .= (model.timestepper.vel₀.v.data .+ model.timestepper.vel₁.v.data) .* 0.5
@@ -131,7 +133,7 @@ function PI_TimeStep!(model::PI_Model, ΔT)
     end
 
     nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.nut_temp, model.arch,
-                model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT)
+                model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT, model.iteration)
 
     @inbounds model.timestepper.vel₀.u.data .= model.timestepper.vel₁.u.data
     @inbounds model.timestepper.vel₀.v.data .= model.timestepper.vel₁.v.data
