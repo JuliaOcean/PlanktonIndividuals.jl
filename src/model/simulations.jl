@@ -78,6 +78,8 @@ function PI_simulation(model::PI_Model; ΔT::Int64, nΔT::Int64, diag_freq::Int6
     PARF = read_IR_input(ΔT, model.grid, path = PARF_path)
     input = PI_Input(temp, PARF, vels)
 
+    validate_bcs(model.nutrients, model.grid, nΔT)
+
     sim = PI_simulation(model, input, ΔT, nΔT, diag_freq, res_dir, save_diags, save_individuals, vel_reuse)
 
     return sim

@@ -23,8 +23,8 @@ end
 # add boundary conditions for DOC
 model.nutrients.DOC.bc.x.left  = 1.0e-3 # west boundary condition of 0.1 mmol/m^2/second
 model.nutrients.DOC.bc.x.right = randn(20,20) .* 1e-3 # east boundary condition of -0.1 mmol/m^2/second
-model.nutrients.DOC.bc.y.left  = randn(20,20,11) .* 1e-3 # south boundary condition of 0.1 mmol/m^2/second
-model.nutrients.DOC.bc.y.right = randn(20,20,11) .* 1e-3 # north boundary condition of -0.1 mmol/m^2/second
+model.nutrients.DOC.bc.y.left  = randn(20,20,10) .* 1e-3 # south boundary condition of 0.1 mmol/m^2/second
+model.nutrients.DOC.bc.y.right = randn(20,20,10) .* 1e-3 # north boundary condition of -0.1 mmol/m^2/second
 
 sim = PI_simulation(model, ΔT = 60, nΔT = 10, diag_freq = 3600, 
                     vels=(u=uvel, v=vvel, w=wvel)) 
