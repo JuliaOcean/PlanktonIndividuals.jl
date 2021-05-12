@@ -1,65 +1,57 @@
 # # Vertical 2-Dimensional Example
 #
-# Here we simulate phytoplankton cells as Lagrangian particles in a 2D flow field.
-# The domain is periodic in x direction but bounded in z direction
+# Here we simulate phytoplankton cells as Lagrangian particles in a 2D flow field, with 
+# one horizontal direction (x) and one vertical one (z), like in an ocean transect.
+#
+# Here the domain is periodic in the x direction while it is bounded in the z direction.
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1. Import packages
 #
 using PlanktonIndividuals, Plots
 
+p=dirname(pathof(PlanktonIndividuals))
+include(joinpath(p,"../examples/helper_functions.jl"))
+
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2. Generate Flow Fields
 #
-# First we'll generate grid information
+# First we generate grid information (128 by 128 grid boxes, 1m thick, and 1m wide) and the computational architecture (CPU).
+
+arch = CPU()
+
 grid = RegularRectilinearGrid(size=(128, 1, 128), spacing=(1, 1, 1))
 
-# Then we use a stream function to generate the flow fields
+# Then we use a stream function (see helper_functions.jl) to generate a simple flow field (displayed below)
+# in a 2D vertical plane.
 
-scal = 2e-1
-f(x, y, z) = scal*sin(x*2π/128)*sin(z*π/128) #stream function
-
-ϕcorners=[f(x,0.,z) for x in 0:128, z in -128:0]
-ϕcenters=[f(x,0.,z) for x in 0.5:128, z in -128:-0.5]
-
-uu=-diff(ϕcorners,dims=2)[1:end-1,:]
-ww=diff(ϕcorners,dims=1)
-uu=reshape(uu,(128,1,128))
-ww=reshape(ww,(128,1,129))
-uu = reverse(uu, dims=3)
-ww = reverse(ww, dims=3)
-
-uvels = fill(uu, 2)
-vvels = fill(0*uu, 2)
-wvels = fill(ww, 2)
-uvels = cat(uvels..., dims=4)
-vvels = cat(vvels..., dims=4)
-wvels = cat(wvels..., dims=4)
-
-nothing
+(uvels, vvels, wvels, ϕcenters) = streamfunction_xz();
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Model Setup
 #
-# Next we setup the individual-based model by specifying the architecture, grid,
-# number of individuals, parameters, and nutrient initial conditions.
+# Next we setup the individual-based model by specifying the architecture, grid, and plankton community.
 
-model = PI_Model(CPU(), grid; individual_size = (Nsp = 1, N = 2^7, cap = 8))
+model = PI_Model(arch, grid; individual_size = (Nsp = 1, N = 2^7, cap = 8))
 
-# We also need to setup a runtime simulation to run the model.
-# The simulation includes time step, number of time steps, flow fields that
-# will be used etc.
+# Finally we setup the duration of the model simulation and the kind of output we want.
 
 sim = PI_simulation(model, ΔT = 60, nΔT = 1, diag_freq = 3600, 
                     vels=(u=uvels, v=vvels, w=wvels), 
                     vel_reuse = true)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 4. Run the Model
+# ## 4. Model Run
 #
-# Finaly, we run the model and plot the distribution of individuals as well as nutrient fields
-# We use Plots.jl to plot individuals and nutrient fields.
-#
+# We run the model for 120 time steps (2 hours) and then plot individuals and nutrients in their final state (stored in model).
+
+for i in 1:120
+    update!(sim)
+end
+
+# To plot the distribution of individuals as well as nutrient fields we use Plots.jl and 
+# create a function that can easily be re-used e.g. to create an animation.
+
 function plot(model::PI_Model)
     ## Coordinate arrays for plotting
     xC, zC = collect(model.grid.xC)[3:130], collect(model.grid.zC)[3:130]
@@ -80,11 +72,6 @@ function plot(model::PI_Model)
         title=[lpad(model.t÷86400,2,"0")*"day "*lpad(model.t÷3600-24*(model.t÷86400),2,"0")*"hour" "DOC (mmolC/L)"])
 
     return plt
-end
-#
-# We run the model for 120 time steps (2 hour) and plot the individuals and DOC field.
-for i in 1:120
-    update!(sim)
 end
 
 plot(model)

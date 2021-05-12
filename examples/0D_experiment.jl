@@ -39,7 +39,6 @@ sim = PI_simulation(model, ΔT = 60, nΔT = ntimesteps, diag_freq = 1,
 #
 update!(sim)
 
-
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 5. Results Vizualization
 #
