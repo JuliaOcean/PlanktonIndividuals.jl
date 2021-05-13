@@ -13,10 +13,10 @@ end
 
 example_pages = [
     "Table Of Content" => "examples.md",
-    "Zero-Dimensional Experiment" => "generated/0D_experiment.md",
-    "Vertical Two-Dimensional Example" => "generated/vertical_2D_example.md",
-    "Horizontal Two-Dimensional Example" => "generated/horizontal_2D_example.md",
-    "Surface Mixing Three-Dimensional Example" => "generated/surface_mixing_3D_example.md",
+    "Lab Experiment" => "generated/0D_experiment.md",
+    "Ocean Transect" => "generated/vertical_2D_example.md",
+    "Two-Dimensional Map" => "generated/horizontal_2D_example.md",
+    "Three-Dimensional Domain" => "generated/surface_mixing_3D_example.md",
 ]
 
 makedocs(;

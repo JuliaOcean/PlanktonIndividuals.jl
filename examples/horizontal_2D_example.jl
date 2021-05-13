@@ -1,12 +1,15 @@
 # # Horizontal 2-Dimensional Example
 #
-# Here we simulate phytoplankton cells as Lagrangian particles in a 2D flow field.
-# The domain is periodic in both directions horizontally.
+# Here we simulate phytoplankton cells as Lagrangian particles in a horizontal, two-dimensional, flow field.
+# The domain is periodic in both directions.
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1. Import packages
 #
 using PlanktonIndividuals, Plots
+
+p=dirname(pathof(PlanktonIndividuals))
+include(joinpath(p,"../examples/helper_functions.jl"))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2. Generate Flow Fields
@@ -15,29 +18,12 @@ using PlanktonIndividuals, Plots
 grid = RegularRectilinearGrid(size=(128, 128, 1), spacing=(1, 1, 1))
 
 # Then we use a stream function to generate the flow field which is a double-gyre configuration
-scal = 3e-1
-f(x, y, z) = scal*(0.3*sin(x*1π/128)*sin(y*2π/128)+0.7*sin(x*2π/128)*sin(y*1π/128)) #stream function
+# [as explained here](https://shaddenlab.berkeley.edu/uploads/LCS-tutorial/examples.html#Sec7.1)
 
-ϕcorners=[f(x,y,0.) for x in 0:128, y in 0:128]
-ϕcenters=[f(x,y,0.) for x in 0.5:128, y in 0.5:128]
-
-uu=-diff(ϕcorners,dims=2)[1:end-1,:]
-vv=diff(ϕcorners,dims=1)[:,1:end-1]
-uu=reshape(uu,(128,128,1))
-vv=reshape(vv,(128,128,1))
-ww=zeros(128,128,2)
-
-uvels = fill(uu, 2)
-vvels = fill(vv, 2)
-wvels = fill(ww, 2)
-uvels = cat(uvels..., dims=4)
-vvels = cat(vvels..., dims=4)
-wvels = cat(wvels..., dims=4)
-
-nothing
+(uvels, vvels, wvels, ϕcenters) = streamfunction_xy();
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 3. Model Setup
+# ## 3. Set Up The Model
 #
 # Next we setup the individual-based model by specifying the architecture, grid,
 # number of individuals, parameters, and nutrient initial conditions.
@@ -55,9 +41,14 @@ sim = PI_simulation(model, ΔT = 60, nΔT = 1, diag_freq = 3600,
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Run the Model
 #
-# Finaly, we run the model and plot the distribution of individuals as well as nutrient fields
-# We use Plots.jl to plot individuals and nutrient fields.
-#
+# We run the model for 120 time steps (2 hour) and plot the individuals and DOC field afterwards.
+for i in 1:120
+    update!(sim)
+end
+
+# To plot the distribution of individuals as well as nutrient fields we use Plots.jl and 
+# create a function that can easily be re-used e.g. to create an animation.
+
 function plot(model::PI_Model)
     ## Coordinate arrays for plotting
     xC, yC = collect(model.grid.xC)[3:130], collect(model.grid.yC)[3:130]
@@ -78,11 +69,6 @@ function plot(model::PI_Model)
         title=[lpad(model.t÷86400,2,"0")*"day "*lpad(model.t÷3600-24*(model.t÷86400),2,"0")*"hour" "DOC (mmolC/L)"])
 
     return plt
-end
-#
-# We run the model for 120 time steps (2 hour) and plot the individuals and DOC field.
-for i in 1:120
-    update!(sim)
 end
 
 plot(model)
