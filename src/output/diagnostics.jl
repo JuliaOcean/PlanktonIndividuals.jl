@@ -60,7 +60,7 @@ function show(io::IO, diags::PlanktonDiagnostics)
     Nsp = length(model.individuals.phytos)
     N = Int(dot(model.individuals.phytos.sp1.data.ac,model.individuals.phytos.sp1.data.ac))
     cap = length(model.individuals.phytos.sp1.data.ac)
-    print(io, "diagnostics of tracers: $(keys(diags.tr))\n",
-              "diagnostics of individuals: $(keys(diags.spcs.sp1))",
+    print(io, "diagnostics of tracers: $(keys(diags.tracer))\n",
+              "diagnostics of individuals: $(keys(diags.plankton.sp1))",
               "save averaged diagnostics every $(diags.frequency) time steps\n")
 end
