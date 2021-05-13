@@ -21,18 +21,23 @@ arch=CPU()
 #
 # Next we setup the individual-based model by specifying the computational architecture, grid, plankton community, and diagnostics.
 #
-model = PI_Model(arch, grid; 
-                 individual_size = (Nsp = 1, N = 2^10, cap = 16),
-                 diag_nprocs = (:num, :graz, :mort, :dvid, :PS, :BS, :Cq, :chl, :Bm))
+model = PlanktonModel(arch, grid; individual_size = (Nsp = 1, N = 2^10, cap = 16))
+
+#
+# Then we setup diagnostics
+#
+diags = PlanktonDiagnostics(model; tracer=(:PAR, :NH4, :NO3, :DOC),
+                                   plankton = (:num, :graz, :mort, :dvid, :PS, :BS, :Cq, :chl, :Bm),
+                                   frequency = 1)
 
 # Finally we setup the duration of the model simulation, a run directory location, and the kind of output we want.
 #
 ntimesteps = 60 * 24 * 1 # 1 days with time step of 60s 
 res_dir = PrepRunDir()
-sim = PI_simulation(model, ΔT = 60, nΔT = ntimesteps, diag_freq = 1, 
-                    res_dir = res_dir, 
-                    save_diags = true,
-                    save_individuals = false)
+sim = PlanktonSimulation(model, ΔT = 60, nΔT = ntimesteps, 
+                         diags = diags,
+                         res_dir = res_dir, 
+                         save_individuals = false)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Model Run

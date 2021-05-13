@@ -28,15 +28,13 @@ grid = RegularRectilinearGrid(size=(128, 128, 1), spacing=(1, 1, 1))
 # Next we setup the individual-based model by specifying the architecture, grid,
 # number of individuals, parameters, and nutrient initial conditions.
 
-model = PI_Model(CPU(), grid; individual_size = (Nsp = 1, N = 2^7, cap = 8))
+model = PlanktonModel(CPU(), grid; individual_size = (Nsp = 1, N = 2^7, cap = 8))
 
 # We also need to setup a runtime simulation to run the model.
 # The simulation includes time step, number of time steps, flow fields that
 # will be used etc.
 
-sim = PI_simulation(model, ΔT = 60, nΔT = 1, diag_freq = 3600, 
-                    vels=(u=uvels, v=vvels, w=wvels), 
-                    vel_reuse = true)
+sim = PlanktonSimulation(model, ΔT = 60, nΔT = 1, vels=(u=uvels, v=vvels, w=wvels), vel_reuse = true)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Run the Model
@@ -49,7 +47,7 @@ end
 # To plot the distribution of individuals as well as nutrient fields we use Plots.jl and 
 # create a function that can easily be re-used e.g. to create an animation.
 
-function plot(model::PI_Model)
+function plot(model::PlanktonModel)
     ## Coordinate arrays for plotting
     xC, yC = collect(model.grid.xC)[3:130], collect(model.grid.yC)[3:130]
 

@@ -32,12 +32,11 @@ grid = RegularRectilinearGrid(size=(128, 1, 128), spacing=(1, 1, 1))
 #
 # Next we setup the individual-based model by specifying the architecture, grid, and plankton community.
 
-model = PI_Model(arch, grid; individual_size = (Nsp = 1, N = 2^7, cap = 8))
+model = PlanktonModel(arch, grid; individual_size = (Nsp = 1, N = 2^7, cap = 8))
 
 # Finally we setup the duration of the model simulation and the kind of output we want.
 
-sim = PI_simulation(model, ΔT = 60, nΔT = 1, diag_freq = 3600, 
-                    vels=(u=uvels, v=vvels, w=wvels), 
+sim = PlanktonSimulation(model, ΔT = 60, nΔT = 1, vels=(u=uvels, v=vvels, w=wvels), 
                     vel_reuse = true)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
@@ -52,7 +51,7 @@ end
 # To plot the distribution of individuals as well as nutrient fields we use Plots.jl and 
 # create a function that can easily be re-used e.g. to create an animation.
 
-function plot(model::PI_Model)
+function plot(model::PlanktonModel)
     ## Coordinate arrays for plotting
     xC, zC = collect(model.grid.xC)[3:130], collect(model.grid.zC)[3:130]
 

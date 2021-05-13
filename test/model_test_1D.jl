@@ -2,7 +2,7 @@ using PlanktonIndividuals, Serialization
 
 grid = RegularRectilinearGrid(size = (1, 1, 16), spacing = (32, 32, 2), halo = (2, 2, 2))
 
-model = PI_Model(CPU(), grid) 
+model = PlanktonModel(CPU(), grid) 
 
 TP = sum((interior(model.nutrients.PO4.data, grid) .+ 
           interior(model.nutrients.DOP.data, grid) .+ 
@@ -20,8 +20,7 @@ for i in 1:11
     wvel[:,:,:,i] .= randn(1,1,17) .* 1e-4
 end
 
-sim = PI_simulation(model, ΔT = 60, nΔT = 10, diag_freq = 3600, 
-                    vels=(u=uvel, v=vvel, w=wvel)) 
+sim = PlanktonSimulation(model, ΔT = 60, nΔT = 10, vels=(u=uvel, v=vvel, w=wvel)) 
 
 update!(sim)
 
