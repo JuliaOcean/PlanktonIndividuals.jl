@@ -42,6 +42,7 @@ include("plankton/plankton_physiology.jl")
 include("utils.jl")
 include("output/output_writers.jl")
 include("output/diagnostics.jl")
+include("output/diagnostics_plankton.jl")
 include("model/timestepper.jl")
 include("model/models.jl")
 include("model/time_step.jl")
@@ -50,7 +51,7 @@ include("model/simulations.jl")
 
 export
     # model structures
-    PI_Model, RegularRectilinearGrid, nutrient_fields,
+    PlanktonModel, RegularRectilinearGrid, nutrient_fields,
     Architecture, GPU, CPU,
 
     # read input functions
@@ -59,11 +60,11 @@ export
     bgc_params_default, phyt_params_default,
     default_nut_init, PrepRunDir,
 
-    # initialize nutrient field and individual sets
-    generate_nutrients,
+    # diagnostics
+    PlanktonDiagnostics,
 
     # Run the model
-    PI_simulation, update!, vel_copy!, PI_TimeStep!,
+    PlanktonSimulation, update!, vel_copy!, TimeStep!,
 
     # write output functions
     write_nut_nc_each_step,

@@ -1,14 +1,14 @@
 """
-    PI_TimeStep!(model, ΔT, resultpath)
-Update physiology processes and nutrient field of `PI_Model` one time step forward.
+    TimeStep!(model, ΔT, resultpath)
+Update physiology processes and nutrient field of `PlanktonModel` one time step forward.
 
 Keyword Arguments
 =================
-- `model`: `PI_Model` to be updated one time step forward
+- `model`: `PlanktonModel` to be updated one time step forward
 - `ΔT`: The length of a time step
 - `resultpath` (optional): The file path to store model output. 
 """
-function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
+function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics, resultspath::String)
     model.t = model.t+ΔT
     model.iteration = model.iteration+1
 
@@ -56,15 +56,15 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
 
         plankton_physiology!(model.individuals.phytos[sp].data, model.timestepper.nuts,
                              model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,
-                             model.timestepper.plk, model.diags.spcs[sp], ΔT, model.t, model.arch)
+                             model.timestepper.plk, diags.spcs[sp], ΔT, model.t, model.arch)
     end
     write_species_dynamics(model.t, model.individuals.phytos, resultspath)
 
     ##### diagnostics for nutrients
-    @inbounds model.diags.tr.PAR .+= model.timestepper.par
-    for key in keys(model.diags.tr)
+    @inbounds diags.tracer.PAR .+= model.timestepper.par
+    for key in keys(diags.tracer)
         if key in keys(model.nutrients)
-            @inbounds model.diags.tr[key] .+= model.nutrients[key].data
+            @inbounds diags.tracer[key] .+= model.nutrients[key].data
         end
     end
 
@@ -80,7 +80,7 @@ function PI_TimeStep!(model::PI_Model, ΔT, resultspath::String)
     return nothing
 end
 
-function PI_TimeStep!(model::PI_Model, ΔT)
+function TimeStep!(model::PlanktonModel, ΔT, ::Nothing, ::Nothing)
     model.t = model.t+ΔT
     model.iteration = model.iteration+1
 
@@ -91,18 +91,11 @@ function PI_TimeStep!(model::PI_Model, ΔT)
     zero_fields!(model.timestepper.plk)
     @inbounds model.timestepper.chl .= 0.0
     @inbounds model.timestepper.pop .= 0.0  # may add an option of self grazing, besides shared grazing
-
-    ##### plankton advection
+    ##### plankton advection and diffusion
     for sp in keys(model.individuals.phytos)
         ##### RK4
         plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
                                model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT, model.arch)
-        ##### AB2 only for 1 species setup
-        # plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos,
-        #                     model.grid, 0.1, model.timestepper.vel₁, ΔT, model.arch)
-        ##### Euler-forward
-        # plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos,
-        #                     model.grid, model.timestepper.vel₁, ΔT, model.arch)
         ##### Diffusion
         plankton_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd,
                             model.bgc_params["κhP"], ΔT, model.grid, model.arch)
@@ -129,7 +122,7 @@ function PI_TimeStep!(model::PI_Model, ΔT)
 
         plankton_physiology!(model.individuals.phytos[sp].data, model.timestepper.nuts,
                              model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,
-                             model.timestepper.plk, model.diags.spcs[sp], ΔT, model.t, model.arch)
+                             model.timestepper.plk, nothing, ΔT, model.t, model.arch)
     end
 
     nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.nut_temp, model.arch,
