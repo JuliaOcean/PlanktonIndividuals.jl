@@ -13,7 +13,7 @@ function calc_diffusion!(plank, rnd, κx, κy, κz, ΔT, arch::Architecture)
     return nothing
 end
 
-function plankton_diffusion!(plank, rnd, κx, κy, κz, ΔT, g::RegularRectilinearGrid, arch::Architecture)
+function plankton_diffusion!(plank, rnd, κx, κy, κz, ΔT, g::AbstractGrid, arch::Architecture)
     ##### generate random numbers for grazing, mortality and division (0,1)
     randn!(rng_type(arch), rnd.x)
     randn!(rng_type(arch), rnd.y)

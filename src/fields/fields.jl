@@ -3,7 +3,7 @@ struct Field
     bc::NamedTuple
 end
 
-function Field(arch::Architecture, g::RegularRectilinearGrid)
+function Field(arch::Architecture, g::AbstractGrid)
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
     data = zeros(total_size) |> array_type(arch)
     bcs = default_bcs()
