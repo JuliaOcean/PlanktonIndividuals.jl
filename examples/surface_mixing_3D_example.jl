@@ -38,14 +38,13 @@ end
 # Next we setup the individual-based model by specifying the architecture, grid,
 # number of individuals, parameters, and nutrient initial conditions.
 
-model = PI_Model(CPU(), grid; individual_size = (Nsp = 1, N = 2^8, cap = 8))
+model = PlanktonModel(CPU(), grid; N_species = 1, N_individual = 2^8, max_individuals = 2^10*8)
 
 # We also need to setup a runtime simulation to run the model.
 # The simulation includes time step, number of time steps, flow fields that
 # will be used etc.
 
-sim = PI_simulation(model, ΔT = 60, nΔT = 1, diag_freq = 3600, 
-                    vels=(u=u, v=v, w=w))
+sim = PlanktonSimulation(model, ΔT = 60, nΔT = 1, vels=(u=u, v=v, w=w))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Run the Model
@@ -53,7 +52,7 @@ sim = PI_simulation(model, ΔT = 60, nΔT = 1, diag_freq = 3600,
 # Finaly, we run the model and plot the distribution of individuals as well as nutrient fields
 # We use Plots.jl to plot individuals and a slice of nutrient fields.
 #
-function plot(model::PI_Model)
+function plot(model::PlanktonModel)
     ## Coordinate arrays for plotting
     xC, zC = collect(model.grid.xC)[3:34], collect(model.grid.zC)[3:34]
 

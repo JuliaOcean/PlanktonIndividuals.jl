@@ -29,7 +29,7 @@ function write_nut_nc_each_step(nut::NamedTuple, t::Int64, filepath::String)
 end
 
 ##### write a brief summary of nutrients at each time step into a txt file
-function write_nut_cons(g::RegularRectilinearGrid, gtr::NamedTuple, nutₜ::NamedTuple, t::Int64, filepath)
+function write_nut_cons(g::AbstractGrid, gtr::NamedTuple, nutₜ::NamedTuple, t::Int64, filepath)
     Σgtrⁿ = sum(interior(gtr.NH4.data, g) .* g.V) +
             sum(interior(gtr.NO3.data, g) .* g.V) +
             sum(interior(gtr.DON.data, g) .* g.V) +
@@ -69,7 +69,7 @@ function write_nut_cons(g::RegularRectilinearGrid, gtr::NamedTuple, nutₜ::Name
     println(Pio,@sprintf("%3.0f  %2.2f  %.16E  %.16E  %.4f",day, hour, Σgtrᵖ, TP, mean(interior(nutₜ.PO4.data, g))))
     close(Cio);close(Nio);close(Pio);
 end
-function write_nut_cons(g::RegularRectilinearGrid, nutₜ::NamedTuple, t::Int64, filepath)
+function write_nut_cons(g::AbstractGrid, nutₜ::NamedTuple, t::Int64, filepath)
     Cio = open(filepath*"cons_C.txt","a")
     Nio = open(filepath*"cons_N.txt","a")
     Pio = open(filepath*"cons_P.txt","a")
@@ -138,20 +138,20 @@ Keyword Arguments
 """
 function write_diags_to_jld2(diags, filepath, t, ncounts)
     jldopen(filepath*"diags.jld2", "a+") do file
-        for key in keys(diags.tr)
-            file[lpad(t, 10, "0")*"/nut/"*string(key)] = Array(diags.tr[key]) ./ ncounts
+        for key in keys(diags.tracer)
+            file[lpad(t, 10, "0")*"/nut/"*string(key)] = Array(diags.tracer[key]) ./ ncounts
         end
-        for sp in keys(diags.spcs)
-            for proc in keys(diags.spcs[sp])
-                file[lpad(t, 10, "0")*"/"*string(sp)*"/"*string(proc)] = Array(diags.spcs[sp][proc]) ./ ncounts 
+        for sp in keys(diags.plankton)
+            for proc in keys(diags.plankton[sp])
+                file[lpad(t, 10, "0")*"/"*string(sp)*"/"*string(proc)] = Array(diags.plankton[sp][proc]) ./ ncounts 
             end
         end
     end
     ##### zeros diags
-    for tr in diags.tr
+    for tr in diags.tracer
         tr .= 0.0
     end
-    for sp in diags.spcs
+    for sp in diags.plankton
         for proc in sp
             proc .= 0.0
         end

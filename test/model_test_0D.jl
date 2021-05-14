@@ -5,9 +5,11 @@ grid = RegularRectilinearGrid(size = (1, 1, 1), spacing = (32, 32, 32), halo = (
 
 phyt_params = deserialize(dirname(pathof(PlanktonIndividuals))*"/../test/param5.bin")
 
-model = PI_Model(CPU(), grid;
-                 individual_size = (Nsp = 5, N = 1024, cap = 10),
-                 phyt_params = update_phyt_params(phyt_params))
+model = PlanktonModel(CPU(), grid;
+                      N_species = 5,
+                      N_individual = 1024,
+                      max_individuals = 1024*10,
+                      phyt_params = update_phyt_params(phyt_params))
 
 TP = sum((interior(model.nutrients.PO4.data, grid) .+ 
           interior(model.nutrients.DOP.data, grid) .+ 
@@ -24,7 +26,7 @@ TP = TP + sum(model.individuals.phytos.sp1.data.Pq .+
               model.individuals.phytos.sp5.data.Bm .* model.individuals.phytos.sp5.p.R_PC)
 
 
-sim = PI_simulation(model, ΔT = 60, nΔT = 10, diag_freq = 3600)
+sim = PlanktonSimulation(model, ΔT = 60, nΔT = 10)
 
 update!(sim)
 

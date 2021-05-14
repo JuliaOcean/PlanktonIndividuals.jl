@@ -1,5 +1,5 @@
 ##### update coordinates of each individual using Explicit Euler (aka Euler Forward) integration
-function plankton_advection!(plank, velos, g::RegularRectilinearGrid, vel, ΔT, arch::Architecture)
+function plankton_advection!(plank, velos, g::AbstractGrid, vel, ΔT, arch::Architecture)
     vel_interpolate!(velos.u1, velos.v1, velos.w1, plank.x, plank.y, plank.z, plank.ac, 
                      vel.u.data, vel.v.data, vel.w.data, g, arch)
 
@@ -8,7 +8,7 @@ function plankton_advection!(plank, velos, g::RegularRectilinearGrid, vel, ΔT, 
 end
 
 ##### update coordinates of each individual using RK4 integration
-function plankton_advection!(plank, velos, g::RegularRectilinearGrid, vel₀, vel½, vel₁, ΔT, arch::Architecture)
+function plankton_advection!(plank, velos, g::AbstractGrid, vel₀, vel½, vel₁, ΔT, arch::Architecture)
     vel_interpolate!(velos.u1, velos.v1, velos.w1, plank.x, plank.y, plank.z, plank.ac, 
                      vel₀.u.data, vel₀.v.data, vel₀.w.data, g, arch)
     calc_coord_1!(plank, velos, ΔT, arch)
@@ -36,7 +36,7 @@ function plankton_advection!(plank, velos, g::RegularRectilinearGrid, vel₀, ve
 end
 
 ##### update coordinates of each individual using quasiAB2 integration
-function plankton_advection!(plank, velos, g::RegularRectilinearGrid, χ, vel₁, ΔT, arch::Architecture)
+function plankton_advection!(plank, velos, g::AbstractGrid, χ, vel₁, ΔT, arch::Architecture)
     ##### time step n
     vel_interpolate!(velos.u1, velos.v1, velos.w1, plank.x, plank.y, plank.z, plank.ac, 
                      vel₁.u.data, vel₁.v.data, vel₁.w.data, g, arch)
