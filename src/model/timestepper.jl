@@ -15,7 +15,7 @@ mutable struct timestepper
     nuts::AbstractArray # a StructArray of nutrients of each individual
 end
 
-function timestepper(arch::Architecture, g::RegularRectilinearGrid, N, cap)
+function timestepper(arch::Architecture, g::RegularRectilinearGrid, N, maxN)
     vel₀ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
     vel½ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
     vel₁ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
@@ -31,19 +31,19 @@ function timestepper(arch::Architecture, g::RegularRectilinearGrid, N, cap)
     temp = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     PARF = zeros(g.Nx, g.Ny) |> array_type(arch)
 
-    rnd = StructArray(x = zeros(cap*N), y = zeros(cap*N), z = zeros(cap*N))
+    rnd = StructArray(x = zeros(maxN), y = zeros(maxN), z = zeros(maxN))
     rnd_d = replace_storage(array_type(arch), rnd)
 
-    velos = StructArray(x  = zeros(cap*N), y  = zeros(cap*N), z  = zeros(cap*N),
-                        u1 = zeros(cap*N), v1 = zeros(cap*N), w1 = zeros(cap*N),
-                        u2 = zeros(cap*N), v2 = zeros(cap*N), w2 = zeros(cap*N),
-                        u3 = zeros(cap*N), v3 = zeros(cap*N), w3 = zeros(cap*N),
-                        u4 = zeros(cap*N), v4 = zeros(cap*N), w4 = zeros(cap*N),
+    velos = StructArray(x  = zeros(maxN), y  = zeros(maxN), z  = zeros(maxN),
+                        u1 = zeros(maxN), v1 = zeros(maxN), w1 = zeros(maxN),
+                        u2 = zeros(maxN), v2 = zeros(maxN), w2 = zeros(maxN),
+                        u3 = zeros(maxN), v3 = zeros(maxN), w3 = zeros(maxN),
+                        u4 = zeros(maxN), v4 = zeros(maxN), w4 = zeros(maxN),
                         )
     velos_d = replace_storage(array_type(arch), velos)
 
-    nuts = StructArray(NH4 = zeros(cap*N), NO3 = zeros(cap*N), PO4 = zeros(cap*N), DOC = zeros(cap*N),
-                       par = zeros(cap*N), T   = zeros(cap*N), pop = zeros(cap*N))
+    nuts = StructArray(NH4 = zeros(maxN), NO3 = zeros(maxN), PO4 = zeros(maxN), DOC = zeros(maxN),
+                       par = zeros(maxN), T   = zeros(maxN), pop = zeros(maxN))
     nuts_d = replace_storage(array_type(arch), nuts)
 
     ts = timestepper(Gcs, nut_temp, vel₀, vel½, vel₁, PARF, temp, plk, par, chl, pop, rnd_d, velos_d, nuts_d)

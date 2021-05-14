@@ -10,19 +10,19 @@ struct individuals
     zoos::NamedTuple
 end
 
-function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict, cap)
-    rawdata = StructArray(x   = zeros(cap*N), y   = zeros(cap*N), z   = zeros(cap*N),
-                          iS  = zeros(cap*N), Sz  = zeros(cap*N), Bm  = zeros(cap*N), 
-                          Cq  = zeros(cap*N), Nq  = zeros(cap*N), Pq  = zeros(cap*N), 
-                          chl = zeros(cap*N), gen = zeros(cap*N), age = zeros(cap*N), 
-                          ac  = zeros(cap*N), idx = zeros(cap*N),
-                          graz= zeros(cap*N), mort= zeros(cap*N), dvid= zeros(cap*N),
-                          xi  = zeros(Int,cap*N), yi  = zeros(Int,cap*N), zi  = zeros(Int,cap*N)) 
+function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict, maxN)
+    rawdata = StructArray(x   = zeros(maxN), y   = zeros(maxN), z   = zeros(maxN),
+                          iS  = zeros(maxN), Sz  = zeros(maxN), Bm  = zeros(maxN), 
+                          Cq  = zeros(maxN), Nq  = zeros(maxN), Pq  = zeros(maxN), 
+                          chl = zeros(maxN), gen = zeros(maxN), age = zeros(maxN), 
+                          ac  = zeros(maxN), idx = zeros(maxN),
+                          graz= zeros(maxN), mort= zeros(maxN), dvid= zeros(maxN),
+                          xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN)) 
     data = replace_storage(array_type(arch), rawdata)
 
-    proc = StructArray(PS   = zeros(cap*N), VDOC = zeros(cap*N), VNH4 = zeros(cap*N), VNO3 = zeros(cap*N),
-                       VPO4 = zeros(cap*N), ρchl = zeros(cap*N), resp = zeros(cap*N), BS   = zeros(cap*N), 
-                       exu  = zeros(cap*N), graz = zeros(cap*N), mort = zeros(cap*N), dvid = zeros(cap*N))
+    proc = StructArray(PS   = zeros(maxN), VDOC = zeros(maxN), VNH4 = zeros(maxN), VNO3 = zeros(maxN),
+                       VPO4 = zeros(maxN), ρchl = zeros(maxN), resp = zeros(maxN), BS   = zeros(maxN), 
+                       exu  = zeros(maxN), graz = zeros(maxN), mort = zeros(maxN), dvid = zeros(maxN))
     proc_d = replace_storage(array_type(arch), proc)
 
     pkeys = collect(keys(params))
@@ -46,13 +46,13 @@ const param_names=(:Nsuper, :Cquota, :mean, :var, :Chl2Cint, :α, :Φ, :TRef, :T
                    :grz_P, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
                    :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP)
 
-function individuals(params::Dict, arch::Architecture, Nsp, N, cap)
+function individuals(params::Dict, arch::Architecture, Nsp, N, maxN)
     plank_data=[]
     if Nsp > 9
         throw(ArgumentError("INDIVIDUALS: species must ≤ 9!"))
     else
         for i in 1:Nsp
-            plank = plankton(N, arch, i, params, cap)
+            plank = plankton(N, arch, i, params, maxN)
             push!(plank_data, plank)
         end
         plank_name = plank_names[1:Nsp]
