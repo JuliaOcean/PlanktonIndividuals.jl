@@ -56,7 +56,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics, result
 
         plankton_physiology!(model.individuals.phytos[sp].data, model.timestepper.nuts,
                              model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,
-                             model.timestepper.plk, diags.spcs[sp], ΔT, model.t, model.arch)
+                             model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch)
     end
     write_species_dynamics(model.t, model.individuals.phytos, resultspath)
 

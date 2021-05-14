@@ -138,20 +138,20 @@ Keyword Arguments
 """
 function write_diags_to_jld2(diags, filepath, t, ncounts)
     jldopen(filepath*"diags.jld2", "a+") do file
-        for key in keys(diags.tr)
-            file[lpad(t, 10, "0")*"/nut/"*string(key)] = Array(diags.tr[key]) ./ ncounts
+        for key in keys(diags.tracer)
+            file[lpad(t, 10, "0")*"/nut/"*string(key)] = Array(diags.tracer[key]) ./ ncounts
         end
-        for sp in keys(diags.spcs)
-            for proc in keys(diags.spcs[sp])
-                file[lpad(t, 10, "0")*"/"*string(sp)*"/"*string(proc)] = Array(diags.spcs[sp][proc]) ./ ncounts 
+        for sp in keys(diags.plankton)
+            for proc in keys(diags.plankton[sp])
+                file[lpad(t, 10, "0")*"/"*string(sp)*"/"*string(proc)] = Array(diags.plankton[sp][proc]) ./ ncounts 
             end
         end
     end
     ##### zeros diags
-    for tr in diags.tr
+    for tr in diags.tracer
         tr .= 0.0
     end
-    for sp in diags.spcs
+    for sp in diags.plankton
         for proc in sp
             proc .= 0.0
         end
