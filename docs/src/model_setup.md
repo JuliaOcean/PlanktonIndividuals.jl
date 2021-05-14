@@ -1,14 +1,14 @@
 # Model Configuration
 
-The model configuration is specified within the `PI_Model` data structure. As documented below, the various parameters of a `PI_Model` can all be specified via keyword arguments. Options and features are documented in more detail afterwards (sub-sections) and in the [Examples](@ref) section.
+The model configuration is specified within the `PlanktonModel` data structure. As documented below, the various parameters of a `PlanktonModel` can all be specified via keyword arguments. Options and features are documented in more detail afterwards (sub-sections) and in the [Examples](@ref) section.
 
 ```@docs
-PI_Model
+PlanktonModel
 ```
 
 ## Architecture
 
-Passing `arch = CPU()` or `arch = GPU()` to the `PI_Model` constructor will determine whether the model
+Passing `arch = CPU()` or `arch = GPU()` to the `PlanktonModel` constructor will determine whether the model
 is time stepped on a CPU or GPU.
 
 Users do not need to modify the setup or simulation script to change the architecture to run on.
@@ -44,8 +44,9 @@ grid spacing (Δx, Δy, Δz): (1, 2, 4)
 
 ## Individuals
 
-The number and species of individuals can be specified via `individual_size = (Nsp = 1, N = 1024, cap = 8)`
-where `Nsp` is the number of species that will be modeled, `N` is the number of individuals in each species, and `cap` is the maximum times of the number of individuals that can be held for each species.
+The number of species can be specified via `N_species = 1`
+The number of individuals per species can be specified via `N_individual = 1024`
+The maximum number of individuals per species that the model can hold is specified via `max_individuals = 8*1024)`
 
 !!! tip "The maximum number of species"
     The maximum number of species that can be modeled is `9`.
