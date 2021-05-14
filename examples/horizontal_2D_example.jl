@@ -28,7 +28,7 @@ grid = RegularRectilinearGrid(size=(128, 128, 1), spacing=(1, 1, 1))
 # Next we setup the individual-based model by specifying the architecture, grid,
 # number of individuals, parameters, and nutrient initial conditions.
 
-model = PlanktonModel(CPU(), grid; individual_size = (Nsp = 1, N = 2^7, cap = 8))
+model = PlanktonModel(CPU(), grid; N_species = 1, N_individual = 2^7, max_individuals = 2^10*8)
 
 # We also need to setup a runtime simulation to run the model.
 # The simulation includes time step, number of time steps, flow fields that

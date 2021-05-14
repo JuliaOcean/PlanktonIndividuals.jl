@@ -21,7 +21,7 @@ arch=CPU()
 #
 # Next we setup the individual-based model by specifying the computational architecture, grid, plankton community, and diagnostics.
 #
-model = PlanktonModel(arch, grid; individual_size = (Nsp = 1, N = 2^10, cap = 16))
+model = PlanktonModel(arch, grid; N_species = 1, N_individual = 2^10, max_individuals = 2^10*16)
 
 #
 # Then we setup diagnostics
