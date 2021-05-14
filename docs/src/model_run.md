@@ -1,7 +1,7 @@
 # Model Simulation
 
 A `PlanktonSimulation` includes a `PlanktonModel` and its time steps `nΔT`, `ΔT`.
-It will time step the `PlanktonModel` by calling [`update!'](@ref).
+It will time step the `PlanktonModel` by calling [`update!`](@ref).
 
 ```@docs
 PlanktonSimulation
