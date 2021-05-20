@@ -1,11 +1,12 @@
 """
-    TimeStep!(model, ΔT, resultpath)
+    TimeStep!(model::PlanktonModel, ΔT::Int64, diags::PlanktonDiagnostics, resultpath::String)
 Update physiology processes and nutrient field of `PlanktonModel` one time step forward.
 
 Keyword Arguments
 =================
-- `model`: `PlanktonModel` to be updated one time step forward
-- `ΔT`: The length of a time step
+- `model`: `PlanktonModel` to be updated one time step forward.
+- `ΔT`: The length of a time step.
+- `diags`: `PlanktonDiagnostics` to be updated.
 - `resultpath` (optional): The file path to store model output. 
 """
 function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics, resultspath::String)

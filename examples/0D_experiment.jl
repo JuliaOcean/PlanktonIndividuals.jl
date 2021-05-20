@@ -12,9 +12,8 @@ using Plots.PlotMeasures
 # ## 2. Grid Setup
 #
 # First we generate grid information (one grid box, 256m thick, and 128x128 in width) and the computational architecture (CPU).
-grid = RegularRectilinearGrid(size=(1,1,1), spacing=(128, 128, 256))
-
 arch=CPU()
+grid = RegularRectilinearGrid(size=(1,1,1), spacing=(128, 128, 256))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Model Setup

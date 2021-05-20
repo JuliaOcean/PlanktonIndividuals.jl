@@ -51,13 +51,14 @@ include("model/simulations.jl")
 
 export
     # model structures
-    PlanktonModel, RegularRectilinearGrid, nutrient_fields,
+    PlanktonModel, RegularRectilinearGrid, 
     Architecture, GPU, CPU,
 
     # read input functions
     read_IR_input, read_temp_input,
     update_bgc_params, update_phyt_params, 
     bgc_params_default, phyt_params_default,
+    generate_nutrients,
     default_nut_init, PrepRunDir,
 
     # diagnostics
