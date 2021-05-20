@@ -140,7 +140,7 @@ function update!(sim::PlanktonSimulation)
 
             if sim.diags ≠ nothing
                 if sim.model.t % (sim.diags.frequency*sim.ΔT) == 0.0
-                    write_diags_to_jld2(sim.diags, sim.res_dir, sim.model.t, sim.diags.frequency)
+                    write_diags_to_jld2(sim.diags, sim.res_dir, sim.model.t, sim.diags.frequency, sim.model.grid)
                 end
             end
 
