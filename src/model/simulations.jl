@@ -11,7 +11,7 @@ mutable struct PlanktonSimulation
     ΔT::Int64                                  # model time step
     nΔT::Int64                                 # number of time steps to run in the simulation
     res_dir::Union{String,Nothing}             # directory to store results
-    save_individuals::Bool
+    save_individuals::Union{Int64,Nothing}     # save individuals every `Int64` time steps
     vel_reuse::Bool
 end
 
@@ -22,7 +22,7 @@ end
                        diags = nothing,
                        vels = (;),
                        res_dir = nothing
-                       save_individuals = false,
+                       save_individuals = nothing,
                        vel_reuse = false
                        )
 Generate a `PlanktonSimulation` data structure.
@@ -41,6 +41,8 @@ Keyword Arguments (Optional)
                      will be applied in the simulation. Otherwise, `vels` mush be a `NamedTuple` containing
                      all `u`, `v`, and `w`. Each of `u`, `v`, and `w` must be an 4D-`Array` of 
                      `(Nx, Ny, Nz+1, nΔT+1)` elements, excluding halo points, but bounded in `z` direction.
+- `save_individuals` : save individuals every `Int64` time steps, do not save individuals if `Nothing`.
+- `vel_reuse` : reuse the provided velocity fields if `true`.
 """
 function PlanktonSimulation(model::PlanktonModel; ΔT::Int64, nΔT::Int64,
                             PARF_path = PlanktonIndividuals.default_PAR,
@@ -48,7 +50,7 @@ function PlanktonSimulation(model::PlanktonModel; ΔT::Int64, nΔT::Int64,
                             diags = nothing,
                             vels = (;),
                             res_dir = nothing,
-                            save_individuals = false,
+                            save_individuals = nothing,
                             vel_reuse = false
                             )
 
@@ -92,13 +94,25 @@ import Base: show
 
 function show(io::IO, sim::PlanktonSimulation)
     save_diags = sim.diags == nothing ? false : true
-    print(io, "ΔT: $(sim.ΔT)s\n",
-              "model time: $(sim.model.t)s\n",
-              "number of time steps: $(sim.nΔT)\n",
-              "results saved at $(sim.res_dir)\n",
-              "save diags: $(save_diags)\n",
-              "save individuals: $(sim.save_individuals)\n",
-              "reuse velocity fields: $(sim.vel_reuse)\n")
+    save_inds = sim.save_individuals == nothing ? false : true
+    if save_inds
+        print(io, "ΔT: $(sim.ΔT)s\n",
+                "model time: $(sim.model.t)s\n",
+                "number of time steps: $(sim.nΔT)\n",
+                "results saved at $(sim.res_dir)\n",
+                "save diags: $(save_diags)\n",
+                "save individuals every $(sim.save_individuals) time steps\n",
+                "reuse velocity fields: $(sim.vel_reuse)\n")
+    else
+        print(io, "ΔT: $(sim.ΔT)s\n",
+                "model time: $(sim.model.t)s\n",
+                "number of time steps: $(sim.nΔT)\n",
+                "results saved at $(sim.res_dir)\n",
+                "save diags: $(save_diags)\n",
+                "save individuals: $(save_inds)\n",
+                "reuse velocity fields: $(sim.vel_reuse)\n")
+    end
+
 end
 
 
@@ -128,9 +142,12 @@ function update!(sim::PlanktonSimulation)
                 if sim.model.t % (sim.diags.frequency*sim.ΔT) == 0.0
                     write_diags_to_jld2(sim.diags, sim.res_dir, sim.model.t, sim.diags.frequency)
                 end
-                if sim.save_individuals
+            end
+
+            if sim.save_individuals ≠ nothing
+                if sim.model.t % (sim.save_individuals*sim.ΔT) == 0.0
                     write_individuals_to_jld2(sim.model.individuals.phytos, sim.res_dir, sim.model.t,
-                                              atts=(:x, :y, :z, :Sz))
+                                                atts=(:x, :y, :z, :Sz))
                 end
             end
         end
@@ -144,11 +161,13 @@ function update!(sim::PlanktonSimulation)
 
             if sim.diags ≠ nothing
                 if sim.model.t % (sim.diags.frequency*sim.ΔT) == 0.0
-                    write_diags_to_jld2(sim.diags, sim.res_dir, sim.model.t, sim.diags.frequency)
+                    write_diags_to_jld2(sim.diags, sim.res_dir, sim.model.t, sim.diags.frequency, sim.model.grid)
                 end
-                if sim.save_individuals
+            end
+            if sim.save_individuals ≠ nothing
+                if sim.model.t % (sim.save_individuals*sim.ΔT) == 0.0
                     write_individuals_to_jld2(sim.model.individuals.phytos, sim.res_dir, sim.model.t,
-                                              atts=(:x, :y, :z, :Sz))
+                                                atts=(:x, :y, :z, :Sz))
                 end
             end
         end

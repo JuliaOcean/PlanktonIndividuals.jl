@@ -60,10 +60,10 @@ nothing
 path = joinpath(res_dir,"diags.jld2")
 file = jldopen(path, "r")
 for i in 1:1440
-    num[i]  = file[joinpath(lpad(i*60,10,"0"),"sp1","num")][3,3,3]
-    dvid[i] = file[joinpath(lpad(i*60,10,"0"),"sp1","dvid")][3,3,3]
-    mort[i] = file[joinpath(lpad(i*60,10,"0"),"sp1","mort")][3,3,3]
-    PS[i]   = file[joinpath(lpad(i*60,10,"0"),"sp1","PS")][3,3,3]
+    num[i]  = file[joinpath(lpad(i*60,10,"0"),"sp1","num")][1,1,1]
+    dvid[i] = file[joinpath(lpad(i*60,10,"0"),"sp1","dvid")][1,1,1]
+    mort[i] = file[joinpath(lpad(i*60,10,"0"),"sp1","mort")][1,1,1]
+    PS[i]   = file[joinpath(lpad(i*60,10,"0"),"sp1","PS")][1,1,1]
 end
 close(file)
 #
