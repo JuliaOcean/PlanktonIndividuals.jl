@@ -17,7 +17,6 @@ Keyword Arguments (Optional)
 - `plankton` : a `Tuple` containing the names of physiological processes of plankton individuals to be diagnosed.
 - `frequency` : frequency of diagnostics (in numbers of time steps), diagnose every time step by default.
 """
-
 function PlanktonDiagnostics(model; tracer=(:PAR, :NH4, :NO3, :DOC),
                             plankton=(:num, :graz, :mort, :dvid),
                             frequency::Int64 = 1)
