@@ -32,7 +32,7 @@ grid = RegularRectilinearGrid(size=(128, 1, 128), spacing=(1, 1, 1))
 #
 # Next we setup the individual-based model by specifying the architecture, grid, and plankton community.
 
-model = PlanktonModel(arch, grid; N_species = 1, N_individual = 2^7, max_individuals = 2^10*8)
+model = PlanktonModel(arch, grid; N_species = 1, N_individual = 2^7, max_individuals = 2^7*8)
 
 # Finally we setup the duration of the model simulation and the kind of output we want.
 

@@ -126,7 +126,7 @@ function write_individuals_to_jld2(phytos::NamedTuple, filepath, t;
 end
 
 """
-    write_diags_to_jld2(diags, filepath, t, ncounts)
+    write_diags_to_jld2(diags, filepath, t, ncounts, grid)
 write model output of individuals at each time step to a binary file
 
 Keyword Arguments
@@ -135,15 +135,18 @@ Keyword Arguments
 - `filepath`: The file path to store JLD2 files.
 - `t`: Current time of `model` in second, usually starting from 0.
 - `ncounts`: the number of time steps included in each diagnostic
+- `grid`: grid information used to exclude halo points.
 """
-function write_diags_to_jld2(diags, filepath, t, ncounts)
+function write_diags_to_jld2(diags, filepath, t, ncounts, grid)
     jldopen(filepath*"diags.jld2", "a+") do file
         for key in keys(diags.tracer)
-            file[lpad(t, 10, "0")*"/nut/"*string(key)] = Array(diags.tracer[key]) ./ ncounts
+            file[lpad(t, 10, "0")*"/nut/"*string(key)] =
+                Array(interior(diags.tracer[key], grid)) ./ ncounts
         end
         for sp in keys(diags.plankton)
             for proc in keys(diags.plankton[sp])
-                file[lpad(t, 10, "0")*"/"*string(sp)*"/"*string(proc)] = Array(diags.plankton[sp][proc]) ./ ncounts 
+                file[lpad(t, 10, "0")*"/"*string(sp)*"/"*string(proc)] =
+                    Array(interior(diags.plankton[sp][proc],grid)) ./ ncounts 
             end
         end
     end
@@ -166,6 +169,6 @@ Create `res/` folder if needed. Remove old files from it if needed.
 function PrepRunDir(;res::String="./results/")
     isdir(res) && rm(res, recursive=true)
     mkdir(res)
-    mkdir("$res"*"nutrients/")
+    # mkdir("$res"*"nutrients/")
     return res
 end
