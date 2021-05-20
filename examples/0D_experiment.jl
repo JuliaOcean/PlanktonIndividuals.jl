@@ -37,7 +37,7 @@ res_dir = PrepRunDir()
 sim = PlanktonSimulation(model, ΔT = 60, nΔT = ntimesteps, 
                          diags = diags,
                          res_dir = res_dir, 
-                         save_individuals = false)
+                         save_individuals = nothing)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Model Run
