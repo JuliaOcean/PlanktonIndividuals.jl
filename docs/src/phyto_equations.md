@@ -53,30 +53,25 @@ VPO4_{max} &= VPO4max \cdot Sz^{VP_b} \nonumber
 ```
 
 ```math
-Q_N = (Nq + Bm \cdot R_{NC}) / (Cq + Bm)
+\begin{align}
+Q_N = (Nq + Bm \cdot R_{NC}) / (Cq + Bm) \nonumber \\
+Q_P = (Pq + Bm \cdot R_{PC}) / (Cq + Bm) \nonumber
+\end{align}
 ```
 
 ```math
-RegQ_N=\bigg[\frac{Nqmax-Q_N}{Nqmax - Nqmin}\bigg]_0^1
+\begin{align}
+RegQ_N=\bigg[\frac{Nqmax-Q_N}{Nqmax - Nqmin}\bigg]_0^1 \nonumber \\
+RegQ_P=\bigg[\frac{Pqmax-Q_P}{Pqmax - Pqmin}\bigg]_0^1 \nonumber
+\end{align}
 ```
 
 ```math
 \begin{align}
 VNH4=VNH4^{max}\cdot regQ_N\cdot\frac{[NH4]}{[NH4]+K_{NH4}^{sat}}\cdot Bm \nonumber \\
-VNO3=VNO3^{max}\cdot regQ_N\cdot\frac{[NO3]}{[NO3]+K_{NO3}^{sat}}\cdot Bm \nonumber
+VNO3=VNO3^{max}\cdot regQ_N\cdot\frac{[NO3]}{[NO3]+K_{NO3}^{sat}}\cdot Bm \nonumber \\
+VPO4=VPO4^{max}\cdot regQ_P\cdot\frac{[PO4]}{[PO4]+K_{PO4}^{sat}}\cdot Bm \nonumber
 \end{align}
-```
-
-```math
-Q_P = (Pq + Bm \cdot R_{PC}) / (Cq + Bm)
-```
-
-```math
-RegQ_P=\bigg[\frac{Pqmax-Q_P}{Pqmax - Pqmin}\bigg]_0^1 
-```
-
-```math
-VPO4=VPO4^{max}\cdot regQ_P\cdot\frac{[PO4]}{[PO4]+K_{PO4}^{sat}}\cdot Bm
 ```
 
 ``VNH4``, ``VNO3``, and ``VPO4`` are cell-specific uptake rates (mmol N/cell/s or mmol P/cell/s).
@@ -130,8 +125,8 @@ S_{chl} = \rho_{chl} * BS * R_{NC}
 \rho_{chl} =
     \begin{cases}
         chl:N * \frac{PC*Bm}{\alpha I \cdot chl}, & \quad \alpha I > 0,\\
-        0 & \quad \alpha I /le 0.
-    \end{cases}
+        0 & \quad else.
+    \end{cases} \nonumber
 \end{equation}
 ```
 
