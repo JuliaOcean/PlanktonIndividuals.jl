@@ -6,7 +6,7 @@
 
 ```@contents
 Pages = [
-    "equations.md",
+    "model_description.md",
     "model_setup.md",    
     "model_run.md",    
     "examples.md",

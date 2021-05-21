@@ -19,6 +19,7 @@ example_pages = [
     "Three-Dimensional Domain" => "generated/surface_mixing_3D_example.md",
 ]
 model_description = [
+    "Table Of Content" => "model_description.md",
     "Phytoplankton Physiology" => "phyto_equations.md",
     "Biogeochemistry" => "bgc_equations.md",
 ]
