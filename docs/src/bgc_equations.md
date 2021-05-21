@@ -14,9 +14,23 @@ The source and sinks of each tracer,``S_X``, are different andincluding biologic
 ## Carbon Cycle
 
 ```math
-S_{DIC} = -\sum_j PS_j\cdot n_j + k_{DOC}\cdot DOC + F_C\\
-S_{DOC} = k_{POC} \cdot POC + f_{C,m} \cdot \sum_j ((Bm_j+Cq_j)\cdot n_{j,m}) + f_{C,g} \cdot \sum_j ((Bm_j+Cq_j)\cdot n_{j,g}) - k_{DOC} \cdot DOC\\
-S_{POC} = (1-f_{C,m}) \cdot \sum_j ((Bm_j+Cq_j)\cdot n_{j,m}) + (1-f_{C,g}) \cdot \sum_j ((Bm_j+Cq_j)\cdot n_{j,g}) - k_{POC} \cdot POC\\
+S_{DIC} = -\sum_j PS_j\cdot n_j + k_{DOC}\cdot DOC + F_C
+```
+
+```math
+\begin{align}
+S_{DOC} & = k_{POC} \cdot POC + f_{C,m} \cdot \sum_j ((Bm_j+Cq_j)\cdot n_{j,m})\\
+        & \quad 
+        + f_{C,g} \cdot \sum_j ((Bm_j+Cq_j)\cdot n_{j,g}) - k_{DOC} \cdot DOC
+\end{align}
+```
+
+```math
+\begin{align}
+S_{POC} & = (1-f_{C,m}) \cdot \sum_j ((Bm_j+Cq_j)\cdot n_{j,m})\\
+        & \quad
+        + (1-f_{C,g}) \cdot \sum_j ((Bm_j+Cq_j)\cdot n_{j,g}) - k_{POC} \cdot POC
+\end{align}
 ```
 
 where ``n_j`` is the cell number of species ``j``, ``n_{j,m}`` is the dead cell number of species ``j``, ``n_{j,g}`` is the grazed cell number of sepcies ``j``.
@@ -24,18 +38,48 @@ where ``n_j`` is the cell number of species ``j``, ``n_{j,m}`` is the dead cell 
 ## Nitrogen Cycle
 
 ```math
+\begin{align}
 S_{HN4} = -\sum_j VNH4_j\cdot n_j + k_{DON}\cdot DON - k_{nit}\cdot NH4\\
-S_{NO3} = -\sum_j VNO3_j\cdot n_j + k_{nit}\cdot NH4\\
-S_{DON} = k_{PON} \cdot PON + f_{N,m} \cdot \sum_j ((Bm_j*R_{NC}+Nq_j)\cdot n_{j,m}) + f_{N,g} \cdot \sum_j ((Bm_j*R_{NC}+Nq_j)\cdot n_{j,g}) - k_{DON} \cdot DON\\
-S_{PON} = (1-f_{N,m}) \cdot \sum_j ((Bm_j*R_{NC}+Nq_j)\cdot n_{j,m}) + (1-f_{N,g}) \cdot \sum_j ((Bm_j*R_{NC}+Nq_j)\cdot n_{j,g}) - k_{PON} \cdot PON\\
+S_{NO3} = -\sum_j VNO3_j\cdot n_j + k_{nit}\cdot NH4
+\end{align}
+```
+
+```math
+\begin{align}
+S_{DON} & = k_{PON} \cdot PON + f_{N,m} \cdot \sum_j ((Bm_j*R_{NC}+Nq_j)\cdot n_{j,m})\\
+        & \quad
+        + f_{N,g} \cdot \sum_j ((Bm_j*R_{NC}+Nq_j)\cdot n_{j,g}) - k_{DON} \cdot DON
+\end{align}
+```
+
+```math
+\begin{align}
+S_{PON} & = (1-f_{N,m}) \cdot \sum_j ((Bm_j*R_{NC}+Nq_j)\cdot n_{j,m})\\
+        & \quad
+        + (1-f_{N,g}) \cdot \sum_j ((Bm_j*R_{NC}+Nq_j)\cdot n_{j,g}) - k_{PON} \cdot PON
+\end{align}
 ```
 
 ## Phosphorus Cycle
 
 ```math
-S_{PO4} = -\sum_j VPO4_j\cdot n_j + k_{DOP}\cdot DOP\\
-S_{DOP} = k_{POP} \cdot POP + f_{P,m} \cdot \sum_j ((Bm_j*R_{PC}+Pq_j)\cdot n_{j,m}) + f_{P,g} \cdot \sum_j ((Bm_j*R_{PC}+Nq_j)\cdot n_{j,g}) - k_{DOP} \cdot DOP\\
-S_{POP} = (1-f_{P,m}) \cdot \sum_j ((Bm_j*R_{PC}+Pq_j)\cdot n_{j,m}) + (1-f_{P,g}) \cdot \sum_j ((Bm_j*R_{PC}+Pq_j)\cdot n_{j,g}) - k_{POP} \cdot POP\\
+S_{PO4} = -\sum_j VPO4_j\cdot n_j + k_{DOP}\cdot DOP
+```
+
+```math
+\begin{align}
+S_{DOP} & = k_{POP} \cdot POP + f_{P,m} \cdot \sum_j ((Bm_j*R_{PC}+Pq_j)\cdot n_{j,m})
+        & \quad
+        + f_{P,g} \cdot \sum_j ((Bm_j*R_{PC}+Nq_j)\cdot n_{j,g}) - k_{DOP} \cdot DOP
+\end{align}
+```
+
+```math
+\begin{align}
+S_{POP} & = (1-f_{P,m}) \cdot \sum_j ((Bm_j*R_{PC}+Pq_j)\cdot n_{j,m})\\
+        & \quad
+        + (1-f_{P,g}) \cdot \sum_j ((Bm_j*R_{PC}+Pq_j)\cdot n_{j,g}) - k_{POP} \cdot POP
+\end{align}
 ```
 
 ## Parameters

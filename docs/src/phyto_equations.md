@@ -42,21 +42,23 @@ PS=PC \cdot Bm
 The uptakes of various nutrients include intracellular nutrient limitation:
 
 ```math
-VNH4_{max}= VNH4max \cdot Sz^{VN_b}
-VNO3_{max}= VNO3max \cdot Sz^{VN_b}
-VPO4_{max}= VPO4max \cdot Sz^{VP_b}
+\begin{align}
+VNH4_{max} &= VNH4max \cdot Sz^{VN_b} \\
+VNO3_{max} &= VNO3max \cdot Sz^{VN_b} \\
+VPO4_{max} &= VPO4max \cdot Sz^{VP_b}
+\end{align}
 ```
 
 ```math
-Q_N = (Nq + Bm \cdot R_{NC}) / (Cq + Bm)
-RegQ_N=\bigg[\frac{Nqmax-Q_N}{Nqmax - Nqmin}\bigg]_0^1\\
-VNH4=VNH4^{max}\cdot regQ_N\cdot\frac{[NH4]}{[NH4]+K_{NH4}^{sat}}\cdot Bm
+Q_N = (Nq + Bm \cdot R_{NC}) / (Cq + Bm) \\
+RegQ_N=\bigg[\frac{Nqmax-Q_N}{Nqmax - Nqmin}\bigg]_0^1 \\
+VNH4=VNH4^{max}\cdot regQ_N\cdot\frac{[NH4]}{[NH4]+K_{NH4}^{sat}}\cdot Bm \\
 VNO3=VNO3^{max}\cdot regQ_N\cdot\frac{[NO3]}{[NO3]+K_{NO3}^{sat}}\cdot Bm
 ```
 
 ```math
-Q_P = (Pq + Bm \cdot R_{PC}) / (Cq + Bm)
-RegQ_P=\bigg[\frac{Pqmax-Q_P}{Pqmax - Pqmin}\bigg]_0^1\\
+Q_P = (Pq + Bm \cdot R_{PC}) / (Cq + Bm) \\
+RegQ_P=\bigg[\frac{Pqmax-Q_P}{Pqmax - Pqmin}\bigg]_0^1 \\
 VPO4=VPO4^{max}\cdot regQ_P\cdot\frac{[PO4]}{[PO4]+K_{PO4}^{sat}}\cdot Bm
 ```
 
@@ -67,9 +69,11 @@ VPO4=VPO4^{max}\cdot regQ_P\cdot\frac{[PO4]}{[PO4]+K_{PO4}^{sat}}\cdot Bm
 Model first updates C, N, and P reserves based on photosynthesis rate (``PS``) and nutrient uptake rates (``VNH4``, ``VNO3``, and ``VPO4``). The result is used to calculate the biosynthesis and excretion rates.
 
 ```math
-Cq=Cq+PS \cdot \Delta T\\
-Nq=Nq+VNO3+VNH4 \cdot \Delta T\\
-Pq=Pq+VPO4 \cdot \Delta T\\
+\begin{align}
+Cq &= Cq+PS \cdot \Delta T \\
+Nq &= Nq+VNO3+VNH4 \cdot \Delta T \\
+Pq &= Pq+VPO4 \cdot \Delta T
+\end{align}
 ```
 
 ## Biosynthesis
@@ -81,14 +85,16 @@ k_{mtb}= k_{mtb}^{max} \cdot Sz^{k^{mtb}_b}
 ```
 
 ```math
-BS_C = Cq \cdot k_{mtb}\\
-BS_N = Nq/R_{NC} \cdot k_{mtb}\\
-BS_P = Pq/R_{PC} \cdot k_{mtb}\\
+\begin{align}
+BS_C &= Cq \cdot k_{mtb} \\
+BS_N &= Nq/R_{NC} \cdot k_{mtb} \\
+BS_P &= Pq/R_{PC} \cdot k_{mtb} \\
+\end{align}
 ```
 
 ```math
 BS = min(BS_C, BS_N, BS_P) \\
-ExuC = BS_C - BS\\
+ExuC = BS_C - BS
 ```
 
 The minimum of these rates gives the actual biosynthesis rate, ``BS`` (mmol C/cell/s), and the difference between carbon-based biosynthesis rate and ``BS`` gives the excretion rate, ``ExuC`` (mmol C/cell/s).
@@ -97,10 +103,16 @@ The minimum of these rates gives the actual biosynthesis rate, ``BS`` (mmol C/ce
 
 ```math
 S_{chl} = \rho_{chl} * BS * R_{NC}
-\rho_{chl} = \begin{cases}
-                chl\text{:}N* \frac{PC*Bm}{\alpha I \cdot chl}
-                & \text{if } \alpha I > 0,\\
-                0 & \text{else.}
+```
+
+```math
+\begin{equation}
+\rho_{chl} =
+    \begin{cases}
+        chl:N * \frac{PC*Bm}{\alpha I \cdot chl}, & \quad \alpha I > 0,\\
+        0 & \quad \alpha I /le 0.
+    \end{cases}
+\end{equation}
 ```
 
 ## Respiration
@@ -114,11 +126,12 @@ Respir = respir_a \cdot Sz^{respir_b} \cdot Bm
 Biosynthesis yields a biomass update and corresponding updates in nutrients. The carbon reserve is further modified by respiration.
 
 ```math
-Bm = Bm + BS \cdot \Delta T\\
-Cq = Cq - (BS - Respir) \cdot \Delta T\\
-Nq = Nq - BS*R_{NC} \cdot \Delta T\\
-Pq = Pq - BS*R_{PC} \cdot \Delta T\\
-chl = chl + S_{chl} \cdot \Delta T\\
+\begin{align}
+Bm  &= Bm + BS \cdot \Delta T \\
+Cq  &= Cq - (BS - Respir) \cdot \Delta T \\
+Nq  &= Nq - BS*R_{NC} \cdot \Delta T \\
+Pq  &= Pq - BS*R_{PC} \cdot \Delta T \\
+chl &= chl + S_{chl} \cdot \Delta T
 ```
 
 ## Cell division
