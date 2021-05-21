@@ -25,7 +25,7 @@ model_description = [
 
 makedocs(;
          modules = [PlanktonIndividuals],
-         format = Documenter.HTML(),
+         format = Documenter.HTML(collapselevel = 1, mathengine = MathJax3()),
          pages = [
              "Home" => "index.md",
              "Model Description" => model_description,
