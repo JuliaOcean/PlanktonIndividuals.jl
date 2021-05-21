@@ -18,13 +18,17 @@ example_pages = [
     "Two-Dimensional Map" => "generated/horizontal_2D_example.md",
     "Three-Dimensional Domain" => "generated/surface_mixing_3D_example.md",
 ]
+model_description = [
+    "Phytoplankton Physiology" => "phyto_equations.md",
+    "Biogeochemistry" => "bgc_equations.md",
+]
 
 makedocs(;
          modules = [PlanktonIndividuals],
          format = Documenter.HTML(),
          pages = [
              "Home" => "index.md",
-             "Model Equations" => "equations.md",
+             "Model Description" => model_description,
              "Model Configuration" => "model_setup.md",
              "Model Simulation" => "model_run.md",
              "Examples"  => example_pages,
