@@ -12,14 +12,14 @@ for i in 1:length(examples)
 end
 
 example_pages = [
-    "Table Of Content" => "examples.md",
+    # "Table Of Content" => "examples.md",
     "Lab Experiment" => "generated/0D_experiment.md",
     "Ocean Transect" => "generated/vertical_2D_example.md",
     "Two-Dimensional Map" => "generated/horizontal_2D_example.md",
     "Three-Dimensional Domain" => "generated/surface_mixing_3D_example.md",
 ]
 model_description = [
-    "Table Of Content" => "model_description.md",
+    # "Table Of Content" => "model_description.md",
     "Phytoplankton Physiology" => "phyto_equations.md",
     "Biogeochemistry" => "bgc_equations.md",
 ]
