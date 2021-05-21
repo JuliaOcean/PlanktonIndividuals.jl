@@ -30,7 +30,10 @@ PC_{max}= PCmax \cdot Sz^{PC_b}
 ```
 
 ```math
-PC=PC_{max}\cdot (1-e^{\frac{-\alpha \cdot I\cdot Chl}{PC_{max}\cdot Bm}})\\
+PC=PC_{max}\cdot (1-e^{\frac{-\alpha \cdot I\cdot Chl}{PC_{max}\cdot Bm}})
+```
+
+```math
 PS=PC \cdot Bm
 ```
 
@@ -43,22 +46,36 @@ The uptakes of various nutrients include intracellular nutrient limitation:
 
 ```math
 \begin{align}
-VNH4_{max} &= VNH4max \cdot Sz^{VN_b} \\
-VNO3_{max} &= VNO3max \cdot Sz^{VN_b} \\
-VPO4_{max} &= VPO4max \cdot Sz^{VP_b}
+VNH4_{max} &= VNH4max \cdot Sz^{VN_b} \nonumber \\
+VNO3_{max} &= VNO3max \cdot Sz^{VN_b} \nonumber \\
+VPO4_{max} &= VPO4max \cdot Sz^{VP_b} \nonumber
 \end{align}
 ```
 
 ```math
-Q_N = (Nq + Bm \cdot R_{NC}) / (Cq + Bm) \\
-RegQ_N=\bigg[\frac{Nqmax-Q_N}{Nqmax - Nqmin}\bigg]_0^1 \\
-VNH4=VNH4^{max}\cdot regQ_N\cdot\frac{[NH4]}{[NH4]+K_{NH4}^{sat}}\cdot Bm \\
-VNO3=VNO3^{max}\cdot regQ_N\cdot\frac{[NO3]}{[NO3]+K_{NO3}^{sat}}\cdot Bm
+Q_N = (Nq + Bm \cdot R_{NC}) / (Cq + Bm)
 ```
 
 ```math
-Q_P = (Pq + Bm \cdot R_{PC}) / (Cq + Bm) \\
-RegQ_P=\bigg[\frac{Pqmax-Q_P}{Pqmax - Pqmin}\bigg]_0^1 \\
+RegQ_N=\bigg[\frac{Nqmax-Q_N}{Nqmax - Nqmin}\bigg]_0^1
+```
+
+```math
+\begin{align}
+VNH4=VNH4^{max}\cdot regQ_N\cdot\frac{[NH4]}{[NH4]+K_{NH4}^{sat}}\cdot Bm \nonumber \\
+VNO3=VNO3^{max}\cdot regQ_N\cdot\frac{[NO3]}{[NO3]+K_{NO3}^{sat}}\cdot Bm \nonumber
+\end{align}
+```
+
+```math
+Q_P = (Pq + Bm \cdot R_{PC}) / (Cq + Bm)
+```
+
+```math
+RegQ_P=\bigg[\frac{Pqmax-Q_P}{Pqmax - Pqmin}\bigg]_0^1 
+```
+
+```math
 VPO4=VPO4^{max}\cdot regQ_P\cdot\frac{[PO4]}{[PO4]+K_{PO4}^{sat}}\cdot Bm
 ```
 
@@ -70,9 +87,9 @@ Model first updates C, N, and P reserves based on photosynthesis rate (``PS``) a
 
 ```math
 \begin{align}
-Cq &= Cq+PS \cdot \Delta T \\
-Nq &= Nq+VNO3+VNH4 \cdot \Delta T \\
-Pq &= Pq+VPO4 \cdot \Delta T
+Cq &= Cq+PS \cdot \Delta T \nonumber \\
+Nq &= Nq+VNO3+VNH4 \cdot \Delta T \nonumber \\
+Pq &= Pq+VPO4 \cdot \Delta T \nonumber
 \end{align}
 ```
 
@@ -86,14 +103,17 @@ k_{mtb}= k_{mtb}^{max} \cdot Sz^{k^{mtb}_b}
 
 ```math
 \begin{align}
-BS_C &= Cq \cdot k_{mtb} \\
-BS_N &= Nq/R_{NC} \cdot k_{mtb} \\
-BS_P &= Pq/R_{PC} \cdot k_{mtb} \\
+BS_C &= Cq \cdot k_{mtb} \nonumber \\
+BS_N &= Nq/R_{NC} \cdot k_{mtb} \nonumber \\
+BS_P &= Pq/R_{PC} \cdot k_{mtb} \nonumber
 \end{align}
 ```
 
 ```math
-BS = min(BS_C, BS_N, BS_P) \\
+BS = min(BS_C, BS_N, BS_P)
+```
+
+```math
 ExuC = BS_C - BS
 ```
 
@@ -127,11 +147,12 @@ Biosynthesis yields a biomass update and corresponding updates in nutrients. The
 
 ```math
 \begin{align}
-Bm  &= Bm + BS \cdot \Delta T \\
-Cq  &= Cq - (BS - Respir) \cdot \Delta T \\
-Nq  &= Nq - BS*R_{NC} \cdot \Delta T \\
-Pq  &= Pq - BS*R_{PC} \cdot \Delta T \\
-chl &= chl + S_{chl} \cdot \Delta T
+Bm  &= Bm + BS \cdot \Delta T \nonumber \\
+Cq  &= Cq - (BS - Respir) \cdot \Delta T \nonumber \\
+Nq  &= Nq - BS*R_{NC} \cdot \Delta T \nonumber \\
+Pq  &= Pq - BS*R_{PC} \cdot \Delta T \nonumber \\
+chl &= chl + S_{chl} \cdot \Delta T \nonumber
+\end{align}
 ```
 
 ## Cell division
@@ -139,7 +160,10 @@ chl &= chl + S_{chl} \cdot \Delta T
 Cell size, ``Sz``, is used to indicate cell division. For the smallest cell, ``Sz=1.0`` and ``Bm=Cquota``. Cells start to divide at ``Sz=2.0`` and the probability of individual cell division is given by a sigmoidal function of ``Sz``.
 
 ```math
-Sz = (Bm + Cq) / Cquota\\
+Sz = (Bm + Cq) / Cquota
+```
+
+```math
 P_{divide} = rand(Bernoulli(P_{dvid}*(tanh(stp_{dvid}*(Sz-b))+1)))
 ```
 
