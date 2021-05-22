@@ -1,7 +1,8 @@
 # PlanktonIndividuals.jl
 
-`PlanktonIndividuals.jl` simulates the behavior of plankton individual communities. The physiology of individual plankton cells (incl. Biosynthesis, Respiration, and Excretion) is parameterized as a function of ambient conditions (light, nutrients). The formulation is documented in [Phytoplankton Physiology](@ref). 
+## Overview
 
+`PlanktonIndividuals.jl` simulates the behavior of plankton individual communities. The physiology of individual plankton cells (incl. Biosynthesis, Respiration, and Excretion) is parameterized as a function of ambient conditions (light, nutrients). The formulation is documented in [Phytoplankton Physiology](@ref). 
 
 ## Getting Help
 
