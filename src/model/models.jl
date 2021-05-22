@@ -46,7 +46,7 @@ function PlanktonModel(arch::Architecture, grid::RegularRectilinearGrid;
                        max_individuals::Int64 = 8*1024,
                        bgc_params = bgc_params_default(), 
                        phyt_params = phyt_params_default(),
-                       nut_inital = default_nut_init(),
+                       nut_initial = default_nut_init(),
                        t::Int64 = 0,
                        mask = nothing,
                        )
@@ -61,7 +61,7 @@ function PlanktonModel(arch::Architecture, grid::RegularRectilinearGrid;
         gen_individuals!(plank, N_individual, grid, arch; mask = mask)
     end
 
-    nutrients = generate_nutrients(arch, grid, nut_inital; mask = mask)
+    nutrients = generate_nutrients(arch, grid, nut_initial; mask = mask)
 
     ts = timestepper(arch, grid, N_individual, max_individuals)
 
