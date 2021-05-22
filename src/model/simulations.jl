@@ -55,17 +55,8 @@ function PlanktonSimulation(model::PlanktonModel; ΔT::Int64, nΔT::Int64,
                             )
 
     if vels ≠ (;)
-        grid_size = (model.grid.Nx, model.grid.Ny, model.grid.Nz)
-        grid_size_w = (model.grid.Nx, model.grid.Ny, model.grid.Nz+1)
-        if size(vels.u)[1:3] == size(vels.v)[1:3] == grid_size
-            if size(vels.w)[1:3] == grid_size_w
-                vel_copy!(model.timestepper.vel₀, vels.u[:,:,:,1],
-                        vels.v[:,:,:,1], vels.w[:,:,:,1], model.grid)
-            else
-                throw(ArgumentError("Dimension mismatch: the size of w must be $(grid_size_w), Nz+1 layers for bounded direction."))
-            end
-        else
-            throw(ArgumentError("Dimension mismatch: the size of u and v must be $(grid_size)."))
+        if validate_velocity(vels, model.grid)
+            vel_copy!(model.timestepper.vel₀, vels.u[:,:,:,1], vels.v[:,:,:,1], vels.w[:,:,:,1], model.grid)
         end
 
         if size(vels.u)[4] < nΔT
@@ -173,3 +164,40 @@ function update!(sim::PlanktonSimulation)
         end
     end
 end
+
+function validate_velocity(vels, g::AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
+    u_size = (g.Nx, g.Ny, g.Nz)
+    v_size = (g.Nx, g.Ny, g.Nz)
+    w_size = (g.Nx, g.Ny, g.Nz)
+    validation = true
+
+    if isa(TX(), Bounded)
+        u_size = (g.Nx+1, g.Ny, g.Nz)
+    end
+
+    if isa(TY(), Bounded)
+        v_size = (g.Nx, g.Ny+1, g.Nz)
+    end
+
+    if isa(TZ(), Bounded)
+        w_size = (g.Nx, g.Ny, g.Nz+1)
+    end
+
+    if size(vels.u)[1:3] ≠ u_size
+        validation = false
+        throw(ArgumentError("Dimension mismatch: the size of u must be $(u_size), for $(TX) topology."))
+    end
+
+    if size(vels.v)[1:3] ≠ v_size
+        validation = false
+        throw(ArgumentError("Dimension mismatch: the size of v must be $(v_size), for $(TY) topology."))
+    end
+
+    if size(vels.w)[1:3] ≠ w_size
+        validation = false
+        throw(ArgumentError("Dimension mismatch: the size of w must be $(w_size), for $(TZ) topology."))
+    end
+
+    return validation
+end
+

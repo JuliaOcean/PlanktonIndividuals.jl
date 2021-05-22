@@ -52,7 +52,7 @@ include("model/simulations.jl")
 export
     # model structures
     PlanktonModel, RegularRectilinearGrid, 
-    Architecture, GPU, CPU,
+    Architecture, GPU, CPU, Periodic, Bounded,
 
     # read input functions
     read_IR_input, read_temp_input,
