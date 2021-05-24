@@ -61,8 +61,8 @@ Q_P &= (Pq + Bm \cdot R_{PC}) / (Cq + Bm) \nonumber
 
 ```math
 \begin{align}
-RegQ_N &= \bigg[\frac{Nqmax-Q_N}{Nqmax - Nqmin}\bigg]_0^1 \nonumber \\
-RegQ_P &= \bigg[\frac{Pqmax-Q_P}{Pqmax - Pqmin}\bigg]_0^1 \nonumber
+regQ_N &= \bigg[\frac{Nqmax-Q_N}{Nqmax - Nqmin}\bigg]_0^1 \nonumber \\
+regQ_P &= \bigg[\frac{Pqmax-Q_P}{Pqmax - Pqmin}\bigg]_0^1 \nonumber
 \end{align}
 ```
 
@@ -93,7 +93,7 @@ Pq &= Pq+VPO4 \cdot \Delta T \nonumber
 Potential biosynthesis rates based on C, N, P quotas are calculated below.
 
 ```math
-k_{mtb}= k_{mtb}^{max} \cdot Sz^{k^{mtb}_b}
+k_{mtb}= kmtb_{max} \cdot Sz^{kmtb_b}
 ```
 
 ```math
@@ -184,8 +184,8 @@ P_{divide} = rand(Bernoulli(P_{dvid}*(tanh(stp_{dvid}*(Sz-b))+1)))
 | ``Pqmin``         | Pqmax   | 0.004   | ``mmol~P/mmol~C`` | Minimum P quota in cell           |
 | ``R_{NC}``        | R_NC    | 16/106  | ``mmol~N/mmol~C`` | N:C ratio in function biomass     |
 | ``R_{PC}``        | R_PC    | 1/106   | ``mmol~P/mmol~C`` | P:C ratio in function biomass     |
-| ``k_{mtb}^{max}`` | k_mtb   | 3.5e-5  | ``s^{-1}``        | Maximum metabolic rate            |
-| ``k^{mtb}_b``     | k_mtb_b | 0.25    |                   | Shape parameter for k_mtb         |
+| ``kmtb_{max}``    | k_mtb   | 3.5e-5  | ``s^{-1}``        | Maximum metabolic rate            |
+| ``kmtb_b``        |k\_mtb\_b| 0.25    |                   | Shape parameter for k_mtb         |
 | ``respir_a``      | respir_a| 1.2e-6  | ``s^{-1}``        | Maximum respiration rate          |
 | ``respir_b``      | respir_b| 0.6     |                   | Shape parameter for respir_a      |
 | ``chl\text{:}N``  | Chl2N   | 3.0     | ``mg~chl/mmol~N`` | Maximum Chl:N in cell             |
