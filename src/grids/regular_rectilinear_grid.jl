@@ -4,22 +4,23 @@ struct Periodic <: AbstractTopology end
 struct Bounded <: AbstractTopology end
 
 struct RegularRectilinearGrid{TX, TY, TZ, R} <: AbstractGrid{TX, TY, TZ}
+    # corrdinates at cell centers, unit: meter
     xC::R
     yC::R
     zC::R
+    # corrdinates at cell faces, unit: meter
     xF::R
     yF::R
     zF::R
-    Δx::Float64 # unit: meter
-    Δy::Float64 # unit: meter
-    Δz::Float64 # unit: meter
-    Ax::Float64 # unit: m²
-    Ay::Float64 # unit: m²
-    Az::Float64 # unit: m²
-    V ::Float64 # unit: m³
+    # grid spacing, unit: meter
+    Δx::Float64
+    Δy::Float64
+    Δz::Float64
+    # number of grid points
     Nx::Int
     Ny::Int
     Nz::Int
+    # number of halo points
     Hx::Int
     Hy::Int
     Hz::Int
@@ -29,7 +30,7 @@ end
     RegularRectilinearGrid(;size, spacing,
                                 topology = (Periodic, Periodic, Bounded),
                                 halo = (2, 2, 2))
-Creats a `Grids` struct with `size = (Nx, Ny, Nz)` grid points.
+Creats a `RegularRectilinearGrid` struct with `size = (Nx, Ny, Nz)` grid points.
 
 Keyword Arguments (Required)
 ============================
@@ -63,13 +64,8 @@ function RegularRectilinearGrid(;size, spacing,
     yC = range((0.5 - Hy) * Δy, (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy)
     zC = -range((0.5 - Hz) * Δz, (Nz + Hz - 0.5) * Δz, length = Nz + 2 * Hz)
 
-    Ax = Δy*Δz
-    Ay = Δx*Δz
-    Az = Δx*Δy
-    V  = Δx*Δy*Δz
-
     return RegularRectilinearGrid{TX, TY, TZ, typeof(xF)}(
-        xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Ax, Ay, Az, V, Nx, Ny, Nz, Hx, Hy, Hz)
+        xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Nx, Ny, Nz, Hx, Hy, Hz)
 end
 
 import Base: show

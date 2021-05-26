@@ -19,18 +19,18 @@
 @inline δz⁺(i, j, k, grid, f::F, args...) where F<:Function = f(i, j, k, grid, args...) - f(i, j, k+1, grid, args...)
 
 ##### Derivative operators
-@inline ∂x⁰(i, j, k, grid, c) = δx⁰(i, j, k, c) / grid.Δx
-@inline ∂y⁰(i, j, k, grid, c) = δy⁰(i, j, k, c) / grid.Δy
-@inline ∂z⁰(i, j, k, grid, c) = δz⁰(i, j, k, c) / grid.Δz
+@inline ∂x⁰(i, j, k, grid, c) = δx⁰(i, j, k, c) / ΔxC(i, j, k, grid)
+@inline ∂y⁰(i, j, k, grid, c) = δy⁰(i, j, k, c) / ΔyC(i, j, k, grid)
+@inline ∂z⁰(i, j, k, grid, c) = δz⁰(i, j, k, c) / ΔzC(i, j, k, grid)
 
 ##### Diffusive fluxes
-@inline diffusive_flux_x(i, j, k, grid, κˣ::Number, c) = κˣ * grid.Ax * ∂x⁰(i, j, k, grid, c)
-@inline diffusive_flux_y(i, j, k, grid, κʸ::Number, c) = κʸ * grid.Ay * ∂y⁰(i, j, k, grid, c)
-@inline diffusive_flux_z(i, j, k, grid, κᶻ::Number, c) = κᶻ * grid.Az * ∂z⁰(i, j, k, grid, c)
+@inline diffusive_flux_x(i, j, k, grid, κˣ::Number, c) = κˣ * AxF(i, j, k, grid) * ∂x⁰(i, j, k, grid, c)
+@inline diffusive_flux_y(i, j, k, grid, κʸ::Number, c) = κʸ * AyF(i, j, k, grid) * ∂y⁰(i, j, k, grid, c)
+@inline diffusive_flux_z(i, j, k, grid, κᶻ::Number, c) = κᶻ * AzF(i, j, k, grid) * ∂z⁰(i, j, k, grid, c)
 
 ##### Laplacian diffusion operator
 @inline function κ∇²(i, j, k, grid, κˣ, κʸ, κᶻ, c)
-    return 1/grid.V * (δx⁺(i, j, k, grid, diffusive_flux_x, κˣ, c) +
+    return 1/volume(i, j, k, grid) * (δx⁺(i, j, k, grid, diffusive_flux_x, κˣ, c) +
                        δy⁺(i, j, k, grid, diffusive_flux_y, κʸ, c) +
                        δz⁺(i, j, k, grid, diffusive_flux_z, κᶻ, c))
 end

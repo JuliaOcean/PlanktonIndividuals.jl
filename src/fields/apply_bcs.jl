@@ -5,34 +5,34 @@
 # a positive west flux is associated with an *increase* in `Gc` near the west boundary.
 # same for south and bottom.
 @inline function apply_west_bc!(Gc, west_flux, j, k, iter, grid)
-    @inbounds Gc[1+grid.Hx, j, k] += getbc(west_flux, j, k, iter) * grid.Ax / grid.V
+    @inbounds Gc[1+grid.Hx, j, k] += getbc(west_flux, j, k, iter) * AxF(1+grid.Hx, j, k, grid) / volume(1+grid.Hx, j, k, grid)
     return nothing
 end
 
 @inline function apply_south_bc!(Gc, south_flux, i, k, iter, grid)
-    @inbounds Gc[i, 1+grid.Hy, k] += getbc(south_flux, i, k, iter) * grid.Ax / grid.V
+    @inbounds Gc[i, 1+grid.Hy, k] += getbc(south_flux, i, k, iter) * AyF(i, 1+grid.Hy, k, grid) / volume(i, 1+grid.Hy, k, grid)
     return nothing
 end
 
 @inline function apply_bottom_bc!(Gc, bottom_flux, i, j, iter, grid)
-    @inbounds Gc[i, j, 1+grid.Hz] += getbc(bottom_flux, i, j, iter) * grid.Ax / grid.V
+    @inbounds Gc[i, j, 1+grid.Hz] += getbc(bottom_flux, i, j, iter) * AzF(i, j, 1+grid.Hz, grid) / volume(i, j, 1+grid.Hz, grid)
     return nothing
 end
 
 # a positive east flux is associated with an *decrease* in `Gc` near the east boundary.
 # same for north and top.
 @inline function apply_east_bc!(Gc, east_flux, j, k, iter, grid)
-    @inbounds Gc[grid.Nx+grid.Hx, j, k] += getbc(east_flux, j, k, iter) * grid.Ax / grid.V
+    @inbounds Gc[grid.Nx+grid.Hx, j, k] += getbc(east_flux, j, k, iter) * AxF(grid.Nx+grid.Hx, j, k, grid) / volume(grid.Nx+grid.Hx, j, k, grid)
     return nothing
 end
 
 @inline function apply_north_bc!(Gc, north_flux, i, k, iter, grid)
-    @inbounds Gc[i, grid.Ny+grid.Hy, k] += getbc(north_flux, i, k, iter) * grid.Ax / grid.V
+    @inbounds Gc[i, grid.Ny+grid.Hy, k] += getbc(north_flux, i, k, iter) * AyF(i, grid.Ny+grid.Hy, k, grid) / volume(i, grid.Ny+grid.Hy, k, grid)
     return nothing
 end
 
 @inline function apply_top_bc!(Gc, top_flux, i, j, iter, grid)
-    @inbounds Gc[i, j, grid.Nz+grid.Hz] += getbc(top_flux, i, j, iter) * grid.Ax / grid.V
+    @inbounds Gc[i, j, grid.Nz+grid.Hz] += getbc(top_flux, i, j, iter) * AzF(i, j, grid.Nz+grid.Hz, grid) / volume(i, j, grid.Nz+grid.Hz, grid)
     return nothing
 end
 
