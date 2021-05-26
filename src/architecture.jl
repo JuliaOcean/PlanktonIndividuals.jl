@@ -5,7 +5,7 @@ struct CPU <: Architecture end
 struct GPU <: Architecture end
 
 device(::CPU) = KernelAbstractions.CPU()
-device(::GPU) = KernelAbstractions.CUDADevice()
+device(::GPU) = CUDAKernels.CUDADevice()
 
 array_type(::CPU) = Array
 if CUDA.has_cuda()
