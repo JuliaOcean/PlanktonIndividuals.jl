@@ -13,7 +13,7 @@ model = PlanktonModel(CPU(), grid;
 
 TP = sum((interior(model.nutrients.PO4.data, grid) .+ 
           interior(model.nutrients.DOP.data, grid) .+ 
-          interior(model.nutrients.POP.data, grid)) .* grid.V)
+          interior(model.nutrients.POP.data, grid)) .* grid.Δx .* grid.Δy .* grid.Δz)
 TP = TP + sum(model.individuals.phytos.sp1.data.Pq .+ 
               model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC) + 
           sum(model.individuals.phytos.sp2.data.Pq .+ 
@@ -32,7 +32,7 @@ update!(sim)
 
 TPt = sum((interior(model.nutrients.PO4.data, grid) .+ 
           interior(model.nutrients.DOP.data, grid) .+ 
-          interior(model.nutrients.POP.data, grid)) .* grid.V)
+          interior(model.nutrients.POP.data, grid)) .* grid.Δx .* grid.Δy .* grid.Δz)
 TPt=TPt + sum(model.individuals.phytos.sp1.data.Pq .+ 
                 model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC) +
           sum(model.individuals.phytos.sp2.data.Pq .+ 
