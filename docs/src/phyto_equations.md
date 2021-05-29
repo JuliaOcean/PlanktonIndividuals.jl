@@ -39,7 +39,6 @@ PS=PC \cdot Bm
 
 ``PS`` is cell-specific photosynthesis rate (mmol C/cell/s).
 
-
 ## Nutrient Uptake
 
 The uptakes of various nutrients include intracellular nutrient limitation:

@@ -29,32 +29,32 @@ function write_nut_nc_each_step(nut::NamedTuple, t::Int64, filepath::String)
 end
 
 ##### write a brief summary of nutrients at each time step into a txt file
-function write_nut_cons(g::AbstractGrid, gtr::NamedTuple, nutₜ::NamedTuple, t::Int64, filepath)
-    Σgtrⁿ = sum(interior(gtr.NH4.data, g) .* g.V) +
-            sum(interior(gtr.NO3.data, g) .* g.V) +
-            sum(interior(gtr.DON.data, g) .* g.V) +
-            sum(interior(gtr.PON.data, g) .* g.V)
+function write_nut_cons(g::RegularRectilinearGrid, gtr::NamedTuple, nutₜ::NamedTuple, t::Int64, filepath)
+    Σgtrⁿ = sum(interior(gtr.NH4.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+            sum(interior(gtr.NO3.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+            sum(interior(gtr.DON.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+            sum(interior(gtr.PON.data, g) .* g.Δx .* g.Δy .* g.Δz)
 
-    Σgtrᶜ = sum(interior(gtr.DIC.data, g) .* g.V) +
-            sum(interior(gtr.DOC.data, g) .* g.V) +
-            sum(interior(gtr.POC.data, g) .* g.V)
+    Σgtrᶜ = sum(interior(gtr.DIC.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+            sum(interior(gtr.DOC.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+            sum(interior(gtr.POC.data, g) .* g.Δx .* g.Δy .* g.Δz)
 
-    Σgtrᵖ = sum(interior(gtr.PO4.data, g) .* g.V) +
-            sum(interior(gtr.DOP.data, g) .* g.V) +
-            sum(interior(gtr.POP.data, g) .* g.V)
+    Σgtrᵖ = sum(interior(gtr.PO4.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+            sum(interior(gtr.DOP.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+            sum(interior(gtr.POP.data, g) .* g.Δx .* g.Δy .* g.Δz)
 
-    TN = sum(interior(nutₜ.NH4.data, g) .* g.V) +
-         sum(interior(nutₜ.NO3.data, g) .* g.V) +
-         sum(interior(nutₜ.DON.data, g) .* g.V) +
-         sum(interior(nutₜ.PON.data, g) .* g.V)
+    TN = sum(interior(nutₜ.NH4.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+         sum(interior(nutₜ.NO3.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+         sum(interior(nutₜ.DON.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+         sum(interior(nutₜ.PON.data, g) .* g.Δx .* g.Δy .* g.Δz)
 
-    TC = sum(interior(nutₜ.DIC.data, g) .* g.V) +
-         sum(interior(nutₜ.DOC.data, g) .* g.V) +
-         sum(interior(nutₜ.POC.data, g) .* g.V)
+    TC = sum(interior(nutₜ.DIC.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+         sum(interior(nutₜ.DOC.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+         sum(interior(nutₜ.POC.data, g) .* g.Δx .* g.Δy .* g.Δz)
 
-    TP = sum(interior(nutₜ.PO4.data, g) .* g.V) +
-         sum(interior(nutₜ.DOP.data, g) .* g.V) +
-         sum(interior(nutₜ.POP.data, g) .* g.V)
+    TP = sum(interior(nutₜ.PO4.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+         sum(interior(nutₜ.DOP.data, g) .* g.Δx .* g.Δy .* g.Δz) +
+         sum(interior(nutₜ.POP.data, g) .* g.Δx .* g.Δy .* g.Δz)
 
     day = t÷86400
     hour = t%86400/3600
@@ -69,17 +69,17 @@ function write_nut_cons(g::AbstractGrid, gtr::NamedTuple, nutₜ::NamedTuple, t:
     println(Pio,@sprintf("%3.0f  %2.2f  %.16E  %.16E  %.4f",day, hour, Σgtrᵖ, TP, mean(interior(nutₜ.PO4.data, g))))
     close(Cio);close(Nio);close(Pio);
 end
-function write_nut_cons(g::AbstractGrid, nutₜ::NamedTuple, t::Int64, filepath)
-    Cio = open(filepath*"cons_C.txt","a")
-    Nio = open(filepath*"cons_N.txt","a")
-    Pio = open(filepath*"cons_P.txt","a")
-    day = t÷86400
-    hour = t%86400/3600
-    println(Cio,@sprintf("%3.0f  %2.2f  %.4f",day, hour, mean(interior(nutₜ.DOC.data, g))))
-    println(Nio,@sprintf("%3.0f  %2.2f  %.4f  %.4f",day, hour, mean(interior(nutₜ.NH4.data, g)),mean(interior(nutₜ.NO3.data, g))))
-    println(Pio,@sprintf("%3.0f  %2.2f  %.4f",day, hour, mean(interior(nutₜ.PO4.data, g))))
-    close(Cio);close(Nio);close(Pio);
-end
+# function write_nut_cons(g::AbstractGrid, nutₜ::NamedTuple, t::Int64, filepath)
+#     Cio = open(filepath*"cons_C.txt","a")
+#     Nio = open(filepath*"cons_N.txt","a")
+#     Pio = open(filepath*"cons_P.txt","a")
+#     day = t÷86400
+#     hour = t%86400/3600
+#     println(Cio,@sprintf("%3.0f  %2.2f  %.4f",day, hour, mean(interior(nutₜ.DOC.data, g))))
+#     println(Nio,@sprintf("%3.0f  %2.2f  %.4f  %.4f",day, hour, mean(interior(nutₜ.NH4.data, g)),mean(interior(nutₜ.NO3.data, g))))
+#     println(Pio,@sprintf("%3.0f  %2.2f  %.4f",day, hour, mean(interior(nutₜ.PO4.data, g))))
+#     close(Cio);close(Nio);close(Pio);
+# end
 
 ##### write a brief summary of each species at each time step into a txt file
 function write_species_dynamics(t::Int64, phytos, filepath)

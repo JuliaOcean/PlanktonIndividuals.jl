@@ -9,7 +9,7 @@ The advection scheme used in the model is [Third Order Direct Space-Time with Fl
 
 where ``\boldsymbol{u}=(u,v,w)``, velocity in physical model, ``\boldsymbol{K}`` is the mixing coefficient in physical model, and ``S_X`` is the source and sink term of tracer ``X``.
 
-The source and sinks of each tracer,``S_X``, are different andincluding biological transformations, chemical reactions,and external sources and sinks. 
+The source and sinks of each tracer,``S_X``, are different andincluding biological transformations, chemical reactions,and external sources and sinks.
 
 ## Carbon Cycle
 

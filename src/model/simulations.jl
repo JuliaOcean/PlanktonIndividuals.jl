@@ -40,7 +40,7 @@ Keyword Arguments (Optional)
 - `vels` : The velocity fields for nutrient fields and individuals. `nothing` means no velocities
                      will be applied in the simulation. Otherwise, `vels` mush be a `NamedTuple` containing
                      all `u`, `v`, and `w`. Each of `u`, `v`, and `w` must be an 4D-`Array` of 
-                     `(Nx, Ny, Nz+1, nΔT+1)` elements, excluding halo points, but bounded in `z` direction.
+                     `(Nx, Ny, Nz, nΔT+1)` elements, excluding halo points. `N+1` is required for bounded direction.
 - `save_individuals` : save individuals every `Int64` time steps, do not save individuals if `Nothing`.
 - `vel_reuse` : reuse the provided velocity fields if `true`.
 """

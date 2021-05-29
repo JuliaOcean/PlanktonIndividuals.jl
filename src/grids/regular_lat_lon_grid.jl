@@ -47,7 +47,7 @@ Keyword Arguments (Required)
 
 Keyword Arguments (Optional)
 ============================
-- `radius` : Specify the radius of the Earth used in the model.
+- `radius` : Specify the radius of the Earth used in the model, 6371.0e3 meters by default.
 - `halo` : A tuple of integers that specifies the size of the halo region of cells
                 surrounding the physical interior for each direction.
                 `halo` is a 3-tuple no matter for 3D, 2D, or 1D model.
@@ -76,7 +76,7 @@ function RegularLatLonGrid(;size, lat, lon, z,
 
     xF = range(lon₁ - Hx * Δx, lon₁ + (Nx + Hx - 1) * Δx, length = Nx + 2 * Hx)
     yF = range(lat₁ - Hy * Δy, lat₁ + (Ny + Hy - 1) * Δy, length = Ny + 2 * Hy)
-    zF = -range(z₁ - Hz * Δz, z₂ + (Nz + Hz - 1) * Δz, length = Nz + 2 * Hz)
+    zF = -range(z₁ - Hz * Δz, z₁ + (Nz + Hz - 1) * Δz, length = Nz + 2 * Hz)
 
     xC = range(lon₁ + (0.5 - Hx) * Δx, lon₁ + (Nx + Hx - 0.5) * Δx, length = Nx + 2 * Hx)
     yC = range(lat₁ + (0.5 - Hy) * Δy, lat₁ + (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy)
