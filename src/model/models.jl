@@ -10,7 +10,7 @@ mutable struct PlanktonModel
 end
 
 """
-    PlanktonModel(arch::Architecture, grid::RegularRectilinearGrid;
+    PlanktonModel(arch::Architecture, grid::AbstractGrid;
                   N_species = 1,
                   N_individual = 1024,
                   max_individuals = 8*1024,
@@ -40,7 +40,7 @@ Keyword Arguments (Optional)
 - `t` : Model time, start from 0 by default, in second.
 - `mask` : Mask out the individuals and tracers generated out of the domain, a 3D array with size `(Nx, Ny, Nz)`.
 """
-function PlanktonModel(arch::Architecture, grid::RegularRectilinearGrid;
+function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        N_species::Int64 = 1,
                        N_individual::Int64 = 1024,
                        max_individuals::Int64 = 8*1024,
