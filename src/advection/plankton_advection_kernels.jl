@@ -12,9 +12,9 @@ end
 
 @kernel function particle_boundaries_kernel!(plank, ac, g::AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
     i = @index(Global)
-    plank.x[i] = particle_boundary_condition(plank.x[i], g.xF[g.Hx+1], g.xF[g.Hx+1+g.Nx], TX) * ac[i]
-    plank.y[i] = particle_boundary_condition(plank.y[i], g.yF[g.Hy+1], g.yF[g.Hy+1+g.Ny], TY) * ac[i]
-    plank.z[i] = particle_boundary_condition(plank.z[i], g.zF[g.Hz+1+g.Nz], g.zF[g.Hz+1], TZ) * ac[i]
+    plank.x[i] = particle_boundary_condition(plank.x[i], g.xF[g.Hx+1], g.xF[g.Hx+1+g.Nx], TX()) * ac[i]
+    plank.y[i] = particle_boundary_condition(plank.y[i], g.yF[g.Hy+1], g.yF[g.Hy+1+g.Ny], TY()) * ac[i]
+    plank.z[i] = particle_boundary_condition(plank.z[i], g.zF[g.Hz+1+g.Nz], g.zF[g.Hz+1], TZ()) * ac[i]
 end
 function particle_boundaries!(plank, ac, g::AbstractGrid, arch::Architecture)
     kernel! = particle_boundaries_kernel!(device(arch), 256, (size(ac,1)))

@@ -1,7 +1,6 @@
-# # Horizontal 2-Dimensional Example
+# #  Global Ocean Example
 #
-# Here we simulate phytoplankton cells as Lagrangian particles in a 2D flow field.
-# The domain is periodic in both directions horizontally.
+# Here we simulate phytoplankton cells as Lagrangian particles in the global ocean.
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1. Import packages
@@ -12,23 +11,24 @@ using PlanktonIndividuals, Plots, IndividualDisplacements, MeshArrays, OceanStat
 # ## 2. Generate Flow Fields
 #
 # First we'll generate grid information
-grid = RegularRectilinearGrid(size=(360, 160, 1), spacing=(1, 1, 1))
-
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/helper_functions.jl"))
 IndividualDisplacements.get_occa_velocity_if_needed()
 𝑃,𝐷,Γ=OCCA_FlowFields(backward_in_time=false)
 
+grid = RegularLatLonGrid(size=(360, 160, 1), lat=(-80,80), lon=(-180,180), z=(0,-10))
+
 # Next, we generate a mask from  the land shape information 
-landshape = findall(x -> x == 0.0 ,Γ["Depth"][1])
+landshape = findall(x -> x == 0.0 ,Γ.Depth[1])
 mask = ones(360,160)
 mask[landshape] .= 0.0
 mask = reshape(mask,360,160,1)
 nothing
 
 # Then we use a stream function to generate the flow field which is a double-gyre configuration
-uu=reshape(𝑃.u0[1][2:end-1,2:end-1,1],(360,160,1)) .* mask
-vv=reshape(𝑃.v0[1][2:end-1,2:end-1,1],(360,160,1)) .* mask
+uu=reshape(𝑃.u0[1][2:end-1,2:end-1,1],(360,160,1)) .* Γ.DXC[1] .* mask
+vv=reshape(𝑃.v0[1][2:end-1,2:end,1],(360,161,1)) .* Γ.DYC[1] .* mask
+vv = hcat(vv,zeros(360)) # for bounded boundary condition
 ww=zeros(360,160,2)
 
 uvels = fill(uu, 2)
