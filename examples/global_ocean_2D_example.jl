@@ -27,7 +27,7 @@ nothing
 
 # Then we use a stream function to generate the flow field which is a double-gyre configuration
 uu=reshape(𝑃.u0[1][2:end-1,2:end-1,1],(360,160,1)) .* Γ.DXC[1] .* mask
-vv=reshape(𝑃.v0[1][2:end-1,2:end,1],(360,161,1)) .* Γ.DYC[1] .* mask
+vv=reshape(𝑃.v0[1][2:end-1,2:end-1,1],(360,160,1)) .* Γ.DYC[1] .* mask
 vv = hcat(vv,zeros(360)) # for bounded boundary condition
 ww=zeros(360,160,2)
 
