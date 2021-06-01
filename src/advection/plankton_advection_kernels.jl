@@ -1,23 +1,23 @@
 ##### deal with particles moved out of the domain
-@inline function periodic_boundary(x, xl, xr)
+@inline function particle_boundary_condition(x, xl, xr, ::Periodic)
     x > xr && return xl + (x  - xr)
     x < xl && return xr - (xl - x) 
     return x
 end
-@inline function bounded_boundary(x, xl, xr)
+@inline function particle_boundary_condition(x, xl, xr, ::Bounded)
     x > xr && return xr - (x - xr) * 1.0
     x < xl && return xl + (xl - x) * 1.0
     return x
 end
 
-@kernel function periodic_domain_kernel!(plank, ac, g::RegularRectilinearGrid)
+@kernel function particle_boundaries_kernel!(plank, ac, g::AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
     i = @index(Global)
-    plank.x[i] = periodic_boundary(plank.x[i], g.xF[g.Hx+1], g.xF[g.Hx+1+g.Nx]) * ac[i]
-    plank.y[i] = periodic_boundary(plank.y[i], g.yF[g.Hy+1], g.yF[g.Hy+1+g.Ny]) * ac[i]
-    plank.z[i] =  bounded_boundary(plank.z[i], g.zF[g.Hz+1+g.Nz], g.zF[g.Hz+1]) * ac[i]
+    plank.x[i] = particle_boundary_condition(plank.x[i], g.xF[g.Hx+1], g.xF[g.Hx+1+g.Nx], TX) * ac[i]
+    plank.y[i] = particle_boundary_condition(plank.y[i], g.yF[g.Hy+1], g.yF[g.Hy+1+g.Ny], TY) * ac[i]
+    plank.z[i] = particle_boundary_condition(plank.z[i], g.zF[g.Hz+1+g.Nz], g.zF[g.Hz+1], TZ) * ac[i]
 end
-function periodic_domain!(plank, ac, g::RegularRectilinearGrid, arch::Architecture)
-    kernel! = periodic_domain_kernel!(device(arch), 256, (size(ac,1)))
+function particle_boundaries!(plank, ac, g::AbstractGrid, arch::Architecture)
+    kernel! = particle_boundaries_kernel!(device(arch), 256, (size(ac,1)))
     event = kernel!(plank, ac, g)
     wait(device(arch), event)
     return nothing

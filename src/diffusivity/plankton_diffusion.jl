@@ -28,7 +28,7 @@ function plankton_diffusion!(plank, rnd, κx, κy, κz, ΔT, g::AbstractGrid, ar
     calc_diffusion!(plank, rnd, κx, κy, κz, ΔT, arch)
 
     ##### keep individuals in the domain
-    periodic_domain!(plank, plank.ac, g, arch)
+    particle_boundaries!(plank, plank.ac, g, arch)
 end
 
 plankton_diffusion!(plank, rnd, κ, ΔT, g, arch) = plankton_diffusion!(plank, rnd, κ, κ, κ, ΔT, g, arch)
