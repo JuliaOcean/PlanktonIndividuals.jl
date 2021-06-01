@@ -43,8 +43,8 @@
 # ΔxF at faces in y direction
 @inline ΔxFFA(i, j, k, g::RegularLatLonGrid) = @inbounds g.radius * cos(g.yF[j+g.Hy]*π/180) * deg2rad(g.Δx)
 
-@inline AxF(i, j, k, g::RegularLatLonGrid) = AxF(i, j, k, g)
+@inline AxF(i, j, k, g::RegularLatLonGrid) = AxC(i, j, k, g)
 @inline AyF(i, j, k, g::RegularLatLonGrid) = ΔxFFA(i, j, k, g) *  g.Δz
-@inline AzF(i, j, k, g::RegularLatLonGrid) = AzF(i, j, k, g)
+@inline AzF(i, j, k, g::RegularLatLonGrid) = AzC(i, j, k, g)
 
 @inline volume(i, j, k, g::RegularLatLonGrid) = AzF(i, j, k, g) * g.Δz
