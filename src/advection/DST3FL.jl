@@ -11,9 +11,9 @@ const θmax = 1.0e20
 @inline d1(CFL) = @inbounds (1.0 - CFL * CFL) / 6.0
 
 ##### calculate volume transport, unit: m³/s
-@inline Trans_x(i, j, k, g::AbstractGrid, u) = @inbounds AxF(i, j, k, g) * u[i, j, k]
-@inline Trans_y(i, j, k, g::AbstractGrid, v) = @inbounds AyF(i, j, k, g) * v[i, j, k]
-@inline Trans_z(i, j, k, g::AbstractGrid, w) = @inbounds AzF(i, j, k, g) * w[i, j, k]
+@inline Trans_x(i, j, k, g::AbstractGrid, u) = @inbounds Ax(i, j, k, g) * u[i, j, k]
+@inline Trans_y(i, j, k, g::AbstractGrid, v) = @inbounds Ay(i, j, k, g) * v[i, j, k]
+@inline Trans_z(i, j, k, g::AbstractGrid, w) = @inbounds Az(i, j, k, g) * w[i, j, k]
 
 ##### calculate θ⁺ and θ⁻
 @inline θx⁺(i, j, k, c) = abs(δx⁰(i, j, k, c))*θmax ≤ abs(δx⁻(i, j, k, c)) ?

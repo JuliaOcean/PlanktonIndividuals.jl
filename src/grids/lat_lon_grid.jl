@@ -1,6 +1,4 @@
-const R_Earth = 6371.0e3    # Mean radius of the Earth in meter (https://en.wikipedia.org/wiki/Earth)
-
-struct RegularLatLonGrid{TX, TY, TZ, R} <: AbstractGrid{TX, TY, TZ}
+struct RegularLatLonGrid{TX, TY, TZ, R, A} <: AbstractGrid{TX, TY, TZ}
     # corrdinates at cell centers, unit: degree
     xC::R
     yC::R
@@ -16,6 +14,17 @@ struct RegularLatLonGrid{TX, TY, TZ, R} <: AbstractGrid{TX, TY, TZ}
     Δy::Float64
     # grid spacing, unit: meter
     Δz::Float64
+    # grid spacing from center to center, unit: meter
+    dxC::A
+    dyC::A
+    # grid spacing from face to face, unit: meter
+    dxF::A
+    dyF::A
+    # areas and volume, unit: m² or m³
+    Ax::A
+    Ay::A
+    Az::A
+    Vol::A
     # number of grid points
     Nx::Int
     Ny::Int
@@ -24,13 +33,11 @@ struct RegularLatLonGrid{TX, TY, TZ, R} <: AbstractGrid{TX, TY, TZ}
     Hx::Int
     Hy::Int
     Hz::Int
-    # radius, unit: meter
-    radius::Float64
 end
 
 """
     RegularLatLonGrid(;size, lat, lon,
-                       radius = R_Earth,
+                       radius = 6370.0e3,
                        halo = (2, 2, 2))
 Creats a `RegularLatLonGrid` struct with `size = (Nx, Ny, Nz)` grid points.
 
@@ -47,14 +54,14 @@ Keyword Arguments (Required)
 
 Keyword Arguments (Optional)
 ============================
-- `radius` : Specify the radius of the Earth used in the model, 6371.0e3 meters by default.
+- `radius` : Specify the radius of the Earth used in the model, 6370.0e3 meters by default.
 - `halo` : A tuple of integers that specifies the size of the halo region of cells
                 surrounding the physical interior for each direction.
                 `halo` is a 3-tuple no matter for 3D, 2D, or 1D model.
                 At least 2 halo points are needed for DST3FL advection scheme.
 """
 function RegularLatLonGrid(;size, lat, lon, z,
-                            radius = R_Earth,
+                            radius = 6370.0e3,
                             halo = (2, 2, 2))
     Nx, Ny, Nz = size
     Hx, Hy, Hz = halo
@@ -82,8 +89,39 @@ function RegularLatLonGrid(;size, lat, lon, z,
     yC = range(lat₁ + (0.5 - Hy) * Δy, lat₁ + (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy)
     zC = -range(z₁ + (0.5 - Hz) * Δz, z₂ + (Nz + Hz - 0.5) * Δz, length = Nz + 2 * Hz)
 
-    return RegularLatLonGrid{TX, TY, TZ, typeof(xF)}(
-        xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Nx, Ny, Nz, Hx, Hy, Hz, radius)
+    # inclue halo points
+    dxC = zeros(Nx+2*Hx, Ny+2*Hy)
+    dyC = zeros(Nx+2*Hx, Ny+2*Hy)
+    dxF = zeros(Nx+2*Hx, Ny+2*Hy)
+    dyF = zeros(Nx+2*Hx, Ny+2*Hy)
+    Ax = zeros(Nx+2*Hx, Ny+2*Hy)
+    Ay = zeros(Nx+2*Hx, Ny+2*Hy)
+    Az = zeros(Nx+2*Hx, Ny+2*Hy)
+    Vol = zeros(Nx+2*Hx, Ny+2*Hy)
+
+    for i in 1:Nx+2*Hx
+        for j in 1:Ny+2*Hy
+            dxC[i, j] = radius * cos(yC[j]*π/180) * deg2rad(Δx)
+            dyC[i, j] = radius * deg2rad(Δy)
+            dxF[i, j] = radius * cos(yC[j]*π/180) * deg2rad(Δx)
+            dyF[i, j] = radius * deg2rad(Δy)
+        end
+    end
+    for i in 1:Nx+2*Hx-1
+        for j in 1:Ny+2*Hy-1
+            Ax[i,j]   = dyF[i,j] * Δz
+            Ay[i,j]   = dxF[i,j] * Δz
+            Az[i,j]   = radius^2 * deg2rad(Δx) * (sin(yF[j+1]*π/180) - sin(yF[j]*π/180))
+        end
+    end
+    for i in 1:Nx+2*Hx-1
+        for j in 1:Ny+2*Hy-1
+            Vol[i,j]   = Az[i,j] * Δz
+        end
+    end
+
+    return RegularLatLonGrid{TX, TY, TZ, typeof(xF), typeof(dxC)}(
+        xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, dxC, dyC, dxF, dyF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz)
 end
 
 import Base: show

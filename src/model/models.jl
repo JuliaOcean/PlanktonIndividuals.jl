@@ -55,19 +55,27 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
         throw(ArgumentError("Cannot create a GPU model. No CUDA-enabled GPU was detected!"))
     end
 
+    grid_d = replace_grid_storage(arch, grid)
+
+    if mask ≠ nothing
+        mask_d = mask |> array_type(arch)
+    else
+        mask_d = nothing
+    end
+
     inds = individuals(phyt_params, arch, N_species, N_individual, max_individuals)
 
     for plank in inds.phytos
-        gen_individuals!(plank, N_individual, grid, arch; mask = mask)
+        gen_individuals!(plank, N_individual, grid_d, arch; mask = mask_d)
     end
 
-    nutrients = generate_nutrients(arch, grid, nut_initial; mask = mask)
+    nutrients = generate_nutrients(arch, grid_d, nut_initial; mask = mask_d)
 
-    ts = timestepper(arch, grid, N_individual, max_individuals)
+    ts = timestepper(arch, grid_d, N_individual, max_individuals)
 
     iteration  = 0
 
-    model = PlanktonModel(arch, t, iteration, inds, nutrients, grid, bgc_params, ts)
+    model = PlanktonModel(arch, t, iteration, inds, nutrients, grid_d, bgc_params, ts)
 
     return model
 end

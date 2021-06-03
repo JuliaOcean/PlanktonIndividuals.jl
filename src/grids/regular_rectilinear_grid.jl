@@ -28,8 +28,8 @@ end
 
 """
     RegularRectilinearGrid(;size, spacing,
-                                topology = (Periodic, Periodic, Bounded),
-                                halo = (2, 2, 2))
+                            topology = (Periodic, Periodic, Bounded),
+                            halo = (2, 2, 2))
 Creats a `RegularRectilinearGrid` struct with `size = (Nx, Ny, Nz)` grid points.
 
 Keyword Arguments (Required)

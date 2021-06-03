@@ -38,7 +38,7 @@
     zd, zi = mod(zi, 1), unsafe_trunc(Int, zi)
     ##### shift to 1-based indexing and include halo points
     ##### return meters for RegularRectilinearGrid, and degree for RegularLatLonGrid
-    return tri_interpolation(u, xd, yd, zd, xi+g.Hx, yi+g.Hy, zi+g.Hz) / ΔxF(xi, yi, zi, g) * g.Δx
+    return tri_interpolation(u, xd, yd, zd, xi+g.Hx, yi+g.Hy, zi+g.Hz) / ΔxF(xi+g.Hx, yi+g.Hy, zi+g.Hz, g) * g.Δx
 end
 
 @inline function v_itpl(v, x, y, z, ac, g::AbstractGrid) 
@@ -50,7 +50,7 @@ end
     zd, zi = mod(zi, 1), unsafe_trunc(Int, zi)
     ##### shift to 1-based indexing and include halo points
     ##### return meters for RegularRectilinearGrid, and degree for RegularLatLonGrid
-    return tri_interpolation(v, xd, yd, zd, xi+g.Hx, yi+g.Hy, zi+g.Hz) / ΔyF(xi, yi, zi, g) * g.Δy
+    return tri_interpolation(v, xd, yd, zd, xi+g.Hx, yi+g.Hy, zi+g.Hz) / ΔyF(xi+g.Hx, yi+g.Hy, zi+g.Hz, g) * g.Δy
 end
 
 @inline function w_itpl(w, x, y, z, ac, g::AbstractGrid) 

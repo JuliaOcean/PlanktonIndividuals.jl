@@ -38,12 +38,12 @@ end
 ```
 
 ```jldoctest
-julia> grid = RegularRectilinearGrid(size=(32, 64, 128), spacing=(1, 2, 4))
+julia> grid = RegularRectilinearGrid(size=(32, 64, 128), spacing=(1.0, 2.0, 4.0))
 domain: x ∈ [0.0, 32.0], y ∈ [0.0, 128.0], z ∈ [0.0, -512.0]
 topology (Tx, Ty, Tz):     (Periodic, Periodic, Bounded)
 resolution (Nx, Ny, Nz):   (32, 64, 128)
 halo size (Hx, Hy, Hz):    (2, 2, 2)
-grid spacing (Δx, Δy, Δz): (1, 2, 4)
+grid spacing (Δx, Δy, Δz): (1.0, 2.0, 4.0)
 ```
 
 The `RegularLatLonGrid` is constructed by specifying its `size` (`Tuple`

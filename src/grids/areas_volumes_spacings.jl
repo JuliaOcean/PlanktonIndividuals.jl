@@ -14,37 +14,26 @@
 @inline ΔyF(i, j, k, g::RegularRectilinearGrid) = g.Δy
 @inline ΔzF(i, j, k, g::RegularRectilinearGrid) = g.Δz
 
-@inline AxC(i, j, k, g::RegularRectilinearGrid) = g.Δy * g.Δz
-@inline AyC(i, j, k, g::RegularRectilinearGrid) = g.Δx * g.Δz
-@inline AzC(i, j, k, g::RegularRectilinearGrid) = g.Δx * g.Δy
+@inline Ax(i, j, k, g::RegularRectilinearGrid) = g.Δy * g.Δz
+@inline Ay(i, j, k, g::RegularRectilinearGrid) = g.Δx * g.Δz
+@inline Az(i, j, k, g::RegularRectilinearGrid) = g.Δx * g.Δy
 
-@inline AxF(i, j, k, g::RegularRectilinearGrid) = g.Δy * g.Δz
-@inline AyF(i, j, k, g::RegularRectilinearGrid) = g.Δx * g.Δz
-@inline AzF(i, j, k, g::RegularRectilinearGrid) = g.Δx * g.Δy
 
-@inline volume(i, j, k, g::RegularRectilinearGrid) = AzF(i, j, k, g) * g.Δz
+@inline volume(i, j, k, g::RegularRectilinearGrid) = Az(i, j, k, g) * g.Δz
 
 #####
-##### RegularLatLonGrid (degree to meter)
+##### RegularLatLonGrid (degree to meter), halo points included
 #####
-@inline ΔxC(i, j, k, g::RegularLatLonGrid) = @inbounds g.radius * cos(g.yC[j+g.Hy]*π/180) * deg2rad(g.Δx)
-@inline ΔyC(i, j, k, g::RegularLatLonGrid) = g.radius * deg2rad(g.Δy)
+@inline ΔxC(i, j, k, g::RegularLatLonGrid) = @inbounds g.dxC[i,j]
+@inline ΔyC(i, j, k, g::RegularLatLonGrid) = @inbounds g.dyC[i,j]
 @inline ΔzC(i, j, k, g::RegularLatLonGrid) = g.Δz
 
-@inline ΔxF(i, j, k, g::RegularLatLonGrid) = ΔxC(i, j, k, g)
-@inline ΔyF(i, j, k, g::RegularLatLonGrid) = ΔyC(i, j, k, g)
+@inline ΔxF(i, j, k, g::RegularLatLonGrid) = @inbounds g.dxF[i,j]
+@inline ΔyF(i, j, k, g::RegularLatLonGrid) = @inbounds g.dyF[i,j]
 @inline ΔzF(i, j, k, g::RegularLatLonGrid) = ΔzC(i, j, k, g)
 
-@inline AxC(i, j, k, g::RegularLatLonGrid) = ΔyF(i, j, k, g) * g.Δz
-@inline AyC(i, j, k, g::RegularLatLonGrid) = ΔxF(i, j, k, g) * g.Δz
-@inline AzC(i, j, k, g::RegularLatLonGrid) = @inbounds g.radius^2 * deg2rad(g.Δx) * (sin(g.yF[j+g.Hy]*π/180) - 
-                                                                                     sin(g.yF[j-1+g.Hy]*π/180))
+@inline Ax(i, j, k, g::RegularLatLonGrid) = @inbounds g.Ax[i,j]
+@inline Ay(i, j, k, g::RegularLatLonGrid) = @inbounds g.Ay[i,j]
+@inline Az(i, j, k, g::RegularLatLonGrid) = @inbounds g.Az[i,j]
 
-# ΔxF at faces in y direction
-@inline ΔxFFA(i, j, k, g::RegularLatLonGrid) = @inbounds g.radius * cos(g.yF[j+g.Hy]*π/180) * deg2rad(g.Δx)
-
-@inline AxF(i, j, k, g::RegularLatLonGrid) = AxC(i, j, k, g)
-@inline AyF(i, j, k, g::RegularLatLonGrid) = ΔxFFA(i, j, k, g) *  g.Δz
-@inline AzF(i, j, k, g::RegularLatLonGrid) = AzC(i, j, k, g)
-
-@inline volume(i, j, k, g::RegularLatLonGrid) = AzF(i, j, k, g) * g.Δz
+@inline volume(i, j, k, g::RegularLatLonGrid) = @inbounds g.Vol[i,j]

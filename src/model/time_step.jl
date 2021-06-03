@@ -72,7 +72,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics, result
     nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.nut_temp, model.arch,
                 model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT, model.iteration)
 
-    write_nut_cons(model.grid, model.timestepper.Gcs, model.nutrients, model.t, resultspath)
+    # write_nut_cons(model.grid, model.timestepper.Gcs, model.nutrients, model.t, resultspath)
 
     @inbounds model.timestepper.vel₀.u.data .= model.timestepper.vel₁.u.data
     @inbounds model.timestepper.vel₀.v.data .= model.timestepper.vel₁.v.data

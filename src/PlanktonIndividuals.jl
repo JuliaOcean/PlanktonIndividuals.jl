@@ -3,7 +3,7 @@ module PlanktonIndividuals
 using NCDatasets, Serialization
 using Random, Statistics, Interpolations
 using Printf, JLD2
-using CUDA, KernelAbstractions, CUDAKernels
+using CUDA, KernelAbstractions, CUDAKernels, Adapt
 using LinearAlgebra
 using StructArrays
 using Pkg.Artifacts
@@ -17,8 +17,9 @@ default_PAR = joinpath(artifact_path(surface_mixing_vels_hash)*"/PAR.bin")
 
 include("architecture.jl")
 include("grids/regular_rectilinear_grid.jl")
-include("grids/regular_lat_lon_grid.jl")
+include("grids/lat_lon_grid.jl")
 include("grids/areas_volumes_spacings.jl")
+include("grids/utils.jl")
 include("params/param_default.jl")
 include("params/param_update.jl")
 include("fields/boundary_conditions.jl")

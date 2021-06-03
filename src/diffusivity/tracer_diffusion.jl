@@ -24,9 +24,9 @@
 @inline ∂z⁰(i, j, k, grid, c) = δz⁰(i, j, k, c) / ΔzC(i, j, k, grid)
 
 ##### Diffusive fluxes
-@inline diffusive_flux_x(i, j, k, grid, κˣ::Number, c) = κˣ * AxF(i, j, k, grid) * ∂x⁰(i, j, k, grid, c)
-@inline diffusive_flux_y(i, j, k, grid, κʸ::Number, c) = κʸ * AyF(i, j, k, grid) * ∂y⁰(i, j, k, grid, c)
-@inline diffusive_flux_z(i, j, k, grid, κᶻ::Number, c) = κᶻ * AzF(i, j, k, grid) * ∂z⁰(i, j, k, grid, c)
+@inline diffusive_flux_x(i, j, k, grid, κˣ::Number, c) = κˣ * Ax(i, j, k, grid) * ∂x⁰(i, j, k, grid, c)
+@inline diffusive_flux_y(i, j, k, grid, κʸ::Number, c) = κʸ * Ay(i, j, k, grid) * ∂y⁰(i, j, k, grid, c)
+@inline diffusive_flux_z(i, j, k, grid, κᶻ::Number, c) = κᶻ * Az(i, j, k, grid) * ∂z⁰(i, j, k, grid, c)
 
 ##### Laplacian diffusion operator
 @inline function κ∇²(i, j, k, grid, κˣ, κʸ, κᶻ, c)
