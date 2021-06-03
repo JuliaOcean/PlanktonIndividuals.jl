@@ -84,7 +84,6 @@ end
 #
 # We run the model for 24 time steps (1 hour per time step) and plot the individuals and DOC field.
 for i in 1:24
-    println("$i")
     update!(sim)
 end
 
