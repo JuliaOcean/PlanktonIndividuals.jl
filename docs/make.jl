@@ -1,7 +1,7 @@
 using Documenter, Literate
 using PlanktonIndividuals
 
-examples = ["vertical_2D_example.jl", "horizontal_2D_example.jl", "surface_mixing_3D_example.jl", "0D_experiment.jl"]
+examples = ["vertical_2D_example.jl", "horizontal_2D_example.jl", "surface_mixing_3D_example.jl", "0D_experiment.jl", "global_ocean_2D_example.jl"]
 
 for i in 1:length(examples)
     INPUT = joinpath(@__DIR__, "..", "examples", examples[i])
@@ -17,6 +17,7 @@ example_pages = [
     "Ocean Transect" => "generated/vertical_2D_example.md",
     "Two-Dimensional Map" => "generated/horizontal_2D_example.md",
     "Three-Dimensional Domain" => "generated/surface_mixing_3D_example.md",
+    "Global Ocean Example" => "generated/global_ocean_2D_example.md",
 ]
 model_description = [
     # "Table Of Content" => "model_description.md",
