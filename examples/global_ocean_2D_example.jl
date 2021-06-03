@@ -76,7 +76,7 @@ function plot(model::PlanktonModel, uu)
     trac1 = Plots.heatmap(xC, yC, Array(model.nutrients.DOC.data)[3:end-2,3:end-2,3]', xlabel="x (m)", ylabel="y (m)", clims=(0.5, 1.1), fmt=:png)
 
     ## Arrange the plots side-by-side.
-    plt = Plots.plot(fl_plot, trac1, size=(800, 400),
+    plt = Plots.plot(fl_plot, trac1, size=(1200, 400),
         title=[lpad(model.t÷86400,2,"0")*"day "*lpad(model.t÷3600-24*(model.t÷86400),2,"0")*"hour" "DOC (mmolC/L)"])
 
     return plt
