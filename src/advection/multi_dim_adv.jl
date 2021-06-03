@@ -128,7 +128,7 @@ end
 
 function calc_nut_tendency!(a, b, c, ΔT)
     for name in nut_names
-        @inbounds a[name].data .= (b[name].data .- c[name].data) ./ ΔT
+        @inbounds a[name].data .= b[name].data .- c[name].data
     end
 end
 

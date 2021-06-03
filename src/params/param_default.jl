@@ -10,8 +10,8 @@ function bgc_params_default()
         "kPOC"     => 1/30/86400,         # Remineralization rate for POC, turn over time: a month (per second)
         "kPON"     => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
         "kPOP"     => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
-        "κh"       => 1.0e-6,             # Horizontal diffusion
-        "κv"       => 1.0e-6,             # Vertical diffusion
+        "κh"       => 0.0e-6,             # Horizontal diffusion
+        "κv"       => 0.0e-6,             # Vertical diffusion
         "κhP"      => 0.0e-6,             # Horizontal diffusion for individuals
         "κvP"      => 0.0e-6,             # Vertical diffusion for individuals
     )

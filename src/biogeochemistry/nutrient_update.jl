@@ -9,7 +9,7 @@
     ii = i + g.Hx
     jj = j + g.Hy
     kk = k + g.Hz
-    @inbounds nut[ii, jj, kk] += Gc[ii, jj, kk] * ΔT + consume[ii, jj, kk] /volume(ii, jj, kk, g)
+    @inbounds nut[ii, jj, kk] += Gc[ii, jj, kk] + consume[ii, jj, kk] /volume(ii, jj, kk, g)
 end
 function apply_tendency!(nuts, Gcs, consume, ΔT, g::AbstractGrid, arch::Architecture)
     kernel! = apply_tendency_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
