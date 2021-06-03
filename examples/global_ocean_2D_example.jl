@@ -95,7 +95,7 @@ u_plot[landshape] .= NaN
 plot(model, u_plot)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# Or you can use the following code to generate an animation like below
+# Or you can use the following code to generate an animation like below.
 # Please note that the following simulation is run for a year.
 #
 # ```
