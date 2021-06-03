@@ -34,7 +34,7 @@ function nut_update!(nutrients, Gcs, nut_temp, arch::Architecture, g::AbstractGr
     nut_forcing!(Gcs, nut_temp, nutrients, params, ΔT)
 
     ##### apply boundary conditions
-    apply_bcs!(Gcs, nutrients, g, iter, arch)
+    apply_bcs!(Gcs, nutrients, g, iter, ΔT, arch)
 
     ##### apply diffusion and forcing tendency
     apply_tendency!(nutrients, Gcs, consume, ΔT, g, arch)
@@ -47,7 +47,7 @@ function nut_update!(nutrients, Gcs, nut_temp, arch::Architecture, g::AbstractGr
     nut_forcing!(Gcs, nut_temp, nutrients, params, ΔT)
 
     ##### apply boundary conditions
-    apply_bcs!(Gcs, nutrients, g, iter, arch)
+    apply_bcs!(Gcs, nutrients, g, iter, ΔT, arch)
 
     # apply forcing tendency
     apply_tendency!(nutrients, Gcs, consume, ΔT, g, arch)
