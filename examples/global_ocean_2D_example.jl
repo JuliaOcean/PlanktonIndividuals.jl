@@ -25,9 +25,9 @@ mask[landshape] .= 0.0
 mask = reshape(mask,360,160,1)
 nothing
 
-# Then we use a stream function to generate the flow field which is a double-gyre configuration
-uu=reshape(𝑃.u0[1][2:end-1,2:end-1,1],(360,160,1)) .* Γ.DXC[1] .* mask
-vv=reshape(𝑃.v0[1][2:end-1,2:end-1,1],(360,160,1)) .* Γ.DYC[1] .* mask
+# Then we re-format velocity fields so they can be loaded in to PlanktonSimulation
+uu=reshape(𝑃.u0[1][2:end-1,2:end-1,1],(360,160,1)) .* grid.dxF[3:end-2, 3:end-2] .* mask
+vv=reshape(𝑃.v0[1][2:end-1,2:end-1,1],(360,160,1)) .* grid.dyF[3:end-2, 3:end-2] .* mask
 vv = hcat(vv,zeros(360)) # for bounded boundary condition
 ww=zeros(360,160,2)
 
@@ -73,7 +73,7 @@ function plot(model::PlanktonModel, uu)
     Plots.scatter!(fl_plot, px, py, ms=5, color = :red, legend=:none)
 
     ## DOC field
-    trac1 = Plots.contourf(xC, yC, Array(model.nutrients.DOC.data)[3:end-2,3:end-2,3]', xlabel="x (m)", ylabel="y (m)", clims=(0.5, 1.1), fmt=:png)
+    trac1 = Plots.heatmap(xC, yC, Array(model.nutrients.DOC.data)[3:end-2,3:end-2,3]', xlabel="x (m)", ylabel="y (m)", clims=(0.5, 1.1), fmt=:png)
 
     ## Arrange the plots side-by-side.
     plt = Plots.plot(fl_plot, trac1, size=(800, 400),
@@ -82,7 +82,7 @@ function plot(model::PlanktonModel, uu)
     return plt
 end
 #
-# We run the model for 24 time steps (1 hour) and plot the individuals and DOC field.
+# We run the model for 24 time steps (1 hour per time step) and plot the individuals and DOC field.
 for i in 1:24
     println("$i")
     update!(sim)
@@ -96,6 +96,7 @@ plot(model, u_plot)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # Or you can use the following code to generate an animation like below
+# Please note that the following simulation is run for a year.
 #
 # ```
 # anim = @animate for i in 1:120
@@ -104,4 +105,4 @@ plot(model, u_plot)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)
 # ```
-# ![animation](https://github.com/JuliaOcean/PlanktonIndividuals.jl/raw/master/examples/figures/anim_horizontal_2D.gif)
+# ![animation](https://github.com/JuliaOcean/PlanktonIndividuals.jl/raw/master/examples/figures/anim_global.gif)
