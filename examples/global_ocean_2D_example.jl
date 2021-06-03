@@ -70,7 +70,7 @@ function plot(model::PlanktonModel, uu)
     ## a scatter plot embeded in the flow fields
     px = Array(model.individuals.phytos.sp1.data.x)
     py = Array(model.individuals.phytos.sp1.data.y)
-    Plots.scatter!(fl_plot, px, py, ms=5, color = :red, legend=:none)
+    Plots.scatter!(fl_plot, px, py, ms=3, color = :red, legend=:none)
 
     ## DOC field
     trac1 = Plots.heatmap(xC, yC, Array(model.nutrients.DOC.data)[3:end-2,3:end-2,3]', xlabel="x (m)", ylabel="y (m)", clims=(0.5, 1.1), fmt=:png)
