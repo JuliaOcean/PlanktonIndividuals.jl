@@ -19,9 +19,9 @@
 @inline δz⁺(i, j, k, grid, f::F, args...) where F<:Function = f(i, j, k, grid, args...) - f(i, j, k+1, grid, args...)
 
 ##### Derivative operators
-@inline ∂x⁰(i, j, k, grid, c) = δx⁰(i, j, k, c) / ΔxC(i, j, k, grid)
-@inline ∂y⁰(i, j, k, grid, c) = δy⁰(i, j, k, c) / ΔyC(i, j, k, grid)
-@inline ∂z⁰(i, j, k, grid, c) = δz⁰(i, j, k, c) / ΔzC(i, j, k, grid)
+@inline ∂x⁰(i, j, k, grid, c) = δx⁰(i, j, k, c) / ΔxF(i, j, k, grid)
+@inline ∂y⁰(i, j, k, grid, c) = δy⁰(i, j, k, c) / ΔyF(i, j, k, grid)
+@inline ∂z⁰(i, j, k, grid, c) = δz⁰(i, j, k, c) / ΔzF(i, j, k, grid)
 
 ##### Diffusive fluxes
 @inline diffusive_flux_x(i, j, k, grid, κˣ::Number, c) = κˣ * Ax(i, j, k, grid) * ∂x⁰(i, j, k, grid, c)
