@@ -10,7 +10,7 @@ struct individuals
     zoos::NamedTuple
 end
 
-function plankton(N::Int64, arch::Architecture, sp::Int64, params::Dict, maxN)
+function plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
     rawdata = StructArray(x   = zeros(maxN), y   = zeros(maxN), z   = zeros(maxN),
                           iS  = zeros(maxN), Sz  = zeros(maxN), Bm  = zeros(maxN), 
                           Cq  = zeros(maxN), Nq  = zeros(maxN), Pq  = zeros(maxN), 
@@ -46,13 +46,13 @@ const param_names=(:Nsuper, :Cquota, :mean, :var, :Chl2Cint, :α, :Φ, :TRef, :T
                    :grz_P, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
                    :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP)
 
-function individuals(params::Dict, arch::Architecture, Nsp, N, maxN)
+function individuals(params::Dict, arch::Architecture, Nsp, maxN)
     plank_data=[]
     if Nsp > 9
         throw(ArgumentError("INDIVIDUALS: species must ≤ 9!"))
     else
         for i in 1:Nsp
-            plank = plankton(N, arch, i, params, maxN)
+            plank = plankton(arch, i, params, maxN)
             push!(plank_data, plank)
         end
         plank_name = plank_names[1:Nsp]
@@ -86,20 +86,19 @@ function gen_individuals!(plank, N::Int64, g::AbstractGrid, arch::Architecture; 
     rand!(rng_type(arch), plank.data.Nq)
     rand!(rng_type(arch), plank.data.Pq)
 
-    plank.data.x   .=(plank.data.x .* (g.xF[g.Nx+g.Hx+1] - g.xF[g.Hx+1]) .+ g.xF[g.Hx+1]) .* plank.data.ac   # x
-    plank.data.y   .=(plank.data.y .* (g.yF[g.Ny+g.Hy+1] - g.yF[g.Hy+1]) .+ g.yF[g.Hy+1]) .* plank.data.ac   # y
-    plank.data.z   .=(plank.data.z .* (g.zF[g.Nz+g.Hz+1] - g.zF[g.Hz+1]) .+ g.zF[g.Hz+1]) .* plank.data.ac   # z
-    plank.data.iS  .= max.(1.0, plank.data.iS .* var .+ mean) .* plank.data.ac                               # init_size
-    plank.data.Sz  .= copy(plank.data.iS)                                                                    # size
-    plank.data.Bm  .= Cquota .* plank.data.Sz .* Nsuper                                                      # Bm
-    plank.data.Cq  .=(plank.data.Cq .* (cqmax - cqmin)  .+ cqmin) .* plank.data.Bm                           # Cq
-    plank.data.Nq  .=(plank.data.Nq .* (nqmax - nqmin)  .+ nqmin) .* plank.data.Bm                           # Nq
-    plank.data.Pq  .=(plank.data.Pq .* (pqmax - pqmin)  .+ pqmin) .* plank.data.Bm                           # Pq
-    plank.data.chl .= plank.data.Bm .* Chl2Cint                                                              # Chl
+    plank.data.x   .=(plank.data.x .* g.Nx) .* plank.data.ac                                         # x, unit: grid spacing, starting from 0
+    plank.data.y   .=(plank.data.y .* g.Ny) .* plank.data.ac                                         # y, unit: grid spacing, starting from 0
+    plank.data.z   .=(plank.data.z .* g.Nz) .* plank.data.ac                                         # z, unit: grid spacing, starting from 0
+    plank.data.iS  .= max.(1.0, plank.data.iS .* var .+ mean) .* plank.data.ac                       # init_size
+    plank.data.Sz  .= copy(plank.data.iS)                                                            # size
+    plank.data.Bm  .= Cquota .* plank.data.Sz .* Nsuper                                              # Bm
+    plank.data.Cq  .=(plank.data.Cq .* (cqmax - cqmin)  .+ cqmin) .* plank.data.Bm                   # Cq
+    plank.data.Nq  .=(plank.data.Nq .* (nqmax - nqmin)  .+ nqmin) .* plank.data.Bm                   # Nq
+    plank.data.Pq  .=(plank.data.Pq .* (pqmax - pqmin)  .+ pqmin) .* plank.data.Bm                   # Pq
+    plank.data.chl .= plank.data.Bm .* Chl2Cint                                                      # Chl
 
     if mask ≠ nothing
         if size(mask) == (g.Nx, g.Ny, g.Nz)
-            find_inds!(plank.data, g, arch)
             mask_individuals!(plank.data, mask, N, arch)
         else
             throw(ArgumentError("nut_mask: grid mismatch, size(mask) must equal to (grid.Nx, grid.Ny, grid.Nz)."))
@@ -109,9 +108,9 @@ end
 
 @kernel function mask_individuals_kernel!(plank, mask)
     i = @index(Global)
-    xi = plank.xi[i] - 2
-    yi = plank.yi[i] - 2
-    zi = plank.zi[i] - 2
+    xi = unsafe_trunc(Int, plank.x[i]) + 1 # 0-based index to 1-based index
+    yi = unsafe_trunc(Int, plank.y[i]) + 1
+    zi = unsafe_trunc(Int, plank.z[i]) + 1
     plank.ac[i] = mask[xi, yi, zi] * plank.ac[i]
 end
 function mask_individuals!(plank, mask, N, arch)
