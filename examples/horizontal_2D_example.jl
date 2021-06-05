@@ -47,7 +47,7 @@ end
 # To plot the distribution of individuals as well as nutrient fields we use Plots.jl and 
 # create a function that can easily be re-used e.g. to create an animation.
 
-function plot(model::PlanktonModel)
+function plot_model(model::PlanktonModel)
     ## Coordinate arrays for plotting
     xC, yC = collect(model.grid.xC)[3:130], collect(model.grid.yC)[3:130]
 
@@ -69,7 +69,7 @@ function plot(model::PlanktonModel)
     return plt
 end
 
-plot(model)
+plot_model(model)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # Or you can use the following code to generate an animation like below
@@ -77,7 +77,7 @@ plot(model)
 # ```
 # anim = @animate for i in 1:120
 #    update!(sim)
-#    plot(model)
+#    plot_model(model)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)
 # ```

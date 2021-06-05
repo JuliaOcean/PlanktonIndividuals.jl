@@ -60,7 +60,7 @@ sim = PlanktonSimulation(model, ΔT = 3600, nΔT = 1, vels=(u=uvels, v=vvels, w=
 # Finaly, we run the model and plot the distribution of individuals as well as nutrient fields
 # We use Plots.jl to plot individuals and nutrient fields.
 #
-function plot(model::PlanktonModel, uu)
+function plot_model(model::PlanktonModel, uu)
     ## Coordinate arrays for plotting
     xC, yC = collect(model.grid.xC)[3:end-2], collect(model.grid.yC)[3:end-2]
 
@@ -91,7 +91,7 @@ end
 # We plot the current state of the model
 u_plot = uu[:,:,1]
 u_plot[landshape] .= NaN
-plot(model, u_plot)
+plot_model(model, u_plot)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # Or you can use the following code to generate an animation like below.
@@ -100,7 +100,7 @@ plot(model, u_plot)
 # ```
 # anim = @animate for i in 1:120
 #   update!(sim)
-#   plot(model)
+#   plot_model(model)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)
 # ```
