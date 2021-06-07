@@ -35,6 +35,29 @@ struct VerticallyStretchedLatLonGrid{TX, TY, TZ, R} <: AbstractGrid{TX, TY, TZ}
     Hz::Int
 end
 
+"""
+    LoadVerticallyStretchedLatLonGrid(; grid_info, size, lat, lon,
+                                        halo=(2,2,2))
+Creats a `VerticallyStretchedLatLonGrid` struct with `size = (Nx, Ny, Nz)` grid points.
+
+Keyword Arguments (Required)
+============================
+- `grid_info` : A NamedTuple contains external grid information (e.g. from MITgcm), please
+                    refer to documentation for the required format.
+- `size` : A tuple prescribing the number of grid points. 
+                `size` is a 3-tuple no matter for 3D, 2D, or 1D model.
+- `lat` : A 2-tuple specifying the startind and ending points in latitudinal direction.
+                Possible values are from -80 (80S) to 80 (80N).
+- `lon` : A 2-tuple specifying the startind and ending points in longitudinal direction.
+                Possible values are from -180 (180W) to 180 (180E).
+
+Keyword Arguments (Optional)
+============================
+- `halo` : A tuple of integers that specifies the size of the halo region of cells
+                surrounding the physical interior for each direction.
+                `halo` is a 3-tuple no matter for 3D, 2D, or 1D model.
+                At least 2 halo points are needed for DST3FL advection scheme.
+"""
 function LoadVerticallyStretchedLatLonGrid(;grid_info, size, lat, lon, halo=(2,2,2))
     Nx, Ny, Nz = size
     Hx, Hy, Hz = halo

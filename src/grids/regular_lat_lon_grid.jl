@@ -36,7 +36,7 @@ struct RegularLatLonGrid{TX, TY, TZ, R} <: AbstractGrid{TX, TY, TZ}
 end
 
 """
-    RegularLatLonGrid(;size, lat, lon,
+    RegularLatLonGrid(;size, lat, lon, z,
                        radius = 6370.0e3,
                        halo = (2, 2, 2))
 Creats a `RegularLatLonGrid` struct with `size = (Nx, Ny, Nz)` grid points.
