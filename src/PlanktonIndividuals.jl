@@ -17,7 +17,8 @@ default_PAR = joinpath(artifact_path(surface_mixing_vels_hash)*"/PAR.bin")
 
 include("architecture.jl")
 include("grids/regular_rectilinear_grid.jl")
-include("grids/lat_lon_grid.jl")
+include("grids/regular_lat_lon_grid.jl")
+include("grids/vertically_stretched_lat_lon_grid.jl")
 include("grids/areas_volumes_spacings.jl")
 include("grids/utils.jl")
 include("params/param_default.jl")
@@ -56,6 +57,7 @@ include("model/simulations.jl")
 export
     # model structures
     PlanktonModel, RegularRectilinearGrid, RegularLatLonGrid,
+    VerticallyStretchedLatLonGrid, LoadVerticallyStretchedLatLonGrid,
     Architecture, GPU, CPU, Periodic, Bounded,
 
     # read input functions
