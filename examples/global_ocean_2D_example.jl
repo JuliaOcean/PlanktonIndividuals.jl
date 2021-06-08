@@ -68,8 +68,8 @@ function plot_model(model::PlanktonModel, uu)
     fl_plot = Plots.contourf(xC, yC, uu', xlabel="x (m)", ylabel="y (m)", color=:balance, fmt=:png, colorbar=false)
 
     ## a scatter plot embeded in the flow fields
-    px = Array(model.individuals.phytos.sp1.data.x) .* 1 # convert fractional indices to degree
-    py = Array(model.individuals.phytos.sp1.data.y) .* 1 # convert fractional indices to degree
+    px = Array(model.individuals.phytos.sp1.data.x) .* 1 .- 180 # convert fractional indices to degree
+    py = Array(model.individuals.phytos.sp1.data.y) .* 1 .- 80  # convert fractional indices to degree
     Plots.scatter!(fl_plot, px, py, ms=3, color = :red, legend=:none)
 
     ## DOC field
