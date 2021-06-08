@@ -36,7 +36,7 @@ model = PlanktonModel(arch, grid; N_species = 1, N_individual = 2^7, max_individ
 
 # Finally we setup the duration of the model simulation and the kind of output we want.
 
-sim = PlanktonSimulation(model, ΔT = 60, nΔT = 1, vels=(u=uvels, v=vvels, w=wvels), vel_reuse = true)
+sim = PlanktonSimulation(model, ΔT = 60, nΔT = 1, vels=(u=uvels, v=vvels, w=wvels), ΔT_vel=60*120)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Model Run

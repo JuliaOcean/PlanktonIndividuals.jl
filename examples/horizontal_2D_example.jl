@@ -34,7 +34,7 @@ model = PlanktonModel(CPU(), grid; N_species = 1, N_individual = 2^7, max_indivi
 # The simulation includes time step, number of time steps, flow fields that
 # will be used etc.
 
-sim = PlanktonSimulation(model, ΔT = 60, nΔT = 1, vels=(u=uvels, v=vvels, w=wvels), vel_reuse = true)
+sim = PlanktonSimulation(model, ΔT = 60, nΔT = 1, vels=(u=uvels, v=vvels, w=wvels), ΔT_vel=60*120)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Run the Model
