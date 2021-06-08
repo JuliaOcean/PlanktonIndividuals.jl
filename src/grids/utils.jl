@@ -11,12 +11,14 @@ function replace_grid_storage(arch::Architecture, grid::RegularLatLonGrid{TX, TY
     Az  = grid.Az  |> array_type(arch)
     Vol = grid.Vol |> array_type(arch)
 
-    return RegularLatLonGrid{TX, TY, TZ, typeof(grid.xF)}(
+    return RegularLatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(dxC)}(
         grid.xC, grid.yC, grid.zC, grid.xF, grid.yF, grid.zF, grid.Δx, grid.Δy, grid.Δz,
         dxC, dyC, dxF, dyF, Ax, Ay, Az, Vol, grid.Nx, grid.Ny, grid.Nz, grid.Hx, grid.Hy, grid.Hz)
 end
 
 function replace_grid_storage(arch::Architecture, grid::VerticallyStretchedLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ}
+    zF  = grid.zF |> array_type(arch)
+    zC  = grid.zC |> array_type(arch)
     dxC = grid.dxC |> array_type(arch)
     dyC = grid.dyC |> array_type(arch)
     dzC = grid.dzC |> array_type(arch)
@@ -28,8 +30,8 @@ function replace_grid_storage(arch::Architecture, grid::VerticallyStretchedLatLo
     Az  = grid.Az  |> array_type(arch)
     Vol = grid.Vol |> array_type(arch)
 
-    return VerticallyStretchedLatLonGrid{TX, TY, TZ, typeof(grid.xF)}(
-        grid.xC, grid.yC, grid.zC, grid.xF, grid.yF, grid.zF, grid.Δx, grid.Δy, dxC, dyC, dzC,
+    return VerticallyStretchedLatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(zF), typeof(dxC), typeof(Vol)}(
+        grid.xC, grid.yC, zC, grid.xF, grid.yF, zF, grid.Δx, grid.Δy, dxC, dyC, dzC,
         dxF, dyF, dzF, Ax, Ay, Az, Vol, grid.Nx, grid.Ny, grid.Nz, grid.Hx, grid.Hy, grid.Hz)
 end
 
@@ -42,7 +44,7 @@ end
 #####
 
 Adapt.adapt_structure(to, grid::RegularLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ} =
-    RegularLatLonGrid{TX, TY, TZ, typeof(grid.xF)}(
+    RegularLatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(Adapt.adapt(to, grid.dxC))}(
         grid.xC, grid.yC, grid.zC,
         grid.xF, grid.yF, grid.zF,
         grid.Δx, grid.Δy, grid.Δz,
@@ -58,9 +60,12 @@ Adapt.adapt_structure(to, grid::RegularLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ
         grid.Hx, grid.Hy, grid.Hz)
 
 Adapt.adapt_structure(to, grid::VerticallyStretchedLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ} =
-    VerticallyStretchedLatLonGrid{TX, TY, TZ, typeof(grid.xF)}(
-        grid.xC, grid.yC, grid.zC,
-        grid.xF, grid.yF, grid.zF,
+    VerticallyStretchedLatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(Adapt.adapt(to, grid.zF)), 
+                                  typeof(Adapt.adapt(to, grid.dxC)), typeof(Adapt.adapt(to, grid.Vol))}(
+        grid.xC, grid.yC,
+        Adapt.adapt(to, grid.zC),
+        grid.xF, grid.yF,
+        Adapt.adapt(to, grid.zF),
         grid.Δx, grid.Δy,
         Adapt.adapt(to, grid.dxC),
         Adapt.adapt(to, grid.dyC),

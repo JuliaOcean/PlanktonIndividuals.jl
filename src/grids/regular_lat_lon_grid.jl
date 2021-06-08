@@ -1,4 +1,4 @@
-struct RegularLatLonGrid{TX, TY, TZ, R} <: AbstractGrid{TX, TY, TZ}
+struct RegularLatLonGrid{TX, TY, TZ, R, A} <: AbstractGrid{TX, TY, TZ}
     # corrdinates at cell centers, unit: degree
     xC::R
     yC::R
@@ -15,16 +15,16 @@ struct RegularLatLonGrid{TX, TY, TZ, R} <: AbstractGrid{TX, TY, TZ}
     # grid spacing, unit: meter
     Δz::Float64
     # grid spacing from center to center, unit: meter
-    dxC::AbstractArray
-    dyC::AbstractArray
+    dxC::A
+    dyC::A
     # grid spacing from face to face, unit: meter
-    dxF::AbstractArray
-    dyF::AbstractArray
+    dxF::A
+    dyF::A
     # areas and volume, unit: m² or m³
-    Ax::AbstractArray
-    Ay::AbstractArray
-    Az::AbstractArray
-    Vol::AbstractArray
+    Ax::A
+    Ay::A
+    Az::A
+    Vol::A
     # number of grid points
     Nx::Int
     Ny::Int
@@ -120,7 +120,7 @@ function RegularLatLonGrid(;size, lat, lon, z,
         end
     end
 
-    return RegularLatLonGrid{TX, TY, TZ, typeof(xF)}(
+    return RegularLatLonGrid{TX, TY, TZ, typeof(xF), typeof(dxC)}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, dxC, dyC, dxF, dyF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz)
 end
 

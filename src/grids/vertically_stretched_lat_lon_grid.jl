@@ -1,30 +1,30 @@
-struct VerticallyStretchedLatLonGrid{TX, TY, TZ, R} <: AbstractGrid{TX, TY, TZ}
+struct VerticallyStretchedLatLonGrid{TX, TY, TZ, R, A1, A2, A3} <: AbstractGrid{TX, TY, TZ}
     # corrdinates at cell centers, unit: degree
     xC::R
     yC::R
     # corrdinates at cell centers, unit: meter
-    zC::AbstractArray
+    zC::A1
     # corrdinates at cell faces, unit: degree
     xF::R
     yF::R
     # corrdinates at cell faces, unit: meter
-    zF::AbstractArray
+    zF::A1
     # grid spacing, unit: degree
     Δx::Float64
     Δy::Float64
     # grid spacing from center to center, unit: meter
-    dxC::AbstractArray
-    dyC::AbstractArray
-    dzC::AbstractArray
+    dxC::A2
+    dyC::A2
+    dzC::A1
     # grid spacing from face to face, unit: meter
-    dxF::AbstractArray
-    dyF::AbstractArray
-    dzF::AbstractArray
+    dxF::A2
+    dyF::A2
+    dzF::A1
     # areas and volume, unit: m² or m³
-    Ax::AbstractArray
-    Ay::AbstractArray
-    Az::AbstractArray
-    Vol::AbstractArray
+    Ax::A3
+    Ay::A3
+    Az::A2
+    Vol::A3
     # number of grid points
     Nx::Int
     Ny::Int
@@ -146,7 +146,7 @@ function LoadVerticallyStretchedLatLonGrid(;grid_info, size, lat, lon, halo=(2,2
         end
     end
 
-    return VerticallyStretchedLatLonGrid{TX, TY, TZ, typeof(xF)}(
+    return VerticallyStretchedLatLonGrid{TX, TY, TZ, typeof(xF), typeof(zF), typeof(dxC), typeof(Vol)}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, dxC, dyC, dzC, dxF, dyF, dzF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz)
 end
 
