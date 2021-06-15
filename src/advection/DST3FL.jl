@@ -2,9 +2,9 @@
 const θmax = 1.0e20
 
 ##### calculate CFL number: c=uΔt/Lx
-@inline CFLx(i, j, k, g::AbstractGrid, u, ΔT) = @inbounds abs(u[i, j, k] * ΔT / ΔxF(i, j, k, g))
-@inline CFLy(i, j, k, g::AbstractGrid, v, ΔT) = @inbounds abs(v[i, j, k] * ΔT / ΔyF(i, j, k, g))
-@inline CFLz(i, j, k, g::AbstractGrid, w, ΔT) = @inbounds abs(w[i, j, k] * ΔT / ΔzF(i, j, k, g))
+@inline CFLx(i, j, k, g::AbstractGrid, u, ΔT) = @inbounds abs(u[i, j, k] * ΔT / ΔxC(i, j, k, g))
+@inline CFLy(i, j, k, g::AbstractGrid, v, ΔT) = @inbounds abs(v[i, j, k] * ΔT / ΔyC(i, j, k, g))
+@inline CFLz(i, j, k, g::AbstractGrid, w, ΔT) = @inbounds abs(w[i, j, k] * ΔT / ΔzC(i, j, k, g))
 
 ##### calculate d₀ and d₁
 @inline d0(CFL) = @inbounds (2.0 - CFL) * (1.0 - CFL) / 6.0

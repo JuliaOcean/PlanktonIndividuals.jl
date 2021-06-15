@@ -52,14 +52,14 @@ sim = PlanktonSimulation(model, ΔT = 60, nΔT = 1, vels=(u=u, v=v, w=w))
 # Finaly, we run the model and plot the distribution of individuals as well as nutrient fields
 # We use Plots.jl to plot individuals and a slice of nutrient fields.
 #
-function plot(model::PlanktonModel)
+function plot_model(model::PlanktonModel)
     ## Coordinate arrays for plotting
     xC, zC = collect(model.grid.xC)[3:34], collect(model.grid.zC)[3:34]
 
     ## a scatter plot embeded in the flow fields
-    px = Array(model.individuals.phytos.sp1.data.x)
-    py = Array(model.individuals.phytos.sp1.data.y)
-    pz = Array(model.individuals.phytos.sp1.data.z)
+    px = Array(model.individuals.phytos.sp1.data.x) .* 4 # convert fractional indices to degree
+    py = Array(model.individuals.phytos.sp1.data.y) .* 4 # convert fractional indices to degree
+    pz = Array(model.individuals.phytos.sp1.data.z) .* -4# convert fractional indices to degree
     p_plot = Plots.scatter(px, py, pz, xlims=(0,128), ylims=(0,128), zlims=(-128,1), ms=5, color = :red, legend=:none, fmt=:png)
 
     ## the middle slice of DOC field
@@ -77,7 +77,7 @@ for i in 1:60
     update!(sim)
 end
 
-plot(model)
+plot_model(model)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # Or you can use the following code to generate an animation like below
@@ -85,7 +85,7 @@ plot(model)
 # ```
 # anim = @animate for i in 1:60
 #    update!(sim)
-#    plot(model)
+#    plot_model(model)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)
 # ```

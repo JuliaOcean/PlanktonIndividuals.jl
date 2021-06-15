@@ -36,7 +36,7 @@ model = PlanktonModel(arch, grid; N_species = 1, N_individual = 2^7, max_individ
 
 # Finally we setup the duration of the model simulation and the kind of output we want.
 
-sim = PlanktonSimulation(model, ΔT = 60, nΔT = 1, vels=(u=uvels, v=vvels, w=wvels), vel_reuse = true)
+sim = PlanktonSimulation(model, ΔT = 60, nΔT = 1, vels=(u=uvels, v=vvels, w=wvels), ΔT_vel=60*120)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Model Run
@@ -50,7 +50,7 @@ end
 # To plot the distribution of individuals as well as nutrient fields we use Plots.jl and 
 # create a function that can easily be re-used e.g. to create an animation.
 
-function plot(model::PlanktonModel)
+function plot_model(model::PlanktonModel)
     ## Coordinate arrays for plotting
     xC, zC = collect(model.grid.xC)[3:130], collect(model.grid.zC)[3:130]
 
@@ -58,8 +58,8 @@ function plot(model::PlanktonModel)
     fl_plot = Plots.contourf(xC, reverse(zC), rotl90(ϕcenters), xlabel="x (m)", ylabel="z (m)", color=:balance, fmt=:png, colorbar=false)
 
     ## a scatter plot embeded in the flow fields
-    px = Array(model.individuals.phytos.sp1.data.x)
-    pz = Array(model.individuals.phytos.sp1.data.z)
+    px = Array(model.individuals.phytos.sp1.data.x) .* 1 # convert fractional indices to degree
+    pz = Array(model.individuals.phytos.sp1.data.z) .* -1# convert fractional indices to degree
     Plots.scatter!(fl_plot, px, pz, ms=5, color = :red, legend=:none)
 
     ## DOC field
@@ -72,7 +72,7 @@ function plot(model::PlanktonModel)
     return plt
 end
 
-plot(model)
+plot_model(model)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # Or you can use the following code to generate an animation like below
@@ -80,7 +80,7 @@ plot(model)
 # ```
 # anim = @animate for i in 1:120
 #    update!(sim)
-#    plot(model)
+#    plot_model(model)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)
 # ```

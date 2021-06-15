@@ -12,9 +12,9 @@ end
 
 @kernel function particle_boundaries_kernel!(plank, ac, g::AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
     i = @index(Global)
-    plank.x[i] = particle_boundary_condition(plank.x[i], g.xF[g.Hx+1], g.xF[g.Hx+1+g.Nx], TX()) * ac[i]
-    plank.y[i] = particle_boundary_condition(plank.y[i], g.yF[g.Hy+1], g.yF[g.Hy+1+g.Ny], TY()) * ac[i]
-    plank.z[i] = particle_boundary_condition(plank.z[i], g.zF[g.Hz+1+g.Nz], g.zF[g.Hz+1], TZ()) * ac[i]
+    @inbounds plank.x[i] = particle_boundary_condition(plank.x[i], 0, g.Nx, TX()) * ac[i]
+    @inbounds plank.y[i] = particle_boundary_condition(plank.y[i], 0, g.Ny, TY()) * ac[i]
+    @inbounds plank.z[i] = particle_boundary_condition(plank.z[i], 0, g.Nz, TZ()) * ac[i]
 end
 function particle_boundaries!(plank, ac, g::AbstractGrid, arch::Architecture)
     kernel! = particle_boundaries_kernel!(device(arch), 256, (size(ac,1)))
@@ -23,34 +23,32 @@ function particle_boundaries!(plank, ac, g::AbstractGrid, arch::Architecture)
     return nothing
 end
 
-##### calculate intermediate coordinates
-@kernel function calc_coord_kernel!(vx, px, u, ac, ΔT, weight::Float64)
+##### calculate uvw velocities at (x, y, z)
+@kernel function vel_interpolate_kernel!(uₜ, vₜ, wₜ, x, y, z, ac, u, v, w, g::AbstractGrid)
     i = @index(Global)
-    @inbounds vx[i] = px[i] + weight * u[i] * ΔT * ac[i]
+    @inbounds uₜ[i] = u_itpl(u, x[i], y[i], z[i], ac[i], g) * ac[i]
+    @inbounds vₜ[i] = v_itpl(v, x[i], y[i], z[i], ac[i], g) * ac[i]
+    @inbounds wₜ[i] = w_itpl(w, x[i], y[i], z[i], ac[i], g) * ac[i]
 end
-function calc_coord!(vx, px, u, ac, ΔT, weight::Float64, arch::Architecture)
-    kernel! = calc_coord_kernel!(device(arch), 256, (size(ac,1)))
-    event = kernel!(vx, px, u, ac, ΔT, weight)
+
+function vel_interpolate!(uₜ, vₜ, wₜ, x, y, z, ac, u, v, w, g::AbstractGrid, arch::Architecture)
+    kernel! = vel_interpolate_kernel!(device(arch), 256, (size(ac,1)))
+    event = kernel!(uₜ, vₜ, wₜ, x, y, z, ac, u, v, w, g)
     wait(device(arch), event)
     return nothing
 end
 
-function calc_coord_1!(plank, velos, ΔT, arch::Architecture)
-    calc_coord!(velos.x, plank.x, velos.u1, plank.ac, ΔT, 0.5, arch)
-    calc_coord!(velos.y, plank.y, velos.v1, plank.ac, ΔT, 0.5, arch)
-    calc_coord!(velos.z, plank.z, velos.w1, plank.ac, ΔT, 0.5, arch)
-    return nothing
+##### calculate intermediate coordinates
+@kernel function calc_coord_kernel!(velos, plank, u, v, w, ac, ΔT, weight::Float64)
+    i = @index(Global)
+    @inbounds velos.x[i] = plank.x[i] + weight * u[i] * ΔT * ac[i]
+    @inbounds velos.y[i] = plank.y[i] + weight * v[i] * ΔT * ac[i]
+    @inbounds velos.z[i] = plank.z[i] - weight * w[i] * ΔT * ac[i] # index increases when w is negtive
 end
-function calc_coord_2!(plank, velos, ΔT, arch::Architecture)
-    calc_coord!(velos.x, plank.x, velos.u2, plank.ac, ΔT, 0.5, arch)
-    calc_coord!(velos.y, plank.y, velos.v2, plank.ac, ΔT, 0.5, arch)
-    calc_coord!(velos.z, plank.z, velos.w2, plank.ac, ΔT, 0.5, arch)
-    return nothing
-end
-function calc_coord_3!(plank, velos, ΔT, arch::Architecture)
-    calc_coord!(velos.x, plank.x, velos.u3, plank.ac, ΔT, 1.0, arch)
-    calc_coord!(velos.y, plank.y, velos.v3, plank.ac, ΔT, 1.0, arch)
-    calc_coord!(velos.z, plank.z, velos.w3, plank.ac, ΔT, 1.0, arch)
+function calc_coord!(velos, plank, u, v, w, ac, ΔT, weight::Float64, arch::Architecture)
+    kernel! = calc_coord_kernel!(device(arch), 256, (size(ac,1)))
+    event = kernel!(velos, plank, u, v, w, ac, ΔT, weight)
+    wait(device(arch), event)
     return nothing
 end
 
@@ -80,11 +78,4 @@ function calc_vel_ab2!(velos, χ, arch::Architecture)
     event = kernel!(velos, χ)
     wait(device(arch), event)
     return nothing
-end
-
-##### calculate coordinates of each individual
-function update_coord!(plank, velos, ΔT, arch::Architecture)
-    calc_coord!(plank.x, plank.x, velos.u1, plank.ac, ΔT, 1.0, arch)
-    calc_coord!(plank.y, plank.y, velos.v1, plank.ac, ΔT, 1.0, arch)
-    calc_coord!(plank.z, plank.z, velos.w1, plank.ac, ΔT, 1.0, arch)
 end

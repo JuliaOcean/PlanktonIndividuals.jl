@@ -15,7 +15,7 @@ mutable struct timestepper
     nuts::AbstractArray # a StructArray of nutrients of each individual
 end
 
-function timestepper(arch::Architecture, g::AbstractGrid, N, maxN)
+function timestepper(arch::Architecture, g::AbstractGrid, maxN)
     vel₀ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
     vel½ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
     vel₁ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
@@ -37,8 +37,6 @@ function timestepper(arch::Architecture, g::AbstractGrid, N, maxN)
     velos = StructArray(x  = zeros(maxN), y  = zeros(maxN), z  = zeros(maxN),
                         u1 = zeros(maxN), v1 = zeros(maxN), w1 = zeros(maxN),
                         u2 = zeros(maxN), v2 = zeros(maxN), w2 = zeros(maxN),
-                        u3 = zeros(maxN), v3 = zeros(maxN), w3 = zeros(maxN),
-                        u4 = zeros(maxN), v4 = zeros(maxN), w4 = zeros(maxN),
                         )
     velos_d = replace_storage(array_type(arch), velos)
 

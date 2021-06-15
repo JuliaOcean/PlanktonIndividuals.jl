@@ -52,7 +52,7 @@ model = PlanktonModel(CPU(), grid; N_species = 1, N_individual = 360, max_indivi
 # The simulation includes time step, number of time steps, flow fields that
 # will be used etc.
 
-sim = PlanktonSimulation(model, ΔT = 3600, nΔT = 1, vels=(u=uvels, v=vvels, w=wvels), vel_reuse = true)
+sim = PlanktonSimulation(model, ΔT = 3600, nΔT = 1, vels=(u=uvels, v=vvels, w=wvels), ΔT_vel=3600*24)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Run the Model
@@ -60,7 +60,7 @@ sim = PlanktonSimulation(model, ΔT = 3600, nΔT = 1, vels=(u=uvels, v=vvels, w=
 # Finaly, we run the model and plot the distribution of individuals as well as nutrient fields
 # We use Plots.jl to plot individuals and nutrient fields.
 #
-function plot(model::PlanktonModel, uu)
+function plot_model(model::PlanktonModel, uu)
     ## Coordinate arrays for plotting
     xC, yC = collect(model.grid.xC)[3:end-2], collect(model.grid.yC)[3:end-2]
 
@@ -68,8 +68,8 @@ function plot(model::PlanktonModel, uu)
     fl_plot = Plots.contourf(xC, yC, uu', xlabel="x (m)", ylabel="y (m)", color=:balance, fmt=:png, colorbar=false)
 
     ## a scatter plot embeded in the flow fields
-    px = Array(model.individuals.phytos.sp1.data.x)
-    py = Array(model.individuals.phytos.sp1.data.y)
+    px = Array(model.individuals.phytos.sp1.data.x) .* 1 .- 180 # convert fractional indices to degree
+    py = Array(model.individuals.phytos.sp1.data.y) .* 1 .- 80  # convert fractional indices to degree
     Plots.scatter!(fl_plot, px, py, ms=3, color = :red, legend=:none)
 
     ## DOC field
@@ -91,7 +91,7 @@ end
 # We plot the current state of the model
 u_plot = uu[:,:,1]
 u_plot[landshape] .= NaN
-plot(model, u_plot)
+plot_model(model, u_plot)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # Or you can use the following code to generate an animation like below.
@@ -100,7 +100,7 @@ plot(model, u_plot)
 # ```
 # anim = @animate for i in 1:120
 #   update!(sim)
-#   plot(model)
+#   plot_model(model)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)
 # ```

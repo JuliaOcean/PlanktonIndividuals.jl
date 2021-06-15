@@ -51,6 +51,8 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        mask = nothing,
                        )
 
+    @assert N_individual ≤ max_individuals
+
     if arch == GPU() && !has_cuda()
         throw(ArgumentError("Cannot create a GPU model. No CUDA-enabled GPU was detected!"))
     end
@@ -63,7 +65,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
         mask_d = nothing
     end
 
-    inds = individuals(phyt_params, arch, N_species, N_individual, max_individuals)
+    inds = individuals(phyt_params, arch, N_species, max_individuals)
 
     for plank in inds.phytos
         gen_individuals!(plank, N_individual, grid_d, arch; mask = mask_d)
@@ -71,7 +73,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
 
     nutrients = generate_nutrients(arch, grid_d, nut_initial; mask = mask_d)
 
-    ts = timestepper(arch, grid_d, N_individual, max_individuals)
+    ts = timestepper(arch, grid_d, max_individuals)
 
     iteration  = 0
 
