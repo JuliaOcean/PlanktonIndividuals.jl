@@ -1,15 +1,15 @@
 # Biogeochemistry
 
-All the Eulerian tracers are advected and diffused by velocity fields provided by `PlanktonSimulation`.
+All Eulerian tracers are advected and diffused by velocity fields provided by `PlanktonSimulation`.
 The advection scheme used in the model is [Third Order Direct Space-Time with Flux Limiting](https://mitgcm.readthedocs.io/en/latest/algorithm/adv-schemes.html#third-order-direct-space-time-with-flux-limiting).
 
 ```math
 \frac{\partial X}{\partial t} = - \nabla \cdot (\boldsymbol{u}X) + \nabla \cdot (\boldsymbol{K}\nabla X) + S_X
 ```
 
-where ``\boldsymbol{u}=(u,v,w)``, velocity in physical model, ``\boldsymbol{K}`` is the mixing coefficient in physical model, and ``S_X`` is the source and sink term of tracer ``X``.
+where ``\boldsymbol{u}=(u,v,w)`` is the velocity field provided by a physical model, ``\boldsymbol{K}`` is the mixing tensor also from a physical model, and ``S_X`` is the source and sink term for tracer ``X``.
 
-The source and sinks of each tracer,``S_X``, are different andincluding biological transformations, chemical reactions,and external sources and sinks.
+The source and sinks term,``S_X``, can be different for each tracer and include biological transformations, chemical reactions, and external sources and sinks (see below for detail).
 
 ## Carbon Cycle
 

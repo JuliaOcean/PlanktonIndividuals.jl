@@ -21,9 +21,7 @@ The only thing needs to be changed is `arch = CPU()` or `arch = GPU()`.
 ## Grid
 
 For now, we only support `RegularRectilinearGrid` and `RegularLatLonGrid` with constant grid spacing in each
-direction (albeit grid spacing can differ between dimensions).
-Two types of topology is support in horizontal directions (`Periodic` and `Bounded`)
-but only `Bounded` topology is support in vertical direction.
+direction (albeit grid spacing can differ between dimensions). Both `Periodic` and `Bounded` domain options are supported for the horizontal directions, whereas the domain is always `Bounded` in the vertical direction (top and bottom).
 
 The `RegularRectilinearGrid` is constructed by specifying its `size` (`Tuple`
 specifying the number of grid points in each dimension) and `spacing` (`Tuple` specifying
