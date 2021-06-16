@@ -6,9 +6,9 @@ All Eulerian tracers are advected, diffused, and affected by sources and sinks:
 \frac{\partial X}{\partial t} = - \nabla \cdot (\boldsymbol{u}X) + \nabla \cdot (\boldsymbol{K}\nabla X) + S_X
 ```
 
-where ``\boldsymbol{u}=(u,v,w)`` is the velocity field provided by a physical model (see `PlanktonSimulation`), ``\boldsymbol{K}`` is the mixing tensor also from the physical model, and ``S_X`` is the source and sink term for tracer ``X``. 
+where ``\boldsymbol{u}=(u,v,w)`` is the velocity field provided by a physical model (see [Model Simulation](@ref)), ``\boldsymbol{K}`` is the mixing tensor also from the physical model, and ``S_X`` is the source and sink term for tracer ``X``. 
 
-The source and sinks term,``S_X``, can be different for each tracer and include biological transformations, chemical reactions, and external sources and sinks (see below for detail).
+The source and sinks term, ``S_X``, can be different for each tracer and include biological transformations, chemical reactions, and external sources and sinks as detailed below.
 
 The advection scheme used is [Third Order Direct Space-Time with Flux Limiting](https://mitgcm.readthedocs.io/en/latest/algorithm/adv-schemes.html#third-order-direct-space-time-with-flux-limiting).
 
@@ -34,7 +34,7 @@ S_{POC} & = (1-f_{C,m}) \cdot \sum_j ((Bm_j+Cq_j)\cdot n_{j,m}) \nonumber\\
 \end{align}
 ```
 
-where ``n_j`` is the cell number of species ``j``, ``n_{j,m}`` is the dead cell number of species ``j``, ``n_{j,g}`` is the grazed cell number of sepcies ``j``.
+where ``n_j`` is the cell number of species ``j``, ``n_{j,m}`` is the dead cell number of species ``j``, ``n_{j,g}`` is the grazed cell number of species ``j``.
 
 ## Nitrogen Cycle
 
