@@ -1,6 +1,6 @@
 # PlanktonIndividuals.jl
 
-[![Build Status](https://travis-ci.org/JuliaOcean/PlanktonIndividuals.jl.svg?branch=master)](https://travis-ci.org/JuliaOcean/PlanktonIndividuals.jl)
+[![Build Status](https://travis-ci.com/JuliaOcean/PlanktonIndividuals.jl.svg?branch=master)](https://travis-ci.com/JuliaOcean/PlanktonIndividuals.jl)
 [![doc](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaOcean.github.io/PlanktonIndividuals.jl/stable)
 [![doc](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaOcean.github.io/PlanktonIndividuals.jl/dev)
 [![codecov](https://codecov.io/gh/JuliaOcean/PlanktonIndividuals.jl/branch/master/graph/badge.svg?token=jJL053vHAM)](https://codecov.io/gh/JuliaOcean/PlanktonIndividuals.jl)
