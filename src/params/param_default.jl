@@ -1,4 +1,8 @@
 # Parameters
+"""
+    bgc_params_default()
+Generate default biogeochemical parameter values 
+"""
 function bgc_params_default()
     params = Dict(
         "kw"       => 0.046,              # PAR attenuation (/m)
@@ -18,6 +22,10 @@ function bgc_params_default()
     return params
 end
 
+"""
+    phyt_params_default()
+Generate default phytoplankton parameter values 
+"""
 function phyt_params_default()
     params=Dict(
         "Nsuper"   => [1, 1],             # Number of phyto cells each super individual represents
