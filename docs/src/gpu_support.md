@@ -14,7 +14,7 @@ To use a GPU to run `PlanktonIndividuals.jl` is easy. Users do not need to rewri
 
 GPU is very useful when running large simulations (either large domain or huge number of individuals, or both). If you simulate over 10,000 individuals, you will probably benefit form GPU. Please note, GPU is usually memory-limited, that is to say, you will probably fill up the memory on GPU long before the model slows down.
 
-`Individuals` take up a large amount of GPU memory due to complicated physiological processes and diagnostic demand. For now, please do not try more than 50,000 individuals for a 12GB GPU.
+`Individuals` take up a large amount of GPU memory due to complicated physiological processes and diagnostics. Typically, one should not try more than 50,000 individuals for a 12GB GPU.
 
 ## GPU resources
 

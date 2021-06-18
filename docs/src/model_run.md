@@ -1,6 +1,6 @@
 # Model Simulation
 
-A `PlanktonSimulation` includes a `PlanktonModel` and its time steps `nΔT`, `ΔT`.
+A `PlanktonSimulation` includes a `PlanktonModel` and its time step `ΔT` and number of time steps `nΔT`.
 It will time step the `PlanktonModel` by calling [`update!`](@ref).
 
 ```@docs
@@ -16,7 +16,7 @@ PlanktonDiagnostics
 Model diagnostics are specified by `tracer` (for tracers) and `plankton` (for individuals).
 Diagnostics for individuals are aggregated into tracer fields.
 
-A full list of available diagnostics are provided below:
+A full list of available diagnostics is provided below:
 
 ```julia
 tracer = (:PAR, :DIC, :NH4, :NO3, :PO4, :DOC, :DON, :DOP, :POC, :PON, :POP)
@@ -43,9 +43,11 @@ plankton = (:num,  # number of individuals
 
 ## Output
 
-Currently, we only support two types of output which are both save in `JLD2` files.
-The first type of output is for `individual`s. The current state of all the `individuals`
-at each time step of a `PlanktonSimulation` will be saved in a single file named `individuals.jld2`.
+The model currently has two types of outputs which are both saved in `JLD2` files.
+
+
+First, the state of all `individuals`
+at each time step of a `PlanktonSimulation` gets saved in a file named `individuals.jld2`.
 An example structure of `individuals.jld2` is shown below.
 
 ```julia
@@ -65,7 +67,7 @@ JLDFile /home/zhenwu/PI_GPU/results/individuals.jld2 (read-only)
        └─🔢 Sz
 ```
 
-The second type of output is for diagnostics. `individual`s at each time step will be aggregated into tracer fields.
+Second, for diagnostics, `individuals` at each time step will be aggregated into tracer fields.
 The frequency of diagnostics is specified by `frequency` in `PlanktonDiagnostics`.
 Only diagnostics specified by `tracer` and `plankton` in `PlanktonDiagnostics` will be saved.
 All the diagnostics of a `PlanktonSimulation` will be saved in a single file named `diags.jld2`.

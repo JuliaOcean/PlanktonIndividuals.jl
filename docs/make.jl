@@ -30,10 +30,10 @@ makedocs(;
          format = Documenter.HTML(collapselevel = 1, mathengine = MathJax3()),
          pages = [
              "Home" => "index.md",
-             "GPU Support" => "gpu_support.md",
              "Model Description" => model_description,
              "Model Configuration" => "model_setup.md",
              "Model Simulation" => "model_run.md",
+             "GPU Support" => "gpu_support.md",
              "Examples"  => example_pages,
              "Benchmarks"  => "benchmarks.md",
              "Function index" => "function_index.md"
