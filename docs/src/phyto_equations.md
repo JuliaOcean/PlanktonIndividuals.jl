@@ -6,7 +6,7 @@ The various resources and processes are summarized in the schematic below, and f
 
 ## State Variables
 
-8 state variables are simulated in each phytoplankton individual (see table below)
+Each phytoplankton individual is characterized using eight state variables (see table below).
 
 |Symbol | Unit            | Description                       |
 |-------|-----------------|-----------------------------------|
@@ -21,12 +21,10 @@ The various resources and processes are summarized in the schematic below, and f
 
 ## Photosynthesis
 
-The parameterization for photosynthesis is shown below.
-
-``PC_{max}`` is scaled by a power-law relationship of cell size (``Sz``).
+The parameterization for photosynthesis is formulated as
 
 ```math
-PC_{max}= PCmax \cdot Sz^{PC_b}
+PS=PC \cdot Bm
 ```
 
 ```math
@@ -34,27 +32,21 @@ PC=PC_{max}\cdot (1-e^{\frac{-\alpha \cdot I\cdot Chl}{PC_{max}\cdot Bm}})
 ```
 
 ```math
-PS=PC \cdot Bm
+PC_{max}= PCmax \cdot Sz^{PC_b}
 ```
 
-``PS`` is cell-specific photosynthesis rate (mmol C/cell/s).
+where ``PS`` is cell-specific photosynthesis rate (mmol C/cell/s) and ``PC_{max}`` is scaled by a power-law relationship of cell size (``Sz``).
+
 
 ## Nutrient Uptake
 
-The uptakes of various nutrients include intracellular nutrient limitation:
+Nutrient uptake rates (``VNH4``, ``VNO3``, and ``VPO4``) are cell-specific (mmol N/cell/s or mmol P/cell/s) and include intracellular nutrient limitation:
 
 ```math
 \begin{align}
-VNH4_{max} &= VNH4max \cdot Sz^{VN_b} \nonumber \\
-VNO3_{max} &= VNO3max \cdot Sz^{VN_b} \nonumber \\
-VPO4_{max} &= VPO4max \cdot Sz^{VP_b} \nonumber
-\end{align}
-```
-
-```math
-\begin{align}
-Q_N &= (Nq + Bm \cdot R_{NC}) / (Cq + Bm) \nonumber \\
-Q_P &= (Pq + Bm \cdot R_{PC}) / (Cq + Bm) \nonumber
+VNH4 &= VNH4_{max}\cdot regQ_N\cdot\frac{[NH4]}{[NH4]+K_{NH4}^{sat}}\cdot Bm \nonumber \\
+VNO3 &= VNO3_{max}\cdot regQ_N\cdot\frac{[NO3]}{[NO3]+K_{NO3}^{sat}}\cdot Bm \nonumber \\
+VPO4 &= VPO4_{max}\cdot regQ_P\cdot\frac{[PO4]}{[PO4]+K_{PO4}^{sat}}\cdot Bm \nonumber
 \end{align}
 ```
 
@@ -67,17 +59,24 @@ regQ_P &= \bigg[\frac{Pqmax-Q_P}{Pqmax - Pqmin}\bigg]_0^1 \nonumber
 
 ```math
 \begin{align}
-VNH4 &= VNH4_{max}\cdot regQ_N\cdot\frac{[NH4]}{[NH4]+K_{NH4}^{sat}}\cdot Bm \nonumber \\
-VNO3 &= VNO3_{max}\cdot regQ_N\cdot\frac{[NO3]}{[NO3]+K_{NO3}^{sat}}\cdot Bm \nonumber \\
-VPO4 &= VPO4_{max}\cdot regQ_P\cdot\frac{[PO4]}{[PO4]+K_{PO4}^{sat}}\cdot Bm \nonumber
+Q_N &= (Nq + Bm \cdot R_{NC}) / (Cq + Bm) \nonumber \\
+Q_P &= (Pq + Bm \cdot R_{PC}) / (Cq + Bm) \nonumber
 \end{align}
 ```
 
-``VNH4``, ``VNO3``, and ``VPO4`` are cell-specific uptake rates (mmol N/cell/s or mmol P/cell/s).
+```math
+\begin{align}
+VNH4_{max} &= VNH4max \cdot Sz^{VN_b} \nonumber \\
+VNO3_{max} &= VNO3max \cdot Sz^{VN_b} \nonumber \\
+VPO4_{max} &= VPO4max \cdot Sz^{VP_b} \nonumber
+\end{align}
+```
+
+where `VNH4max`, `VNO3max`, and `VPO4max` are constant parameters (see [`Parameters`](@ref)) while `VNH4_{max}`, `VNO3_{max}`, and `VNO3_{max}` are cell-specific as they depend on the cell size, `Sz`.
 
 ## Reserve Update
 
-Model first updates C, N, and P reserves based on photosynthesis rate (``PS``) and nutrient uptake rates (``VNH4``, ``VNO3``, and ``VPO4``). The result is used to calculate the biosynthesis and excretion rates.
+The model first updates C, N, and P reserves based on photosynthesis rate (``PS``) and nutrient uptake rates (``VNH4``, ``VNO3``, and ``VPO4``) as formulated above. The result is then used to calculate the biosynthesis and excretion rates.
 
 ```math
 \begin{align}
@@ -87,13 +86,9 @@ Pq &= Pq+VPO4 \cdot \Delta T \nonumber
 \end{align}
 ```
 
-## Biosynthesis
+## Biosynthesis And Excretion Rates
 
-Potential biosynthesis rates based on C, N, P quotas are calculated below.
-
-```math
-k_{mtb}= kmtb_{max} \cdot Sz^{kmtb_b}
-```
+Potential biosynthesis rates are calculated based on C, N, P quotas as
 
 ```math
 \begin{align}
@@ -104,14 +99,18 @@ BS_P &= Pq/R_{PC} \cdot k_{mtb} \nonumber
 ```
 
 ```math
+k_{mtb}= kmtb_{max} \cdot Sz^{kmtb_b}
+```
+
+The minimum of these rates gives the actual biosynthesis rate, ``BS`` (mmol C/cell/s), and the difference between carbon-based biosynthesis rate and ``BS`` gives the excretion rate, ``ExuC`` (mmol C/cell/s).
+
+```math
 BS = min(BS_C, BS_N, BS_P)
 ```
 
 ```math
 ExuC = BS_C - BS
 ```
-
-The minimum of these rates gives the actual biosynthesis rate, ``BS`` (mmol C/cell/s), and the difference between carbon-based biosynthesis rate and ``BS`` gives the excretion rate, ``ExuC`` (mmol C/cell/s).
 
 ## Chlorophyll Synthesis
 
@@ -137,7 +136,7 @@ Respir = respir_a \cdot Sz^{respir_b} \cdot Bm
 
 ## Biomass Update
 
-Biosynthesis yields a biomass update and corresponding updates in nutrients. The carbon reserve is further modified by respiration.
+Biosynthesis yields a biomass increase, a commensurate reduction in nutrient reserves, and an increase in chlorophyll. The carbon reserve is further modified by respiration.
 
 ```math
 \begin{align}
@@ -151,7 +150,7 @@ chl &= chl + S_{chl} \cdot \Delta T \nonumber
 
 ## Cell division
 
-Cell size, ``Sz``, is used to indicate cell division. For the smallest cell, ``Sz=1.0`` and ``Bm=Cquota``. Cells start to divide at ``Sz=2.0`` and the probability of individual cell division is given by a sigmoidal function of ``Sz``.
+Cell size, ``Sz``, is used to indicate cell division. For the smallest cell, ``Sz=1.0`` and ``Bm=Cquota``. Cells start to divide at ``Sz=2.0`` and the probability of individual cell division is then given by a sigmoidal function of ``Sz``.
 
 ```math
 Sz = (Bm + Cq) / Cquota
