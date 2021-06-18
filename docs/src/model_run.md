@@ -14,12 +14,23 @@ PlanktonDiagnostics
 ```
 
 Model diagnostics are specified by `tracer` (for tracers) and `plankton` (for individuals).
-Diagnostics for individuals are aggregated into tracer fields.
+Diagnostics for individuals are aggregated into gridded fields.
 
 A full list of available diagnostics is provided below:
 
 ```julia
-tracer = (:PAR, :DIC, :NH4, :NO3, :PO4, :DOC, :DON, :DOP, :POC, :PON, :POP)
+tracer = (:PAR, # photosynthetically active radiation
+          :DIC, # dissolved inorganic carbon
+          :NH4, # ammonia
+          :NO3, # nitrate
+          :PO4, # phosphate
+          :DOC, # dissolved organic carbon
+          :DON, # dissolved organic nitrogen
+          :DOP, # dissolved organic phosphorus
+          :POC, # particulate organic carbon
+          :PON, # particulate organic nitrogen
+          :POP  # particulate organic phosphorus
+         )
 
 plankton = (:num,  # number of individuals
             :graz, # number of grazed individuals
@@ -38,13 +49,12 @@ plankton = (:num,  # number of individuals
             :Nq,   # Nitrogen pool
             :Pq,   # Phosphorus pool
             :chl   # Chla
-            )
+           )
 ```
 
 ## Output
 
 The model currently has two types of outputs which are both saved in `JLD2` files.
-
 
 First, the state of all `individuals`
 at each time step of a `PlanktonSimulation` gets saved in a file named `individuals.jld2`.

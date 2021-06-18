@@ -10,13 +10,13 @@ Each phytoplankton individual is characterized using eight state variables (see 
 
 |Symbol | Unit            | Description                       |
 |-------|-----------------|-----------------------------------|
-| Sz    |                 | cell size                         |
+| Sz    | ``unitless``    | relative cell size                |
 | Bm    | ``mmol~C/cell`` | functional biomass pool in C      |
 | Cq    | ``mmol~C/cell`` | C reserve                         |
 | Nq    | ``mmol~N/cell`` | N reserve                         |
 | Pq    | ``mmol~P/cell`` | P reserve                         |
 | chl   | ``mg~Chl/cell`` | Chla pool                         |
-| gen   |                 | generation                        |
+| gen   | ``unitless``    | generation                        |
 | age   |  ``hour``       | age of the individual             |
 
 ## Photosynthesis
@@ -37,16 +37,15 @@ PC_{max}= PCmax \cdot Sz^{PC_b}
 
 where ``PS`` is cell-specific photosynthesis rate (mmol C/cell/s) and ``PC_{max}`` is scaled by a power-law relationship of cell size (``Sz``).
 
-
 ## Nutrient Uptake
 
 Nutrient uptake rates (``VNH4``, ``VNO3``, and ``VPO4``) are cell-specific (mmol N/cell/s or mmol P/cell/s) and include intracellular nutrient limitation:
 
 ```math
 \begin{align}
-VNH4 &= VNH4_{max}\cdot regQ_N\cdot\frac{[NH4]}{[NH4]+K_{NH4}^{sat}}\cdot Bm \nonumber \\
-VNO3 &= VNO3_{max}\cdot regQ_N\cdot\frac{[NO3]}{[NO3]+K_{NO3}^{sat}}\cdot Bm \nonumber \\
-VPO4 &= VPO4_{max}\cdot regQ_P\cdot\frac{[PO4]}{[PO4]+K_{PO4}^{sat}}\cdot Bm \nonumber
+VNH4 &= VNH4_{cell}\cdot regQ_N\cdot\frac{[NH4]}{[NH4]+K_{NH4}^{sat}} \nonumber \\
+VNO3 &= VNO3_{cell}\cdot regQ_N\cdot\frac{[NO3]}{[NO3]+K_{NO3}^{sat}} \nonumber \\
+VPO4 &= VPO4_{cell}\cdot regQ_P\cdot\frac{[PO4]}{[PO4]+K_{PO4}^{sat}} \nonumber
 \end{align}
 ```
 
@@ -66,13 +65,13 @@ Q_P &= (Pq + Bm \cdot R_{PC}) / (Cq + Bm) \nonumber
 
 ```math
 \begin{align}
-VNH4_{max} &= VNH4max \cdot Sz^{VN_b} \nonumber \\
-VNO3_{max} &= VNO3max \cdot Sz^{VN_b} \nonumber \\
-VPO4_{max} &= VPO4max \cdot Sz^{VP_b} \nonumber
+VNH4_{cell} &= VNH4max \cdot Sz^{VN_b} \cdot Bm \nonumber \\
+VNO3_{cell} &= VNO3max \cdot Sz^{VN_b} \cdot Bm \nonumber \\
+VPO4_{cell} &= VPO4max \cdot Sz^{VP_b} \cdot Bm \nonumber
 \end{align}
 ```
 
-where `VNH4max`, `VNO3max`, and `VPO4max` are constant parameters (see [`Parameters`](@ref)) while `VNH4_{max}`, `VNO3_{max}`, and `VNO3_{max}` are cell-specific as they depend on the cell size, `Sz`.
+where `VNH4max`, `VNO3max`, and `VPO4max` are constant parameters (see [`Parameters`](@ref)) while `VNH4_{cell}`, `VNO3_{cell}`, and `VPO4_{cell}` are cell-specific maximum uptake rates (mmol N/cell/s or mmol P/cell/s) depending on cell size, `Sz`.
 
 ## Reserve Update
 
