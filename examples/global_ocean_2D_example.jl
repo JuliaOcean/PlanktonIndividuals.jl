@@ -1,6 +1,6 @@
 # #  Global Ocean Example
 #
-# Here we simulate phytoplankton cells as Lagrangian particles in the global ocean.
+# Here we simulate phytoplankton cells as **passive** Lagrangian particles and nutrient fields as **passive** tracers in the global ocean.
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1. Import packages
@@ -46,7 +46,37 @@ nothing
 # Next we setup the individual-based model by specifying the architecture, grid,
 # number of individuals, parameters, and nutrient initial conditions.
 
-model = PlanktonModel(CPU(), grid; N_species = 1, N_individual = 360, max_individuals = 360*8, mask = mask)
+#
+# In order to change individuals and tracer to **passive** mode, we need to update some parameters.
+#
+phyt_parameter = Dict("PCmax"   => [0.0], # maximum photosynthesis rate
+                      "VNH4max" => [0.0], # maximum ammonia uptake rate
+                      "VNO3max" => [0.0], # maximum nitrate uptake rate
+                      "VPO4max" => [0.0], # maximum phosphate uptake rate
+                      "respir_a"=> [0.0], # respiration rate
+                      "k_mtb"   => [0.0], # biosynthesis rate
+                      "dvid_P"  => [0.0], # probability of cell division
+                      "mort_P"  => [0.0]  # probability of cell natural death
+                     )
+#
+
+bgc_parameter = Dict("kDOC"     => 0.0,         # Remineralization rate for DOC, turn over time: a month (per second)
+                     "Nit"      => 0.0,         # Nitrification rate for NH4
+                     "kDON"     => 0.0,         # Remineralization rate for DON, turn over time: a month (per second)
+                     "kDOP"     => 0.0,         # Remineralization rate for DON, turn over time: a month (per second)
+                     "kPOC"     => 0.0,         # Remineralization rate for POC, turn over time: a month (per second)
+                     "kPON"     => 0.0,         # Remineralization rate for PON, turn over time: a month (per second)
+                     "kPOP"     => 0.0,         # Remineralization rate for PON, turn over time: a month (per second)
+                    )
+#
+# Then we update new parameter values in the model
+model = PlanktonModel(CPU(), grid;
+                      N_species = 1,
+                      N_individual = 360,
+                      max_individuals = 360*8,
+                      bgc_params = update_bgc_params(bgc_parameter),
+                      phyt_params = update_phyt_params(phyt_parameter), 
+                      mask = mask)
 
 # We also need to setup a runtime simulation to run the model.
 # The simulation includes time step, number of time steps, flow fields that
