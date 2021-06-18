@@ -71,7 +71,7 @@ VPO4_{cell} &= VPO4max \cdot Sz^{VP_b} \cdot Bm \nonumber
 \end{align}
 ```
 
-where `VNH4max`, `VNO3max`, and `VPO4max` are constant parameters (see [Parameters](@ref)) while `VNH4_{cell}`, `VNO3_{cell}`, and `VPO4_{cell}` are cell-specific maximum uptake rates (mmol N/cell/s or mmol P/cell/s) depending on cell size, `Sz`.
+where `VNH4max`, `VNO3max`, and `VPO4max` are constant parameters (see [Parameters](@ref parameters)) while `VNH4_{cell}`, `VNO3_{cell}`, and `VPO4_{cell}` are cell-specific maximum uptake rates (mmol N/cell/s or mmol P/cell/s) depending on cell size, `Sz`.
 
 ## Reserve Update
 

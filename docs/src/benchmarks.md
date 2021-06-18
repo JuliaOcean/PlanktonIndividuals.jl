@@ -1,4 +1,3 @@
-
 # [Benchmarks](@id benchmarks)
 
 Here we benchmark the model performance in two `Architecture`s.
