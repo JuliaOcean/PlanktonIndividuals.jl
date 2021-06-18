@@ -14,7 +14,7 @@ using PlanktonIndividuals, Plots, IndividualDisplacements, MeshArrays, OceanStat
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/helper_functions.jl"))
 IndividualDisplacements.get_occa_velocity_if_needed()
-𝑃,𝐷,Γ=OCCA_FlowFields(backward_in_time=false)
+𝑃,𝐷,Γ=OCCA_FlowFields()
 
 grid = RegularLatLonGrid(size=(360, 160, 1), lat=(-80,80), lon=(-180,180), z=(0,-10))
 
