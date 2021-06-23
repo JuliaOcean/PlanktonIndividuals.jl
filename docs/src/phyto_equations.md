@@ -10,12 +10,12 @@ Each phytoplankton individual is characterized using eight state variables (see 
 
 |Symbol | Unit            | Description                       |
 |-------|-----------------|-----------------------------------|
-| Sz    | ``unitless``    | relative cell size                |
 | Bm    | ``mmol~C/cell`` | functional biomass pool in C      |
 | Cq    | ``mmol~C/cell`` | C reserve                         |
 | Nq    | ``mmol~N/cell`` | N reserve                         |
 | Pq    | ``mmol~P/cell`` | P reserve                         |
 | chl   | ``mg~Chl/cell`` | Chla pool                         |
+| Sz    | ``unitless``    | relative cell size                |
 | gen   | ``unitless``    | generation                        |
 | age   |  ``hour``       | age of the individual             |
 
@@ -71,7 +71,7 @@ VPO4_{cell} &= VPO4max \cdot Sz^{VP_b} \cdot Bm \nonumber
 \end{align}
 ```
 
-where `VNH4max`, `VNO3max`, and `VPO4max` are constant parameters (see [Parameters](@ref parameters)) while `VNH4_{cell}`, `VNO3_{cell}`, and `VPO4_{cell}` are cell-specific maximum uptake rates (mmol N/cell/s or mmol P/cell/s) depending on cell size, `Sz`.
+where ``VNH4max``, ``VNO3max``, and ``VPO4max`` are constant parameters (see [Parameters](@ref parameters)) while ``VNH4_{cell}``, ``VNO3_{cell}``, and ``VPO4_{cell}`` are cell-specific maximum uptake rates (mmol N/cell/s or mmol P/cell/s) depending on cell size, ``Sz``.
 
 ## Reserve Update
 
