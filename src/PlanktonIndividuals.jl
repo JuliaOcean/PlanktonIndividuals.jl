@@ -1,7 +1,7 @@
 module PlanktonIndividuals
 
 using NCDatasets, Serialization
-using Random, Statistics, Interpolations
+using Random, Statistics
 using Printf, JLD2
 using CUDA, KernelAbstractions, CUDAKernels, Adapt
 using LinearAlgebra
@@ -12,8 +12,6 @@ p=dirname(pathof(PlanktonIndividuals))
 artifact_toml = joinpath(p, "../Artifacts.toml")
 surface_mixing_vels_hash = artifact_hash("surface_mixing_vels", artifact_toml)
 surface_mixing_vels = joinpath(artifact_path(surface_mixing_vels_hash)*"/velocities.jld2")
-default_temperature = joinpath(artifact_path(surface_mixing_vels_hash)*"/temp.bin")
-default_PAR = joinpath(artifact_path(surface_mixing_vels_hash)*"/PAR.bin")
 
 include("architecture.jl")
 include("grids/regular_rectilinear_grid.jl")
@@ -61,7 +59,7 @@ export
     Architecture, GPU, CPU, Periodic, Bounded,
 
     # read input functions
-    read_IR_input, read_temp_input,
+    default_PARF, default_temperature,
     update_bgc_params, update_phyt_params, 
     bgc_params_default, phyt_params_default,
     generate_nutrients,
