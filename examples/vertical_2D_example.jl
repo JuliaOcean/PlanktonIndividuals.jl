@@ -36,7 +36,7 @@ model = PlanktonModel(arch, grid; N_species = 1, N_individual = 2^7, max_individ
 
 # Finally we setup the duration of the model simulation and the kind of output we want.
 
-sim = PlanktonSimulation(model, ΔT = 60, nΔT = 1, vels=(u=uvels, v=vvels, w=wvels), ΔT_vel=60*120)
+sim = PlanktonSimulation(model, ΔT = 60, iterations = 1, vels=(u=uvels, v=vvels, w=wvels), ΔT_vel=60*120)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Model Run
@@ -45,6 +45,7 @@ sim = PlanktonSimulation(model, ΔT = 60, nΔT = 1, vels=(u=uvels, v=vvels, w=wv
 
 for i in 1:120
     update!(sim)
+    sim.stop_time += 60
 end
 
 # To plot the distribution of individuals as well as nutrient fields we use Plots.jl and 
@@ -80,6 +81,7 @@ plot_model(model)
 # ```
 # anim = @animate for i in 1:120
 #    update!(sim)
+#    sim.stop_time += 60
 #    plot_model(model)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)

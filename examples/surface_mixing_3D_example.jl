@@ -44,7 +44,7 @@ model = PlanktonModel(CPU(), grid; N_species = 1, N_individual = 2^8, max_indivi
 # The simulation includes time step, number of time steps, flow fields that
 # will be used etc.
 
-sim = PlanktonSimulation(model, ΔT = 60, nΔT = 1, vels=(u=u, v=v, w=w))
+sim = PlanktonSimulation(model, ΔT = 60, iterations = 1, vels=(u=u, v=v, w=w))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Run the Model
@@ -75,6 +75,7 @@ end
 # We run the model for 60 time steps (1 hour) and plot the individuals and DOC field.
 for i in 1:60
     update!(sim)
+    sim.stop_time += 60
 end
 
 plot_model(model)
@@ -85,6 +86,7 @@ plot_model(model)
 # ```
 # anim = @animate for i in 1:60
 #    update!(sim)
+#    sim.stop_time += 60
 #    plot_model(model)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)
