@@ -5,8 +5,8 @@
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1. Import packages
 #
+ENV["GKSwstype"]="nul"
 using PlanktonIndividuals, Plots, IndividualDisplacements, MeshArrays, OceanStateEstimation
-pyplot()
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2. Generate Flow Fields

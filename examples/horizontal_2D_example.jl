@@ -6,8 +6,8 @@
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1. Import packages
 #
+ENV["GKSwstype"]="nul"
 using PlanktonIndividuals, Plots
-pyplot()
 
 p=dirname(pathof(PlanktonIndividuals))
 include(joinpath(p,"../examples/helper_functions.jl"))
