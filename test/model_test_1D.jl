@@ -21,7 +21,7 @@ for i in 1:11
     wvel[:,:,:,i] .= randn(1,1,17) .* 1e-4
 end
 
-sim = PlanktonSimulation(model, ΔT = 60, nΔT = 10, vels=(u=uvel, v=vvel, w=wvel)) 
+sim = PlanktonSimulation(model, ΔT = 60, iterations = 10, vels=(u=uvel, v=vvel, w=wvel)) 
 
 update!(sim)
 

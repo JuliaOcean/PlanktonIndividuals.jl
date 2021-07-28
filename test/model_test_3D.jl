@@ -26,7 +26,7 @@ model.nutrients.DOC.bc.x.right = randn(20,20) .* 1e-3 # east boundary condition 
 model.nutrients.DOC.bc.y.left  = randn(20,20,10) .* 1e-3 # south boundary condition of 0.1 mmol/m^2/second
 model.nutrients.DOC.bc.y.right = randn(20,20,10) .* 1e-3 # north boundary condition of -0.1 mmol/m^2/second
 
-sim = PlanktonSimulation(model, ΔT = 60, nΔT = 10, vels=(u=uvel, v=vvel, w=wvel)) 
+sim = PlanktonSimulation(model, ΔT = 60, iterations = 10, vels=(u=uvel, v=vvel, w=wvel)) 
 
 update!(sim)
 

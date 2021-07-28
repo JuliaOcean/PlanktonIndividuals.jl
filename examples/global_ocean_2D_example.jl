@@ -5,6 +5,7 @@
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1. Import packages
 #
+ENV["GKSwstype"]="nul"
 using PlanktonIndividuals, Plots, IndividualDisplacements, MeshArrays, OceanStateEstimation
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
@@ -82,7 +83,7 @@ model = PlanktonModel(CPU(), grid;
 # The simulation includes time step, number of time steps, flow fields that
 # will be used etc.
 
-sim = PlanktonSimulation(model, ΔT = 3600, nΔT = 1, vels=(u=uvels, v=vvels, w=wvels), ΔT_vel=3600*24)
+sim = PlanktonSimulation(model, ΔT = 3600, iterations = 1, vels=(u=uvels, v=vvels, w=wvels), ΔT_vel=3600*24)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Run the Model
