@@ -33,7 +33,7 @@ diags = PlanktonDiagnostics(model; tracer=(:PAR, :NH4, :NO3, :DOC),
 # Finally we setup the duration of the model simulation, a run directory location, and the kind of output we want.
 #
 res_dir = PrepRunDir()
-sim = PlanktonSimulation(model, ΔT = 60, iterations = 60, 
+sim = PlanktonSimulation(model, ΔT = 60, iterations = 1440, 
                          diags = diags,
                          res_dir = res_dir, 
                          save_individuals = nothing)
@@ -41,10 +41,7 @@ sim = PlanktonSimulation(model, ΔT = 60, iterations = 60,
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Model Run
 #
-for i in 1:24
-    update!(sim)
-    println(string(i)*"h")
-end
+update!(sim)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 5. Results Vizualization
