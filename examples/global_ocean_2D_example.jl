@@ -6,6 +6,7 @@
 # ## 1. Import packages
 #
 using PlanktonIndividuals, Plots, IndividualDisplacements, MeshArrays, OceanStateEstimation
+pyplot()
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2. Generate Flow Fields
@@ -115,7 +116,6 @@ end
 # We run the model for 24 time steps (1 hour per time step) and plot the individuals and DOC field.
 for i in 1:24
     update!(sim)
-    sim.stop_time += 3600
 end
 
 #
@@ -131,7 +131,6 @@ plot_model(model, u_plot)
 # ```
 # anim = @animate for i in 1:120
 #   update!(sim)
-#   sim.stop_time += 3600
 #   plot_model(model)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)

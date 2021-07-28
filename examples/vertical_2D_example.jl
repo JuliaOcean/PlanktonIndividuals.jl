@@ -9,6 +9,7 @@
 # ## 1. Import packages
 #
 using PlanktonIndividuals, Plots
+pyplot()
 
 p=dirname(pathof(PlanktonIndividuals))
 include(joinpath(p,"../examples/helper_functions.jl"))
@@ -45,7 +46,6 @@ sim = PlanktonSimulation(model, ΔT = 60, iterations = 1, vels=(u=uvels, v=vvels
 
 for i in 1:120
     update!(sim)
-    sim.stop_time += 60
 end
 
 # To plot the distribution of individuals as well as nutrient fields we use Plots.jl and 
@@ -81,7 +81,6 @@ plot_model(model)
 # ```
 # anim = @animate for i in 1:120
 #    update!(sim)
-#    sim.stop_time += 60
 #    plot_model(model)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)

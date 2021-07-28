@@ -8,6 +8,7 @@
 # ## 1. Import packages
 #
 using PlanktonIndividuals, Plots, JLD2
+pyplot()
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2. Generate Flow Fields
@@ -75,7 +76,6 @@ end
 # We run the model for 60 time steps (1 hour) and plot the individuals and DOC field.
 for i in 1:60
     update!(sim)
-    sim.stop_time += 60
 end
 
 plot_model(model)
@@ -86,7 +86,6 @@ plot_model(model)
 # ```
 # anim = @animate for i in 1:60
 #    update!(sim)
-#    sim.stop_time += 60
 #    plot_model(model)
 # end
 # gif(anim, "anim_fps15.gif", fps = 15)

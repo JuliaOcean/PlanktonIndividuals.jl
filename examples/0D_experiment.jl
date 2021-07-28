@@ -7,6 +7,7 @@
 #
 using PlanktonIndividuals, Plots, JLD2
 using Plots.PlotMeasures
+pyplot()
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2. Grid Setup
