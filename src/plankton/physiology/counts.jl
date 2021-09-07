@@ -3,8 +3,8 @@
     index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     stride = blockDim().x * gridDim().x
     for i = index:stride:size(ac,1)
-        @inbounds @atomic ctschl[x[i], y[i], z[i]] += chl[i] * ac[i]
-        @inbounds @atomic ctspop[x[i], y[i], z[i]] += ac[i]
+        @inbounds CUDA.@atomic ctschl[x[i], y[i], z[i]] += chl[i] * ac[i]
+        @inbounds CUDA.@atomic ctspop[x[i], y[i], z[i]] += ac[i]
     end
     return nothing
 end
@@ -25,11 +25,11 @@ function gpu_calc_consume_kernel!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, proc, 
     index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     stride = blockDim().x * gridDim().x
     for i = index:stride:size(ac,1)
-        @inbounds @atomic ctsdic[x[i], y[i], z[i]] += (proc.resp[i] - proc.PS[i]) * ΔT * ac[i]
-        @inbounds @atomic ctsdoc[x[i], y[i], z[i]] += (proc.exu[i] - proc.VDOC[i]) * ΔT * ac[i]
-        @inbounds @atomic ctsnh4[x[i], y[i], z[i]] -= proc.VNH4[i] * ΔT * ac[i]
-        @inbounds @atomic ctsno3[x[i], y[i], z[i]] -= proc.VNO3[i] * ΔT * ac[i]
-        @inbounds @atomic ctspo4[x[i], y[i], z[i]] -= proc.VPO4[i] * ΔT * ac[i]
+        @inbounds CUDA.@atomic ctsdic[x[i], y[i], z[i]] += (proc.resp[i] - proc.PS[i]) * ΔT * ac[i]
+        @inbounds CUDA.@atomic ctsdoc[x[i], y[i], z[i]] += (proc.exu[i] - proc.VDOC[i]) * ΔT * ac[i]
+        @inbounds CUDA.@atomic ctsnh4[x[i], y[i], z[i]] -= proc.VNH4[i] * ΔT * ac[i]
+        @inbounds CUDA.@atomic ctsno3[x[i], y[i], z[i]] -= proc.VNO3[i] * ΔT * ac[i]
+        @inbounds CUDA.@atomic ctspo4[x[i], y[i], z[i]] -= proc.VPO4[i] * ΔT * ac[i]
     end
     return nothing
 end
@@ -55,12 +55,12 @@ function gpu_calc_loss_kernel!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, p
     index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     stride = blockDim().x * gridDim().x
     for i = index:stride:size(ac,1)
-        @inbounds @atomic ctsdoc[x[i], y[i], z[i]] += (plank.Bm[i] + plank.Cq[i]) * lossFracC * ac[i] * loss[i]
-        @inbounds @atomic ctsdon[x[i], y[i], z[i]] += (plank.Bm[i]*R_NC + plank.Nq[i]) * lossFracN * ac[i] * loss[i]
-        @inbounds @atomic ctsdop[x[i], y[i], z[i]] += (plank.Bm[i]*R_PC + plank.Pq[i]) * lossFracP * ac[i] * loss[i]
-        @inbounds @atomic ctspoc[x[i], y[i], z[i]] += (plank.Bm[i] + plank.Cq[i]) * (1.0-lossFracC) * ac[i] * loss[i]
-        @inbounds @atomic ctspon[x[i], y[i], z[i]] += (plank.Bm[i]*R_NC + plank.Nq[i]) * (1.0-lossFracN) * ac[i] * loss[i]
-        @inbounds @atomic ctspop[x[i], y[i], z[i]] += (plank.Bm[i]*R_PC + plank.Pq[i]) * (1.0-lossFracP) * ac[i] * loss[i]
+        @inbounds CUDA.@atomic ctsdoc[x[i], y[i], z[i]] += (plank.Bm[i] + plank.Cq[i]) * lossFracC * ac[i] * loss[i]
+        @inbounds CUDA.@atomic ctsdon[x[i], y[i], z[i]] += (plank.Bm[i]*R_NC + plank.Nq[i]) * lossFracN * ac[i] * loss[i]
+        @inbounds CUDA.@atomic ctsdop[x[i], y[i], z[i]] += (plank.Bm[i]*R_PC + plank.Pq[i]) * lossFracP * ac[i] * loss[i]
+        @inbounds CUDA.@atomic ctspoc[x[i], y[i], z[i]] += (plank.Bm[i] + plank.Cq[i]) * (1.0-lossFracC) * ac[i] * loss[i]
+        @inbounds CUDA.@atomic ctspon[x[i], y[i], z[i]] += (plank.Bm[i]*R_NC + plank.Nq[i]) * (1.0-lossFracN) * ac[i] * loss[i]
+        @inbounds CUDA.@atomic ctspop[x[i], y[i], z[i]] += (plank.Bm[i]*R_PC + plank.Pq[i]) * (1.0-lossFracP) * ac[i] * loss[i]
     end
     return nothing
 end
