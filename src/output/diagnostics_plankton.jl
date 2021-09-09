@@ -6,7 +6,7 @@ function gpu_diags_proc_kernel!(diags_proc, proc, ac, x, y, z)
     index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     stride = blockDim().x * gridDim().x
     for i = index:stride:size(ac,1)
-        @inbounds @atomic diags_proc[x[i], y[i], z[i]] += proc[i] * ac[i]
+        @inbounds CUDA.@atomic diags_proc[x[i], y[i], z[i]] += proc[i] * ac[i]
     end
 end
 function diags_proc!(diags_proc, proc, ac, x, y, z, ::GPU)
