@@ -30,9 +30,13 @@ function find_NPT!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop, arch::
 end
 
 ##### temperature function
+# @inline function tempFunc(temp, p)
+#     TFunc = max(1.0e-10, exp(p.TAe * (1.0/(temp+273.15) - (1.0/p.TRef)))) * p.TCoeff
+#     return TFunc
+# end
 @inline function tempFunc(temp, p)
-    TFunc = max(1.0e-10, exp(p.TAe * (1.0/(temp+273.15) - (1.0/p.TRef)))) * p.TCoeff
-    return TFunc
+    TFunc = exp(-p.Ea/(8.3145*(temp+273.15)))*(1.0-exp(temp+273.15 - p.T⁺))
+    return max(0.0, TFunc)
 end
 
 ##### calculate photosynthesis rate (mmolC/individual/second)
