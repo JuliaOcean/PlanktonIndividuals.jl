@@ -1,34 +1,3 @@
-##### find indices (halo points included)
-@kernel function find_inds_kernel!(plank, g::AbstractGrid)
-    i = @index(Global)
-    @inbounds plank.xi[i] = unsafe_trunc(Int, get_xf_index(plank.x[i]) * plank.ac[i]) + g.Hx 
-    @inbounds plank.yi[i] = unsafe_trunc(Int, get_yf_index(plank.y[i]) * plank.ac[i]) + g.Hy
-    @inbounds plank.zi[i] = unsafe_trunc(Int, get_zf_index(plank.z[i]) * plank.ac[i]) + g.Hz
-end
-function find_inds!(plank, g::AbstractGrid, arch::Architecture)
-    kernel! = find_inds_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, g)
-    wait(device(arch), event)
-    return nothing
-end
-
-@kernel function find_NPT_kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop)
-    i = @index(Global)
-    @inbounds nuts.NH4[i] = max(1.0e-10, NH4[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.NO3[i] = max(1.0e-10, NO3[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.PO4[i] = max(1.0e-10, PO4[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.DOC[i] = max(1.0e-10, DOC[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.par[i] = par[x[i], y[i], z[i]] * ac[i]
-    @inbounds nuts.T[i]   =temp[x[i], y[i], z[i]] * ac[i]
-    @inbounds nuts.pop[i] = pop[x[i], y[i], z[i]] * ac[i]
-end
-function find_NPT!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop, arch::Architecture)
-    kernel! = find_NPT_kernel!(device(arch), 256, (size(ac,1)))
-    event = kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop)
-    wait(device(arch), event)
-    return nothing
-end
-
 ##### temperature function
 # @inline function tempFunc(temp, p)
 #     TFunc = max(1.0e-10, exp(p.TAe * (1.0/(temp+273.15) - (1.0/p.TRef)))) * p.TCoeff

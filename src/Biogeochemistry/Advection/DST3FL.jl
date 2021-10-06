@@ -60,10 +60,10 @@ const θmax = 1.0e20
                          θz⁻(i, j, k, c) * (1.0 - CFLz(i, j, k, g, w, ΔT)) / (CFLz(i, j, k, g, w, ΔT) + 1.0e-20)))
 
 ##### advection flux
-@inline function adv_flux_x(i, j, k, g::AbstractGrid, u, c, ΔT)
+@inline adv_flux_x(i, j, k, g::AbstractGrid, u, c, ΔT) = 
     0.5 * (Trans_x(i, j, k, g, u) + abs(Trans_x(i, j, k, g, u))) * (c[i-1, j, k] + Ψx⁺(i, j, k, g, u, c, ΔT) * δx⁰(i, j, k, c)) +
     0.5 * (Trans_x(i, j, k, g, u) - abs(Trans_x(i, j, k, g, u))) * (c[i,   j, k] - Ψx⁻(i, j, k, g, u, c, ΔT) * δx⁰(i, j, k, c))
-end
+
 @inline adv_flux_y(i, j, k, g::AbstractGrid, v, c, ΔT) =
     0.5 * (Trans_y(i, j, k, g, v) + abs(Trans_y(i, j, k, g, v))) * (c[i, j-1, k] + Ψy⁺(i, j, k, g, v, c, ΔT) * δy⁰(i, j, k, c)) +
     0.5 * (Trans_y(i, j, k, g, v) - abs(Trans_y(i, j, k, g, v))) * (c[i, j,   k] - Ψy⁻(i, j, k, g, v, c, ΔT) * δy⁰(i, j, k, c))

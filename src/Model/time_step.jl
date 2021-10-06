@@ -55,7 +55,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics, result
                   model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
                   model.timestepper.par, model.timestepper.temp, model.timestepper.pop, model.arch)
 
-        plankton_physiology!(model.individuals.phytos[sp].data, model.timestepper.nuts,
+        plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts,
                              model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,
                              model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch)
     end
@@ -121,7 +121,7 @@ function TimeStep!(model::PlanktonModel, ΔT, ::Nothing, ::Nothing)
                   model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
                   model.timestepper.par, model.timestepper.temp, model.timestepper.pop, model.arch)
 
-        plankton_physiology!(model.individuals.phytos[sp].data, model.timestepper.nuts,
+        plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts,
                              model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,
                              model.timestepper.plk, nothing, ΔT, model.t, model.arch)
     end

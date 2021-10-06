@@ -1,5 +1,5 @@
-function plankton_physiology!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture)
-    plankton_update!(plank, nuts, proc, p, ΔT, t, arch)
+function plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture)
+    plankton_growth!(plank, nuts, proc, p, ΔT, t, arch)
 
     calc_consume!(plk.DIC.data, plk.DOC.data, plk.NH4.data, plk.NO3.data, plk.PO4.data,
                   proc, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, arch)
@@ -37,8 +37,8 @@ function plankton_physiology!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arc
     diags_proc!(diags_spcs.num, plank.ac, plank.ac, plank.xi, plank.yi, plank.zi, arch)
 end
 
-function plankton_physiology!(plank, nuts, proc, p, plk, ::Nothing, ΔT, t, arch::Architecture)
-    plankton_update!(plank, nuts, proc, p, ΔT, t, arch)
+function plankton_update!(plank, nuts, proc, p, plk, ::Nothing, ΔT, t, arch::Architecture)
+    plankton_growth!(plank, nuts, proc, p, ΔT, t, arch)
 
     calc_consume!(plk.DIC.data, plk.DOC.data, plk.NH4.data, plk.NO3.data, plk.PO4.data,
                   proc, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, arch)

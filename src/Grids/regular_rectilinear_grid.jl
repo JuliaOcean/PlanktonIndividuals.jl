@@ -1,8 +1,3 @@
-abstract type AbstractGrid{TX, TY, YZ} end
-abstract type AbstractTopology end
-struct Periodic <: AbstractTopology end
-struct Bounded <: AbstractTopology end
-
 struct RegularRectilinearGrid{TX, TY, TZ, R} <: AbstractGrid{TX, TY, TZ}
     # corrdinates at cell centers, unit: meter
     xC::R
@@ -67,8 +62,6 @@ function RegularRectilinearGrid(;size, spacing,
     return RegularRectilinearGrid{TX, TY, TZ, typeof(xF)}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Nx, Ny, Nz, Hx, Hy, Hz)
 end
-
-import Base: show
 
 function show(io::IO, g::RegularRectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ}
     xL, xR = g.xF[g.Hx+1], g.xF[g.Hx+1+g.Nx]

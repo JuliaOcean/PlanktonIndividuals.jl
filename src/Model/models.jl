@@ -82,8 +82,6 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
     return model
 end
 
-import Base: show
-
 function show(io::IO, model::PlanktonModel)
     Nsp = length(model.individuals.phytos)
     N = Int(dot(model.individuals.phytos.sp1.data.ac,model.individuals.phytos.sp1.data.ac))

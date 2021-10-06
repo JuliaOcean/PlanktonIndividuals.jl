@@ -98,8 +98,6 @@ function PlanktonSimulation(model::PlanktonModel; ΔT::Int64, iterations::Int64,
     return sim
 end
 
-import Base: show
-
 function save_inds_string(sim::PlanktonSimulation)
     save_inds = sim.save_individuals == nothing ? false : true
     if save_inds

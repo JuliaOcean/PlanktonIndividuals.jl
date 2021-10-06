@@ -1,3 +1,13 @@
+module Architectures
+
+export CPU, GPU, Architecture
+export array_type, rng_type
+export device
+
+using CUDA
+using KernelAbstractions, CUDAKernels
+using Random
+
 abstract type Architecture end
 
 struct CPU <: Architecture end
@@ -15,4 +25,6 @@ end
 rng_type(::CPU) = MersenneTwister()
 if CUDA.has_cuda()
     rng_type(::GPU) = CURAND.default_rng()
+end
+
 end

@@ -124,8 +124,6 @@ function RegularLatLonGrid(;size, lat, lon, z,
         xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, dxC, dyC, dxF, dyF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz)
 end
 
-import Base: show
-
 function show(io::IO, g::RegularLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ}
     xL, xR = g.xF[g.Hx+1], g.xF[g.Hx+1+g.Nx]
     yL, yR = g.yF[g.Hy+1], g.yF[g.Hy+1+g.Ny]
