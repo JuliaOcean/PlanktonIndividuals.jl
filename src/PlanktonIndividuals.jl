@@ -7,6 +7,7 @@ end
 export
     # Model
     PlanktonModel, PlanktonSimulation, update!, vel_copy!,
+    CarbonMode, QuotaMode, MacroMolecularMode,
 
     # Grids
     RegularRectilinearGrid, RegularLatLonGrid,
@@ -37,6 +38,11 @@ p=dirname(pathof(PlanktonIndividuals))
 artifact_toml = joinpath(p, "../Artifacts.toml")
 surface_mixing_vels_hash = artifact_hash("surface_mixing_vels", artifact_toml)
 surface_mixing_vels = joinpath(artifact_path(surface_mixing_vels_hash)*"/velocities.jld2")
+
+abstract type AbstractMode end
+struct CarbonMode <: AbstractMode end
+struct QuotaMode <: AbstractMode end
+struct MacroMolecularMode <: AbstractMode end
 
 include("Architectures.jl")
 include("Grids/Grids.jl")

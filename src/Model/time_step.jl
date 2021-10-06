@@ -57,7 +57,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics, result
 
         plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts,
                              model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,
-                             model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch)
+                             model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch, model.mode)
     end
     write_species_dynamics(model.t, model.individuals.phytos, resultspath)
 
@@ -123,7 +123,7 @@ function TimeStep!(model::PlanktonModel, ΔT, ::Nothing, ::Nothing)
 
         plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts,
                              model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,
-                             model.timestepper.plk, nothing, ΔT, model.t, model.arch)
+                             model.timestepper.plk, nothing, ΔT, model.t, model.arch, model.mode)
     end
 
     nut_update!(model.nutrients, model.timestepper.Gcs, model.timestepper.nut_temp, model.arch,

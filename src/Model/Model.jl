@@ -6,6 +6,7 @@ export update!, vel_copy!
 
 using CUDA
 using StructArrays
+using LinearAlgebra
 
 using PlanktonIndividuals.Architectures
 using PlanktonIndividuals.Grids
@@ -15,7 +16,10 @@ using PlanktonIndividuals.Parameters
 using PlanktonIndividuals.Plankton
 using PlanktonIndividuals.Output
 
+using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode
+
 import Base: show
+
 
 include("utils.jl")
 include("timestepper.jl")

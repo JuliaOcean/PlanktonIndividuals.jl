@@ -7,6 +7,7 @@ mutable struct PlanktonModel
     grid::AbstractGrid          # grid information
     bgc_params::Dict            # biogeochemical parameter set
     timestepper::timestepper    # operating Tuples and arrays for timestep
+    mode::AbstractMode          # Carbon, Quota, or MacroMolecular
 end
 
 """
@@ -18,6 +19,7 @@ end
                   phyt_params = phyt_params_default(),
                   nut_initial = default_nut_init(),
                   t = 0.0,
+                  mode = Quota(),
                   mask = nothing,
                   )
 
@@ -38,6 +40,7 @@ Keyword Arguments (Optional)
 - `nut_initial` : The source of initial conditions of nutrient fields, should be either a `NamedTuple` 
                            or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
 - `t` : Model time, start from 0 by default, in second.
+- `mode` : Phytoplankton physiology mode, choose among Carbon(), Quota(), or MacroMolecular().
 - `mask` : Mask out the individuals and tracers generated out of the domain, a 3D array with size `(Nx, Ny, Nz)`.
 """
 function PlanktonModel(arch::Architecture, grid::AbstractGrid;
@@ -48,6 +51,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        phyt_params = phyt_params_default(),
                        nut_initial = default_nut_init(),
                        t::Int64 = 0,
+                       mode::AbstractMode = QuotaMode(),
                        mask = nothing,
                        )
 
@@ -77,7 +81,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
 
     iteration  = 0
 
-    model = PlanktonModel(arch, t, iteration, inds, nutrients, grid_d, bgc_params, ts)
+    model = PlanktonModel(arch, t, iteration, inds, nutrients, grid_d, bgc_params, ts, mode)
 
     return model
 end
@@ -87,6 +91,7 @@ function show(io::IO, model::PlanktonModel)
     N = Int(dot(model.individuals.phytos.sp1.data.ac,model.individuals.phytos.sp1.data.ac))
     cap = length(model.individuals.phytos.sp1.data.ac)
     print(io, "grid: Nx = $(model.grid.Nx), Ny = $(model.grid.Ny), Nz = $(model.grid.Nz)\n",
+              "$(model.mode) is selected for phytoplankton physiology\n",
               "individuals: $(Nsp) phytoplankton species each with $(N) individuals\n",
               "maximum number of individuals: $(cap) per species\n")
 end
