@@ -1,7 +1,7 @@
 module Quota
 
 export plankton_update!
-export individuals, gen_individuals!
+export construct_plankton, generate_plankton!
 
 using KernelAbstractions: @kernel, @index, Event, MultiEvent, wait
 using KernelAbstractions.Extras.LoopInfo: @unroll

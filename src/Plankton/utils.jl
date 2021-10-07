@@ -1,3 +1,16 @@
+##### structs for individuals
+mutable struct plankton
+    data::AbstractArray
+    proc::AbstractArray
+    sp::Int64
+    p::NamedTuple
+end
+
+struct individuals
+    phytos::NamedTuple
+    # zoos::NamedTuple
+end
+
 ##### find indices (halo points included)
 @kernel function find_inds_kernel!(plank, g::AbstractGrid)
     i = @index(Global)
@@ -66,6 +79,20 @@ end
 function calc_par!(par, arch::Architecture, chl, PARF, g::AbstractGrid, kc, kw)
     kernel! = calc_par_kernel!(device(arch), (16,16), (g.Nx, g.Ny))
     event = kernel!(par, chl, PARF, g, kc, kw)
+    wait(device(arch), event)
+    return nothing
+end
+
+@kernel function mask_individuals_kernel!(plank, mask)
+    i = @index(Global)
+    xi = unsafe_trunc(Int, plank.x[i]) + 1 # 0-based index to 1-based index
+    yi = unsafe_trunc(Int, plank.y[i]) + 1
+    zi = unsafe_trunc(Int, plank.z[i]) + 1
+    plank.ac[i] = mask[xi, yi, zi] * plank.ac[i]
+end
+function mask_individuals!(plank, mask, N, arch)
+    kernel! = mask_individuals_kernel!(device(arch), 256, (N,))
+    event = kernel!(plank, mask)
     wait(device(arch), event)
     return nothing
 end

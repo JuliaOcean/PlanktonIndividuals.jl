@@ -69,11 +69,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
         mask_d = nothing
     end
 
-    inds = individuals(phyt_params, arch, N_species, max_individuals)
-
-    for plank in inds.phytos
-        gen_individuals!(plank, N_individual, grid_d, arch; mask = mask_d)
-    end
+    inds = generate_individuals(phyt_params, arch, N_species, N_individual, max_individuals, grid_d, mode; mask = mask_d)
 
     nutrients = generate_nutrients(arch, grid_d, nut_initial; mask = mask_d)
 
@@ -93,5 +89,5 @@ function show(io::IO, model::PlanktonModel)
     print(io, "grid: Nx = $(model.grid.Nx), Ny = $(model.grid.Ny), Nz = $(model.grid.Nz)\n",
               "$(model.mode) is selected for phytoplankton physiology\n",
               "individuals: $(Nsp) phytoplankton species each with $(N) individuals\n",
-              "maximum number of individuals: $(cap) per species\n")
+              "maximum number of individuals: $(cap) per species")
 end

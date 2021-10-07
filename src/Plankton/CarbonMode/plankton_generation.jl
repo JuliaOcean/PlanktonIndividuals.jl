@@ -1,25 +1,19 @@
 function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
     rawdata = StructArray(x   = zeros(maxN), y   = zeros(maxN), z   = zeros(maxN),
-                          iS  = zeros(maxN), Sz  = zeros(maxN), Bm  = zeros(maxN), 
-                          Cq  = zeros(maxN), Nq  = zeros(maxN), Pq  = zeros(maxN), 
-                          chl = zeros(maxN), gen = zeros(maxN), age = zeros(maxN), 
-                          ac  = zeros(maxN), idx = zeros(maxN),
+                          iS  = zeros(maxN), Sz  = zeros(maxN), Bm  = zeros(maxN), chl = zeros(maxN),
+                          gen = zeros(maxN), age = zeros(maxN), ac  = zeros(maxN), idx = zeros(maxN),
                           graz= zeros(maxN), mort= zeros(maxN), dvid= zeros(maxN),
                           xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN)) 
     data = replace_storage(array_type(arch), rawdata)
 
-    proc = StructArray(PS   = zeros(maxN), VDOC = zeros(maxN), VNH4 = zeros(maxN), VNO3 = zeros(maxN),
-                       VPO4 = zeros(maxN), ρchl = zeros(maxN), resp = zeros(maxN), BS   = zeros(maxN), 
-                       exu  = zeros(maxN), graz = zeros(maxN), mort = zeros(maxN), dvid = zeros(maxN))
+    proc = StructArray(PS   = zeros(maxN), ρchl = zeros(maxN), resp = zeros(maxN),
+                       graz = zeros(maxN), mort = zeros(maxN), dvid = zeros(maxN))
     proc_d = replace_storage(array_type(arch), proc)
 
-    param_names=(:Nsuper, :Cquota, :mean, :var, :Chl2Cint, :α, :Φ, :T⁺, :Ea,
-                   :PCmax, :PC_b, :VDOCmax, :VDOC_b, :VNO3max, :VNH4max, :VN_b, :VPO4max, :VP_b,
-                   :KsatDOC, :KsatNH4, :KsatNO3, :KsatPO4, :Cqmax, :Cqmin, :Nqmax, :Nqmin, :Pqmax, :Pqmin,
-                   :Chl2N, :R_NC, :R_PC, :k_mtb, :k_mtb_b, :respir_a, :respir_b,
-                   :grz_P, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
-                   :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP)
-
+    param_names=(:Nsuper, :Cquota, :mean, :var, :α, :Φ, :T⁺, :Ea,
+                 :PCmax, :PC_b, :Chl2Cint, :respir_a, :respir_b,
+                 :grz_P, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
+                 :mort_P, :mort_reg, :grazFracC, :mortFracC)
     pkeys = collect(keys(params))
     tmp = zeros(length(param_names))
     for i in 1:length(param_names)
@@ -38,13 +32,6 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     var = plank.p.var
     Cquota = plank.p.Cquota
     Nsuper = plank.p.Nsuper
-    cqmax = plank.p.Cqmax
-    cqmin = plank.p.Cqmin
-    nqmax = plank.p.Nqmax
-    nqmin = plank.p.Nqmin
-    pqmax = plank.p.Pqmax
-    pqmin = plank.p.Pqmin
-    Chl2Cint = plank.p.Chl2Cint
 
     plank.data.ac[1:N]  .= 1.0                                                                             # activity
     plank.data.gen[1:N] .= 1.0                                                                             # generation
@@ -54,9 +41,6 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     rand!(rng_type(arch), plank.data.x)
     rand!(rng_type(arch), plank.data.y)
     rand!(rng_type(arch), plank.data.z)
-    rand!(rng_type(arch), plank.data.Cq)
-    rand!(rng_type(arch), plank.data.Nq)
-    rand!(rng_type(arch), plank.data.Pq)
 
     plank.data.x   .=(plank.data.x .* g.Nx) .* plank.data.ac                                         # x, unit: grid spacing, starting from 0
     plank.data.y   .=(plank.data.y .* g.Ny) .* plank.data.ac                                         # y, unit: grid spacing, starting from 0
@@ -64,9 +48,6 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     plank.data.iS  .= max.(1.0, plank.data.iS .* var .+ mean) .* plank.data.ac                       # init_size
     plank.data.Sz  .= copy(plank.data.iS)                                                            # size
     plank.data.Bm  .= Cquota .* plank.data.Sz .* Nsuper                                              # Bm
-    plank.data.Cq  .=(plank.data.Cq .* (cqmax - cqmin)  .+ cqmin) .* plank.data.Bm                   # Cq
-    plank.data.Nq  .=(plank.data.Nq .* (nqmax - nqmin)  .+ nqmin) .* plank.data.Bm                   # Nq
-    plank.data.Pq  .=(plank.data.Pq .* (pqmax - pqmin)  .+ pqmin) .* plank.data.Bm                   # Pq
     plank.data.chl .= plank.data.Bm .* Chl2Cint                                                      # Chl
 
     if mask ≠ nothing
