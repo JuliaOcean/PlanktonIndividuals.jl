@@ -1,5 +1,6 @@
 module Carbon
 
+export plankton_update!
 export construct_plankton, generate_plankton!
 
 using KernelAbstractions: @kernel, @index, Event, MultiEvent, wait
@@ -19,5 +20,9 @@ include("../utils.jl")
 include("../division_death_probability.jl")
 include("plankton_generation.jl")
 include("growth_kernels.jl")
+include("plankton_growth.jl")
+include("consume_loss.jl")
+include("division_death.jl")
+include("plankton_update.jl")
 
 end

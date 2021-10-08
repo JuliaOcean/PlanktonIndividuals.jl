@@ -64,8 +64,8 @@ plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architectu
 plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::QuotaMode) =
     Quota.plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture)
 
-# plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::CarbonMode) =
-#     Carbon.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture)
-# plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::CarbonMode) =
-#     Carbon.plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture)
+plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::CarbonMode) =
+    Carbon.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture)
+plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::CarbonMode) =
+    Carbon.plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture)
 end

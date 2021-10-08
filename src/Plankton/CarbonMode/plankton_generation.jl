@@ -11,7 +11,7 @@ function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
     proc_d = replace_storage(array_type(arch), proc)
 
     param_names=(:Nsuper, :Cquota, :mean, :var, :α, :Φ, :T⁺, :Ea,
-                 :PCmax, :PC_b, :Chl2Cint, :respir_a, :respir_b,
+                 :PCmax, :PC_b, :Chl2C, :respir_a, :respir_b,
                  :grz_P, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
                  :mort_P, :mort_reg, :grazFracC, :mortFracC)
     pkeys = collect(keys(params))
@@ -48,7 +48,7 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     plank.data.iS  .= max.(1.0, plank.data.iS .* var .+ mean) .* plank.data.ac                       # init_size
     plank.data.Sz  .= copy(plank.data.iS)                                                            # size
     plank.data.Bm  .= Cquota .* plank.data.Sz .* Nsuper                                              # Bm
-    plank.data.chl .= plank.data.Bm .* Chl2Cint                                                      # Chl
+    plank.data.chl .= plank.data.Bm .* Chl2C                                                         # Chl
 
     if mask ≠ nothing
         if size(mask) == (g.Nx, g.Ny, g.Nz)

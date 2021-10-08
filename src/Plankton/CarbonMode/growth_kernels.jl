@@ -23,20 +23,6 @@ function calc_inorganic_uptake!(plank, proc, nuts, p, arch::Architecture)
     return nothing
 end
 
-##### calculate ρchl
-@kernel function calc_ρchl_kernel!(plank, proc, par, p)
-    i = @index(Global)
-    @inbounds proc.ρchl[i] = proc.PS[i]/max(1.0e-10, plank.Bm[i]) * p.Chl2N / 
-                             max(1.0e-10, par[i] * p.α * p.Φ * plank.chl[i]/plank.Bm[i]) *
-                             isless(1.0e-1, par[i]) * plank.ac[i]
-end
-function calc_ρchl!(plank, proc, par, p, arch)
-    kernel! = calc_ρchl_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, proc, par, p)
-    wait(device(arch), event)
-    return nothing
-end
-
 ##### calculate respiration (mmolC/individual/second)
 @kernel function calc_respir_kernel!(plank, proc, T, p)
     i = @index(Global)
@@ -53,7 +39,6 @@ end
 @kernel function update_quotas_kernel!(plank, proc, ΔT)
     i = @index(Global)
     @inbounds plank.Bm[i]  += (proc.PS[i] - proc.resp[i]) * ΔT
-    @inbounds plank.chl[i] += ΔT * proc.PS[i] * proc.ρchl[i]
     @inbounds plank.age[i] += ΔT / 3600.0 * plank.ac[i]
 end
 function update_quotas!(plank, proc, ΔT, arch)
@@ -66,7 +51,8 @@ end
 ##### update cell size
 @kernel function update_cellsize_kernel!(plank, p)
     i = @index(Global)
-    @inbounds plank.Sz[i] = plank.Bm[i] / (p.Cquota * p.Nsuper)
+    @inbounds plank.Sz[i]  = plank.Bm[i] / (p.Cquota * p.Nsuper)
+    @inbounds plank.chl[i] = plank.Bm[i] * p.Chl2C
 end
 function update_cellsize!(plank, p, arch)
     kernel! = update_cellsize_kernel!(device(arch), 256, (size(plank.ac,1)))
