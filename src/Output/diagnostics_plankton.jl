@@ -19,38 +19,25 @@ function diags_proc!(diags_proc, proc, ac, x, y, z, ::CPU)
     end
 end
 
-function diags_spcs!(diags_sp, proc, plank, ac, x, y, z, arch::Architecture)
+function diags_spcs!(diags_sp, proc, plank, ac, x, y, z, mode::AbstractMode, arch::Architecture)
+    proc_diags = (:PS, :resp)
+    plank_diags = (:Bm, :Chl)
+    if isa(mode, CarbonMode)
+        nothing
+    elseif isa(mode, QuotaMode)
+        proc_diags = (:PS, :BS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :exu)
+        plank_diags = (:Bm, :Cq, :Nq, :Pq, :Chl)
+    elseif isa(mode, MacroMolecularMode)
+        nothing
+    end
+
     for diag in keys(diags_sp)
-        if diag == :num || diag == :graz || diag == :mort || diag == :dvid
+        if diag in (:num, :graz, :mort, :dvid)
             nothing
-        elseif diag == :PS
-            diags_proc!(diags_sp[diag], proc.PS, ac, x, y, z, arch)
-        elseif diag == :BS
-            diags_proc!(diags_sp[diag], proc.BS, ac, x, y, z, arch)
-        elseif diag == :VDOC
-            diags_proc!(diags_sp[diag], proc.VDOC, ac, x, y, z, arch)
-        elseif diag == :VNH4
-            diags_proc!(diags_sp[diag], proc.VNH4, ac, x, y, z, arch)
-        elseif diag == :VNO3
-            diags_proc!(diags_sp[diag], proc.VNO3, ac, x, y, z, arch)
-        elseif diag == :VPO4
-            diags_proc!(diags_sp[diag], proc.VPO4, ac, x, y, z, arch)
-        elseif diag == :resp
-            diags_proc!(diags_sp[diag], proc.resp, ac, x, y, z, arch)
-        elseif diag == :exu
-            diags_proc!(diags_sp[diag], proc.exu, ac, x, y, z, arch)
-        elseif diag == :Bm
-            diags_proc!(diags_sp[diag], plank.Bm, ac, x, y, z, arch)
-        elseif diag == :Cq
-            diags_proc!(diags_sp[diag], plank.Cq, ac, x, y, z, arch)
-        elseif diag == :Nq
-            diags_proc!(diags_sp[diag], plank.Nq, ac, x, y, z, arch)
-        elseif diag == :Pq
-            diags_proc!(diags_sp[diag], plank.Pq, ac, x, y, z, arch)
-        elseif diag == :chl
-            diags_proc!(diags_sp[diag], plank.chl, ac, x, y, z, arch)
-        else
-            throw(ArgumentError("$(diag) is not one of the diagnostics"))
+        elseif diag in proc_diags
+            diags_proc!(diags_sp[diag], proc[diag], ac, x, y, z, arch)
+        elseif diag in plank_diags
+            diags_proc!(diags_sp[diag], plank[diag], ac, x, y, z, arch)
         end
     end
 end

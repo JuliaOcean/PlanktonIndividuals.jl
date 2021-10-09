@@ -1,4 +1,38 @@
-# Parameters
+"""
+    default_PARF(grid)
+Generate default hourly surface PAR of a single day.
+"""
+function default_PARF(grid)
+    PAR = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3871666666666666, 87.10258333333333, 475.78150000000016, 929.2737916666669,
+           1232.3633333333337, 1638.918916666667, 1823.7921666666664, 1906.2769583333336, 1776.0280416666667,
+           1678.5026249999999, 1410.216666666667, 815.4129583333336, 525.104, 135.993, 2.9493750000000003, 0.0, 0.0, 0.0,]
+    PAR_domain = zeros(grid.Nx, grid.Ny, 24)
+    for i in 1:24
+        PAR_domain[:,:,i] .= PAR[i]
+    end
+    return PAR_domain
+end
+
+"""
+    default_temperature(grid)
+Generate default hourly temperature of a single day.
+"""
+function default_temperature(grid)
+    temp = [26.646446609406727, 26.56698729810778, 26.517037086855467, 26.5, 26.517037086855467, 26.56698729810778,
+            26.646446609406727, 26.75, 26.87059047744874, 27.0, 27.12940952255126, 27.25, 27.353553390593273,
+            27.43301270189222, 27.482962913144533, 27.5, 27.482962913144533, 27.43301270189222, 27.353553390593273,
+            27.25, 27.12940952255126, 27.0, 26.87059047744874, 26.75]
+    temp_domain = zeros(grid.Nx, grid.Ny, grid.Nz, 24)
+    for i in 1:24
+        temp_domain[:,:,end,i] .= temp[i]
+    end
+    # vertical temperature gradient
+    for j in grid.Nz-1:-1:1
+        temp_domain[:,:,j,:] .= temp_domain[:,:,j+1,:] .- (0.04*(grid.zC[j+1]-grid.zC[j]))
+    end
+    return temp_domain
+end
+
 """
     bgc_params_default()
 Generate default biogeochemical parameter values 
@@ -23,10 +57,10 @@ function bgc_params_default()
 end
 
 """
-    phyt_params_default()
-Generate default phytoplankton parameter values 
+    phyt_params_default(mode::AbstractMode)
+Generate default phytoplankton parameter values based on `AbstractMode`
 """
-function phyt_params_default()
+function phyt_params_default(mode::QuotaMode)
     params=Dict(
         "Nsuper"   => [1, 1],             # Number of phyto cells each super individual represents
         "Cquota"   => [1.8e-11, 1.8e-11], # C quota of phyto cells at size = 1.0
@@ -82,37 +116,32 @@ function phyt_params_default()
     return params
 end
 
-"""
-    default_PARF(grid)
-Generate default hourly surface PAR of a single day.
-"""
-function default_PARF(grid)
-    PAR = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3871666666666666, 87.10258333333333, 475.78150000000016, 929.2737916666669,
-           1232.3633333333337, 1638.918916666667, 1823.7921666666664, 1906.2769583333336, 1776.0280416666667,
-           1678.5026249999999, 1410.216666666667, 815.4129583333336, 525.104, 135.993, 2.9493750000000003, 0.0, 0.0, 0.0,]
-    PAR_domain = zeros(grid.Nx, grid.Ny, 24)
-    for i in 1:24
-        PAR_domain[:,:,i] .= PAR[i]
-    end
-    return PAR_domain
-end
-
-"""
-    default_temperature(grid)
-Generate default hourly temperature of a single day.
-"""
-function default_temperature(grid)
-    temp = [26.646446609406727, 26.56698729810778, 26.517037086855467, 26.5, 26.517037086855467, 26.56698729810778,
-            26.646446609406727, 26.75, 26.87059047744874, 27.0, 27.12940952255126, 27.25, 27.353553390593273,
-            27.43301270189222, 27.482962913144533, 27.5, 27.482962913144533, 27.43301270189222, 27.353553390593273,
-            27.25, 27.12940952255126, 27.0, 26.87059047744874, 26.75]
-    temp_domain = zeros(grid.Nx, grid.Ny, grid.Nz, 24)
-    for i in 1:24
-        temp_domain[:,:,end,i] .= temp[i]
-    end
-    # vertical temperature gradient
-    for j in grid.Nz-1:-1:1
-        temp_domain[:,:,j,:] .= temp_domain[:,:,j+1,:] .- (0.04*(grid.zC[j+1]-grid.zC[j]))
-    end
-    return temp_domain
+function phyt_params_default(mode::CarbonMode)
+    params=Dict(
+        "Nsuper"   => [1, 1],             # Number of phyto cells each super individual represents
+        "Cquota"   => [1.8e-11, 1.8e-11], # C quota of phyto cells at size = 1.0
+        "mean"     => [1.2, 1.2],         # Mean of the normal distribution of initial phyto individuals
+        "var"      => [0.3, 0.3],         # Variance of the normal distribution of initial phyto individuals
+        "Chl2C"    => [0.10, 0.10],       # Chla:C ratio in phytoplankton (mgChl/mmolC)
+        "α"        => [2.0e-2,2.0e-2],    # Irradiance absorption coeff (m²/mgChl)
+        "Φ"        => [4.0e-5,4.0e-5],    # Maximum quantum yield (mmolC/μmol photon)
+        "T⁺"       => [298.0, 298.0],     # Maximal temperature for growth
+        "Ea"       => [53.0, 53.0],       # Free energy
+        "PCmax"    => [4.2e-5, 4.2e-5],   # Maximum primary production rate (per second)
+        "PC_b"     => [0.6, 0.6],         # Shape parameter for size
+        "respir_a" => [1.2e-6,1.2e-6],    # Respiration rate(per second)
+        "respir_b" => [0.6,0.6],          # Shape parameter for size
+        "grz_P"    => [0.0, 0.0],         # Grazing probability per second
+        "dvid_P"   => [5e-5,5e-5],        # Probability of cell division per second.
+        "dvid_type"=> [1,5],              # The type of cell division, 1:sizer, 2:adder.
+        "dvid_stp" => [6.0,6.0],          # Steepness of sigmoidal function
+        "dvid_reg" => [1.9,1.9],          # Regulations of cell division (sizer)
+        "dvid_stp2"=> [2.0,2.0],          # Steepness of sigmoidal function
+        "dvid_reg2"=> [12.0,12.0],        # Regulations of cell division (sizer)
+        "mort_P"   => [5e-5,5e-5],        # Probability of cell natural death per second
+        "mort_reg" => [0.5,0.5],          # Regulation of cell natural death
+        "grazFracC"=> [0.7, 0.7],         # Fraction goes into dissolved organic pool
+        "mortFracC"=> [0.5, 0.5],         # Fraction goes into dissolved organic pool
+    )
+    return params
 end

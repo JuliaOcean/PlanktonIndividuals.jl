@@ -55,7 +55,7 @@ end
         @inbounds plank.Cq[idx[i]]   = plank.Cq[i]
         @inbounds plank.Nq[idx[i]]   = plank.Nq[i]
         @inbounds plank.Pq[idx[i]]   = plank.Pq[i]
-        @inbounds plank.chl[idx[i]]  = plank.chl[i]
+        @inbounds plank.Chl[idx[i]]  = plank.Chl[i]
         @inbounds plank.gen[idx[i]]  = plank.gen[i]
         @inbounds plank.ac[idx[i]]   = plank.ac[i]
         @inbounds plank.dvid[idx[i]] = plank.dvid[i]
@@ -78,7 +78,7 @@ end
     @inbounds plank.Cq[i]  *= (2.0 - plank.dvid[i]) / 2 
     @inbounds plank.Nq[i]  *= (2.0 - plank.dvid[i]) / 2 
     @inbounds plank.Pq[i]  *= (2.0 - plank.dvid[i]) / 2 
-    @inbounds plank.chl[i] *= (2.0 - plank.dvid[i]) / 2 
+    @inbounds plank.Chl[i] *= (2.0 - plank.dvid[i]) / 2 
     @inbounds plank.gen[i] += plank.dvid[i]
     @inbounds plank.age[i] *= (1.0 - plank.dvid[i])
     @inbounds plank.iS[i]   = plank.iS[i] * (1.0 - plank.dvid[i]) + plank.Sz[i] * plank.dvid[i]

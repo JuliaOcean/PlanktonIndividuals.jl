@@ -49,7 +49,7 @@ end
         @inbounds plank.z[idx[i]]    = plank.z[i]
         @inbounds plank.Sz[idx[i]]   = plank.Sz[i]
         @inbounds plank.Bm[idx[i]]   = plank.Bm[i]
-        @inbounds plank.chl[idx[i]]  = plank.chl[i]
+        @inbounds plank.Chl[idx[i]]  = plank.Chl[i]
         @inbounds plank.gen[idx[i]]  = plank.gen[i]
         @inbounds plank.ac[idx[i]]   = plank.ac[i]
         @inbounds plank.dvid[idx[i]] = plank.dvid[i]
@@ -69,7 +69,7 @@ end
     i = @index(Global)
     @inbounds plank.Sz[i]  *= (2.0 - plank.dvid[i]) / 2 
     @inbounds plank.Bm[i]  *= (2.0 - plank.dvid[i]) / 2 
-    @inbounds plank.chl[i] *= (2.0 - plank.dvid[i]) / 2 
+    @inbounds plank.Chl[i] *= (2.0 - plank.dvid[i]) / 2 
     @inbounds plank.gen[i] += plank.dvid[i]
     @inbounds plank.age[i] *= (1.0 - plank.dvid[i])
     @inbounds plank.iS[i]   = plank.iS[i] * (1.0 - plank.dvid[i]) + plank.Sz[i] * plank.dvid[i]

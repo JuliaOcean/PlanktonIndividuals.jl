@@ -1,19 +1,19 @@
 function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
     rawdata = StructArray(x   = zeros(maxN), y   = zeros(maxN), z   = zeros(maxN),
-                          iS  = zeros(maxN), Sz  = zeros(maxN), Bm  = zeros(maxN), chl = zeros(maxN),
+                          iS  = zeros(maxN), Sz  = zeros(maxN), Bm  = zeros(maxN), Chl = zeros(maxN),
                           gen = zeros(maxN), age = zeros(maxN), ac  = zeros(maxN), idx = zeros(maxN),
                           graz= zeros(maxN), mort= zeros(maxN), dvid= zeros(maxN),
                           xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN)) 
     data = replace_storage(array_type(arch), rawdata)
 
-    proc = StructArray(PS   = zeros(maxN), ρchl = zeros(maxN), resp = zeros(maxN),
-                       graz = zeros(maxN), mort = zeros(maxN), dvid = zeros(maxN))
+    proc = StructArray(PS   = zeros(maxN), resp = zeros(maxN), graz = zeros(maxN), mort = zeros(maxN), dvid = zeros(maxN))
     proc_d = replace_storage(array_type(arch), proc)
 
     param_names=(:Nsuper, :Cquota, :mean, :var, :α, :Φ, :T⁺, :Ea,
                  :PCmax, :PC_b, :Chl2C, :respir_a, :respir_b,
                  :grz_P, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
                  :mort_P, :mort_reg, :grazFracC, :mortFracC)
+
     pkeys = collect(keys(params))
     tmp = zeros(length(param_names))
     for i in 1:length(param_names)
@@ -32,6 +32,7 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     var = plank.p.var
     Cquota = plank.p.Cquota
     Nsuper = plank.p.Nsuper
+    Chl2C = plank.p.Chl2C
 
     plank.data.ac[1:N]  .= 1.0                                                                             # activity
     plank.data.gen[1:N] .= 1.0                                                                             # generation
@@ -48,7 +49,7 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     plank.data.iS  .= max.(1.0, plank.data.iS .* var .+ mean) .* plank.data.ac                       # init_size
     plank.data.Sz  .= copy(plank.data.iS)                                                            # size
     plank.data.Bm  .= Cquota .* plank.data.Sz .* Nsuper                                              # Bm
-    plank.data.chl .= plank.data.Bm .* Chl2C                                                         # Chl
+    plank.data.Chl .= plank.data.Bm .* Chl2C                                                      # Chl
 
     if mask ≠ nothing
         if size(mask) == (g.Nx, g.Ny, g.Nz)

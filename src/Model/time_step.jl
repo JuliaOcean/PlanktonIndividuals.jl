@@ -18,7 +18,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics, result
     @inbounds model.timestepper.vel½.w.data .= (model.timestepper.vel₀.w.data .+ model.timestepper.vel₁.w.data) .* 0.5
 
     zero_fields!(model.timestepper.plk)
-    @inbounds model.timestepper.chl .= 0.0
+    @inbounds model.timestepper.Chl .= 0.0
     @inbounds model.timestepper.pop .= 0.0  # may add an option of self grazing, besides shared grazing
     ##### plankton advection and diffusion
     for sp in keys(model.individuals.phytos)
@@ -35,16 +35,16 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics, result
         plankton_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd,
                             model.bgc_params["κhP"], ΔT, model.grid, model.arch)
 
-        #### calculate accumulated chla quantity (not concentration)
+        #### calculate accumulated Chla quantity (not concentration)
         find_inds!(model.individuals.phytos[sp].data, model.grid, model.arch)
-        acc_counts!(model.timestepper.chl, model.timestepper.pop,
-                    model.individuals.phytos[sp].data.chl, model.individuals.phytos[sp].data.ac, 
+        acc_counts!(model.timestepper.Chl, model.timestepper.pop,
+                    model.individuals.phytos[sp].data.Chl, model.individuals.phytos[sp].data.ac, 
                     model.individuals.phytos[sp].data.xi, model.individuals.phytos[sp].data.yi, 
                     model.individuals.phytos[sp].data.zi, model.arch)
     end
 
     ##### calculate PAR
-    calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.timestepper.PARF,
+    calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, model.timestepper.PARF,
               model.grid, model.bgc_params["kc"], model.bgc_params["kw"])
 
     ##### plankton physiology
@@ -90,7 +90,7 @@ function TimeStep!(model::PlanktonModel, ΔT, ::Nothing, ::Nothing)
     @inbounds model.timestepper.vel½.w.data .= (model.timestepper.vel₀.w.data .+ model.timestepper.vel₁.w.data) .* 0.5
 
     zero_fields!(model.timestepper.plk)
-    @inbounds model.timestepper.chl .= 0.0
+    @inbounds model.timestepper.Chl .= 0.0
     @inbounds model.timestepper.pop .= 0.0  # may add an option of self grazing, besides shared grazing
     ##### plankton advection and diffusion
     for sp in keys(model.individuals.phytos)
@@ -101,16 +101,16 @@ function TimeStep!(model::PlanktonModel, ΔT, ::Nothing, ::Nothing)
         plankton_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd,
                             model.bgc_params["κhP"], ΔT, model.grid, model.arch)
 
-        #### calculate accumulated chla quantity (not concentration)
+        #### calculate accumulated Chla quantity (not concentration)
         find_inds!(model.individuals.phytos[sp].data, model.grid, model.arch)
-        acc_counts!(model.timestepper.chl, model.timestepper.pop,
-                    model.individuals.phytos[sp].data.chl, model.individuals.phytos[sp].data.ac, 
+        acc_counts!(model.timestepper.Chl, model.timestepper.pop,
+                    model.individuals.phytos[sp].data.Chl, model.individuals.phytos[sp].data.ac, 
                     model.individuals.phytos[sp].data.xi, model.individuals.phytos[sp].data.yi, 
                     model.individuals.phytos[sp].data.zi, model.arch)
     end
 
     ##### calculate PAR
-    calc_par!(model.timestepper.par, model.arch, model.timestepper.chl, model.timestepper.PARF,
+    calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, model.timestepper.PARF,
               model.grid, model.bgc_params["kc"], model.bgc_params["kw"])
 
     ##### plankton physiology

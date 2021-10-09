@@ -43,42 +43,42 @@ function find_NPT!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop, arch::
 end
 
 ##### calculate Chla and individual counts based on the status of plankton individuals
-@inline function gpu_acc_counts_kernel!(ctschl, ctspop, chl, ac, x, y, z)
+@inline function gpu_acc_counts_kernel!(ctsChl, ctspop, Chl, ac, x, y, z)
     index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     stride = blockDim().x * gridDim().x
     for i = index:stride:size(ac,1)
-        @inbounds CUDA.@atomic ctschl[x[i], y[i], z[i]] += chl[i] * ac[i]
+        @inbounds CUDA.@atomic ctsChl[x[i], y[i], z[i]] += Chl[i] * ac[i]
         @inbounds CUDA.@atomic ctspop[x[i], y[i], z[i]] += ac[i]
     end
     return nothing
 end
-function acc_counts!(ctschl, ctspop, chl, ac, x, y, z, ::GPU)
-    @cuda threads=256 blocks=ceil(Int, size(ac,1)/256) gpu_acc_counts_kernel!(ctschl, ctspop, chl, ac, x, y, z)
+function acc_counts!(ctsChl, ctspop, Chl, ac, x, y, z, ::GPU)
+    @cuda threads=256 blocks=ceil(Int, size(ac,1)/256) gpu_acc_counts_kernel!(ctsChl, ctspop, Chl, ac, x, y, z)
     return nothing 
 end
-function acc_counts!(ctschl, ctspop, chl, ac, x, y, z, ::CPU)
+function acc_counts!(ctsChl, ctspop, Chl, ac, x, y, z, ::CPU)
     for i in 1:size(ac,1)
-        @inbounds ctschl[x[i], y[i], z[i]] += chl[i] * ac[i]
+        @inbounds ctsChl[x[i], y[i], z[i]] += Chl[i] * ac[i]
         @inbounds ctspop[x[i], y[i], z[i]] += ac[i]
     end
     return nothing
 end
 
 ##### calculate PAR field based on Chla field and depth
-@kernel function calc_par_kernel!(par, chl, PARF, g::AbstractGrid, kc, kw)
+@kernel function calc_par_kernel!(par, Chl, PARF, g::AbstractGrid, kc, kw)
     i, j = @index(Global, NTuple)
     @unroll for k in 1:g.Nz
         ii = i + g.Hx
         jj = j + g.Hy
         kk = k + g.Hz
-        atten = (chl[ii,jj,kk]/volume(ii, jj, kk, g) * kc + kw) * g.Δz
+        atten = (Chl[ii,jj,kk]/volume(ii, jj, kk, g) * kc + kw) * g.Δz
         par[ii,jj,kk] = PARF[i,j] * (1.0 - exp(-atten)) / atten
         PARF[i,j] = PARF[i,j] * exp(-atten)
     end
 end
-function calc_par!(par, arch::Architecture, chl, PARF, g::AbstractGrid, kc, kw)
+function calc_par!(par, arch::Architecture, Chl, PARF, g::AbstractGrid, kc, kw)
     kernel! = calc_par_kernel!(device(arch), (16,16), (g.Nx, g.Ny))
-    event = kernel!(par, chl, PARF, g, kc, kw)
+    event = kernel!(par, Chl, PARF, g, kc, kw)
     wait(device(arch), event)
     return nothing
 end

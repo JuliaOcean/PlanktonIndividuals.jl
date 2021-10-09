@@ -2,23 +2,23 @@ function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
     rawdata = StructArray(x   = zeros(maxN), y   = zeros(maxN), z   = zeros(maxN),
                           iS  = zeros(maxN), Sz  = zeros(maxN), Bm  = zeros(maxN), 
                           Cq  = zeros(maxN), Nq  = zeros(maxN), Pq  = zeros(maxN), 
-                          chl = zeros(maxN), gen = zeros(maxN), age = zeros(maxN), 
+                          Chl = zeros(maxN), gen = zeros(maxN), age = zeros(maxN), 
                           ac  = zeros(maxN), idx = zeros(maxN),
                           graz= zeros(maxN), mort= zeros(maxN), dvid= zeros(maxN),
                           xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN)) 
     data = replace_storage(array_type(arch), rawdata)
 
     proc = StructArray(PS   = zeros(maxN), VDOC = zeros(maxN), VNH4 = zeros(maxN), VNO3 = zeros(maxN),
-                       VPO4 = zeros(maxN), ρchl = zeros(maxN), resp = zeros(maxN), BS   = zeros(maxN), 
+                       VPO4 = zeros(maxN), ρChl = zeros(maxN), resp = zeros(maxN), BS   = zeros(maxN), 
                        exu  = zeros(maxN), graz = zeros(maxN), mort = zeros(maxN), dvid = zeros(maxN))
     proc_d = replace_storage(array_type(arch), proc)
 
     param_names=(:Nsuper, :Cquota, :mean, :var, :Chl2Cint, :α, :Φ, :T⁺, :Ea,
-                   :PCmax, :PC_b, :VDOCmax, :VDOC_b, :VNO3max, :VNH4max, :VN_b, :VPO4max, :VP_b,
-                   :KsatDOC, :KsatNH4, :KsatNO3, :KsatPO4, :Cqmax, :Cqmin, :Nqmax, :Nqmin, :Pqmax, :Pqmin,
-                   :Chl2N, :R_NC, :R_PC, :k_mtb, :k_mtb_b, :respir_a, :respir_b,
-                   :grz_P, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
-                   :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP)
+                 :PCmax, :PC_b, :VDOCmax, :VDOC_b, :VNO3max, :VNH4max, :VN_b, :VPO4max, :VP_b,
+                 :KsatDOC, :KsatNH4, :KsatNO3, :KsatPO4, :Cqmax, :Cqmin, :Nqmax, :Nqmin, :Pqmax, :Pqmin,
+                 :Chl2N, :R_NC, :R_PC, :k_mtb, :k_mtb_b, :respir_a, :respir_b,
+                 :grz_P, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
+                 :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP)
 
     pkeys = collect(keys(params))
     tmp = zeros(length(param_names))
@@ -67,7 +67,7 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     plank.data.Cq  .=(plank.data.Cq .* (cqmax - cqmin)  .+ cqmin) .* plank.data.Bm                   # Cq
     plank.data.Nq  .=(plank.data.Nq .* (nqmax - nqmin)  .+ nqmin) .* plank.data.Bm                   # Nq
     plank.data.Pq  .=(plank.data.Pq .* (pqmax - pqmin)  .+ pqmin) .* plank.data.Bm                   # Pq
-    plank.data.chl .= plank.data.Bm .* Chl2Cint                                                      # Chl
+    plank.data.Chl .= plank.data.Bm .* Chl2Cint                                                      # Chl
 
     if mask ≠ nothing
         if size(mask) == (g.Nx, g.Ny, g.Nz)

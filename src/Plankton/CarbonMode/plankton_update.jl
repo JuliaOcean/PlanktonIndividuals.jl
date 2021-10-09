@@ -1,9 +1,9 @@
-function plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture)
+function plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::CarbonMode)
     plankton_growth!(plank, nuts, proc, p, ΔT, t, arch)
 
     calc_consume!(plk.DIC.data, proc, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, arch)
     ##### diagnostics of processes for each species
-    diags_spcs!(diags_spcs, proc, plank, plank.ac, plank.xi, plank.yi, plank.zi, arch)
+    diags_spcs!(diags_spcs, proc, plank, plank.ac, plank.xi, plank.yi, plank.zi, mode, arch)
 
     ##### check the probabilities every 10 time steps or 1 hour whichever is shorter
     if t%(ΔT*(min(10,3600÷ΔT))) == 0 
@@ -36,7 +36,7 @@ function plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::A
     diags_proc!(diags_spcs.num, plank.ac, plank.ac, plank.xi, plank.yi, plank.zi, arch)
 end
 
-function plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture)
+function plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::CarbonMode)
     plankton_growth!(plank, nuts, proc, p, ΔT, t, arch)
 
     calc_consume!(plk.DIC.data, proc, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, arch)

@@ -5,16 +5,16 @@
 end
 
 ##### calculate photosynthesis rate (mmolC/individual/second)
-@inline function calc_PS(par, temp, chl, Bm, Sz, p)
+@inline function calc_PS(par, temp, Chl, Bm, Sz, p)
     αI  = par * p.α * p.Φ
     PCm = p.PCmax * Sz^p.PC_b * tempFunc(temp, p)
-    PS  = PCm * (1.0 - exp(-αI / max(1.0e-10, PCm) * chl / max(1.0e-10, Bm))) * Bm
+    PS  = PCm * (1.0 - exp(-αI / max(1.0e-10, PCm) * Chl / max(1.0e-10, Bm))) * Bm
     return PS
 end
 
 @kernel function calc_inorganic_uptake_kernel!(plank, proc, nuts, p)
     i = @index(Global)
-    @inbounds proc.PS[i] = calc_PS(nuts.par[i], nuts.T[i], plank.chl[i], plank.Bm[i], plank.Sz[i], p) * plank.ac[i]
+    @inbounds proc.PS[i] = calc_PS(nuts.par[i], nuts.T[i], plank.Chl[i], plank.Bm[i], plank.Sz[i], p) * plank.ac[i]
 end
 function calc_inorganic_uptake!(plank, proc, nuts, p, arch::Architecture)
     kernel! = calc_inorganic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -52,7 +52,7 @@ end
 @kernel function update_cellsize_kernel!(plank, p)
     i = @index(Global)
     @inbounds plank.Sz[i]  = plank.Bm[i] / (p.Cquota * p.Nsuper)
-    @inbounds plank.chl[i] = plank.Bm[i] * p.Chl2C
+    @inbounds plank.Chl[i] = plank.Bm[i] * p.Chl2C
 end
 function update_cellsize!(plank, p, arch)
     kernel! = update_cellsize_kernel!(device(arch), 256, (size(plank.ac,1)))

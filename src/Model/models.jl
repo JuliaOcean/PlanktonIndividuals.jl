@@ -19,7 +19,7 @@ end
                   phyt_params = phyt_params_default(),
                   nut_initial = default_nut_init(),
                   t = 0.0,
-                  mode = Quota(),
+                  mode = QuotaMode(),
                   mask = nothing,
                   )
 
@@ -29,6 +29,7 @@ Keyword Arguments (Required)
 ============================
 - `arch` : `CPU()` or `GPU()`. Computer architecture being used to run the model.
 - `grid` : a `AbstractGrid` structure. Discrete grid for the model (resolution and geometry).
+- `mode` : Phytoplankton physiology mode, choose among CarbonMode(), QuotaMode(), or MacroMolecularMode().
 
 Keyword Arguments (Optional)
 ============================
@@ -40,18 +41,17 @@ Keyword Arguments (Optional)
 - `nut_initial` : The source of initial conditions of nutrient fields, should be either a `NamedTuple` 
                            or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
 - `t` : Model time, start from 0 by default, in second.
-- `mode` : Phytoplankton physiology mode, choose among Carbon(), Quota(), or MacroMolecular().
 - `mask` : Mask out the individuals and tracers generated out of the domain, a 3D array with size `(Nx, Ny, Nz)`.
 """
 function PlanktonModel(arch::Architecture, grid::AbstractGrid;
+                       mode = QuotaMode(),
                        N_species::Int64 = 1,
                        N_individual::Int64 = 1024,
                        max_individuals::Int64 = 8*1024,
                        bgc_params = bgc_params_default(), 
-                       phyt_params = phyt_params_default(),
+                       phyt_params = phyt_params_default(mode),
                        nut_initial = default_nut_init(),
                        t::Int64 = 0,
-                       mode::AbstractMode = QuotaMode(),
                        mask = nothing,
                        )
 

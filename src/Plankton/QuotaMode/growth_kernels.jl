@@ -9,10 +9,10 @@
 end
 
 ##### calculate photosynthesis rate (mmolC/individual/second)
-@inline function calc_PS(par, temp, chl, Bm, Sz, p)
+@inline function calc_PS(par, temp, Chl, Bm, Sz, p)
     αI  = par * p.α * p.Φ
     PCm = p.PCmax * Sz^p.PC_b * tempFunc(temp, p)
-    PS  = PCm * (1.0 - exp(-αI / max(1.0e-10, PCm) * chl / max(1.0e-10, Bm))) * Bm
+    PS  = PCm * (1.0 - exp(-αI / max(1.0e-10, PCm) * Chl / max(1.0e-10, Bm))) * Bm
     return PS
 end
 
@@ -40,7 +40,7 @@ end
 
 @kernel function calc_inorganic_uptake_kernel!(plank, proc, nuts, p)
     i = @index(Global)
-    @inbounds proc.PS[i] = calc_PS(nuts.par[i], nuts.T[i], plank.chl[i], plank.Bm[i], plank.Sz[i], p) * plank.ac[i]
+    @inbounds proc.PS[i] = calc_PS(nuts.par[i], nuts.T[i], plank.Chl[i], plank.Bm[i], plank.Sz[i], p) * plank.ac[i]
 
     @inbounds proc.VNH4[i] = calc_NH4_uptake(nuts.NH4[i], nuts.T[i], plank.Cq[i], plank.Nq[i], plank.Bm[i],
                                              plank.Sz[i], p) * plank.ac[i]
@@ -87,15 +87,15 @@ function calc_organic_uptake!(plank, proc, nuts, p, arch::Architecture)
     return nothing
 end
 
-##### calculate ρchl
-@kernel function calc_ρchl_kernel!(plank, proc, par, p)
+##### calculate ρChl
+@kernel function calc_ρChl_kernel!(plank, proc, par, p)
     i = @index(Global)
-    @inbounds proc.ρchl[i] = proc.PS[i]/max(1.0e-10, plank.Bm[i]) * p.Chl2N / 
-                             max(1.0e-10, par[i] * p.α * p.Φ * plank.chl[i]/plank.Bm[i]) *
+    @inbounds proc.ρChl[i] = proc.PS[i]/max(1.0e-10, plank.Bm[i]) * p.Chl2N / 
+                             max(1.0e-10, par[i] * p.α * p.Φ * plank.Chl[i]/plank.Bm[i]) *
                              isless(1.0e-1, par[i]) * plank.ac[i]
 end
-function calc_ρchl!(plank, proc, par, p, arch)
-    kernel! = calc_ρchl_kernel!(device(arch), 256, (size(plank.ac,1)))
+function calc_ρChl!(plank, proc, par, p, arch)
+    kernel! = calc_ρChl_kernel!(device(arch), 256, (size(plank.ac,1)))
     event = kernel!(plank, proc, par, p)
     wait(device(arch), event)
     return nothing
@@ -152,7 +152,7 @@ end
     @inbounds plank.Cq[i]  -= ΔT *(proc.BS[i] + proc.exu[i])
     @inbounds plank.Nq[i]  -= ΔT * proc.BS[i] * p.R_NC
     @inbounds plank.Pq[i]  -= ΔT * proc.BS[i] * p.R_PC
-    @inbounds plank.chl[i] += ΔT * proc.BS[i] * p.R_NC * proc.ρchl[i]
+    @inbounds plank.Chl[i] += ΔT * proc.BS[i] * p.R_NC * proc.ρChl[i]
     @inbounds plank.age[i] += ΔT / 3600.0 * plank.ac[i]
 end
 function update_biomass!(plank, proc, p, ΔT, arch)

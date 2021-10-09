@@ -6,7 +6,7 @@ function plankton_growth!(plank, nuts, proc, p, ΔT, t, arch::Architecture)
 
     calc_organic_uptake!(plank, proc, nuts, p, arch)
 
-    calc_ρchl!(plank, proc, nuts.par, p, arch)
+    calc_ρChl!(plank, proc, nuts.par, p, arch)
 
     calc_respir!(plank, proc, nuts.T, p, arch)
 

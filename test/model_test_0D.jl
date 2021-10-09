@@ -9,7 +9,7 @@ model = PlanktonModel(CPU(), grid;
                       N_species = 5,
                       N_individual = 1024,
                       max_individuals = 1024*10,
-                      phyt_params = update_phyt_params(phyt_params))
+                      phyt_params = update_phyt_params(phyt_params, QuotaMode()))
 
 TP = sum((interior(model.nutrients.PO4.data, grid) .+ 
           interior(model.nutrients.DOP.data, grid) .+ 

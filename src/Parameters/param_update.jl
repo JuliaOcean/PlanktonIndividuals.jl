@@ -28,8 +28,8 @@ Keyword Arguments
 =================
 - `tmp` is a `Dict` containing the parameters needed to be upadated
 """
-function update_phyt_params(tmp::Dict)
-    parameters = phyt_params_default()
+function update_phyt_params(tmp::Dict, mode::AbstractMode)
+    parameters = phyt_params_default(mode)
     tmp_keys = collect(keys(tmp))
     pkeys = collect(keys(parameters))
     for key in tmp_keys

@@ -8,7 +8,7 @@ mutable struct timestepper
     temp::AbstractArray # a (Cu)Array to store temperature field of each timestep
     plk::NamedTuple     # a NamedTuple same as nutrients to store interactions with individuals
     par::AbstractArray  # a (Cu)Array to store PAR field of each timestep
-    chl::AbstractArray  # a (Cu)Array to store Chl field of each timestep
+    Chl::AbstractArray  # a (Cu)Array to store Chl field of each timestep
     pop::AbstractArray  # a (Cu)Array to store population field of each timestep
     rnd::AbstractArray  # a StructArray of random numbers for plankton diffusion or grazing, mortality and division.
     velos::AbstractArray# a StructArray of intermediate values for RK4 particle advection
@@ -25,7 +25,7 @@ function timestepper(arch::Architecture, g::AbstractGrid, maxN)
     plk = nutrients_init(arch, g)
 
     par = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
-    chl = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
+    Chl = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     pop = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
 
     temp = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
@@ -44,7 +44,7 @@ function timestepper(arch::Architecture, g::AbstractGrid, maxN)
                        par = zeros(maxN), T   = zeros(maxN), pop = zeros(maxN))
     nuts_d = replace_storage(array_type(arch), nuts)
 
-    ts = timestepper(Gcs, nut_temp, vel₀, vel½, vel₁, PARF, temp, plk, par, chl, pop, rnd_d, velos_d, nuts_d)
+    ts = timestepper(Gcs, nut_temp, vel₀, vel½, vel₁, PARF, temp, plk, par, Chl, pop, rnd_d, velos_d, nuts_d)
 
     return ts
 end
