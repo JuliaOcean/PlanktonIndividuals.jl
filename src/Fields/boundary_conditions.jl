@@ -3,20 +3,30 @@
 #####
 
 # struct to combine the left and right boundary conditions in one direction
-mutable struct LFBoundaryConditions
-    left::Union{Nothing, Number, AbstractArray}
-    right::Union{Nothing, Number, AbstractArray}
+mutable struct BoundaryConditions
+    west::Union{Nothing, Number, AbstractArray}
+    east::Union{Nothing, Number, AbstractArray}
+    north::Union{Nothing, Number, AbstractArray}
+    south::Union{Nothing, Number, AbstractArray}
+    top::Union{Nothing, Number, AbstractArray}
+    bottom::Union{Nothing, Number, AbstractArray}
 end
 
 # generate the default boundary conditions for one field
 function default_bcs()
-    x = LFBoundaryConditions(nothing, nothing)
-    y = LFBoundaryConditions(nothing, nothing)
-    z = LFBoundaryConditions(nothing, nothing)
-
-    bcs = (x = x, y = y, z = z)
-
+    bcs = BoundaryConditions(nothing, nothing, nothing, nothing, nothing, nothing)
     return bcs
+end
+
+# set boundary condition with external value or array
+function set_bc!(model, tracer::Symbol, pos::Symbol, bc_value::Union{Number, AbstractArray})
+    @assert tracer in nut_names
+
+    bc_value_d = bc_value
+    if isa(bc_value, AbstractArray)
+        bc_value_d = vc_value |> array_type(model.arch)
+    end
+    setproperty!(model.nutrients[tracer].bc, pos, bc_value_d)
 end
 
 # get boundary condition at each grid point
@@ -44,12 +54,12 @@ end
 
 function validate_bcs(nut, grid, nΔT)
     for name in nut_names
-        bc_west    = nut[name].bc.x.left
-        bc_east    = nut[name].bc.x.right
-        bc_south   = nut[name].bc.y.left
-        bc_north   = nut[name].bc.y.right
-        bc_bottom  = nut[name].bc.z.left
-        bc_top     = nut[name].bc.z.right
+        bc_west    = nut[name].bc.west
+        bc_east    = nut[name].bc.east
+        bc_south   = nut[name].bc.south
+        bc_north   = nut[name].bc.north
+        bc_bottom  = nut[name].bc.bottom
+        bc_top     = nut[name].bc.top
 
         bc_size_x = (grid.Ny+2*grid.Hy, grid.Nz+2*grid.Hz)
         bc_size_y = (grid.Nx+2*grid.Hx, grid.Nz+2*grid.Hz)

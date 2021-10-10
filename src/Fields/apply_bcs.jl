@@ -15,7 +15,7 @@ end
 end
 
 @inline function apply_bottom_bc!(Gc, bottom_flux, i, j, iter, grid, ΔT)
-    @inbounds Gc[i, j, 1+grid.Hz] += getbc(bottom_flux, i, j, iter) * ΔT * Az(i, j, 1+grid.Hz, grid) / volume(i, j, 1+grid.Hz, grid)
+    @inbounds Gc[i, j, grid.Nz+grid.Hz] += getbc(bottom_flux, i, j, iter) * ΔT * Az(i, j, grid.Nz+grid.Hz, grid) / volume(i, j, grid.Nz+grid.Hz, grid)
     return nothing
 end
 
@@ -32,7 +32,7 @@ end
 end
 
 @inline function apply_top_bc!(Gc, top_flux, i, j, iter, grid, ΔT)
-    @inbounds Gc[i, j, grid.Nz+grid.Hz] += getbc(top_flux, i, j, iter) * ΔT * Az(i, j, grid.Nz+grid.Hz, grid) / volume(i, j, grid.Nz+grid.Hz, grid)
+    @inbounds Gc[i, j, 1+grid.Hz] += getbc(top_flux, i, j, iter) * ΔT * Az(i, j, 1+grid.Hz, grid) / volume(i, j, 1+grid.Hz, grid)
     return nothing
 end
 
@@ -87,9 +87,9 @@ function apply_bcs!(Gcs, nuts, grid, iter, ΔT, arch)
     barrier = Event(device(arch))
     events = []
     for name in nut_names
-        x_event = apply_x_bcs!(Gcs[name].data, grid, nuts[name].bc.x.left, nuts[name].bc.x.right, iter, ΔT, arch, barrier)
-        y_event = apply_y_bcs!(Gcs[name].data, grid, nuts[name].bc.y.left, nuts[name].bc.y.right, iter, ΔT, arch, barrier)
-        z_event = apply_z_bcs!(Gcs[name].data, grid, nuts[name].bc.z.left, nuts[name].bc.z.right, iter, ΔT, arch, barrier)
+        x_event = apply_x_bcs!(Gcs[name].data, grid, nuts[name].bc.west,   nuts[name].bc.east,  iter, ΔT, arch, barrier)
+        y_event = apply_y_bcs!(Gcs[name].data, grid, nuts[name].bc.south,  nuts[name].bc.north, iter, ΔT, arch, barrier)
+        z_event = apply_z_bcs!(Gcs[name].data, grid, nuts[name].bc.bottom, nuts[name].bc.top,   iter, ΔT, arch, barrier)
         push!(events, x_event, y_event, z_event)
     end
 

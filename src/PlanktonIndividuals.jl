@@ -5,17 +5,23 @@ if VERSION < v"1.6"
 end
 
 export
-    # Model
-    PlanktonModel, PlanktonSimulation, update!, vel_copy!,
-    CarbonMode, QuotaMode, MacroMolecularMode,
+    # Architectures
+    Architecture, GPU, CPU,
 
     # Grids
     RegularRectilinearGrid, RegularLatLonGrid,
     VerticallyStretchedLatLonGrid, LoadVerticallyStretchedLatLonGrid,
     Periodic, Bounded,
 
-    # Architectures
-    Architecture, GPU, CPU,
+    # Model
+    PlanktonModel, 
+    CarbonMode, QuotaMode, MacroMolecularMode,
+
+    # BoundaryConditions
+    set_bc!,
+
+    # Simulation
+    PlanktonSimulation, update!, vel_copy!,
 
     # Parameters
     default_PARF, default_temperature,

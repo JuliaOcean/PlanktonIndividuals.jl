@@ -4,8 +4,9 @@ export Field
 export interior, zero_fields!
 export fill_halo_nut!, fill_halo_Gcs!, fill_halo_vel!
 export fill_halo_u!, fill_halo_v!, fill_halo_w!
-export apply_bcs!
-export default_bcs, getbc, validate_bcs, LFBoundaryConditions
+export apply_bcs!, getbc
+export default_bcs
+export set_bc!, validate_bcs
 export nut_names
 
 using KernelAbstractions
@@ -14,10 +15,13 @@ using CUDA
 using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Architectures: device, Architecture, array_type
 
+include("halo_regions.jl")
+include("boundary_conditions.jl")
+include("apply_bcs.jl")
 
 struct Field
     data::AbstractArray{Float64,3}
-    bc::NamedTuple
+    bc::BoundaryConditions
 end
 
 function Field(arch::Architecture, g::AbstractGrid; bcs = default_bcs())
@@ -35,9 +39,5 @@ function zero_fields!(a)
 end
 
 const nut_names=(:DIC,:NH4,:NO3,:PO4,:DOC,:DON,:DOP,:POC,:PON,:POP)
-
-include("halo_regions.jl")
-include("boundary_conditions.jl")
-include("apply_bcs.jl")
 
 end
