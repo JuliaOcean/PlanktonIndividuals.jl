@@ -1,78 +1,78 @@
 module PlanktonIndividuals
 
-using NCDatasets, Serialization
-using Random, Statistics
-using Printf, JLD2
-using CUDA, KernelAbstractions, CUDAKernels, Adapt
-using LinearAlgebra
-using StructArrays
+if VERSION < v"1.6"
+    error("This version of PlanktonIndividuals.jl requires Julia v1.6 or newer.")
+end
+
+export
+    # Architectures
+    Architecture, GPU, CPU,
+
+    # Grids
+    RegularRectilinearGrid, RegularLatLonGrid,
+    VerticallyStretchedLatLonGrid, LoadVerticallyStretchedLatLonGrid,
+    Periodic, Bounded,
+
+    # Model
+    PlanktonModel, 
+    CarbonMode, QuotaMode, MacroMolecularMode,
+
+    # BoundaryConditions
+    set_bc!,
+
+    # Simulation
+    PlanktonSimulation, update!, vel_copy!,
+
+    # Parameters
+    default_PARF, default_temperature,
+    update_bgc_params, update_phyt_params, 
+    bgc_params_default, phyt_params_default,
+
+    # Biogeochemistry
+    generate_nutrients, default_nut_init,
+
+    # Output
+    PlanktonDiagnostics, PrepRunDir, interior
+
+
+using CUDA
 using Pkg.Artifacts
+
+import Base: show
 
 p=dirname(pathof(PlanktonIndividuals))
 artifact_toml = joinpath(p, "../Artifacts.toml")
 surface_mixing_vels_hash = artifact_hash("surface_mixing_vels", artifact_toml)
 surface_mixing_vels = joinpath(artifact_path(surface_mixing_vels_hash)*"/velocities.jld2")
 
-include("architecture.jl")
-include("grids/regular_rectilinear_grid.jl")
-include("grids/regular_lat_lon_grid.jl")
-include("grids/vertically_stretched_lat_lon_grid.jl")
-include("grids/areas_volumes_spacings.jl")
-include("grids/utils.jl")
-include("params/param_default.jl")
-include("params/param_update.jl")
-include("fields/boundary_conditions.jl")
-include("fields/apply_bcs.jl")
-include("fields/fields.jl")
-include("fields/halo_regions.jl")
-include("diffusivity/tracer_diffusion.jl")
-include("diffusivity/plankton_diffusion.jl")
-include("advection/DST3FL.jl")
-include("advection/multi_dim_adv.jl")
-include("advection/interpolation.jl")
-include("plankton/plankton_advection_kernels.jl")
-include("biogeochemistry/nutrient_forcings.jl")
-include("biogeochemistry/nutrient_fields.jl")
-include("biogeochemistry/nutrient_update.jl")
-include("plankton/plankton_generation.jl")
-include("plankton/plankton_advection.jl")
-include("plankton/physiology/counts.jl")
-include("plankton/physiology/uptake_processes.jl")
-include("plankton/physiology/division_loss_kernels.jl")
-include("plankton/physiology/division_loss.jl")
-include("plankton/physiology/plankton_growth.jl")
-include("plankton/plankton_physiology.jl")
-include("utils.jl")
-include("output/output_writers.jl")
-include("output/diagnostics.jl")
-include("output/diagnostics_plankton.jl")
-include("model/timestepper.jl")
-include("model/models.jl")
-include("model/time_step.jl")
-include("model/simulations.jl")
+abstract type AbstractMode end
+struct CarbonMode <: AbstractMode end
+struct QuotaMode <: AbstractMode end
+struct MacroMolecularMode <: AbstractMode end
+
+include("Architectures.jl")
+include("Grids/Grids.jl")
+include("Parameters/Parameters.jl")
+include("Fields/Fields.jl")
+include("Biogeochemistry/Biogeochemistry.jl")
+include("Output/Output.jl")
+include("Plankton/Plankton.jl")
+include("Model/Model.jl")
 
 
-export
-    # model structures
-    PlanktonModel, RegularRectilinearGrid, RegularLatLonGrid,
-    VerticallyStretchedLatLonGrid, LoadVerticallyStretchedLatLonGrid,
-    Architecture, GPU, CPU, Periodic, Bounded,
+using .Architectures
+using .Grids
+using .Parameters
+using .Fields
+using .Biogeochemistry
+using .Output
+using .Plankton
+using .Model
 
-    # read input functions
-    default_PARF, default_temperature,
-    update_bgc_params, update_phyt_params, 
-    bgc_params_default, phyt_params_default,
-    generate_nutrients,
-    default_nut_init, PrepRunDir,
+function __init__()
+    if CUDA.has_cuda()
+        CUDA.allowscalar(false)
+    end
+end
 
-    # diagnostics
-    PlanktonDiagnostics,
-
-    # Run the model
-    PlanktonSimulation, update!, vel_copy!, TimeStep!,
-
-    # write output functions
-    write_nut_nc_each_step,
-    write_individuals_to_jld2, write_diags_to_jld2,
-    interior
 end # module
