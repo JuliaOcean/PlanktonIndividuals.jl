@@ -82,7 +82,7 @@ end
 # end
 
 ##### write a brief summary of each species at each time step into a txt file
-function write_species_dynamics(t::Int64, phytos, filepath)
+function write_species_dynamics(t::Int64, phytos, filepath, mode::QuotaMode)
     for i in 1:length(phytos)
         pop = dot(phytos[i].data.ac, phytos[i].data.ac)
         gen_ave =  dot(phytos[i].data.gen, phytos[i].data.ac) / pop
@@ -98,6 +98,21 @@ function write_species_dynamics(t::Int64, phytos, filepath)
         io = open(filepath*"dynamic_species"*lpad(i,3,"0")*".txt","a");
         println(io,@sprintf("%3.0f  %2.2f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E",
                             day,hour,pop,gen_ave,age_ave,size_ave,Bm_ave,Cq_ave,Nq_ave,Pq_ave,Chl_ave))
+        close(io);
+    end
+end
+function write_species_dynamics(t::Int64, phytos, filepath, mode::CarbonMode)
+    for i in 1:length(phytos)
+        pop = dot(phytos[i].data.ac, phytos[i].data.ac)
+        gen_ave =  dot(phytos[i].data.gen, phytos[i].data.ac) / pop
+        age_ave =  dot(phytos[i].data.age, phytos[i].data.ac) / pop
+        size_ave=  dot(phytos[i].data.Sz,  phytos[i].data.ac) / pop
+        Bm_ave  =  dot(phytos[i].data.Bm,  phytos[i].data.ac) / pop
+        day = t÷86400
+        hour = t%86400/3600
+        io = open(filepath*"dynamic_species"*lpad(i,3,"0")*".txt","a");
+        println(io,@sprintf("%3.0f  %2.2f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E",
+                            day,hour,pop,gen_ave,age_ave,size_ave,Bm_ave))
         close(io);
     end
 end

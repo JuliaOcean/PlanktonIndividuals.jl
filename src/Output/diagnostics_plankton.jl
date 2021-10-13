@@ -35,9 +35,9 @@ function diags_spcs!(diags_sp, proc, plank, ac, x, y, z, mode::AbstractMode, arc
         if diag in (:num, :graz, :mort, :dvid)
             nothing
         elseif diag in proc_diags
-            diags_proc!(diags_sp[diag], proc[diag], ac, x, y, z, arch)
+            diags_proc!(diags_sp[diag], getproperty(proc, diag), ac, x, y, z, arch)
         elseif diag in plank_diags
-            diags_proc!(diags_sp[diag], plank[diag], ac, x, y, z, arch)
+            diags_proc!(diags_sp[diag], getproperty(plank, diag), ac, x, y, z, arch)
         end
     end
 end

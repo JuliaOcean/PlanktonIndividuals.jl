@@ -12,6 +12,7 @@ using LinearAlgebra, Statistics, JLD2, NCDatasets, Serialization, Printf
 
 using PlanktonIndividuals.Architectures
 using PlanktonIndividuals.Grids
+using PlanktonIndividuals.Fields
 
 using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode
 

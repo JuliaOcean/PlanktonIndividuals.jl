@@ -59,7 +59,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics, result
                              model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,
                              model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch, model.mode)
     end
-    write_species_dynamics(model.t, model.individuals.phytos, resultspath)
+    write_species_dynamics(model.t, model.individuals.phytos, resultspath, model.mode)
 
     ##### diagnostics for nutrients
     @inbounds diags.tracer.PAR .+= model.timestepper.par
