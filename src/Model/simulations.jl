@@ -52,8 +52,8 @@ Keyword Arguments (Optional)
 - `save_individuals` : save individuals every `Int64` time steps, do not save individuals if `Nothing`.
 """
 function PlanktonSimulation(model::PlanktonModel; ΔT::Int64, iterations::Int64,
-                            PARF = default_PARF(model.grid),
-                            temp = default_temperature(model.grid),
+                            PARF = default_PARF(model.grid, ΔT, iterations),
+                            temp = default_temperature(model.grid, ΔT, iterations),
                             diags = nothing,
                             vels = (;),
                             ΔT_vel::Int64 = ΔT,
