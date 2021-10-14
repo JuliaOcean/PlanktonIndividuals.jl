@@ -1,6 +1,7 @@
 module Model
 
 export PlanktonModel
+export TimeStep!
 
 using CUDA
 using StructArrays
