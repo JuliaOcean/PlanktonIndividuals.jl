@@ -1,13 +1,13 @@
 mutable struct PlanktonDiagnostics
     plankton::NamedTuple       # for each species
     tracer::NamedTuple         # for tracers
-    frequency::Int64           # frequency of diagnostics (in number of time steps)
+    time_interval::Int64       # time interval that the diagnostics is time averaged
 end
 
 """
     PlanktonDiagnostics(model; tracer=(:PAR, :NH4, :NO3, :DOC),
                         plankton=(:num, :graz, :mort, :dvid),
-                        frequency = 1)
+                        time_interval = 3600)
 
 Generate a `PlanktonDiagnostics` structure.
 
@@ -15,11 +15,11 @@ Keyword Arguments (Optional)
 ============================
 - `tracer` : a `Tuple` containing the names of nutrient fields to be diagnosed.
 - `plankton` : a `Tuple` containing the names of physiological processes of plankton individuals to be diagnosed.
-- `frequency` : frequency of diagnostics (in numbers of time steps), diagnose every time step by default.
+- `time_interval` : The time interval that diagnostics is averaged, an hour (3600 seconds) by default.
 """
 function PlanktonDiagnostics(model; tracer=(:PAR,),
                             plankton=(:num, :graz, :mort, :dvid),
-                            frequency::Int64 = 1)
+                            time_interval::Int64 = 3600)
     
     @assert isa(tracer, Tuple)
     @assert isa(plankton, Tuple)
@@ -67,15 +67,15 @@ function PlanktonDiagnostics(model; tracer=(:PAR,),
     end
     diag_sp = NamedTuple{plank_name}(procs)
 
-    diagnostics = PlanktonDiagnostics(diag_sp, diag_tr, frequency)
+    diagnostics = PlanktonDiagnostics(diag_sp, diag_tr, time_interval)
 
     return diagnostics
 end
 
 function show(io::IO, diags::PlanktonDiagnostics)
-    print(io, "diagnostics of tracers: $(keys(diags.tracer))\n",
-              "diagnostics of individuals: $(keys(diags.plankton.sp1))\n",
-              "save averaged diagnostics every $(diags.frequency) time steps\n")
+    print(io, "├── diagnostics of tracers: $(keys(diags.tracer))\n",
+              "├── diagnostics of individuals: $(keys(diags.plankton.sp1))\n",
+              "└── save averaged diagnostics every $(diags.time_interval) seconds")
 end
 
 function diag_avail(tracer, plank, mode::AbstractMode)

@@ -32,8 +32,12 @@ export
     generate_nutrients, default_nut_init,
 
     # Output
-    PlanktonDiagnostics, PrepRunDir, interior
+    PlanktonDiagnostics, PlanktonOutputWriter, interior,
 
+    # Units
+    second, minute, hour, meter, kilometer,
+    seconds, minutes, hours, meters, kilometers,
+    KiB, MiB, GiB, TiB
 
 using CUDA
 using Pkg.Artifacts
@@ -51,13 +55,16 @@ struct QuotaMode <: AbstractMode end
 struct MacroMolecularMode <: AbstractMode end
 
 include("Architectures.jl")
+include("Units.jl")
 include("Grids/Grids.jl")
 include("Parameters/Parameters.jl")
 include("Fields/Fields.jl")
 include("Biogeochemistry/Biogeochemistry.jl")
-include("Output/Output.jl")
+include("Diagnostics/Diagnostics.jl")
 include("Plankton/Plankton.jl")
 include("Model/Model.jl")
+include("Output/Output.jl")
+include("Simulation/Simulation.jl")
 
 
 using .Architectures
@@ -65,9 +72,12 @@ using .Grids
 using .Parameters
 using .Fields
 using .Biogeochemistry
-using .Output
+using .Diagnostics
 using .Plankton
 using .Model
+using .Output
+using .Simulation
+using .Units
 
 function __init__()
     if CUDA.has_cuda()
