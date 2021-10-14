@@ -9,7 +9,7 @@ Keyword Arguments
 - `diags`: `PlanktonDiagnostics` to be updated.
 - `resultpath` (optional): The file path to store model output. 
 """
-function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics, resultspath::String)
+function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     model.t = model.t+ΔT
     model.iteration = model.iteration+1
 
@@ -59,7 +59,6 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics, result
                              model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,
                              model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch, model.mode)
     end
-    write_species_dynamics(model.t, model.individuals.phytos, resultspath, model.mode)
 
     ##### diagnostics for nutrients
     @inbounds diags.tracer.PAR .+= model.timestepper.par
@@ -81,7 +80,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics, result
     return nothing
 end
 
-function TimeStep!(model::PlanktonModel, ΔT, ::Nothing, ::Nothing)
+function TimeStep!(model::PlanktonModel, ΔT, ::Nothing)
     model.t = model.t+ΔT
     model.iteration = model.iteration+1
 

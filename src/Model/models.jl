@@ -86,8 +86,8 @@ function show(io::IO, model::PlanktonModel)
     Nsp = length(model.individuals.phytos)
     N = Int(dot(model.individuals.phytos.sp1.data.ac,model.individuals.phytos.sp1.data.ac))
     cap = length(model.individuals.phytos.sp1.data.ac)
-    print(io, "grid: Nx = $(model.grid.Nx), Ny = $(model.grid.Ny), Nz = $(model.grid.Nz)\n",
-              "$(model.mode) is selected for phytoplankton physiology\n",
-              "individuals: $(Nsp) phytoplankton species each with $(N) individuals\n",
-              "maximum number of individuals: $(cap) per species")
+    print(io, "├── grid: $(short_show(model.grid))\n",
+              "├── $(model.mode) is selected for phytoplankton physiology\n",
+              "├── individuals: $(Nsp) phytoplankton species each with $(N) individuals\n",
+              "└── maximum number of individuals: $(cap) per species")
 end
