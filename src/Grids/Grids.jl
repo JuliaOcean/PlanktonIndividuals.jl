@@ -4,7 +4,7 @@ export AbstractGrid
 export RegularRectilinearGrid
 export RegularLatLonGrid
 export VerticallyStretchedLatLonGrid, LoadVerticallyStretchedLatLonGrid
-export Periodic, Bounded
+export Periodic, Bounded, short_show
 export replace_grid_storage
 export ΔxC, ΔyC, ΔzC, ΔxF, ΔyF, ΔzF, Ax, Ay, Az, volume 
 

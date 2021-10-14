@@ -74,6 +74,11 @@ function show(io::IO, g::RegularRectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ}
               "grid spacing (Δx, Δy, Δz): ", (g.Δx, g.Δy, g.Δz))
 end
 
+function short_show(grid::RegularRectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ}
+    return "RegularRectilinearGrid{$TX, $TY, $TZ}(Nx=$(grid.Nx), Ny=$(grid.Ny), Nz=$(grid.Nz))"
+end
+
+
 function validate_topology(topology)
     for T in topology
         if !isa(T(), AbstractTopology)

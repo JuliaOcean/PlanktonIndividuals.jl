@@ -162,3 +162,7 @@ function show(io::IO, g::VerticallyStretchedLatLonGrid{TX, TY, TZ}) where {TX, T
               "halo size (Hx, Hy, Hz):    ", (g.Hx, g.Hy, g.Hz), '\n',
               "grid spacing (Δx, Δy, Δz): ", g.Δx, ", ", g.Δy, ", [min=", dzF_min, ", max=", dzF_max,"])",)
 end
+
+function short_show(grid::VerticallyStretchedLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ}
+    return "VerticallyStretchedLatLonGrid{$TX, $TY, $TZ}(Nx=$(grid.Nx), Ny=$(grid.Ny), Nz=$(grid.Nz))"
+end

@@ -134,3 +134,7 @@ function show(io::IO, g::RegularLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ}
               "halo size (Hx, Hy, Hz):    ", (g.Hx, g.Hy, g.Hz), '\n',
               "grid spacing (Δx, Δy, Δz): ", (g.Δx, g.Δy, g.Δz))
 end
+
+function short_show(grid::RegularLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ}
+    return "RegularLatLonGrid{$TX, $TY, $TZ}(Nx=$(grid.Nx), Ny=$(grid.Ny), Nz=$(grid.Nz))"
+end
