@@ -1,5 +1,5 @@
 ##### write model outputs
-function write_output!(writer::PlanktonOutputWriter, model::PlanktonModel, diags::PlanktonDiagnostics, ΔT)
+function write_output!(writer::Union{PlanktonOutputWriter, Nothing}, model::PlanktonModel, diags::PlanktonDiagnostics, ΔT)
     if isa(writer, Nothing)
         return nothing
     else
