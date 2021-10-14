@@ -14,7 +14,7 @@ using KernelAbstractions.Extras.LoopInfo: @unroll
 
 using PlanktonIndividuals.Architectures: device, Architecture, GPU, CPU, rng_type
 using PlanktonIndividuals.Grids
-using PlanktonIndividuals.Output
+using PlanktonIndividuals.Diagnostics
 
 using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode
 
