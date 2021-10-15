@@ -1,6 +1,6 @@
 # Model Configuration
 
-The model configuration is specified within the `PlanktonModel` data structure. As documented below, the various parameters of a `PlanktonModel` can all be specified via keyword arguments. Options and features are documented in more detail afterwards and in the [Examples](@ref examples-list) section.
+The model configuration is specified within the `PlanktonModel` data structure. As documented below, the various parameters of a `PlanktonModel` can all be specified via keyword arguments. Options and features are documented in more detail afterwards and in the [Examples](@ref examples) section.
 
 ```@docs
 PlanktonModel
