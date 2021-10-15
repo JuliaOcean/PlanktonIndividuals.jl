@@ -1,56 +1,100 @@
-# # Vertical 2-Dimensional Example
-#
-# Here we simulate phytoplankton cells as Lagrangian particles in a 2D flow field, with 
-# one horizontal direction (x) and one vertical one (z), like in an ocean transect.
-#
-# Here the domain is periodic in the x direction while it is bounded in the z direction.
+### A Pluto.jl notebook ###
+# v0.16.1
 
-#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 1. Import packages
-#
-ENV["GKSwstype"]="nul"
+using Markdown
+using InteractiveUtils
+
+# ╔═╡ 96ebd146-8f33-4e91-a367-97f7ae34a2dc
+begin
+    import Pkg
+    # careful: this is _not_ a reproducible environment
+    # activate the global environment
+    Pkg.activate()
+end
+
+# ╔═╡ 54683b9a-bf00-4956-8894-e263eded3db8
 using PlanktonIndividuals, Plots
 
-p=dirname(pathof(PlanktonIndividuals))
-include(joinpath(p,"../examples/helper_functions.jl"))
+# ╔═╡ e74d8d84-546b-4ccd-9724-78ed29f587c3
+begin
+	p=dirname(pathof(PlanktonIndividuals))
+	include(joinpath(p,"../examples/helper_functions.jl"))
+	nothing
+end
 
-#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 2. Generate Flow Fields
-#
-# First we generate grid information (128 by 128 grid boxes, 1m thick, and 1m wide) and the computational architecture (CPU).
+# ╔═╡ a1e895f9-fd5a-4908-a760-344b7f8fb304
+md"""
+# Vertical 2-Dimensional Example
+Here we simulate phytoplankton cells as Lagrangian particles in a 2D flow field, with one horizontal direction (x) and one vertical one (z), like in an ocean transect.
 
+Here the domain is periodic in the x direction while it is bounded in the z direction.
+"""
+
+# ╔═╡ a6072dc8-2d64-11ec-0a4e-dd442a0f0e63
+md"""
+## 1. Import packages
+"""
+
+# ╔═╡ 88c6027d-bc47-4bc4-9628-c946ac2fd57f
+md"""
+## 2. Generate Flow Fields
+First we generate grid information (128 by 128 grid boxes, 1m thick, and 1m wide) and the computational architecture (CPU).
+"""
+
+# ╔═╡ 10d290fd-5aa7-4b7f-be91-3cc51e4250be
 arch = CPU()
 
+# ╔═╡ 3093a948-630d-402c-aeb4-73a552e0cb31
 grid = RegularRectilinearGrid(size=(128, 1, 128), spacing=(1, 1, 1))
 
-# Then we use a stream function (see helper_functions.jl) to generate a simple flow field (displayed below)
-# in a 2D vertical plane.
+# ╔═╡ 02a7cda3-4a3a-49ea-a646-e1da7a1e1f14
+md"""
+Then we use a stream function (see helper_functions.jl) to generate a simple flow field (displayed below) in a 2D vertical plane.
+"""
 
+# ╔═╡ ed5b3467-8bac-4800-824f-2bf26b3954c0
 (uvels, vvels, wvels, ϕcenters) = streamfunction_xz();
 
-#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 3. Model Setup
-#
-# Next we setup the individual-based model by specifying the architecture, grid, and plankton community.
+# ╔═╡ 5abbed9f-a256-4312-a9de-7277379bb33a
+md"""
+## 3. Model Setup
 
-model = PlanktonModel(arch, grid; N_species = 1, N_individual = 2^7, max_individuals = 2^7*8)
+Next we setup the individual-based model by specifying the architecture, grid, and plankton community.
+"""
 
-# Finally we setup the duration of the model simulation and the kind of output we want.
+# ╔═╡ 7735454f-bc9f-4dad-8c40-2e5bba096307
+model = PlanktonModel(arch, grid; N_species = 1, 
+								  N_individual = 2^7,
+								  max_individuals = 2^7*8)
 
-sim = PlanktonSimulation(model, ΔT = 60, iterations = 1, vels=(u=uvels, v=vvels, w=wvels), ΔT_vel=60*120)
+# ╔═╡ 970cba93-d4a5-4579-a436-465085ea6e6b
+md"""
+Finally we setup the duration of the model simulation and the kind of output we want.
+"""
 
-#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 4. Model Run
-#
-# We run the model for 120 time steps (2 hours) and then plot individuals and nutrients in their final state (stored in model).
+# ╔═╡ e47e4afc-699c-4d6f-957d-26aafb592031
+sim = PlanktonSimulation(model, ΔT = 60, iterations = 1,
+								vels=(u=uvels, v=vvels, w=wvels),
+								ΔT_vel=60*120)
 
+# ╔═╡ ec89f0af-1690-49f5-8d7f-23971d332d7d
+md"""
+## 4. Model Run
+
+We run the model for 120 time steps (2 hours) and then plot individuals and nutrients in their final state (stored in model).
+"""
+
+# ╔═╡ 20a9dffd-b197-44c1-b973-bedea6fd19eb
 for i in 1:120
     update!(sim)
 end
 
-# To plot the distribution of individuals as well as nutrient fields we use Plots.jl and 
-# create a function that can easily be re-used e.g. to create an animation.
+# ╔═╡ 7f06e8a4-eada-4607-b5dc-8945b8218ca7
+md"""
+To plot the distribution of individuals as well as nutrient fields we use Plots.jl and create a function that can easily be re-used e.g. to create an animation.
+"""
 
+# ╔═╡ f83b3a52-42bb-481e-b405-20f5d4e75f86
 function plot_model(model::PlanktonModel)
     ## Coordinate arrays for plotting
     xC, zC = collect(model.grid.xC)[3:130], collect(model.grid.zC)[3:130]
@@ -73,16 +117,41 @@ function plot_model(model::PlanktonModel)
     return plt
 end
 
+# ╔═╡ e873d085-a34c-4fd6-a419-5c05444fe0a6
 plot_model(model)
 
-#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# Or you can use the following code to generate an animation like below
-#
-# ```
-# anim = @animate for i in 1:120
-#    update!(sim)
-#    plot_model(model)
-# end
-# gif(anim, "anim_fps15.gif", fps = 15)
-# ```
-# ![animation](https://github.com/JuliaOcean/PlanktonIndividuals.jl/raw/master/examples/figures/anim_vertical_2D.gif)
+# ╔═╡ 9e833367-c0d5-45f0-92a3-0de9042597ff
+md"""
+Or you can use the following code to generate an animation like below
+
+```
+anim = @animate for i in 1:120
+   update!(sim)
+   plot_model(model)
+end
+gif(anim, "anim_fps15.gif", fps = 15)
+```
+![animation](https://github.com/JuliaOcean/PlanktonIndividuals.jl/raw/master/examples/figures/anim_vertical_2D.gif)
+"""
+
+# ╔═╡ Cell order:
+# ╟─a1e895f9-fd5a-4908-a760-344b7f8fb304
+# ╟─a6072dc8-2d64-11ec-0a4e-dd442a0f0e63
+# ╠═96ebd146-8f33-4e91-a367-97f7ae34a2dc
+# ╠═54683b9a-bf00-4956-8894-e263eded3db8
+# ╟─e74d8d84-546b-4ccd-9724-78ed29f587c3
+# ╟─88c6027d-bc47-4bc4-9628-c946ac2fd57f
+# ╠═10d290fd-5aa7-4b7f-be91-3cc51e4250be
+# ╠═3093a948-630d-402c-aeb4-73a552e0cb31
+# ╟─02a7cda3-4a3a-49ea-a646-e1da7a1e1f14
+# ╠═ed5b3467-8bac-4800-824f-2bf26b3954c0
+# ╟─5abbed9f-a256-4312-a9de-7277379bb33a
+# ╠═7735454f-bc9f-4dad-8c40-2e5bba096307
+# ╠═970cba93-d4a5-4579-a436-465085ea6e6b
+# ╠═e47e4afc-699c-4d6f-957d-26aafb592031
+# ╟─ec89f0af-1690-49f5-8d7f-23971d332d7d
+# ╠═20a9dffd-b197-44c1-b973-bedea6fd19eb
+# ╟─7f06e8a4-eada-4607-b5dc-8945b8218ca7
+# ╟─f83b3a52-42bb-481e-b405-20f5d4e75f86
+# ╠═e873d085-a34c-4fd6-a419-5c05444fe0a6
+# ╟─9e833367-c0d5-45f0-92a3-0de9042597ff
