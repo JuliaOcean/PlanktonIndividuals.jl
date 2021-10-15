@@ -4,7 +4,7 @@ export second, minute, hour, meter, kilometer,
        seconds, minutes, hours, meters, kilometers,
        KiB, MiB, GiB, TiB
 
-const second = 1.0
+const second = 1
 const seconds = second
 const minute = 60seconds
 const minutes = minute

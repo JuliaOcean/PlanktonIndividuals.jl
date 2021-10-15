@@ -4,7 +4,7 @@ function plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::A
     calc_consume!(plk.DIC.data, plk.DOC.data, plk.NH4.data, plk.NO3.data, plk.PO4.data,
                   proc, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, arch)
     ##### diagnostics of processes for each species
-    diags_spcs!(diags_spcs, proc, plank, plank.ac, plank.xi, plank.yi, plank.zi, arch, mode)
+    diags_spcs!(diags_spcs, proc, plank, plank.ac, plank.xi, plank.yi, plank.zi, mode, arch)
 
     ##### check the probabilities every 10 time steps or 1 hour whichever is shorter
     if t%(ΔT*(min(10,3600÷ΔT))) == 0 
