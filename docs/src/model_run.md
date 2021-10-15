@@ -48,64 +48,22 @@ plankton = (:num,  # number of individuals
             :Cq,   # Carbon pool
             :Nq,   # Nitrogen pool
             :Pq,   # Phosphorus pool
-            :chl   # Chla
+            :Chl   # Chla
            )
 ```
 
-## Output
+## Output Writer
+
+```@docs
+PlanktonOutputWriter
+```
 
 The model currently has two types of outputs which are both saved in `JLD2` files.
 
 First, the state of all `individuals`
-at each time step of a `PlanktonSimulation` gets saved in a file named `individuals.jld2`.
-An example structure of `individuals.jld2` is shown below.
-
-```julia
-julia> jldopen("results/individuals.jld2") # only the location and cell size is saved for now
-JLDFile /home/zhenwu/PI_GPU/results/individuals.jld2 (read-only)
- ├─📂 0000000060
- │  └─📂 sp1
- │     ├─🔢 x
- │     ├─🔢 y
- │     ├─🔢 z
- │     └─🔢 Sz
- └─📂 0000000120
-    └─📂 sp1
-       ├─🔢 x
-       ├─🔢 y
-       ├─🔢 z
-       └─🔢 Sz
-```
+at each time step of a `PlanktonSimulation` gets saved in a file named `plankton_prefix*".jld2"`, default: `plankton.jld2`.
 
 Second, for diagnostics, `individuals` at each time step will be aggregated into tracer fields.
-The frequency of diagnostics is specified by `frequency` in `PlanktonDiagnostics`.
+The keyword argument `time_interval` in `PlanktonDiagnostics` specifies the time window that the diagnostics are averaged.
 Only diagnostics specified by `tracer` and `plankton` in `PlanktonDiagnostics` will be saved.
-All the diagnostics of a `PlanktonSimulation` will be saved in a single file named `diags.jld2`.
-An example structure of `diags.jld2` is shown below.
-
-```julia
-julia> jldopen("results/diags.jld2")
-JLDFile /home/zhenwu/PI_GPU/results/diags.jld2 (read-only)
- ├─📂 0000000060
- │  ├─📂 nut
- │  │  ├─🔢 PAR
- │  │  ├─🔢 DOC
- │  │  ├─🔢 NH4
- │  │  └─🔢 NO3
- │  └─📂 sp1
- │     ├─🔢 num
- │     ├─🔢 graz
- │     ├─🔢 mort
- │     └─🔢 dvid
- └─📂 0000000120
-    ├─📂 nut
-    │  ├─🔢 PAR
-    │  ├─🔢 DOC
-    │  ├─🔢 NH4
-    │  └─🔢 NO3
-    └─📂 sp1
-       ├─🔢 num
-       ├─🔢 graz
-       ├─🔢 mort
-       └─🔢 dvid
-```
+All the diagnostics of a `PlanktonSimulation` will be saved in a file named `diags_prefix*".jld2"`, default: `diags.jld2`.

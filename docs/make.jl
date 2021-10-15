@@ -4,14 +4,6 @@ Pkg.precompile()
 
 examples = ["vertical_2D_example.jl", "horizontal_2D_example.jl", "surface_mixing_3D_example.jl", "0D_experiment.jl", "global_ocean_2D_example.jl"]
 
-for i in examples
-    fil_in=joinpath(@__DIR__,"..", "examples",i)
-    fil_out=joinpath(@__DIR__,"build", "examples",i[1:end-2]*"html")
-    PlutoSliderServer.export_notebook(fil_in)
-    mv(fil_in[1:end-2]*"html",fil_out)
-    cp(fil_in,fil_out[1:end-4]*"jl")
-end
-
 model_description = [
     # "Table Of Content" => "model_description.md",
     "Phytoplankton Physiology" => "phyto_equations.md",
@@ -36,5 +28,13 @@ makedocs(;
          authors="ZhenWu <zhenwu@mit.edu>",
          assets=String[],
 )
+
+for i in examples
+    fil_in=joinpath(@__DIR__,"..", "examples",i)
+    fil_out=joinpath(@__DIR__,"build", "examples",i[1:end-2]*"html")
+    PlutoSliderServer.export_notebook(fil_in)
+    mv(fil_in[1:end-2]*"html",fil_out)
+    cp(fil_in,fil_out[1:end-4]*"jl")
+end
 
 deploydocs(repo="github.com/JuliaOcean/PlanktonIndividuals.jl.git")
