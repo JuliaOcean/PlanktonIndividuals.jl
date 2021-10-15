@@ -54,10 +54,10 @@ construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN, mode::Carb
     Carbon.construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
 
 generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::QuotaMode; mask = nothing) =
-    Quota.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture; mask = nothing)
+    Quota.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture; mask = mask)
 
 generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::CarbonMode; mask = nothing) =
-    Carbon.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture; mask = nothing)
+    Carbon.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture; mask = mask)
 
 plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode) =
     Quota.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode)
