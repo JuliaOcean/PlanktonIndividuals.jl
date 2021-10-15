@@ -8,6 +8,7 @@ using InteractiveUtils
 begin
 	using PlanktonIndividuals, Plots, JLD2
 	using Plots.PlotMeasures
+	using PlutoUI
 end
 
 # ╔═╡ b795ac78-2d4f-11ec-2cbd-d38135481545
@@ -138,17 +139,22 @@ end
 # ╔═╡ f3ac2cf9-5b6c-453f-ac2f-f082277e0cbb
 plot(p1, p2, p3, p4, layout = (4,1), size=(600,600), titlefont = (12))
 
+# ╔═╡ 882365f6-b010-46e7-b1f3-96caadc87e5f
+TableOfContents()
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 PlanktonIndividuals = "dfeb4ede-c75e-11e9-050d-41ab7a730e9e"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 JLD2 = "~0.4.15"
 PlanktonIndividuals = "~0.3.6"
 Plots = "~1.22.6"
+PlutoUI = "~0.7.16"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -429,6 +435,23 @@ deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll",
 git-tree-sha1 = "8a954fed8ac097d5be04921d595f741115c1b2ad"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "2.8.1+0"
+
+[[Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.4"
+
+[[HypertextLiteral]]
+git-tree-sha1 = "f6532909bf3d40b308a0f360b6a0e626c0e263a8"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.1"
+
+[[IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.2"
 
 [[IniFile]]
 deps = ["Test"]
@@ -727,6 +750,12 @@ deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers"
 git-tree-sha1 = "ba43b248a1f04a9667ca4a9f782321d9211aa68e"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.22.6"
+
+[[PlutoUI]]
+deps = ["Base64", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
+git-tree-sha1 = "4c8a7d080daca18545c56f1cac28710c362478f3"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.16"
 
 [[Preferences]]
 deps = ["TOML"]
@@ -1140,5 +1169,6 @@ version = "0.9.1+5"
 # ╟─49c7d833-6fe1-4619-ace3-e2f6aaefac32
 # ╠═d642e1ee-7e66-46d6-9f92-8b29279e7ad9
 # ╠═f3ac2cf9-5b6c-453f-ac2f-f082277e0cbb
+# ╟─882365f6-b010-46e7-b1f3-96caadc87e5f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
