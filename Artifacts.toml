@@ -4,4 +4,10 @@ git-tree-sha1 = "c2857fee2ec8b771e78cc2301bb46a7e36c33d43"
     [[surface_mixing_vels.download]]
     sha256 = "3c16b246278fdaf1baab8c9c10d80141d84866d96a94629526a82e7b15f08332"
     url = "https://zenodo.org/record/4667834/files/surface_mixing_vel.tar.gz"
-    
+
+[OCCA_FlowFields]
+git-tree-sha1: c731682d6346c16975e5f31a8ada521c813346f2
+
+    [[OCCA_FlowFields.download]]
+    sha256: 6c73c84b922d237e4498344aebfcf8644ffce02816fbb886c69789dac766a0e0
+    url = "https://zenodo.org/record/5571249/files/OCCA_FlowFields.tar.gz"

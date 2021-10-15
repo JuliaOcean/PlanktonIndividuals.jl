@@ -48,6 +48,8 @@ p=dirname(pathof(PlanktonIndividuals))
 artifact_toml = joinpath(p, "../Artifacts.toml")
 surface_mixing_vels_hash = artifact_hash("surface_mixing_vels", artifact_toml)
 surface_mixing_vels = joinpath(artifact_path(surface_mixing_vels_hash)*"/velocities.jld2")
+global_vels_hash = artifact_hash("OCCA_FlowFields", artifact_toml)
+global_vels = joinpath(artifact_path(global_vels_hash)*"/OCCA_FlowFields.jld2")
 
 abstract type AbstractMode end
 struct CarbonMode <: AbstractMode end
