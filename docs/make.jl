@@ -1,5 +1,5 @@
 using Documenter, Pkg, PlanktonIndividuals
-import PlutoSlideServer
+import PlutoSliderServer
 Pkg.precompile()
 
 examples = ["vertical_2D_example.jl", "horizontal_2D_example.jl", "surface_mixing_3D_example.jl", "0D_experiment.jl", "global_ocean_2D_example.jl"]
