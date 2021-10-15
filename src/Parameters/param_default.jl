@@ -73,7 +73,7 @@ function phyt_params_default(mode::QuotaMode)
         "Chl2Cint" => [0.10, 0.10],       # Initial Chla:C ratio in phytoplankton (mgChl/mmolC)
         "α"        => [2.0e-2,2.0e-2],    # Irradiance absorption coeff (m²/mgChl)
         "Φ"        => [4.0e-5,4.0e-5],    # Maximum quantum yield (mmolC/μmol photon)
-        "T⁺"       => [298.0, 298.0],     # Maximal temperature for growth
+        "T⁺"       => [305.0, 305.0],     # Maximal temperature for growth
         "Ea"       => [53.0, 53.0],       # Free energy
         "PCmax"    => [4.2e-5, 4.2e-5],   # Maximum primary production rate (per second)
         "VDOCmax"  => [0.0, 1.2e-5],      # Maximum DOC uptake rate (mmol C/mmol C/second)
