@@ -37,7 +37,4 @@ for i in examples
     cp(fil_in,fil_out[1:end-4]*"jl")
 end
 
-fil_in=joinpath(@__DIR__,"build","PlanktonIndividuals.jl")
-PlutoSliderServer.export_notebook(fil_in)
-
 deploydocs(repo="github.com/JuliaOcean/PlanktonIndividuals.jl.git")
