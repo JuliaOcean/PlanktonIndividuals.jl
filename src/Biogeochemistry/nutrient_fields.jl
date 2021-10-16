@@ -9,6 +9,10 @@ function nutrients_init(arch, g)
     return nut
 end
 
+"""
+    default_nut_init()
+Generate defalut nutrient initial conditions.
+"""
 function default_nut_init()
     init = (DIC=20.0, NH4=0.2, NO3=0.5, PO4=0.03, DOC=1.0, DON=0.1, DOP=0.05, POC=0.0, PON=0.0, POP=0.0)
     rand_noise = (DIC=0.1, NH4=0.1, NO3=0.1, PO4=0.1, DOC=0.1, DON=0.1, DOP=0.1, POC=0.1, PON=0.1, POP=0.1)

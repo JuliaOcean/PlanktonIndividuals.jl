@@ -8,10 +8,22 @@ using CUDA
 using KernelAbstractions, CUDAKernels
 using Random
 
+"""
+    Architecture
+Abstract type for architectures supported by PlanktonIndividuals.
+"""
 abstract type Architecture end
 
+"""
+    CPU <: Architecture
+Run PlanktonIndividuals on one CPU node.
+"""
 struct CPU <: Architecture end
 
+"""
+    GPU <: Architecture
+Run PlanktonIndividuals on one GPU node.
+"""
 struct GPU <: Architecture end
 
 device(::CPU) = KernelAbstractions.CPU()

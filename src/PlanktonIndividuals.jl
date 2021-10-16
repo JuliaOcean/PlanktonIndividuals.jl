@@ -51,9 +51,29 @@ surface_mixing_vels = joinpath(artifact_path(surface_mixing_vels_hash)*"/velocit
 global_vels_hash = artifact_hash("OCCA_FlowFields", artifact_toml)
 global_vels = joinpath(artifact_path(global_vels_hash)*"/OCCA_FlowFields.jld2")
 
+
+"""
+    AbstractMode
+Abstract type for phytoplankton physiology modes supported by PlanktonIndividuals.
+"""
 abstract type AbstractMode end
+
+"""
+    CarbonMode <: AbstractMode
+Type for the phytoplankton physiology mode which only resolves carbon quota.
+"""
 struct CarbonMode <: AbstractMode end
+
+"""
+    QuotaMode <: AbstractMode
+Type for the phytoplankton physiology mode which resolves carbon, nitrogen, and phosphorus quotas.
+"""
 struct QuotaMode <: AbstractMode end
+
+"""
+    MacroMolecularMode <: AbstractMode
+Type for the phytoplankton physiology mode which resolves marco-molecules.
+"""
 struct MacroMolecularMode <: AbstractMode end
 
 include("Architectures.jl")

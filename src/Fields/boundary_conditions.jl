@@ -18,7 +18,10 @@ function default_bcs()
     return bcs
 end
 
-# set boundary condition with external value or array
+"""
+    set_bc!(model, tracer::Symbol, pos::Symbol, bc_value::Union{Number, AbstractArray})
+Set the boundary condition of `tracer` on `pos` with `bc_value`.
+"""
 function set_bc!(model, tracer::Symbol, pos::Symbol, bc_value::Union{Number, AbstractArray})
     @assert tracer in nut_names
 

@@ -1,3 +1,7 @@
+"""
+    VerticallyStretchedLatLonGrid{TX, TY, TZ} <: AbstractGrid{TX, TY, TZ}
+A horizontally curvilinear vertically strecthed grid with topology {TX, TY, TZ}
+"""
 struct VerticallyStretchedLatLonGrid{TX, TY, TZ, R, A1, A2, A3} <: AbstractGrid{TX, TY, TZ}
     # corrdinates at cell centers, unit: degree
     xC::R

@@ -1,4 +1,7 @@
-##### copy external velocities into the model
+"""
+    vel_copy!(vel::NamedTuple, u, v, w, g::AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
+Copy external velocities into `PlanktonModel`
+"""
 function vel_copy!(vel::NamedTuple, u, v, w, g::AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
     copy_interior_u!(vel.u.data, u, g, TX())
     copy_interior_v!(vel.v.data, v, g, TY())

@@ -21,12 +21,12 @@ makedocs(;
              "GPU Support" => "gpu_support.md",
              "Examples"  => "examples.md",
              "Benchmarks"  => "benchmarks.md",
+             "Library" => "library.md",
              "Function index" => "function_index.md"
              ],
          repo="https://github.com/JuliaOcean/PlanktonIndividuals.jl/blob/{commit}{path}#L{line}",
          sitename = "PlanktonIndividuals.jl",
          authors="ZhenWu <zhenwu@mit.edu>",
-         assets=String[],
 )
 
 for i in examples

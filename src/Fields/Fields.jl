@@ -24,13 +24,17 @@ struct Field
     bc::BoundaryConditions
 end
 
-function Field(arch::Architecture, g::AbstractGrid; bcs = default_bcs())
-    total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
+"""
+    Field(arch::Architecture, grid::AbstractGrid; bcs = default_bcs())
+Construct a `Field` on `grid` with data and boundary conditions on architecture `arch`
+"""
+function Field(arch::Architecture, grid::AbstractGrid; bcs = default_bcs())
+    total_size = (grid.Nx+grid.Hx*2, grid.Ny+grid.Hy*2, grid.Nz+grid.Hz*2)
     data = zeros(total_size) |> array_type(arch)
     return Field(data,bcs)
 end
 
-@inline interior(c, g) = c[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz]
+@inline interior(c, grid) = c[grid.Hx+1:grid.Hx+grid.Nx, grid.Hy+1:grid.Hy+grid.Ny, grid.Hz+1:grid.Hz+grid.Nz]
 
 function zero_fields!(a)
     for i in 1:length(a)

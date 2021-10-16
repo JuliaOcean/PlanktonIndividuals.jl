@@ -13,10 +13,28 @@ using Adapt
 
 using PlanktonIndividuals.Architectures
 
-
+"""
+    AbstractGrid{TX, TY, TZ}
+Abstract type for grids with elements of type `Float64` and topology `{TX, TY, TZ}`.
+"""
 abstract type AbstractGrid{TX, TY, YZ} end
+
+"""
+    AbstractTopology
+Abstract type for grid topologies.
+"""
 abstract type AbstractTopology end
+
+"""
+    Periodic
+Grid topology for periodic dimensions.
+"""
 struct Periodic <: AbstractTopology end
+
+"""
+    Bounded
+Grid topology for bounded dimensions.
+"""
 struct Bounded <: AbstractTopology end
 
 import Base: show
