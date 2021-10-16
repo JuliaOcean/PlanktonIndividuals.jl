@@ -12,6 +12,7 @@ end
 
 """
     PlanktonModel(arch::Architecture, grid::AbstractGrid;
+                  mode = QuotaMode(),
                   N_species = 1,
                   N_individual = 1024,
                   max_individuals = 8*1024,
@@ -19,7 +20,6 @@ end
                   phyt_params = phyt_params_default(),
                   nut_initial = default_nut_init(),
                   t = 0.0,
-                  mode = QuotaMode(),
                   mask = nothing,
                   )
 
@@ -29,10 +29,10 @@ Keyword Arguments (Required)
 ============================
 - `arch` : `CPU()` or `GPU()`. Computer architecture being used to run the model.
 - `grid` : a `AbstractGrid` structure. Discrete grid for the model (resolution and geometry).
-- `mode` : Phytoplankton physiology mode, choose among CarbonMode(), QuotaMode(), or MacroMolecularMode().
 
 Keyword Arguments (Optional)
 ============================
+- `mode` : Phytoplankton physiology mode, choose among CarbonMode(), QuotaMode(), or MacroMolecularMode().
 - `N_species` : Number of species.
 - `N_individual` : Number of individuals per species.
 - `max_individuals` : Maximum number of individuals per species the model can hold.
