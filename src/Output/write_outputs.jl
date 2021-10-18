@@ -108,7 +108,7 @@ function write_diags_to_jld2(diags, filepath, t, iter, ncounts, grid)
         end
         for sp in keys(diags.plankton)
             for proc in keys(diags.plankton[sp])
-                file["timeseries/$proc/$iter"] = Array(interior(diags.plankton[sp][proc],grid)) ./ ncounts 
+                file["timeseries/$sp/$proc/$iter"] = Array(interior(diags.plankton[sp][proc],grid)) ./ ncounts 
             end
         end
     end
