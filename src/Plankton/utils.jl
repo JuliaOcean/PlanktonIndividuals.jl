@@ -71,7 +71,7 @@ end
         ii = i + g.Hx
         jj = j + g.Hy
         kk = k + g.Hz
-        atten = (Chl[ii,jj,kk]/volume(ii, jj, kk, g) * kc + kw) * g.Δz
+        atten = (Chl[ii,jj,kk]/volume(ii, jj, kk, g) * kc + kw) * ΔzF(ii, jj, kk, g)
         par[ii,jj,kk] = PARF[i,j] * (1.0 - exp(-atten)) / atten
         PARF[i,j] = PARF[i,j] * exp(-atten)
     end

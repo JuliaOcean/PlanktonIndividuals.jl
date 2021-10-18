@@ -160,7 +160,8 @@ function show(io::IO, g::VerticallyStretchedLatLonGrid{TX, TY, TZ}) where {TX, T
     zL, zR = g.zF[g.Hz+1], g.zF[g.Hz+1+g.Nz]
     dzF_min = minimum(g.dzF)
     dzF_max = maximum(g.dzF)
-    print(io, "domain: x ∈ [$xL, $xR], y ∈ [$yL, $yR], z ∈ [$zL, $zR]\n",
+    print(io, "VerticallyStretchedLatLonGrid{$TX, $TY, $TZ}\n",
+              "domain: x ∈ [$xL, $xR], y ∈ [$yL, $yR], z ∈ [$zL, $zR]\n",
               "topology (Tx, Ty, Tz):     ", (TX, TY, TZ), '\n',
               "resolution (Nx, Ny, Nz):   ", (g.Nx, g.Ny, g.Nz), '\n',
               "halo size (Hx, Hy, Hz):    ", (g.Hx, g.Hy, g.Hz), '\n',

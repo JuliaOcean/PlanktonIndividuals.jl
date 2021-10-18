@@ -64,7 +64,8 @@ function PlanktonOutputWriter(;dir = "./results",
 end
 
 function show(io::IO, writer::PlanktonOutputWriter)
-    print(io, "├── files are saved at $(writer.filepath)\n",
+    print(io, "PlanktonOutputWriter:\n",
+              "├── files are saved at $(writer.filepath)\n",
               "├── $(save_diags_string(writer))\n",
               "├── $(save_inds_string(writer))\n",
               "├── write log: $(writer.write_log)\n",

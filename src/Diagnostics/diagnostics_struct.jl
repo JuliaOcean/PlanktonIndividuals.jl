@@ -73,7 +73,8 @@ function PlanktonDiagnostics(model; tracer=(:PAR,),
 end
 
 function show(io::IO, diags::PlanktonDiagnostics)
-    print(io, "├── diagnostics of tracers: $(keys(diags.tracer))\n",
+    print(io, "PlanktonDiagnostics:\n",
+              "├── diagnostics of tracers: $(keys(diags.tracer))\n",
               "├── diagnostics of individuals: $(keys(diags.plankton.sp1))\n",
               "└── save averaged diagnostics every $(diags.time_interval) seconds")
 end

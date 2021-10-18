@@ -97,7 +97,8 @@ function vels_string(sim::PlanktonSimulation)
 end
 
 function show(io::IO, sim::PlanktonSimulation)
-    print(io, "├── ΔT: $(sim.ΔT)s\n",
+    print(io, "PlanktonSimulation:\n",
+              "├── ΔT: $(sim.ΔT)s\n",
               "├── model time: $(sim.model.t)s\n",
               "├── simulation stops after: $(sim.iterations) iterations\n",
               "├── $(vels_string(sim))\n",
