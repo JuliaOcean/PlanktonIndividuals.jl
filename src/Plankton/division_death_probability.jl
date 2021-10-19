@@ -34,55 +34,55 @@ struct Adder_Timer <: division_type end
     end
 end
 
-@kernel function calc_dvid_kernel!(plank, proc, dvid_type, p, t)
+@kernel function calc_dvid_kernel!(plank, dvid_type, p, t)
     i = @index(Global)
-    @inbounds proc.dvid[i] = calc_division(dvid_type, plank.Sz[i], plank.iS[i], t, 
+    @inbounds plank.dvid[i] = calc_division(dvid_type, plank.Sz[i], plank.iS[i], t, 
                                             p.dvid_stp, p.dvid_reg, p.dvid_stp2, p.dvid_reg2, p.dvid_P) * 
                                             isless(2.0 * p.Cquota * p.Nsuper, plank.Bm[i]) * plank.ac[i]
 end
-function calc_dvid!(plank, proc, dvid_type, p, t, arch)
+function calc_dvid!(plank, dvid_type, p, t, arch)
     kernel! = calc_dvid_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, proc, dvid_type, p, t)
+    event = kernel!(plank, dvid_type, p, t)
     wait(device(arch), event)
     return nothing
 end
 
 ##### calculate the probability of grazing
 ##### quadratic grazing
-@kernel function calc_graz_quadratic_kernel!(plank, proc, nuts, P)
+@kernel function calc_graz_quadratic_kernel!(plank, nuts, P)
     i = @index(Global)
-    @inbounds proc.graz[i] = nuts.pop[i] * P * plank.ac[i]
+    @inbounds plank.graz[i] = nuts.pop[i] * P * plank.ac[i]
 end
-function calc_graz_quadratic!(plank, proc, nuts, P, arch)
+function calc_graz_quadratic!(plank, nuts, P, arch)
     kernel! = calc_graz_quadratic_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, proc, nuts, P)
+    event = kernel!(plank, nuts, P)
     wait(device(arch), event)
     return nothing
 end
 
 ##### calculate the probability of mortality
-@kernel function calc_mort_kernel!(plank, proc, p)
+@kernel function calc_mort_kernel!(plank, p)
     i = @index(Global)
-    @inbounds proc.mort[i] = p.mort_P * (tanh(6.0*(p.mort_reg - plank.Sz[i])) + 1.0) * plank.ac[i]
+    @inbounds plank.mort[i] = p.mort_P * (tanh(6.0*(p.mort_reg - plank.Sz[i])) + 1.0) * plank.ac[i]
 end
-function calc_mort!(plank, proc, p, arch)
+function calc_mort!(plank, p, arch)
     kernel! = calc_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, proc, p)
+    event = kernel!(plank, p)
     wait(device(arch), event)
     return nothing
 end
 
 ##### generate the random results from probabilities of grazing, mortality and cell division
-function get_probability!(plank, proc, ΔT, arch)
+function get_probability!(plank, rnd, ΔT, arch)
     ##### generate random numbers (0,1) 
-    rand!(rng_type(arch), plank.graz)
-    rand!(rng_type(arch), plank.mort)
-    rand!(rng_type(arch), plank.dvid)
+    rand!(rng_type(arch), rnd.x)
+    rand!(rng_type(arch), rnd.y)
+    rand!(rng_type(arch), rnd.z)
 
     ##### compare the random number with the given probability (per time step or per hour whichever is shorter)
     ##### return 1 if random number is smaller
-    @inbounds plank.graz .= isless.(plank.graz, proc.graz .* ΔT .* min(10,3600÷ΔT)) .* plank.ac
-    @inbounds plank.mort .= isless.(plank.mort, proc.mort .* ΔT .* min(10,3600÷ΔT)) .* plank.ac
-    @inbounds plank.dvid .= isless.(plank.dvid, proc.dvid .* ΔT .* min(10,3600÷ΔT)) .* plank.ac
+    @inbounds plank.graz .= isless.(rnd.x, plank.graz .* ΔT .* min(10,3600÷ΔT)) .* plank.ac
+    @inbounds plank.mort .= isless.(rnd.y, plank.mort .* ΔT .* min(10,3600÷ΔT)) .* plank.ac
+    @inbounds plank.dvid .= isless.(rnd.z, plank.dvid .* ΔT .* min(10,3600÷ΔT)) .* plank.ac
     return nothing
 end
