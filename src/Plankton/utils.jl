@@ -1,8 +1,6 @@
 ##### structs for individuals
 mutable struct plankton
     data::AbstractArray
-    proc::AbstractArray
-    sp::Int64
     p::NamedTuple
 end
 

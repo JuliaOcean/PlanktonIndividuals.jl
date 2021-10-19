@@ -1,13 +1,12 @@
 function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
     rawdata = StructArray(x   = zeros(maxN), y   = zeros(maxN), z   = zeros(maxN),
+                          xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN),
                           iS  = zeros(maxN), Sz  = zeros(maxN), Bm  = zeros(maxN), Chl = zeros(maxN),
                           gen = zeros(maxN), age = zeros(maxN), ac  = zeros(maxN), idx = zeros(maxN),
-                          graz= zeros(maxN), mort= zeros(maxN), dvid= zeros(maxN),
-                          xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN)) 
+                          PS  = zeros(maxN), resp= zeros(maxN), 
+                          graz= zeros(maxN), mort= zeros(maxN), dvid= zeros(maxN)
+                          ) 
     data = replace_storage(array_type(arch), rawdata)
-
-    proc = StructArray(PS   = zeros(maxN), resp = zeros(maxN), graz = zeros(maxN), mort = zeros(maxN), dvid = zeros(maxN))
-    proc_d = replace_storage(array_type(arch), proc)
 
     param_names=(:Nsuper, :Cquota, :mean, :var, :α, :Φ, :T⁺, :Ea,
                  :PCmax, :PC_b, :Chl2C, :respir_a, :respir_b,
@@ -24,7 +23,7 @@ function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
         end
     end
     p = NamedTuple{param_names}(tmp)
-    return plankton(data, proc_d, sp, p)
+    return plankton(data, p)
 end
 
 function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture; mask = nothing)

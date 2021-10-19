@@ -1,19 +1,19 @@
 ##### deal with nutrients uptake
-function gpu_calc_consume_kernel!(ctsdic, proc, ac, x, y, z, ΔT)
+function gpu_calc_consume_kernel!(ctsdic, plank, ac, x, y, z, ΔT)
     index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     stride = blockDim().x * gridDim().x
     for i = index:stride:size(ac,1)
-        @inbounds CUDA.@atomic ctsdic[x[i], y[i], z[i]] += (proc.resp[i] - proc.PS[i]) * ΔT * ac[i]
+        @inbounds CUDA.@atomic ctsdic[x[i], y[i], z[i]] += (plank.resp[i] - plank.PS[i]) * ΔT * ac[i]
     end
     return nothing
 end
-function calc_consume!(ctsdic, proc, ac, x, y, z, ΔT, ::GPU)
-    @cuda threads=256 blocks=ceil(Int, size(ac,1)/256) gpu_calc_consume_kernel!(ctsdic, proc, ac, x, y, z, ΔT)
+function calc_consume!(ctsdic, plank, ac, x, y, z, ΔT, ::GPU)
+    @cuda threads=256 blocks=ceil(Int, size(ac,1)/256) gpu_calc_consume_kernel!(ctsdic, plank, ac, x, y, z, ΔT)
     return nothing 
 end
-function calc_consume!(ctsdic, proc, ac, x, y, z, ΔT, ::CPU)
+function calc_consume!(ctsdic, plank, ac, x, y, z, ΔT, ::CPU)
     for i in 1:size(ac,1)
-        @inbounds ctsdic[x[i], y[i], z[i]] += (proc.resp[i] - proc.PS[i]) * ΔT * ac[i]
+        @inbounds ctsdic[x[i], y[i], z[i]] += (plank.resp[i] - plank.PS[i]) * ΔT * ac[i]
     end
     return nothing
 end

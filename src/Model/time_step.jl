@@ -56,7 +56,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                   model.timestepper.par, model.timestepper.temp, model.timestepper.pop, model.arch)
 
         plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts,
-                             model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,
+                             model.timestepper.rnd, model.individuals.phytos[sp].p,
                              model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch, model.mode)
     end
 
@@ -121,7 +121,7 @@ function TimeStep!(model::PlanktonModel, ΔT, ::Nothing)
                   model.timestepper.par, model.timestepper.temp, model.timestepper.pop, model.arch)
 
         plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts,
-                             model.individuals.phytos[sp].proc, model.individuals.phytos[sp].p,
+                             model.timestepper.rnd, model.individuals.phytos[sp].p,
                              model.timestepper.plk, nothing, ΔT, model.t, model.arch, model.mode)
     end
 

@@ -19,14 +19,12 @@ function diags_proc!(diags_proc, proc, ac, x, y, z, ::CPU)
     end
 end
 
-function diags_spcs!(diags_sp, proc, plank, ac, x, y, z, mode::AbstractMode, arch::Architecture)
-    proc_diags = (:PS, :resp)
-    plank_diags = (:Bm, :Chl)
+function diags_spcs!(diags_sp, plank, ac, x, y, z, mode::AbstractMode, arch::Architecture)
+    diags = (:PS, :resp, :Bm, :Chl)
     if isa(mode, CarbonMode)
         nothing
     elseif isa(mode, QuotaMode)
-        proc_diags = (:PS, :BS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :exu)
-        plank_diags = (:Bm, :Cq, :Nq, :Pq, :Chl)
+        diags = (:PS, :BS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :exu, :Bm, :Cq, :Nq, :Pq, :Chl)
     elseif isa(mode, MacroMolecularMode)
         nothing
     end
@@ -34,9 +32,7 @@ function diags_spcs!(diags_sp, proc, plank, ac, x, y, z, mode::AbstractMode, arc
     for diag in keys(diags_sp)
         if diag in (:num, :graz, :mort, :dvid)
             nothing
-        elseif diag in proc_diags
-            diags_proc!(diags_sp[diag], getproperty(proc, diag), ac, x, y, z, arch)
-        elseif diag in plank_diags
+        elseif diag in diags
             diags_proc!(diags_sp[diag], getproperty(plank, diag), ac, x, y, z, arch)
         end
     end
