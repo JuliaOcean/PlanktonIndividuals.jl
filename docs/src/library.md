@@ -100,6 +100,6 @@ Modules = [PlanktonIndividuals.Output]
 Private = false
 Pages   =[
     "Output/Output.jl",
-    "Output/output_writer.jl"
+    "Output/output_writers.jl"
 ]
 ```
