@@ -74,7 +74,7 @@ function phyt_params_default(N::Int64, mode::QuotaMode)
         "α"        => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
         "Φ"        => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
         "T⁺"       => [305.0],   # Maximal temperature for growth
-        "Ea"       => [53.0],    # Free energy
+        "Ea"       => [5.3e4],   # Free energy
         "PCmax"    => [4.2e-5],  # Maximum primary production rate (per second)
         "VDOCmax"  => [0.0],     # Maximum DOC uptake rate (mmol C/mmol C/second)
         "VNH4max"  => [6.9e-6],  # Maximum N uptake rate (mmol N/mmol C/second)
@@ -135,7 +135,7 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "α"        => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
         "Φ"        => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
         "T⁺"       => [298.0],   # Maximal temperature for growth
-        "Ea"       => [53.0],    # Free energy
+        "Ea"       => [5.3e4],   # Free energy
         "PCmax"    => [4.2e-5],  # Maximum primary production rate (per second)
         "PC_b"     => [0.6],     # Shape parameter for size
         "respir_a" => [1.2e-6],  # Respiration rate(per second)
