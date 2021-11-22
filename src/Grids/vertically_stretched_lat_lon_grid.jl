@@ -125,23 +125,32 @@ function LoadVerticallyStretchedLatLonGrid(;grid_info, size, lat, lon, halo=(2,2
     @views @. zC[Nz+Hz+1:Nz+2*Hz] = zC[Nz+1:Nz+Hz] - dzC[end]*2
 
     if TX == Periodic
-        for g in (dxC, dyC, dxF, dyF, Az, hFW, hFS, hFC)
-            @views @. g[1:Hx, :, :] = g[Nx+1:Nx+Hx, :, :]            # west
-            @views @. g[Nx+Hx+1:Nx+2Hx, :, :] = g[1+Hx:2Hx, :, :]    # east
+        for g in (dxC, dyC, dxF, dyF, Az)
+            @views @. g[1:Hx, :] = g[Nx+1:Nx+Hx, :]            # west
+            @views @. g[Nx+Hx+1:Nx+2Hx, :] = g[1+Hx:2Hx, :]    # east
         end
     elseif TX == Bounded
-        for g in (dxC, dyC, dxF, dyF, Az, hFW, hFS, hFC)
-            @views @. g[1:Hx, :, :] = g[Hx+1:Hx+1, :, :]             # west
-            @views @. g[Nx+Hx+1:Nx+2Hx, :, :] = g[Nx+Hx:Nx+Hx, :, :] # east
+        for g in (dxC, dyC, dxF, dyF, Az)
+            @views @. g[1:Hx, :] = g[Hx+1:Hx+1, :]             # west
+            @views @. g[Nx+Hx+1:Nx+2Hx, :] = g[Nx+Hx:Nx+Hx, :] # east
         end
     end
 
-    for g in (dxC, dyC, dxF, dyF, Az, hFW, hFS, hFC)
-        @views @. g[:, 1:Hy, :] = g[:, Hy+1:Hy+1, :]             # south
-        @views @. g[:, Ny+Hy+1:Ny+2Hy, :] = g[:, Ny+Ny:Hy+Ny, :] # north
+    for g in (dxC, dyC, dxF, dyF, Az)
+        @views @. g[:, 1:Hy] = g[:, Hy+1:Hy+1]             # south
+        @views @. g[:, Ny+Hy+1:Ny+2Hy] = g[:, Ny+Hy:Ny+Hy] # north
     end
 
     for g in (hFW, hFS, hFC)
+        if TX == Periodic
+            @views @. g[1:Hx, :, :] = g[Nx+1:Nx+Hx, :, :]            # west
+            @views @. g[Nx+Hx+1:Nx+2Hx, :, :] = g[1+Hx:2Hx, :, :]    # east
+        elseif TX == Bounded
+            @views @. g[1:Hx, :, :] = g[Hx+1:Hx+1, :, :]             # west
+            @views @. g[Nx+Hx+1:Nx+2Hx, :, :] = g[Nx+Hx:Nx+Hx, :, :] # east
+        end
+        @views @. g[:, 1:Hy, :] = g[:, Hy+1:Hy+1, :]             # south
+        @views @. g[:, Ny+Hy+1:Ny+2Hy, :] = g[:, Ny+Hy:Ny+Hy, :] # north
         @views @. g[:, :, 1:Hz] = g[:, :, Hz+1:Hz+1]             # top
         @views @. g[:, :, Nz+Hz+1:Nz+2Hz] = g[:, :, Nz+Hz:Nz+Hz] # bottom
     end
