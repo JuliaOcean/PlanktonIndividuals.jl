@@ -124,19 +124,26 @@ function LoadVerticallyStretchedLatLonGrid(;grid_info, size, lat, lon, halo=(2,2
     @views @. zF[Nz+Hz+2:Nz+2*Hz] = zF[Nz+2:Nz+Hz] - dzF[end]*2
     @views @. zC[Nz+Hz+1:Nz+2*Hz] = zC[Nz+1:Nz+Hz] - dzC[end]*2
 
-    for g in (dxC, dyC, dxF, dyF, Az)
-        fill_halo_west!(g, Hx, Nx, TX())
-        fill_halo_east!(g, Hx, Nx, TX())
-        fill_halo_south!(g, Hy, Ny, TY())
-        fill_halo_north!(g, Hy, Ny, TY())
+    if TX == Periodic
+        for g in (dxC, dyC, dxF, dyF, Az, hFW, hFS, hFC)
+            @views @. g[1:Hx, :, :] = g[Nx+1:Nx+Hx, :, :]            # west
+            @views @. g[Nx+Hx+1:Nx+2Hx, :, :] = g[1+Hx:2Hx, :, :]    # east
+        end
+    elseif TX == Bounded
+        for g in (dxC, dyC, dxF, dyF, Az, hFW, hFS, hFC)
+            @views @. g[1:Hx, :, :] = g[Hx+1:Hx+1, :, :]             # west
+            @views @. g[Nx+Hx+1:Nx+2Hx, :, :] = g[Nx+Hx:Nx+Hx, :, :] # east
+        end
     end
+
+    for g in (dxC, dyC, dxF, dyF, Az, hFW, hFS, hFC)
+        @views @. g[:, 1:Hy, :] = g[:, Hy+1:Hy+1, :]             # south
+        @views @. g[:, Ny+Hy+1:Ny+2Hy, :] = g[:, Ny+Ny:Hy+Ny, :] # north
+    end
+
     for g in (hFW, hFS, hFC)
-        fill_halo_west!(g, Hx, Nx, TX())
-        fill_halo_east!(g, Hx, Nx, TX())
-        fill_halo_south!(g, Hy, Ny, TY())
-        fill_halo_north!(g, Hy, Ny, TY())
-        fill_halo_top!(g, Hz, Nz, TZ())
-        fill_halo_bottom!(g, Hz, Nz, TZ())
+        @views @. g[:, :, 1:Hz] = g[:, :, Hz+1:Hz+1]             # top
+        @views @. g[:, :, Nz+Hz+1:Nz+2Hz] = g[:, :, Nz+Hz:Nz+Hz] # bottom
     end
 
     ##### calculate areas and volumes
