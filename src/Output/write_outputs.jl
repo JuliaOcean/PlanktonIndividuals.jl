@@ -19,11 +19,13 @@ function write_output!(writer::Union{PlanktonOutputWriter, Nothing}, model::Plan
         end
 
         if writer.save_plankton
+            if model.t % (writer.plankton_time_interval) == 0.0
                 if filesize(writer.plankton_file) ≥ writer.max_filesize
                     start_next_plankton_file(writer)
                 end
-            write_individuals_to_jld2(model.individuals.phytos, writer.plankton_file, model.t,
-                                      model.iteration, writer.plankton_include)
+                write_individuals_to_jld2(model.individuals.phytos, writer.plankton_file, model.t,
+                                          model.iteration, writer.plankton_include)
+            end
         end
     end
 end
