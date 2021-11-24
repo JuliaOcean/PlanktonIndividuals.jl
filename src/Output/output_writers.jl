@@ -64,7 +64,7 @@ function PlanktonOutputWriter(;dir = "./results",
     end
 
     return PlanktonOutputWriter(dir, write_log, save_diags, save_plankton, diags_file, plankton_file,
-                                plankton_include, max_filesize, 1, 1)
+                                plankton_include, plankton_time_interval, max_filesize, 1, 1)
 end
 
 function show(io::IO, writer::PlanktonOutputWriter)
