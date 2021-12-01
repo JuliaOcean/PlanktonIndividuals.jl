@@ -1,6 +1,6 @@
 # Model Configuration
 
-The model configuration is specified within the `PlanktonModel` data structure. As documented below, the various parameters of a `PlanktonModel` can all be specified via keyword arguments. Options and features are documented in more detail afterwards and in the [Examples](@ref examples-list) section.
+The model configuration is specified within the `PlanktonModel` data structure. As documented below, the various parameters of a `PlanktonModel` can all be specified via keyword arguments. Options and features are documented in more detail afterwards and in the [Examples](@ref examples) section.
 
 ```@docs
 PlanktonModel
@@ -64,9 +64,6 @@ grid spacing (Δx, Δy, Δz): (1.0, 1.0, 10.0)
 The number of species can be specified via `N_species`.
 The number of individuals per species can be specified via `N_individual`.
 The maximum number of individuals per species that the model can hold is specified via `max_individuals`.
-
-!!! tip "Maximum number of species"
-    The value for `N_species` is currently limited to `9`.
 
 ## [Parameters](@id parameters)
 

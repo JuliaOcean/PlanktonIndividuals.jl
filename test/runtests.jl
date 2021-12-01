@@ -3,7 +3,7 @@ using PlanktonIndividuals
 
 @testset "PlanktonIndividuals 3D tests:" begin
     include(dirname(pathof(PlanktonIndividuals))*"/../test/model_test_3D.jl")
-    @test isapprox(TP,TPt; atol=1e1)
+    @test isapprox(TC,TCt; atol=1e2)
 end #@testset "PlanktonIndividuals 3D tests:" begin
 
 @testset "PlanktonIndividuals 2D tests:" begin
