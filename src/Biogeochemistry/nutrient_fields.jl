@@ -20,7 +20,7 @@ function default_nut_init()
 end
 
 """
-    generate_nutrients(arch, grid, source; mask = nothing)
+    generate_nutrients(arch, grid, source)
 Set up initial nutrient fields according to `grid`.
 
 Keyword Arguments
@@ -29,9 +29,8 @@ Keyword Arguments
 - `grid`: The resolution and discrete geometry on which nutrient fields are solved.
 - `source`: A `NamedTuple` containing 10 numbers each of which is the uniform initial condition of one tracer, 
             or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
-- `mask` (optional): Mask out the tracers generated out of the domain, a 3D array with size `(Nx, Ny, Nz)`.
 """
-function generate_nutrients(arch, g, source::Union{Dict,NamedTuple}; mask=nothing)
+function generate_nutrients(arch, g, source::Union{Dict,NamedTuple})
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
     nut = nutrients_init(arch, g)
     pathkeys = collect(keys(source))
@@ -65,13 +64,7 @@ function generate_nutrients(arch, g, source::Union{Dict,NamedTuple}; mask=nothin
             end
         end
 
-        if mask ≠ nothing
-            if size(mask) == (g.Nx, g.Ny, g.Nz)
-                @views @. nut[name].data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] *= mask
-            else
-                throw(ArgumentError("nut_mask: grid mismatch, size(mask) must equal to (grid.Nx, grid.Ny, grid.Nz)."))
-            end
-        end
+        @views @. nut[name].data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] *= g.landmask
     end
 
     fill_halo_nut!(nut,g)

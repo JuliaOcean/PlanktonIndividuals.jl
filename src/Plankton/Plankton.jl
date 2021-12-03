@@ -21,13 +21,13 @@ using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMo
 #####
 ##### generate individuals of multiple species
 #####
-function generate_individuals(params::Dict, arch::Architecture, Nsp, N, maxN, g::AbstractGrid, mode::AbstractMode; mask = nothing)
+function generate_individuals(params::Dict, arch::Architecture, Nsp, N, maxN, g::AbstractGrid, mode::AbstractMode)
     plank_names = Symbol[]
     plank_data=[]
     for i in 1:Nsp
         name = Symbol("sp"*string(i))
         plank = construct_plankton(arch, i, params, maxN, mode::AbstractMode)
-        generate_plankton!(plank, N, g, arch, mode; mask = mask)
+        generate_plankton!(plank, N, g, arch, mode)
         push!(plank_names, name)
         push!(plank_data, plank)
     end
@@ -53,11 +53,11 @@ construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN, mode::Quot
 construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN, mode::CarbonMode) = 
     Carbon.construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
 
-generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::QuotaMode; mask = nothing) =
-    Quota.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture; mask = mask)
+generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::QuotaMode) =
+    Quota.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
-generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::CarbonMode; mask = nothing) =
-    Carbon.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture; mask = mask)
+generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::CarbonMode) =
+    Carbon.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
 plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode) =
     Quota.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode)

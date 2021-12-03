@@ -10,10 +10,11 @@ function replace_grid_storage(arch::Architecture, grid::RegularLatLonGrid{TX, TY
     Ay  = grid.Ay  |> array_type(arch)
     Az  = grid.Az  |> array_type(arch)
     Vol = grid.Vol |> array_type(arch)
+    landmask = grid.landmask |> array_type(arch)
 
-    return RegularLatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(dxC)}(
+    return RegularLatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(dxC), typeof(landmask)}(
         grid.xC, grid.yC, grid.zC, grid.xF, grid.yF, grid.zF, grid.Δx, grid.Δy, grid.Δz,
-        dxC, dyC, dxF, dyF, Ax, Ay, Az, Vol, grid.Nx, grid.Ny, grid.Nz, grid.Hx, grid.Hy, grid.Hz)
+        dxC, dyC, dxF, dyF, Ax, Ay, Az, Vol, grid.Nx, grid.Ny, grid.Nz, grid.Hx, grid.Hy, grid.Hz, landmask)
 end
 
 function replace_grid_storage(arch::Architecture, grid::VerticallyStretchedLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ}
@@ -29,22 +30,35 @@ function replace_grid_storage(arch::Architecture, grid::VerticallyStretchedLatLo
     Ay  = grid.Ay  |> array_type(arch)
     Az  = grid.Az  |> array_type(arch)
     Vol = grid.Vol |> array_type(arch)
+    landmask = grid.landmask |> array_type(arch)
 
     return VerticallyStretchedLatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(zF), typeof(dxC), typeof(Vol)}(
         grid.xC, grid.yC, zC, grid.xF, grid.yF, zF, grid.Δx, grid.Δy, dxC, dyC, dzC,
-        dxF, dyF, dzF, Ax, Ay, Az, Vol, grid.Nx, grid.Ny, grid.Nz, grid.Hx, grid.Hy, grid.Hz)
+        dxF, dyF, dzF, Ax, Ay, Az, Vol, grid.Nx, grid.Ny, grid.Nz, grid.Hx, grid.Hy, grid.Hz, landmask)
 end
 
 function replace_grid_storage(arch::Architecture, grid::RegularRectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ}
-    return grid
+    landmask = grid.landmask |> array_type(arch)
+    return RegularRectilinearGrid{TX, TY, TZ, typeof(grid.xF), typeof(grid.landmask)}(
+        grid.xC, grid.yC, grid.zC, grid.xF, grid.yF, grid.zF, grid.Δx, grid.Δy, grid.Δz,
+        grid.Nx, grid.Ny, grid.Nz, grid.Hx, grid.Hy, grid.Hz, landmask)
 end
 
 #####
 ##### adapt the grid struct to GPU
 #####
 
+Adapt.adapt_structure(to, grid::RegularRectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ} =
+    RegularRectilinearGrid{TX, TY, TZ, typeof(grid.xF), typeof(Adapt.adapt(to, grid.landmask))}(
+        grid.xC, grid.yC, grid.zC,
+        grid.xF, grid.yF, grid.zF,
+        grid.Δx, grid.Δy, grid.Δz,
+        grid.Nx, grid.Ny, grid.Nz,
+        grid.Hx, grid.Hy, grid.Hz,
+        Adapt.adapt(to, grid.landmask))
+
 Adapt.adapt_structure(to, grid::RegularLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ} =
-    RegularLatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(Adapt.adapt(to, grid.dxC))}(
+    RegularLatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(Adapt.adapt(to, grid.dxC)), typeof(Adapt.adapt(to, grid.landmask))}(
         grid.xC, grid.yC, grid.zC,
         grid.xF, grid.yF, grid.zF,
         grid.Δx, grid.Δy, grid.Δz,
@@ -57,7 +71,8 @@ Adapt.adapt_structure(to, grid::RegularLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ
         Adapt.adapt(to, grid.Az),
         Adapt.adapt(to, grid.Vol),
         grid.Nx, grid.Ny, grid.Nz,
-        grid.Hx, grid.Hy, grid.Hz)
+        grid.Hx, grid.Hy, grid.Hz,
+        Adapt.adapt(to, grid.landmask))
 
 Adapt.adapt_structure(to, grid::VerticallyStretchedLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ} =
     VerticallyStretchedLatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(Adapt.adapt(to, grid.zF)), 
@@ -78,4 +93,5 @@ Adapt.adapt_structure(to, grid::VerticallyStretchedLatLonGrid{TX, TY, TZ}) where
         Adapt.adapt(to, grid.Az),
         Adapt.adapt(to, grid.Vol),
         grid.Nx, grid.Ny, grid.Nz,
-        grid.Hx, grid.Hy, grid.Hz)
+        grid.Hx, grid.Hy, grid.Hz,
+        Adapt.adapt(to, grid.landmask))

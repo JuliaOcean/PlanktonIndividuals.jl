@@ -32,7 +32,7 @@ function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
     return plankton(data, p)
 end
 
-function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture; mask = nothing)
+function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
     mean = plank.p.mean
     var = plank.p.var
     Cquota = plank.p.Cquota
@@ -68,11 +68,5 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     plank.data.Pq  .=(plank.data.Pq .* (pqmax - pqmin)  .+ pqmin) .* plank.data.Bm                   # Pq
     plank.data.Chl .= plank.data.Bm .* Chl2Cint                                                      # Chl
 
-    if mask ≠ nothing
-        if size(mask) == (g.Nx, g.Ny, g.Nz)
-            mask_individuals!(plank.data, mask, N, arch)
-        else
-            throw(ArgumentError("nut_mask: grid mismatch, size(mask) must equal to (grid.Nx, grid.Ny, grid.Nz)."))
-        end
-    end
+    mask_individuals!(plank.data, g.landmask, N, arch)
 end
