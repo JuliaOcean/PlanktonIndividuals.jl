@@ -170,13 +170,7 @@ function LoadVerticallyStretchedLatLonGrid(;grid_info, size, lat, lon, landmask 
         end
     end
 
-    if landmask == nothing
-        landmask = ones(Nx, Ny, Nz)
-    else
-        if Base.size(landmask) ≠ (Nx, Ny, Nz)
-            throw(ArgumentError("landmask: grid mismatch, size(landmask) must equal to (grid.Nx, grid.Ny, grid.Nz)."))
-        end
-    end
+    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX)
 
     return VerticallyStretchedLatLonGrid{TX, TY, TZ, typeof(xF), typeof(zF), typeof(dxC), typeof(Vol)}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, dxC, dyC, dzC, dxF, dyF, dzF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz, landmask)

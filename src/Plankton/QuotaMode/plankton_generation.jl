@@ -68,5 +68,5 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     plank.data.Pq  .=(plank.data.Pq .* (pqmax - pqmin)  .+ pqmin) .* plank.data.Bm                   # Pq
     plank.data.Chl .= plank.data.Bm .* Chl2Cint                                                      # Chl
 
-    mask_individuals!(plank.data, g.landmask, N, arch)
+    mask_individuals!(plank.data, g, N, arch)
 end

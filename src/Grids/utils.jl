@@ -95,3 +95,32 @@ Adapt.adapt_structure(to, grid::VerticallyStretchedLatLonGrid{TX, TY, TZ}) where
         grid.Nx, grid.Ny, grid.Nz,
         grid.Hx, grid.Hy, grid.Hz,
         Adapt.adapt(to, grid.landmask))
+
+#####
+##### validate the land mask
+#####
+function landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX)
+    if landmask == nothing
+        landmask = ones(Nx, Ny, Nz)
+    else
+        if Base.size(landmask) ≠ (Nx, Ny, Nz)
+            throw(ArgumentError("landmask: grid mismatch, size(landmask) must equal to (grid.Nx, grid.Ny, grid.Nz)."))
+        end
+    end
+
+    lh = zeros(Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
+    lh[Hx+1:Hx+Nx, Hy+1:Hy+Ny, Hz+1:Hz+Nz] .= landmask
+    if TX == Periodic
+        @views @. lh[1:Hx, :, :] = lh[Nx+1:Nx+Hx, :, :]            # west
+        @views @. lh[Nx+Hx+1:Nx+2Hx, :, :] = lh[1+Hx:2Hx, :, :]    # east
+    elseif TX == Bounded
+        @views @. lh[1:Hx, :, :] = lh[Hx+1:Hx+1, :, :]             # west
+        @views @. lh[Nx+Hx+1:Nx+2Hx, :, :] = lh[Nx+Hx:Nx+Hx, :, :] # east
+    end
+    @views @. lh[:, 1:Hy, :] = lh[:, Hy+1:Hy+1, :]             # south
+    @views @. lh[:, Ny+Hy+1:Ny+2Hy, :] = lh[:, Ny+Hy:Ny+Hy, :] # north
+    @views @. lh[:, :, 1:Hz] = lh[:, :, Hz+1:Hz+1]             # top
+    @views @. lh[:, :, Nz+Hz+1:Nz+2Hz] = lh[:, :, Nz+Hz:Nz+Hz] # bottom
+
+    return lh
+end

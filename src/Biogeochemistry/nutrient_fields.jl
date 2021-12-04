@@ -64,7 +64,7 @@ function generate_nutrients(arch, g, source::Union{Dict,NamedTuple})
             end
         end
 
-        @views @. nut[name].data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] *= g.landmask
+        @views @. nut[name].data *= g.landmask
     end
 
     fill_halo_nut!(nut,g)

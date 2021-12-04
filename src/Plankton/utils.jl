@@ -81,16 +81,16 @@ function calc_par!(par, arch::Architecture, Chl, PARF, g::AbstractGrid, kc, kw)
     return nothing
 end
 
-@kernel function mask_individuals_kernel!(plank, mask)
+@kernel function mask_individuals_kernel!(plank, g::AbstractGrid)
     i = @index(Global)
-    xi = unsafe_trunc(Int, plank.x[i]) + 1 # 0-based index to 1-based index
-    yi = unsafe_trunc(Int, plank.y[i]) + 1
-    zi = unsafe_trunc(Int, plank.z[i]) + 1
-    plank.ac[i] = mask[xi, yi, zi] * plank.ac[i]
+    @inbounds xi = unsafe_trunc(Int, (plank.x[i]+1) * plank.ac[i]) + g.Hx 
+    @inbounds yi = unsafe_trunc(Int, (plank.y[i]+1) * plank.ac[i]) + g.Hy
+    @inbounds zi = unsafe_trunc(Int, (plank.z[i]+1) * plank.ac[i]) + g.Hz
+    @inbounds plank.ac[i] = g.landmask[xi, yi, zi] * plank.ac[i]
 end
-function mask_individuals!(plank, mask, N, arch)
+function mask_individuals!(plank, g::AbstractGrid, N, arch)
     kernel! = mask_individuals_kernel!(device(arch), 256, (N,))
-    event = kernel!(plank, mask)
+    event = kernel!(plank, g)
     wait(device(arch), event)
     return nothing
 end

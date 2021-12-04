@@ -50,5 +50,5 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     plank.data.Bm  .= Cquota .* plank.data.Sz .* Nsuper                                              # Bm
     plank.data.Chl .= plank.data.Bm .* Chl2C                                                         # Chl
 
-    mask_individuals!(plank.data, g.landmask, N, arch)
+    mask_individuals!(plank.data, g, N, arch)
 end

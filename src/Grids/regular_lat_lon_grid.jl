@@ -125,13 +125,7 @@ function RegularLatLonGrid(;size, lat, lon, z,
         end
     end
 
-    if landmask == nothing
-        landmask = ones(Nx, Ny, Nz)
-    else
-        if Base.size(landmask) ≠ (Nx, Ny, Nz)
-            throw(ArgumentError("landmask: grid mismatch, size(landmask) must equal to (grid.Nx, grid.Ny, grid.Nz)."))
-        end
-    end
+    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX)
 
     return RegularLatLonGrid{TX, TY, TZ, typeof(xF), typeof(dxC), typeof(landmask)}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, dxC, dyC, dxF, dyF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz, landmask)

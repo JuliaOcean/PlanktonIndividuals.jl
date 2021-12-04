@@ -64,13 +64,7 @@ function RegularRectilinearGrid(;size, spacing,
     yC = range((0.5 - Hy) * Δy, (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy)
     zC = -range((0.5 - Hz) * Δz, (Nz + Hz - 0.5) * Δz, length = Nz + 2 * Hz)
 
-    if landmask == nothing
-        landmask = ones(Nx, Ny, Nz)
-    else
-        if Base.size(landmask) ≠ (Nx, Ny, Nz)
-            throw(ArgumentError("landmask: grid mismatch, size(landmask) must equal to (grid.Nx, grid.Ny, grid.Nz)."))
-        end
-    end
+    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX)
 
     return RegularRectilinearGrid{TX, TY, TZ, typeof(xF), typeof(landmask)}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Nx, Ny, Nz, Hx, Hy, Hz, landmask)
