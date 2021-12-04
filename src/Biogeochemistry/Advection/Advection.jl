@@ -10,6 +10,7 @@ using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Architectures: device, array_type, Architecture
 using PlanktonIndividuals.Fields
 
+include("operaters.jl")
 include("tracer_diffusion.jl")
 include("DST3FL.jl")
 include("multi_dim_adv.jl")

@@ -70,7 +70,7 @@ end
     ii = i + g.Hx
     jj = j + g.Hy
     kk = k + g.Hz
-    @inbounds ctemp[ii, jj, kk] -= ΔT / volume(ii, jj, kk, g) * (δx⁺(ii, jj, kk, Gc) - c[ii, jj, kk] * δx⁺(ii, jj, kk, g, Trans_x, u))
+    @inbounds ctemp[ii, jj, kk] -= ΔT / volume(ii, jj, kk, g) * (δx⁺(ii, jj, kk, Gc, g) - c[ii, jj, kk] * δx⁺(ii, jj, kk, g, Trans_x, u))
 end
 function multi_dim_x!(nut_temp, Gcs, nut, u, g::AbstractGrid, ΔT, arch::Architecture)
     kernel! = multi_dim_x_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
@@ -91,7 +91,7 @@ end
     ii = i + g.Hx
     jj = j + g.Hy
     kk = k + g.Hz
-    @inbounds ctemp[ii, jj, kk] -= ΔT / volume(ii, jj, kk, g) * (δy⁺(ii, jj, kk, Gc) - c[ii, jj, kk] * δy⁺(ii, jj, kk, g, Trans_y, v ))
+    @inbounds ctemp[ii, jj, kk] -= ΔT / volume(ii, jj, kk, g) * (δy⁺(ii, jj, kk, Gc, g) - c[ii, jj, kk] * δy⁺(ii, jj, kk, g, Trans_y, v ))
 end
 function multi_dim_y!(nut_temp, Gcs, nut, v, g::AbstractGrid, ΔT, arch::Architecture)
     kernel! = multi_dim_y_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
@@ -112,7 +112,7 @@ end
     ii = i + g.Hx
     jj = j + g.Hy
     kk = k + g.Hz
-    @inbounds ctemp[ii, jj, kk] -= ΔT / volume(ii, jj, kk, g) * (δz⁺(ii, jj, kk, Gc) - c[ii, jj, kk] * δz⁺(ii, jj, kk, g, Trans_z, w ))
+    @inbounds ctemp[ii, jj, kk] -= ΔT / volume(ii, jj, kk, g) * (δz⁺(ii, jj, kk, Gc, g) - c[ii, jj, kk] * δz⁺(ii, jj, kk, g, Trans_z, w ))
 end
 function multi_dim_z!(nut_temp, Gcs, nut, w, g::AbstractGrid, ΔT, arch::Architecture)
     kernel! = multi_dim_z_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
