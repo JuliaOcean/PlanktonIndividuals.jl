@@ -28,4 +28,9 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
         @inbounds plank.mort .= 0.0
         @inbounds plank.dvid .= 0.0
     end
+
+    ##### thermal mortality
+    if p.ther_mort == 1
+        thermal_mort!(plank, nuts, p)
+    end
 end
