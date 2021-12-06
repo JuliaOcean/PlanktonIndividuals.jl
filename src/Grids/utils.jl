@@ -39,7 +39,7 @@ end
 
 function replace_grid_storage(arch::Architecture, grid::RegularRectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ}
     landmask = grid.landmask |> array_type(arch)
-    return RegularRectilinearGrid{TX, TY, TZ, typeof(grid.xF), typeof(grid.landmask)}(
+    return RegularRectilinearGrid{TX, TY, TZ, typeof(grid.xF), typeof(landmask)}(
         grid.xC, grid.yC, grid.zC, grid.xF, grid.yF, grid.zF, grid.Δx, grid.Δy, grid.Δz,
         grid.Nx, grid.Ny, grid.Nz, grid.Hx, grid.Hy, grid.Hz, landmask)
 end
@@ -76,7 +76,7 @@ Adapt.adapt_structure(to, grid::RegularLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ
 
 Adapt.adapt_structure(to, grid::VerticallyStretchedLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ} =
     VerticallyStretchedLatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(Adapt.adapt(to, grid.zF)), 
-                                  typeof(Adapt.adapt(to, grid.dxC)), typeof(Adapt.adapt(to, grid.Vol))}(
+                                            typeof(Adapt.adapt(to, grid.dxC)), typeof(Adapt.adapt(to, grid.Vol))}(
         grid.xC, grid.yC,
         Adapt.adapt(to, grid.zC),
         grid.xF, grid.yF,
