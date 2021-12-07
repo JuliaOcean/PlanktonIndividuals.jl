@@ -62,7 +62,7 @@ end
 
 ##### thermal mortality
 function thermal_mort!(plank, nuts, p)
-    @inbounds plank.mort .= isless.(p.T⁺, nuts.T) .* plank.ac
+    @inbounds plank.mort .= isless.(p.T⁺-273.15, nuts.T) .* plank.ac
 end
 
 ##### calculate the probability of mortality
