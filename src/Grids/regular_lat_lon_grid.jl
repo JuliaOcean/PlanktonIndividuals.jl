@@ -1,4 +1,4 @@
-struct RegularLatLonGrid{TX, TY, TZ, R, A} <: AbstractGrid{TX, TY, TZ}
+struct RegularLatLonGrid{TX, TY, TZ, R, A2, A3} <: AbstractGrid{TX, TY, TZ}
     # corrdinates at cell centers, unit: degree
     xC::R
     yC::R
@@ -15,16 +15,16 @@ struct RegularLatLonGrid{TX, TY, TZ, R, A} <: AbstractGrid{TX, TY, TZ}
     # grid spacing, unit: meter
     Δz::Float64
     # grid spacing from center to center, unit: meter
-    dxC::A
-    dyC::A
+    dxC::A2
+    dyC::A2
     # grid spacing from face to face, unit: meter
-    dxF::A
-    dyF::A
+    dxF::A2
+    dyF::A2
     # areas and volume, unit: m² or m³
-    Ax::A
-    Ay::A
-    Az::A
-    Vol::A
+    Ax::A2
+    Ay::A2
+    Az::A2
+    Vol::A2
     # number of grid points
     Nx::Int
     Ny::Int
@@ -33,11 +33,14 @@ struct RegularLatLonGrid{TX, TY, TZ, R, A} <: AbstractGrid{TX, TY, TZ}
     Hx::Int
     Hy::Int
     Hz::Int
+    # landmask to indicate where is the land
+    landmask::A3
 end
 
 """
     RegularLatLonGrid(;size, lat, lon, z,
                        radius = 6370.0e3,
+                       landmask = nothing,
                        halo = (2, 2, 2))
 Creats a `RegularLatLonGrid` struct with `size = (Nx, Ny, Nz)` grid points.
 
@@ -55,6 +58,7 @@ Keyword Arguments (Required)
 Keyword Arguments (Optional)
 ============================
 - `radius` : Specify the radius of the Earth used in the model, 6370.0e3 meters by default.
+- `landmask` : a 3-dimentional array to indicate where the land is.
 - `halo` : A tuple of integers that specifies the size of the halo region of cells
                 surrounding the physical interior for each direction.
                 `halo` is a 3-tuple no matter for 3D, 2D, or 1D model.
@@ -62,6 +66,7 @@ Keyword Arguments (Optional)
 """
 function RegularLatLonGrid(;size, lat, lon, z,
                             radius = 6370.0e3,
+                            landmask = nothing,
                             halo = (2, 2, 2))
     Nx, Ny, Nz = size
     Hx, Hy, Hz = halo
@@ -120,8 +125,10 @@ function RegularLatLonGrid(;size, lat, lon, z,
         end
     end
 
-    return RegularLatLonGrid{TX, TY, TZ, typeof(xF), typeof(dxC)}(
-        xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, dxC, dyC, dxF, dyF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz)
+    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX)
+
+    return RegularLatLonGrid{TX, TY, TZ, typeof(xF), typeof(dxC), typeof(landmask)}(
+        xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, dxC, dyC, dxF, dyF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz, landmask)
 end
 
 function show(io::IO, g::RegularLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ}

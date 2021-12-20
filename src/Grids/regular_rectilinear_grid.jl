@@ -1,4 +1,4 @@
-struct RegularRectilinearGrid{TX, TY, TZ, R} <: AbstractGrid{TX, TY, TZ}
+struct RegularRectilinearGrid{TX, TY, TZ, R, A3} <: AbstractGrid{TX, TY, TZ}
     # corrdinates at cell centers, unit: meter
     xC::R
     yC::R
@@ -19,11 +19,14 @@ struct RegularRectilinearGrid{TX, TY, TZ, R} <: AbstractGrid{TX, TY, TZ}
     Hx::Int
     Hy::Int
     Hz::Int
+    # landmask to indicate where is the land
+    landmask::A3
 end
 
 """
     RegularRectilinearGrid(;size, spacing,
                             topology = (Periodic, Periodic, Bounded),
+                            landmask = nothing,
                             halo = (2, 2, 2))
 Creats a `RegularRectilinearGrid` struct with `size = (Nx, Ny, Nz)` grid points.
 
@@ -38,6 +41,7 @@ Keyword Arguments (Optional)
 ============================
 - `topology` : A 3-tuple specifying the topology of the domain.
                 The topology can be either Periodic or Bounded in each direction.
+- `landmask` : a 3-dimentional array to indicate where the land is.
 - `halo` : A tuple of integers that specifies the size of the halo region of cells
                 surrounding the physical interior for each direction.
                 `halo` is a 3-tuple no matter for 3D, 2D, or 1D model.
@@ -45,6 +49,7 @@ Keyword Arguments (Optional)
 """
 function RegularRectilinearGrid(;size, spacing,
                                 topology = (Periodic, Periodic, Bounded),
+                                landmask = nothing,
                                 halo = (2, 2, 2))
     Nx, Ny, Nz = size
     Hx, Hy, Hz = halo
@@ -59,8 +64,10 @@ function RegularRectilinearGrid(;size, spacing,
     yC = range((0.5 - Hy) * Δy, (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy)
     zC = -range((0.5 - Hz) * Δz, (Nz + Hz - 0.5) * Δz, length = Nz + 2 * Hz)
 
-    return RegularRectilinearGrid{TX, TY, TZ, typeof(xF)}(
-        xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Nx, Ny, Nz, Hx, Hy, Hz)
+    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX)
+
+    return RegularRectilinearGrid{TX, TY, TZ, typeof(xF), typeof(landmask)}(
+        xC, yC, zC, xF, yF, zF, Δx, Δy, Δz, Nx, Ny, Nz, Hx, Hy, Hz, landmask)
 end
 
 function show(io::IO, g::RegularRectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ}

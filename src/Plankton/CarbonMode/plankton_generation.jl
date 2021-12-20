@@ -11,7 +11,7 @@ function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
     param_names=(:Nsuper, :Cquota, :mean, :var, :α, :Φ, :T⁺, :Ea,
                  :PCmax, :PC_b, :Chl2C, :respir_a, :respir_b,
                  :grz_P, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
-                 :mort_P, :mort_reg, :grazFracC, :mortFracC)
+                 :mort_P, :mort_reg, :grazFracC, :mortFracC, :ther_mort)
 
     pkeys = collect(keys(params))
     tmp = zeros(length(param_names))
@@ -26,7 +26,7 @@ function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
     return plankton(data, p)
 end
 
-function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture; mask = nothing)
+function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
     mean = plank.p.mean
     var = plank.p.var
     Cquota = plank.p.Cquota
@@ -48,13 +48,7 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     plank.data.iS  .= max.(1.0, plank.data.iS .* var .+ mean) .* plank.data.ac                       # init_size
     plank.data.Sz  .= copy(plank.data.iS)                                                            # size
     plank.data.Bm  .= Cquota .* plank.data.Sz .* Nsuper                                              # Bm
-    plank.data.Chl .= plank.data.Bm .* Chl2C                                                      # Chl
+    plank.data.Chl .= plank.data.Bm .* Chl2C                                                         # Chl
 
-    if mask ≠ nothing
-        if size(mask) == (g.Nx, g.Ny, g.Nz)
-            mask_individuals!(plank.data, mask, N, arch)
-        else
-            throw(ArgumentError("nut_mask: grid mismatch, size(mask) must equal to (grid.Nx, grid.Ny, grid.Nz)."))
-        end
-    end
+    mask_individuals!(plank.data, g, N, arch)
 end

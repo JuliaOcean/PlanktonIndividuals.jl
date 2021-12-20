@@ -23,9 +23,15 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
         calc_mort!(plank, p, arch)
         calc_dvid!(plank, divide_type(p.dvid_type), p, t, arch)
         get_probability!(plank, rnd, ΔT, arch)
+
+        ##### thermal mortality (WIP)
+        if p.ther_mort == 1
+            # thermal_mort!(plank, nuts, p)
+        end
     else
         @inbounds plank.graz .= 0.0
         @inbounds plank.mort .= 0.0
         @inbounds plank.dvid .= 0.0
     end
+
 end

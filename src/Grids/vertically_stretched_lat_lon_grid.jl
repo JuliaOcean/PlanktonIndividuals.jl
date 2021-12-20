@@ -37,11 +37,14 @@ struct VerticallyStretchedLatLonGrid{TX, TY, TZ, R, A1, A2, A3} <: AbstractGrid{
     Hx::Int
     Hy::Int
     Hz::Int
+    # landmask to indicate where is the land
+    landmask::A3
 end
 
 """
-    LoadVerticallyStretchedLatLonGrid(; grid_info, size, lat, lon,
-                                        halo=(2,2,2))
+    LoadVerticallyStretchedLatLonGrid(;grid_info, size, lat, lon,
+                                       landmask = nothing,
+                                       halo=(2,2,2))
 Creats a `VerticallyStretchedLatLonGrid` struct with `size = (Nx, Ny, Nz)` grid points.
 
 Keyword Arguments (Required)
@@ -57,12 +60,13 @@ Keyword Arguments (Required)
 
 Keyword Arguments (Optional)
 ============================
+- `landmask` : a 3-dimentional array to indicate where the land is.
 - `halo` : A tuple of integers that specifies the size of the halo region of cells
                 surrounding the physical interior for each direction.
                 `halo` is a 3-tuple no matter for 3D, 2D, or 1D model.
                 At least 2 halo points are needed for DST3FL advection scheme.
 """
-function LoadVerticallyStretchedLatLonGrid(;grid_info, size, lat, lon, halo=(2,2,2))
+function LoadVerticallyStretchedLatLonGrid(;grid_info, size, lat, lon, landmask = nothing, halo=(2,2,2))
     Nx, Ny, Nz = size
     Hx, Hy, Hz = halo
     lat₁, lat₂ = lat
@@ -166,8 +170,10 @@ function LoadVerticallyStretchedLatLonGrid(;grid_info, size, lat, lon, halo=(2,2
         end
     end
 
+    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX)
+
     return VerticallyStretchedLatLonGrid{TX, TY, TZ, typeof(xF), typeof(zF), typeof(dxC), typeof(Vol)}(
-        xC, yC, zC, xF, yF, zF, Δx, Δy, dxC, dyC, dzC, dxF, dyF, dzF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz)
+        xC, yC, zC, xF, yF, zF, Δx, Δy, dxC, dyC, dzC, dxF, dyF, dzF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz, landmask)
 end
 
 function show(io::IO, g::VerticallyStretchedLatLonGrid{TX, TY, TZ}) where {TX, TY, TZ}

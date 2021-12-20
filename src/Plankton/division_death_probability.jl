@@ -60,6 +60,11 @@ function calc_graz_quadratic!(plank, nuts, P, arch)
     return nothing
 end
 
+##### thermal mortality (WIP)
+function thermal_mort!(plank, nuts, p)
+    # @inbounds plank.mort .= (plank.mort .+ isless.(p.T⁺-273.15, nuts.T) .* (1 .- plank.mort)) .* plank.ac
+end
+
 ##### calculate the probability of mortality
 @kernel function calc_mort_kernel!(plank, p)
     i = @index(Global)

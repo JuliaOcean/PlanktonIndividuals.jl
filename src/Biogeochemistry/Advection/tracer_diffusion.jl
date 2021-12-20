@@ -1,28 +1,3 @@
-##### Difference operators
-@inline δx⁺(i, j, k, c) = @inbounds c[i+1, j, k] - c[i, j, k]
-@inline δy⁺(i, j, k, c) = @inbounds c[i, j+1, k] - c[i, j, k]
-@inline δz⁺(i, j, k, c) = @inbounds c[i, j, k] - c[i, j, k+1]
-
-@inline δx⁰(i, j, k, c) = @inbounds c[i, j, k] - c[i-1, j, k]
-@inline δy⁰(i, j, k, c) = @inbounds c[i, j, k] - c[i, j-1, k]
-@inline δz⁰(i, j, k, c) = @inbounds c[i, j, k-1] - c[i, j, k]
-
-##### used only when halo points ≥ 2
-@inline δx⁻(i, j, k, c) = @inbounds c[i-1, j, k] - c[i-2, j, k]
-@inline δy⁻(i, j, k, c) = @inbounds c[i, j-1, k] - c[i, j-2, k]
-@inline δz⁻(i, j, k, c) = @inbounds c[i, j, k-2] - c[i, j, k-1]
-#####
-
-##### Difference operators with functions
-@inline δx⁺(i, j, k, grid, f::F, args...) where F<:Function = f(i+1, j, k, grid, args...) - f(i, j, k, grid, args...)
-@inline δy⁺(i, j, k, grid, f::F, args...) where F<:Function = f(i, j+1, k, grid, args...) - f(i, j, k, grid, args...)
-@inline δz⁺(i, j, k, grid, f::F, args...) where F<:Function = f(i, j, k, grid, args...) - f(i, j, k+1, grid, args...)
-
-##### Derivative operators
-@inline ∂x⁰(i, j, k, grid, c) = δx⁰(i, j, k, c) / ΔxF(i, j, k, grid)
-@inline ∂y⁰(i, j, k, grid, c) = δy⁰(i, j, k, c) / ΔyF(i, j, k, grid)
-@inline ∂z⁰(i, j, k, grid, c) = δz⁰(i, j, k, c) / ΔzF(i, j, k, grid)
-
 ##### Diffusive fluxes
 @inline diffusive_flux_x(i, j, k, grid, κˣ::Number, c) = κˣ * Ax(i, j, k, grid) * ∂x⁰(i, j, k, grid, c)
 @inline diffusive_flux_y(i, j, k, grid, κʸ::Number, c) = κʸ * Ay(i, j, k, grid) * ∂y⁰(i, j, k, grid, c)

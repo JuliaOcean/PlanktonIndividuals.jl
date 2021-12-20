@@ -116,6 +116,7 @@ function phyt_params_default(N::Int64, mode::QuotaMode)
         "mortFracC"=> [0.5],     # Fraction goes into dissolved organic pool
         "mortFracN"=> [0.5],     # Fraction goes into dissolved organic pool
         "mortFracP"=> [0.5],     # Fraction goes into dissolved organic pool
+        "ther_mort"=> [0],       # thermal mortality, 1 for on, 0 for off
     )
 
     if N == 1
@@ -151,6 +152,7 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "mort_reg" => [0.5],     # Regulation of cell natural death
         "grazFracC"=> [0.7],     # Fraction goes into dissolved organic pool
         "mortFracC"=> [0.5],     # Fraction goes into dissolved organic pool
+        "ther_mort"=> [0],       # thermal mortality, 1 for on, 0 for off
     )
 
     if N == 1

@@ -20,7 +20,6 @@ end
                   phyt_params = phyt_params_default(N_species, mode),
                   nut_initial = default_nut_init(),
                   t = 0.0,
-                  mask = nothing,
                   )
 
 Generate a `PlanktonModel` data structure. 
@@ -41,7 +40,6 @@ Keyword Arguments (Optional)
 - `nut_initial` : The source of initial conditions of nutrient fields, should be either a `NamedTuple` 
                            or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
 - `t` : Model time, start from 0 by default, in second.
-- `mask` : Mask out the individuals and tracers generated out of the domain, a 3D array with size `(Nx, Ny, Nz)`.
 """
 function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        mode = QuotaMode(),
@@ -52,7 +50,6 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        phyt_params = phyt_params_default(N_species, mode),
                        nut_initial = default_nut_init(),
                        t::Int64 = 0,
-                       mask = nothing,
                        )
 
     @assert N_individual ≤ max_individuals
@@ -63,15 +60,10 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
 
     grid_d = replace_grid_storage(arch, grid)
 
-    if mask ≠ nothing
-        mask_d = mask |> array_type(arch)
-    else
-        mask_d = nothing
-    end
 
-    inds = generate_individuals(phyt_params, arch, N_species, N_individual, max_individuals, grid_d, mode; mask = mask_d)
+    inds = generate_individuals(phyt_params, arch, N_species, N_individual, max_individuals, grid_d, mode)
 
-    nutrients = generate_nutrients(arch, grid_d, nut_initial; mask = mask_d)
+    nutrients = generate_nutrients(arch, grid_d, nut_initial)
 
     ts = timestepper(arch, grid_d, max_individuals)
 
