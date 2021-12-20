@@ -25,7 +25,8 @@ bibliography: paper.bib
 ---
 
 # Summary
-PlanktonIndividuals.jl is a fast individual-based model that represents the phytoplankton life cycle model in detail, is written in Julia, and runs on both CPU and GPU. It simulates the life cycle of phytoplankton cells as Lagrangian particles while nutrients are represented as Eulerian tracers and advected over the gridded domain. 
+PlanktonIndividuals.jl is a fast individual-based model that represents the phytoplankton life cycle in detail, is written in Julia, and runs on both CPU and GPU. It simulates the life cycle of phytoplankton cells as Lagrangian particles while nutrients are represented as Eulerian tracers and advected over the gridded domain. 
+
 
 The model is used to elucidate temporal and spatial variations in phytoplankton cell density, stoichiometry, as well as growth and division behaviors induced by diel cycle and physical motions ranging from sub-mesoscale to large scale processes. The phytoplankton physiology model is state of the art (FIGURE) with the widely-used Droop model (CITATION) implemented for nutrient uptakes. The photosynthesis formulation by Geider et al (CITATION) is also implemented for carbon fixation. Additionally, exudation and mixotrophy are also accounted for in the model (CITATION).
 
