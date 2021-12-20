@@ -63,7 +63,7 @@ begin
 end
 
 # ╔═╡ 2d407d40-a43b-4501-9621-547bd59633fb
-grid = LoadVerticallyStretchedLatLonGrid(;grid_info = grid_info, size = (360,160,50), lat = (-80,80), lon= (-180,180))
+grid = LoadVerticallyStretchedLatLonGrid(;grid_info = grid_info, size = (360,160,50), lat = (-80,80), lon= (-180,180), landmask = mask)
 
 # ╔═╡ 2668717a-33f8-4c82-a326-136821f5d269
 phyt_parameter = Dict("PCmax"   => [0.0], # maximum photosynthesis rate
@@ -89,8 +89,7 @@ model = PlanktonModel(CPU(), grid;
                       N_individual = 360,
                       max_individuals = 360*8,
                       bgc_params = update_bgc_params(bgc_parameter),
-                      phyt_params = update_phyt_params(phyt_parameter, CarbonMode()), 
-                      mask = mask)
+                      phyt_params = update_phyt_params(phyt_parameter, CarbonMode())) 
 
 # ╔═╡ c921438a-f9d0-41d4-9130-4e40ca323b27
 sim = PlanktonSimulation(model, ΔT = 3600,
