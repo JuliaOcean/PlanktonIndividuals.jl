@@ -73,6 +73,7 @@ end
     @inbounds plank.gen[i] += plank.dvid[i]
     @inbounds plank.age[i] *= (1.0 - plank.dvid[i])
     @inbounds plank.iS[i]   = plank.iS[i] * (1.0 - plank.dvid[i]) + plank.Sz[i] * plank.dvid[i]
+    @inbounds plank.Th[i]  *= (1.0 - plank.dvid[i])
 end
 function divide_to_half!(plank, arch)
     kernel! = divide_to_half_kernel!(device(arch), 256, (size(plank.ac,1)))

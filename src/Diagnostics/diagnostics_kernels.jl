@@ -20,7 +20,7 @@ function diags_proc!(diags_proc, proc, ac, x, y, z, ::CPU)
 end
 
 function diags_spcs!(diags_sp, plank, ac, x, y, z, mode::AbstractMode, arch::Architecture)
-    diags = (:PS, :resp, :Bm, :Chl)
+    diags = (:PS, :resp, :Bm, :Chl, :Th)
     if isa(mode, CarbonMode)
         nothing
     elseif isa(mode, QuotaMode)

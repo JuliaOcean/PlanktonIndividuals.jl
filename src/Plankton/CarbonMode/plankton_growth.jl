@@ -8,6 +8,8 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
 
     update_cellsize!(plank, p, arch)
 
+    calc_thermal_history!(plank, nuts, p, ΔT, arch)
+
     ##### probabilities of grazing, mortality, and cell division
     ##### check the probabilities every 10 time steps or 1 hour whichever is shorter
     if t%(ΔT*(min(10,3600÷ΔT))) == 0 
@@ -25,5 +27,10 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
         @inbounds plank.mort .= 0.0
         @inbounds plank.dvid .= 0.0
     end
+
+    # ##### reset thermal history factor every day
+    # if t%86400 == 0
+    #     plank.Th .= 0.0
+    # end
 
 end
