@@ -64,7 +64,7 @@ function write_species_dynamics(t::Int64, phytos, filepath, mode::QuotaMode)
         Cq_ave  =  dot(phytos[i].data.Cq,  phytos[i].data.ac) / pop
         Nq_ave  =  dot(phytos[i].data.Nq,  phytos[i].data.ac) / pop
         Pq_ave  =  dot(phytos[i].data.Pq,  phytos[i].data.ac) / pop
-        Chl_ave =  dot(phytos[i].data.chl, phytos[i].data.ac) / pop
+        Chl_ave =  dot(phytos[i].data.Chl, phytos[i].data.ac) / pop
         day = t÷86400
         hour = t%86400/3600
         io = open(file,"a");
@@ -96,7 +96,7 @@ function write_individuals_to_jld2(phytos::NamedTuple, filepath, t, iter, atts)
         for sp in keys(phytos)
             spi = NamedTuple{atts}([getproperty(phytos[sp].data, att) for att in atts])
             for att in atts
-                file["timeseries/$att/$iter"] = Array(spi[att])
+                file["timeseries/$sp/$att/$iter"] = Array(spi[att])
             end
         end
     end
