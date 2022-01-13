@@ -163,7 +163,7 @@ where ``S_{dvid}`` represents the sigmoidal function in different cell division 
 
 ### Sizer
 
-The probability of cell division is a function of cell size and increase while the cell size gets larger.
+The probability of cell division is a function of cell size and increases as the cell size gets larger.
 
 ```math
 S_{dvid} = tanh(stp_D * (Sz - reg_D)) + 1.0
@@ -171,7 +171,7 @@ S_{dvid} = tanh(stp_D * (Sz - reg_D)) + 1.0
 
 ### Adder
 
-The probability of cell division is a function of the difference between current cell size and initial cell size (``iSz``) and increase while the difference gets larger.
+The probability of cell division is a function of the difference between current cell size and initial cell size (``iSz``) and increases as the difference gets larger.
 
 ```math
 S_{dvid} = tanh(stp_D * (Sz - iSz - reg_D)) + 1.0
@@ -179,7 +179,7 @@ S_{dvid} = tanh(stp_D * (Sz - iSz - reg_D)) + 1.0
 
 ### Timer
 
-The probability of cell division is a function of clock time and increase in the dark.
+The probability of cell division is a function of clock time and increases in the dark.
 
 ```math
 S_{dvid} = tanh(stp_D * (t - reg_D)) + 1.0
@@ -205,7 +205,7 @@ S_{dvid} = (tanh(stp1_D * (Sz - iSz - reg1_D)) + 1.0) * (tanh(stp2_D * (t - reg2
 
 ## Grazing
 
-For now, there're no real grazers in the model. Instead, a quadratic grazing term is implemented in the model to represent the grazing loss of cells. For each individual, the probability to be grazed (``P_G``) is calculated as below.
+For now, the model does not have individuals of grazers. Instead, a quadratic grazing term is parameterized and implemented in the model to represent the grazing loss of cells. For each individual, the probability to be grazed (``P_G``) is calculated as below.
 
 ```math
 P_G =  P_{graz} * pop
