@@ -35,7 +35,7 @@ PC=PC_{max}\cdot (1-e^{\frac{-\alpha\Phi \cdot I\cdot Chl}{PC_{max}\cdot Bm}})
 PC_{max}= PCmax \cdot Sz^{PC_b}
 ```
 
-where ``PS`` is cell-specific light limited photosynthesis rate (``mmol~C~cell^{-1}~s^{-1}``). ``PC`` is carbon-specific light limited photosynthesis rate (``mmol~C~(mmol~C)^{-1}~s^{-1}``). ``PC_{max}`` is light-saturated photosynthesis rate (``mmol~C~(mmol~C)^{-1}~s^{-1}) and is scaled by a power-law relationship of cell size (``Sz``), $I$ is the flux of photosynthetically active radiation (PAR, ``\mu mol~photons~m^{-2}~s^{-1}``).
+where ``PS`` is cell-specific light limited photosynthesis rate (``mmol~C~cell^{-1}~s^{-1}``). ``PC`` is carbon-specific light limited photosynthesis rate (``mmol~C~(mmol~C)^{-1}~s^{-1}``). ``PC_{max}`` is light-saturated photosynthesis rate (``mmol~C~(mmol~C)^{-1}~s^{-1})`` and is scaled by a power-law relationship of cell size (``Sz``), $I$ is the flux of photosynthetically active radiation (PAR, ``\mu mol~photons~m^{-2}~s^{-1}``).
 
 ## Nutrient Uptake
 
@@ -219,7 +219,7 @@ where `pop` is the number of individuals in the grid cell where the individual s
 | ``Cquota``        | Cquota   | 1.8e-11 | ``mmol~C~cell^{-1}``     | carbon quota when ``Sz = 1.0``    |
 | ``PCmax``         | PCmax    | 4.2e-5  | ``s^{-1}``               | Maximum photosynthesis rate       |
 | ``\alpha``        |``\alpha``| 2.0e-2  | ``m^2~mgChl^{-1}``       | Irradiance absorption coeff       |
-| ``\Phi``          |``\Phi``  | 4.0e-5  | ``mmol~C~\mumol~photons``| Maximum quantum yield             |
+| ``\Phi``          |``\Phi``  | 4.0e-5  | ``mmol~C~ / \mu~mol~photons``| Maximum quantum yield             |
 | ``VNH4max``       | VNH4max  | 6.9e-6  | ``s^{-1}``               | Maximum ammonium uptake rate      |
 | ``VNO3max``       | VNO3max  | 6.9e-6  | ``s^{-1}``               | Maximum nitrate uptake rate       |
 | ``VPO4max``       | VPO4max  | 1.2e-6  | ``s^{-1}``               | Maximum phosphate uptake rate     |
