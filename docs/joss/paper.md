@@ -32,8 +32,9 @@ The model is used to elucidate temporal and spatial variations in phytoplankton 
 
 ![Schematic diagram of phytoplankton physiology described in PlanktonIndividuals.jl.\label{fig:phyto}](PI_Quota.jpeg)
 
-`PlanktonIndividuals.jl` can simulate multiple functional groups of phytoplankton with different growth and division strategies which will illustrate the interactions within and between functional groups. The individuals can be simulated not only in a zero-dimensional domain (like lab experiments) but also in one-, two-, or three-dimensional domains where individuals can be advected by velocities provided by various models or observations (e.g. `MITgcm`, `Oceananigans.jl`).
+`PlanktonIndividuals.jl` can simulate multiple functional groups of phytoplankton with different growth and division strategies which will illustrate the interactions within and between functional groups. The individuals can be simulated not only in a zero-dimensional domain (like lab experiments) but also in one-, two-, or three-dimensional domains where individuals can be advected by velocities provided by various models or observations (e.g. `MITgcm`, `Oceananigans.jl`). The model outputs include time series of individual trajectories, cell density, biomass, and vital rates such as cell division rates, photosynthesis rate, and nutrient uptake rates \autoref{fig:0D}.
 
+![Model results of a 0-dimensional setup.\label{fig:0D}](0D_plot.png)
 
 # Statement of need
 Phytoplankton models, like those incorporated in ecological and biogeochemical models, are essential tools to explore and understand phytoplankton life cycles, interactions between species, population dynamics, and community structures in various water bodies (e.g. lakes, coastal waters, and open ocean) [@follows2007emergent; @geider1997dynamic]. Individual-based / Lagrangian models differ from Eulerian (population level) models in the way they represent heterogeneous populations like cells of different sizes, nutrient quotas, and life cycle stages [@hellweger2016advancing; @hellweger2014biogeographic; @clark2011individual]. 
