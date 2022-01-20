@@ -101,8 +101,8 @@ tracer. Second element is a 10-element `NamedTuple`, each element is a `Float64`
 An example of the `NamedTuple` is listed below:
 
 ```@repl 1
-initial_condition = (DIC=20.0, NH4=0.2, NO3=0.5, PO4=0.03, DOC=1.0, DON=0.1, DOP=0.05, POC=0.0, PON=0.0,POP=0.0)
-rand_noise = (DIC=0.0, NH4=0.0, NO3=0.0, PO4=0.0, DOC=0.0, DON=0.0, DOP=0.0, POC=0.0, PON=0.0,POP=0.0)
+initial_condition = (DIC=20.0, NH4=0.2, NO3=0.5, PO4=0.03, DOC=1.0, DON=0.1, DOP=0.05, POC=0.0, PON=0.0,POP=0.0);
+rand_noise = (DIC=0.0, NH4=0.0, NO3=0.0, PO4=0.0, DOC=0.0, DON=0.0, DOP=0.0, POC=0.0, PON=0.0,POP=0.0);
 nut_initial = (initial_condition = initial_condition, rand_noise = rand_noise)
 ```
 
@@ -119,5 +119,5 @@ nut_init = Dict(
     "DOP" => "path/to/DOP.bin",
     "POC" => "path/to/POC.bin",
     "PON" => "path/to/PON.bin",
-    "POP" => "path/to/POP.bin")
+    "POP" => "path/to/POP.bin");
 ```
