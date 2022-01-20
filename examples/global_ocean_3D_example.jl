@@ -1,11 +1,21 @@
 ### A Pluto.jl notebook ###
-# v0.17.2
+# v0.17.5
 
 using Markdown
 using InteractiveUtils
 
 # ╔═╡ 88e0998b-177d-4de6-8ebf-932a6969ee7a
 using PlanktonIndividuals
+
+# ╔═╡ 1251276b-991b-4c5c-af05-697f439d8dad
+md"""# Global Ocean 3D example
+
+Here we setup a passive tracer and particle simulation. The tracer is initialized to 1 below 100m depth and 0 above that depth horizon to highlight the Eulerian advection capability. 3600 particles are initialy distributed at random over the Global Ocean to demonstrate the Lagrangian advection capability.
+
+!!! note
+    This simulation may take several hours to complete.
+
+"""
 
 # ╔═╡ 111b70b4-4bca-11ec-30fa-6318c8a55e2c
 import MeshArrays, OceanStateEstimation, NetCDF,Plots
@@ -86,53 +96,84 @@ bgc_parameter = Dict("kDOC" => 0.0, # Remineralization rate for DOC
 model = PlanktonModel(CPU(), grid;
 					  mode = CarbonMode(),
                       N_species = 1,
-                      N_individual = 360,
-                      max_individuals = 360*8,
+                      N_individual = 3600,
+                      max_individuals = 3600*8,
                       bgc_params = update_bgc_params(bgc_parameter),
                       phyt_params = update_phyt_params(phyt_parameter, CarbonMode())) 
 
-# ╔═╡ c921438a-f9d0-41d4-9130-4e40ca323b27
-sim = PlanktonSimulation(model, ΔT = 3600,
-								iterations = 12,
-								vels=(u=uvels, v=vvels, w=wvels),
-								temp = temps,
-								ΔT_vel=3600*24*30,
-								ΔT_temp=3600*24*30)
+# ╔═╡ b49a4d13-83a0-45df-95ee-6105c1a1e087
+function fill_halo_array!(data, g::PlanktonIndividuals.AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
+          PlanktonIndividuals.Fields.fill_halo_west!(data, g.Hx, g.Nx, TX())
+          PlanktonIndividuals.Fields.fill_halo_east!(data, g.Hx, g.Nx, TX())
+         PlanktonIndividuals.Fields.fill_halo_south!(data, g.Hy, g.Ny, TY())
+         PlanktonIndividuals.Fields.fill_halo_north!(data, g.Hy, g.Ny, TY())
+           PlanktonIndividuals.Fields.fill_halo_top!(data, g.Hz, g.Nz, TZ())
+        PlanktonIndividuals.Fields.fill_halo_bottom!(data, g.Hz, g.Nz, TZ())
+    return nothing
+end
 
-# ╔═╡ 958cb675-2b08-41e5-8f20-75c967b50e10
+# ╔═╡ 9f25ad02-d92c-42f0-8cc5-84fd5393fe1c
+begin
+	tmp=1.0*mask
+	tmp[:,:,1:10].=0.0
+	DOC_init=zeros(size(mask).+4)
+	DOC_init[3:end-2,3:end-2,3:end-2] .= tmp
+	fill_halo_array!(DOC_init,grid)
+	model.nutrients.DOC.data.=DOC_init
+	✔2= "Done with initial condition"
+end
+
+# ╔═╡ c921438a-f9d0-41d4-9130-4e40ca323b27
+begin
+	✔2
+	sim = PlanktonSimulation(model, ΔT = 3600,
+									iterations = 24*30*12,
+									vels=(u=uvels, v=vvels, w=wvels),
+									temp = temps,
+									ΔT_vel=3600*24*30,
+									ΔT_temp=3600*24*30)
+end
+
+# ╔═╡ 59c5f5ba-5823-47f2-85d4-65467d166cd6
 update!(sim)
 
 # ╔═╡ b9b48754-9244-435e-aa45-afb54d950273
-function plot_model(model::PlanktonModel, uu)
-    ## Coordinate arrays for plotting
-    xC, yC = collect(model.grid.xC)[3:end-2], collect(model.grid.yC)[3:end-2]
-
-    ## heatmap of the flow field
-    fl_plot = Plots.contourf(xC, yC, uu', xlabel="x (m)", ylabel="y (m)", color=:balance, fmt=:png, colorbar=false)
-
-    ## a scatter plot embeded in the flow fields
+function plot_map(model::PlanktonModel, kk=10)
+	## tracer field
+	col=Array(model.nutrients.DOC.data)[3:end-2,3:end-2,kk]
+	col[findall(mask[:,:,kk].==0.0)].=NaN
+	xC, yC = collect(model.grid.xC)[3:end-2], collect(model.grid.yC)[3:end-2]
+    fig = Plots.heatmap(xC, yC, col',clims=(-0.1, 1.1), color=:thermal, fmt=:png)
+	
+    ## scatter plot
     px = Array(model.individuals.phytos.sp1.data.x) .* 1 .- 180 # convert fractional indices to degree
     py = Array(model.individuals.phytos.sp1.data.y) .* 1 .- 80  # convert fractional indices to degree
-    Plots.scatter!(fl_plot, px, py, ms=3, color = :red, legend=:none)
+    Plots.scatter!(fig, px, py, ms=3, color = :white, legend=:none)
 
-    ## DOC field
-    trac1 = Plots.heatmap(xC, yC, Array(model.nutrients.DOC.data)[3:end-2,3:end-2,3]', xlabel="x (m)", ylabel="y (m)", clims=(0.5, 1.1), fmt=:png)
-
-    ## Arrange the plots side-by-side.
-    plt = Plots.plot(fl_plot, trac1, size=(1200, 400),
-        title=[lpad(model.t÷86400,2,"0")*"day "*lpad(model.t÷3600-24*(model.t÷86400),2,"0")*"hour" "DOC (mmolC/L)"])
-
-    return plt
+    return fig
 end
 
 
 # ╔═╡ c6afa25a-432e-4e0f-ae52-58cf4c936fa2
+f1=plot_map(model, 10)
+
+# ╔═╡ b068dc2b-7688-4c0f-9404-b41f3dca3ea8
 begin
-	u_plot = uvels[:,:,1,1]
-	u_plot[findall(x -> x == 0.0, mask[:,:,1])] .= NaN
-	plot_model(model, u_plot)
+	function plot_zm(model::PlanktonModel, kk=10)
+		d1=Array(model.nutrients.DOC.data)[3:end-2,3:end-2,3:end-2];
+		#d1[findall(mask.==0.0)].=missing
+		d2=dropdims(sum(d1,dims=1),dims=1)./dropdims(sum(mask,dims=1),dims=1)
+		zC2, yC2 = collect(model.grid.zC)[3:end-2], collect(model.grid.yC)[3:end-2]
+		f2=Plots.contourf(yC2,reverse(zC2),reverse(permutedims(d2),dims=1),
+		ylims=(-200.0,0.0),xlabel="latitude",ylabel="depth")
+		f2
+	end
+	
+	f2=plot_zm(model)
 end
 
+# ╔═╡ 342840e0-d18a-4218-b6b0-1b95065878fd
+#Plots.savefig(f1,"global_ocean_3D_example_f1.png")
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -580,9 +621,9 @@ version = "4.7.0"
 
 [[deps.LLVMExtra_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "c5fc4bef251ecd37685bea1c4068a9cfa41e8b9a"
+git-tree-sha1 = "62115afed394c016c2d3096c5b85c407b48be96b"
 uuid = "dad2f222-ce93-54a1-a47d-0025e8a3acab"
-version = "0.0.13+0"
+version = "0.0.13+1"
 
 [[deps.LZO_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -768,9 +809,9 @@ version = "0.2.0"
 
 [[deps.Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "7937eda4681660b4d6aeeecc2f7e1c81c8ee4e2f"
+git-tree-sha1 = "887579a3eb005446d514ab7aeac5d1d027658b8f"
 uuid = "e7412a2a-1a6e-54c0-be00-318e2571c051"
-version = "1.3.5+0"
+version = "1.3.5+1"
 
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
@@ -1274,6 +1315,7 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
+# ╟─1251276b-991b-4c5c-af05-697f439d8dad
 # ╠═111b70b4-4bca-11ec-30fa-6318c8a55e2c
 # ╠═1431ecc6-2b02-4c86-bd81-906899e78f18
 # ╠═4efcd71d-2fef-4f80-b8fe-5fc22a2ac056
@@ -1283,9 +1325,13 @@ version = "0.9.1+5"
 # ╠═2668717a-33f8-4c82-a326-136821f5d269
 # ╠═a793979f-cebe-4fc7-bd2a-bc9901840410
 # ╠═191704d8-1900-4408-a509-2f488017c498
+# ╠═9f25ad02-d92c-42f0-8cc5-84fd5393fe1c
+# ╠═b49a4d13-83a0-45df-95ee-6105c1a1e087
 # ╠═c921438a-f9d0-41d4-9130-4e40ca323b27
-# ╠═958cb675-2b08-41e5-8f20-75c967b50e10
-# ╟─b9b48754-9244-435e-aa45-afb54d950273
+# ╠═59c5f5ba-5823-47f2-85d4-65467d166cd6
+# ╠═b9b48754-9244-435e-aa45-afb54d950273
 # ╠═c6afa25a-432e-4e0f-ae52-58cf4c936fa2
+# ╟─b068dc2b-7688-4c0f-9404-b41f3dca3ea8
+# ╠═342840e0-d18a-4218-b6b0-1b95065878fd
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
