@@ -9,8 +9,8 @@ export
     Architecture, GPU, CPU,
 
     # Grids
-    RegularRectilinearGrid, RegularLatLonGrid,
-    VerticallyStretchedLatLonGrid, LoadVerticallyStretchedLatLonGrid,
+    RectilinearGrid,
+    LatLonGrid, LoadLatLonGrid,
     Periodic, Bounded,
 
     # Model
