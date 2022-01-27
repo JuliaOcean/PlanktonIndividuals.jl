@@ -2,7 +2,8 @@ using Documenter, Pkg, PlanktonIndividuals, Plots
 import PlutoSliderServer
 Pkg.precompile()
 
-examples = ["vertical_2D_example.jl", "horizontal_2D_example.jl", "surface_mixing_3D_example.jl", "0D_experiment.jl", "global_ocean_2D_example.jl"]
+examples = ["vertical_2D_example.jl", "horizontal_2D_example.jl", "surface_mixing_3D_example.jl",
+            "0D_experiment.jl", "global_ocean_2D_example.jl", "global_ocean_3D_example.jl"]
 
 model_description = [
     # "Table Of Content" => "model_description.md",
