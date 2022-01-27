@@ -47,5 +47,9 @@ There are many software packages for individual-based modeling, both in Julia or
 
 Our package is unique in the way that it is taylored to the analysis of marine ecosystems across a wide range of scales using HPC systems. To this end, `PlanktonIndividuals.jl` provides a comprehensive description of phytoplankton physiology and biogeochemistry, written in a fast language, Julia, and with GPU support. It further innovates in combining the Eulerian and Lagrangian perspectives. Plankton individuals (Lagrangian) indeed have a two-way interactions with gridded nutrient fields (Eulerian) that are advected by the same flow fields (in 2D or 3D) in our package. 
 
+To illustrate advective processes, we performed a one-year simulation of a passive tracer, initialized to a concentration of 1 below 100m depth and 0 above 100m depth, along with 3600 particles moving in three dimensions \autoref{fig:3D}.
+
+![Model results of a 3-dimensional setup.\label{fig:3D}](global_ocean_3D_example_f1.png)
+
 Further development plans include implementation of macro-molecular model [@Inomura2020] and support for distributed parallelism with CUDA-aware MPI.
 
