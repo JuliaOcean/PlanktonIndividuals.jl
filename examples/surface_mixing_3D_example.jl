@@ -31,7 +31,7 @@ First we generate grid information and the computational architecture (CPU).
 arch = CPU()
 
 # ╔═╡ 3093a948-630d-402c-aeb4-73a552e0cb31
-grid = RegularRectilinearGrid(size=(32, 32, 32), spacing=(4meters, 4meters, 4meters))
+grid = RectilinearGrid(size=(32, 32, 32), x = (0.0,128meters), y = (0.0,128meters), z = (0.0,-128meter) )
 
 # ╔═╡ 02a7cda3-4a3a-49ea-a646-e1da7a1e1f14
 md"""

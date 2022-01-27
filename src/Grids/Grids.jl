@@ -1,9 +1,9 @@
 module Grids
 
 export AbstractGrid
-export RegularRectilinearGrid
-export RegularLatLonGrid
-export VerticallyStretchedLatLonGrid, LoadVerticallyStretchedLatLonGrid
+export RectilinearGrid
+export LatLonGrid
+export LoadLatLonGrid
 export Periodic, Bounded, short_show
 export replace_grid_storage
 export ΔxC, ΔyC, ΔzC, ΔxF, ΔyF, ΔzF, Ax, Ay, Az, volume 
@@ -39,9 +39,8 @@ struct Bounded <: AbstractTopology end
 
 import Base: show
 
-include("regular_rectilinear_grid.jl")
-include("regular_lat_lon_grid.jl")
-include("vertically_stretched_lat_lon_grid.jl")
+include("rectilinear_grid.jl")
+include("lat_lon_grid.jl")
 include("utils.jl")
 include("areas_volumes_spacings.jl")
 
