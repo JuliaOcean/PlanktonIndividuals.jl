@@ -43,7 +43,7 @@ Then we generate the grid information.
 """
 
 # ╔═╡ 707f61f5-8b6a-4c2b-8b5b-3aedd62e0f9c
-grid = LatLonGrid(size=(360, 160, 1), lat=(-80,80), lon=(-180,180), z=(0,-10), landmask = mask)
+grid = RegularLatLonGrid(size=(360, 160, 1), lat=(-80,80), lon=(-180,180), z=(0,-10), landmask = mask)
 
 
 # ╔═╡ d88cd912-326b-4d21-ac18-74e3ff7edcb9

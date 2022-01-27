@@ -37,7 +37,7 @@ First we generate grid information (128 by 128 grid boxes, 1m thick, and 1m wide
 arch = CPU()
 
 # ╔═╡ 3093a948-630d-402c-aeb4-73a552e0cb31
-grid = RectilinearGrid(size=(128, 1, 128), x = (0.0, 128meters), y = (0.0,1meter), z = (0.0, -128meter))
+grid = RegularRectilinearGrid(size=(128, 1, 128), spacing=(1, 1, 1))
 
 # ╔═╡ 02a7cda3-4a3a-49ea-a646-e1da7a1e1f14
 md"""

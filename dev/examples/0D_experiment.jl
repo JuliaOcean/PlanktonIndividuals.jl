@@ -32,7 +32,7 @@ First we generate grid information (one grid box, 256m thick, and 128x128 in wid
 arch=CPU()
 
 # ╔═╡ 91079b4b-dd70-4e57-b7ca-4d7be300911a
-grid = RectilinearGrid(size=(1,1,1), x = (0, 128meters), y = (0,128meters), z = (0,-128meters))
+grid = RegularRectilinearGrid(size=(1,1,1), spacing=(128meters, 128meters, 256meters))
 
 # ╔═╡ c4af7de9-7e1e-44a4-a25c-84cca7c768cf
 md"""
