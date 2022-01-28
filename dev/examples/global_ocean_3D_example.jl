@@ -118,8 +118,8 @@ begin
 									iterations = 5,#24*30*12,
 									vels=(u=uvels, v=vvels, w=wvels),
 									temp = temps,
-									ΔT_vel=3600*30,
-									ΔT_temp=3600*30)
+									ΔT_vel=3600*24*30,
+									ΔT_temp=3600*24*30)
 end
 
 # ╔═╡ 59c5f5ba-5823-47f2-85d4-65467d166cd6
