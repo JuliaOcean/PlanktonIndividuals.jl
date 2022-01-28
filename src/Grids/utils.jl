@@ -27,7 +27,7 @@ function replace_grid_storage(arch::Architecture, grid::RectilinearGrid{TX, TY, 
     dzC = grid.dzC |> array_type(arch)
     dzF = grid.dzF |> array_type(arch)
     landmask = grid.landmask |> array_type(arch)
-    return RectilinearGrid{TX, TY, TZ, typeof(grid.xF), typeof(grid.zF), typeof(landmask)}(
+    return RectilinearGrid{TX, TY, TZ, typeof(grid.xF), typeof(zF), typeof(landmask)}(
         grid.xC, grid.yC, zC, grid.xF, grid.yF, zF, grid.Δx, grid.Δy, dzC, dzF,
         grid.Nx, grid.Ny, grid.Nz, grid.Hx, grid.Hy, grid.Hz, landmask)
 end
