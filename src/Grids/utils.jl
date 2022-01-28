@@ -37,7 +37,7 @@ end
 #####
 
 Adapt.adapt_structure(to, grid::RectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ} =
-    RegularRectilinearGrid{TX, TY, TZ, typeof(grid.xF), typeof(Adapt.adapt(to, grid.zF)), typeof(Adapt.adapt(to, grid.landmask))}(
+    RectilinearGrid{TX, TY, TZ, typeof(grid.xF), typeof(Adapt.adapt(to, grid.zF)), typeof(Adapt.adapt(to, grid.landmask))}(
         grid.xC, grid.yC,
         Adapt.adapt(to, grid.zC),
         grid.xF, grid.yF,
@@ -50,7 +50,7 @@ Adapt.adapt_structure(to, grid::RectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ} 
         Adapt.adapt(to, grid.landmask))
 
 Adapt.adapt_structure(to, grid::LatLonGrid{TX, TY, TZ}) where {TX, TY, TZ} =
-    VerticallyStretchedLatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(Adapt.adapt(to, grid.zF)), 
+    LatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(Adapt.adapt(to, grid.zF)), 
                                             typeof(Adapt.adapt(to, grid.dxC)), typeof(Adapt.adapt(to, grid.Vol))}(
         grid.xC, grid.yC,
         Adapt.adapt(to, grid.zC),
