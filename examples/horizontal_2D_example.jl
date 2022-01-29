@@ -58,6 +58,18 @@ model = PlanktonModel(arch, grid; N_species = 1,
 								  N_individual = 2^7,
 								  max_individuals = 2^7*8)
 
+# ╔═╡ 1ec4dee6-e560-4bf1-b523-134961234617
+md"""
+We modify the DOC tracer field to better illustrate the advection.
+"""
+
+# ╔═╡ 8760c506-bd00-47cd-9560-d23141797953
+for i in 1:132
+	for j in 1:132
+		model.nutrients.DOC.data[i,j,:] .= isless(132-j,i) .+ 1
+	end
+end
+
 # ╔═╡ 970cba93-d4a5-4579-a436-465085ea6e6b
 md"""
 Finally we setup the duration of the model simulation and the kind of output we want.
@@ -66,19 +78,14 @@ Finally we setup the duration of the model simulation and the kind of output we 
 # ╔═╡ e47e4afc-699c-4d6f-957d-26aafb592031
 sim = PlanktonSimulation(model, ΔT = 60, iterations = 1,
 								vels=(u=uvels, v=vvels, w=wvels),
-								ΔT_vel=60*120)
+								ΔT_vel=60*240)
 
 # ╔═╡ ec89f0af-1690-49f5-8d7f-23971d332d7d
 md"""
 ## 4. Model Run
 
-We run the model for 120 time steps (2 hours) and then plot individuals and nutrients in their final state (stored in model).
+We run the model for 120 time steps (2 hours) and generate animation.
 """
-
-# ╔═╡ 20a9dffd-b197-44c1-b973-bedea6fd19eb
-for i in 1:120
-    update!(sim)
-end
 
 # ╔═╡ 7f06e8a4-eada-4607-b5dc-8945b8218ca7
 md"""
@@ -99,7 +106,7 @@ function plot_model(model::PlanktonModel)
     Plots.scatter!(fl_plot, px, py, ms=5, color = :red, legend=:none)
 
     ## DOC field
-    trac1 = Plots.contourf(xC, yC, Array(model.nutrients.DOC.data)[3:130,3:130,3]', xlabel="x (m)", ylabel="y (m)", clims=(0.5, 1.1), fmt=:png)
+    trac1 = Plots.contourf(xC, yC, Array(model.nutrients.DOC.data)[3:130,3:130,3]', xlabel="x (m)", ylabel="y (m)", clims=(0.5, 2.4), fmt=:png)
 
     ## Arrange the plots side-by-side.
     plt = Plots.plot(fl_plot, trac1, size=(800, 400),
@@ -108,22 +115,27 @@ function plot_model(model::PlanktonModel)
     return plt
 end
 
+# ╔═╡ 4b9071ef-b7c5-4331-9f49-dcabcfbd4e80
+md"""
+The initial condition of the model is below:
+"""
+
 # ╔═╡ e873d085-a34c-4fd6-a419-5c05444fe0a6
 plot_model(model)
 
-# ╔═╡ 9e833367-c0d5-45f0-92a3-0de9042597ff
+# ╔═╡ 238af617-183f-4caa-a879-4eaf092e8a38
 md"""
-Or you can use the following code to generate an animation like below
-
-```
-anim = @animate for i in 1:120
-   update!(sim)
-   plot_model(model)
-end
-gif(anim, "anim_fps15.gif", fps = 15)
-```
-![animation](https://github.com/JuliaOcean/PlanktonIndividuals.jl/raw/master/examples/figures/anim_horizontal_2D.gif)
+The animation is generated using the following code.
 """
+
+# ╔═╡ 34a23406-1f4a-4d9f-af0f-20e1bfc0aeaa
+begin
+	anim = @animate for i in 1:240
+	   update!(sim)
+	   plot_model(model)
+	end
+	gif(anim, "anim_fps15.gif", fps = 15)
+end
 
 # ╔═╡ 6f59c271-969a-4647-b307-e4e4d109dea8
 TableOfContents()
@@ -1185,14 +1197,17 @@ version = "0.9.1+5"
 # ╠═ed5b3467-8bac-4800-824f-2bf26b3954c0
 # ╟─5abbed9f-a256-4312-a9de-7277379bb33a
 # ╠═7735454f-bc9f-4dad-8c40-2e5bba096307
+# ╟─1ec4dee6-e560-4bf1-b523-134961234617
+# ╠═8760c506-bd00-47cd-9560-d23141797953
 # ╟─970cba93-d4a5-4579-a436-465085ea6e6b
 # ╠═e47e4afc-699c-4d6f-957d-26aafb592031
 # ╟─ec89f0af-1690-49f5-8d7f-23971d332d7d
-# ╠═20a9dffd-b197-44c1-b973-bedea6fd19eb
 # ╟─7f06e8a4-eada-4607-b5dc-8945b8218ca7
 # ╟─f83b3a52-42bb-481e-b405-20f5d4e75f86
+# ╟─4b9071ef-b7c5-4331-9f49-dcabcfbd4e80
 # ╠═e873d085-a34c-4fd6-a419-5c05444fe0a6
-# ╟─9e833367-c0d5-45f0-92a3-0de9042597ff
+# ╟─238af617-183f-4caa-a879-4eaf092e8a38
+# ╠═34a23406-1f4a-4d9f-af0f-20e1bfc0aeaa
 # ╟─6f59c271-969a-4647-b307-e4e4d109dea8
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
