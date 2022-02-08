@@ -19,13 +19,13 @@ affiliations:
  - name: MIT, EAPS
    index: 1
 
-date: 15 September 2021
+date: 07 February 2022
 bibliography: paper.bib
 
 ---
 
 # Summary
-`PlanktonIndividuals.jl` is a fast individual-based model that represents the phytoplankton life cycle in detail, is written in Julia, and runs on both CPU and GPU. It simulates the life cycle of phytoplankton cells as Lagrangian particles while nutrients are represented as Eulerian tracers taking the advantage of both type of models in one framework. 
+`PlanktonIndividuals.jl` is a fast individual-based model that represents the phytoplankton life cycle in detail, is written in Julia, and runs on both CPU and GPU. It simulates phytoplankton cells as Lagrangian particles while nutrients are represented as Eulerian tracers taking the advantage of both types of models in one framework. 
 
 
 The model is used to elucidate temporal and spatial variations in phytoplankton cell density, stoichiometry, as well as growth and division behaviors induced by diel cycle and physical motions ranging from sub-mesoscale to large scale processes. The phytoplankton physiology model is state of the art \autoref{fig:phyto} with the widely-used Droop model [@Droop1973] implemented for nutrient uptakes. The photosynthesis formulation by Geider et al [@geider1997dynamic] is also implemented for carbon fixation. Additionally, exudation and mixotrophy are also accounted for in the model [@wu2021modeling].
