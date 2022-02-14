@@ -19,13 +19,13 @@ affiliations:
  - name: MIT, EAPS
    index: 1
 
-date: 15 September 2021
+date: 07 February 2022
 bibliography: paper.bib
 
 ---
 
 # Summary
-`PlanktonIndividuals.jl` is a fast individual-based model that represents the phytoplankton life cycle in detail, is written in Julia, and runs on both CPU and GPU. It simulates the life cycle of phytoplankton cells as Lagrangian particles while nutrients are represented as Eulerian tracers taking the advantage of both type of models in one framework. 
+`PlanktonIndividuals.jl` is a fast individual-based model that represents the phytoplankton life cycle in detail, is written in Julia, and runs on both CPU and GPU. It simulates phytoplankton cells as Lagrangian particles while nutrients are represented as Eulerian tracers taking the advantage of both types of models in one framework. 
 
 
 The model is used to elucidate temporal and spatial variations in phytoplankton cell density, stoichiometry, as well as growth and division behaviors induced by diel cycle and physical motions ranging from sub-mesoscale to large scale processes. The phytoplankton physiology model is state of the art \autoref{fig:phyto} with the widely-used Droop model [@Droop1973] implemented for nutrient uptakes. The photosynthesis formulation by Geider et al [@geider1997dynamic] is also implemented for carbon fixation. Additionally, exudation and mixotrophy are also accounted for in the model [@wu2021modeling].
@@ -47,9 +47,9 @@ There are many software packages for individual-based modeling, both in Julia or
 
 Our package is unique in the way that it is taylored to the analysis of marine ecosystems across a wide range of scales using HPC systems. To this end, `PlanktonIndividuals.jl` provides a comprehensive description of phytoplankton physiology and biogeochemistry, written in a fast language, Julia, and with GPU support. It further innovates in combining the Eulerian and Lagrangian perspectives. Plankton individuals (Lagrangian) indeed have a two-way interactions with gridded nutrient fields (Eulerian) that are advected by the same flow fields (in 2D or 3D) in our package. 
 
-To illustrate advective processes, we performed a one-year simulation of a passive tracer, initialized to a concentration of 1 below 100m depth and 0 above 100m depth, along with 3600 particles moving in three dimensions \autoref{fig:3D}.
+To illustrate advective processes, we performed a one-year simulation of a passive tracer, initialized to a concentration of 1 below 50m depth and 0 above 50m depth, along with 512 particles moving in three dimensions \autoref{fig:3D}.
 
-![Model results of a 3-dimensional setup.\label{fig:3D}](global_ocean_3D_example_f1.png)
+![Model results of a 3-dimensional setup.\label{fig:3D}](global_ocean_3D_example.png)
 
 Further development plans include implementation of macro-molecular model [@Inomura2020] and support for distributed parallelism with CUDA-aware MPI.
 
