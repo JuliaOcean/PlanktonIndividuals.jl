@@ -60,7 +60,10 @@ model = PlanktonModel(arch, grid; N_species = 1,
 
 # ╔═╡ 1ec4dee6-e560-4bf1-b523-134961234617
 md"""
-We modify the DOC tracer field to better illustrate the advection.
+We modify the initial tracer field to highlight advection.
+
+!!! note
+    DOC is used here as a generic tracer; not to represent dissolved organic carbon per se.
 """
 
 # ╔═╡ 8760c506-bd00-47cd-9560-d23141797953
@@ -94,23 +97,23 @@ To plot the distribution of individuals as well as nutrient fields we use Plots.
 
 # ╔═╡ f83b3a52-42bb-481e-b405-20f5d4e75f86
 function plot_model(model::PlanktonModel)
-    ## Coordinate arrays for plotting
+    ## coordinate arrays for plotting
     xC, yC = collect(model.grid.xC)[3:130], collect(model.grid.yC)[3:130]
 
     ## heatmap of the flow field
     fl_plot = Plots.contourf(xC, yC, ϕcenters', xlabel="x (m)", ylabel="y (m)", color=:balance, fmt=:png, colorbar=false)
 
-    ## a scatter plot embeded in the flow fields
+    ## scatter plot embeded in the flow fields
     px = Array(model.individuals.phytos.sp1.data.x) .* 1 # convert fractional indices to degree
     py = Array(model.individuals.phytos.sp1.data.y) .* 1 # convert fractional indices to degree
     Plots.scatter!(fl_plot, px, py, ms=5, color = :red, legend=:none)
 
-    ## DOC field
+    ## passive tracer field
     trac1 = Plots.contourf(xC, yC, Array(model.nutrients.DOC.data)[3:130,3:130,3]', xlabel="x (m)", ylabel="y (m)", clims=(0.5, 2.4), fmt=:png)
 
-    ## Arrange the plots side-by-side.
+    ## arrange plots side-by-side
     plt = Plots.plot(fl_plot, trac1, size=(800, 400),
-        title=[lpad(model.t÷86400,2,"0")*"day "*lpad(model.t÷3600-24*(model.t÷86400),2,"0")*"hour" "DOC (mmolC/L)"])
+        title=[lpad(model.t÷86400,2,"0")*"day "*lpad(model.t÷3600-24*(model.t÷86400),2,"0")*"hour" " concentration (mmolC/L)"])
 
     return plt
 end
@@ -134,7 +137,7 @@ begin
 	   update!(sim)
 	   plot_model(model)
 	end
-	gif(anim, "anim_fps15.gif", fps = 15)
+	gif(anim, joinpath(tempdir(),"anim_fps15.gif"), fps = 15)
 end
 
 # ╔═╡ 6f59c271-969a-4647-b307-e4e4d109dea8
