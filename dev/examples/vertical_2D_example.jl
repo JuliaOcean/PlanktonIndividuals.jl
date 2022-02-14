@@ -61,7 +61,10 @@ model = PlanktonModel(arch, grid; N_species = 1,
 
 # ╔═╡ f07a08bb-f4e4-4300-9913-15efad0408b1
 md"""
-We modify the DOC tracer field to a two-layer setup.
+We modify the DOC tracer field to a two-layer setup to highlight advection.
+
+!!! note
+    DOC is used here as a generic tracer; not to represent dissolved organic carbon per se.
 """
 
 # ╔═╡ 888b6bf9-877f-4b3e-bd81-3e6d79685a09
@@ -95,7 +98,7 @@ To plot the distribution of individuals as well as nutrient fields we use Plots.
 
 # ╔═╡ f83b3a52-42bb-481e-b405-20f5d4e75f86
 function plot_model(model::PlanktonModel)
-    ## Coordinate arrays for plotting
+    ## coordinate arrays for plotting
     xC, zC = collect(model.grid.xC)[3:130], collect(model.grid.zC)[3:130]
 
     ## contour of the flow field
@@ -106,7 +109,7 @@ function plot_model(model::PlanktonModel)
     pz = Array(model.individuals.phytos.sp1.data.z) .* -1# convert fractional indices to degree
     Plots.scatter!(fl_plot, px, pz, ms=5, color = :red, legend=:none)
 
-    ## DOC field
+    ## tracer field
     trac1 = Plots.contourf(xC, reverse(zC), rotl90(Array(model.nutrients.DOC.data)[3:130,3,3:130]), xlabel="x (m)", ylabel="z (m)", clims=(0.0, 2.5), fmt=:png)
 
     ## Arrange the plots side-by-side.
@@ -135,7 +138,7 @@ begin
 	   update!(sim)
 	   plot_model(model)
 	end
-	gif(anim, "anim_fps15.gif", fps = 15)
+	gif(anim, joinpath(tempdir(),"anim_fps15.gif"), fps = 15)
 end
 
 # ╔═╡ e55d07af-84af-4f8b-b19d-1b9e7d8d701a

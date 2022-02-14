@@ -73,6 +73,9 @@ model = PlanktonModel(arch, grid; N_species = 1,
 # ╔═╡ 2aecf438-c18a-4c9c-b1d1-febdf6fffb17
 md"""
 We modify the DOC tracer field to better illustrate the surface mixing event.
+
+!!! note
+    DOC is used here as a generic tracer; not to represent dissolved organic carbon per se.
 """
 
 # ╔═╡ 393e8a5f-1dcd-4ffb-a356-d951d1dc6d8f
@@ -120,7 +123,7 @@ function plot_model(model::PlanktonModel)
     pz = Array(model.individuals.phytos.sp1.data.z) .* -4# convert fractional indices to degree
     p_plot = Plots.scatter(px, py, pz, xlims=(0,128), ylims=(0,128), zlims=(-128,1), ms=5, color = :red, legend=:none, fmt=:png)
 
-    ## the middle slice of DOC field
+    ## the middle slice of tracer field
     trac1 = Plots.heatmap(xC, reverse(zC), rotl90(Array(model.nutrients.DOC.data)[3:34,18,3:34]), xlabel="x (m)", ylabel="z (m)", clims=(0.0, 2.5), fmt=:png)
 
     ## Arrange the plots side-by-side.
@@ -149,7 +152,7 @@ begin
 	   update!(sim)
 	   plot_model(model)
 	end
-	gif(anim, "anim_fps15.gif", fps = 15)
+	gif(anim, joinpath(tempdir(),"anim_fps15.gif"), fps = 15)
 end
 
 # ╔═╡ e8e1168e-1d90-4d31-930a-975d292dfbf9
