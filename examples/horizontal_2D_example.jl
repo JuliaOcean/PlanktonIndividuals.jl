@@ -87,7 +87,7 @@ sim = PlanktonSimulation(model, ΔT = 60, iterations = 1,
 md"""
 ## 4. Model Run
 
-We run the model for 120 time steps (2 hours) and generate animation.
+We run the model for 240 time steps (4 hours) and generate animation.
 """
 
 # ╔═╡ 7f06e8a4-eada-4607-b5dc-8945b8218ca7
