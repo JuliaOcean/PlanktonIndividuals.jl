@@ -28,19 +28,12 @@ the grid cell width for each dimension).
 
 For example, a rectilinear grid with ``32 \times 64 \times 128`` grid points and grid `spacing` of ``dx=1``m, ``dy=2``m, ``dz=4``m is constructed like this:
 
-```@meta
-DocTestSetup = quote
-    using PlanktonIndividuals
-end
+```@setup 1
+using PlanktonIndividuals
 ```
 
-```jldoctest
-julia> grid = RegularRectilinearGrid(size=(32, 64, 128), spacing=(1.0, 2.0, 4.0))
-domain: x ∈ [0.0, 32.0], y ∈ [0.0, 128.0], z ∈ [0.0, -512.0]
-topology (Tx, Ty, Tz):     (Periodic, Periodic, Bounded)
-resolution (Nx, Ny, Nz):   (32, 64, 128)
-halo size (Hx, Hy, Hz):    (2, 2, 2)
-grid spacing (Δx, Δy, Δz): (1.0, 2.0, 4.0)
+```@repl 1
+grid = RegularRectilinearGrid(size=(32, 64, 128), spacing=(1.0, 2.0, 4.0))
 ```
 
 The `RegularLatLonGrid` is constructed by specifying its `size` (`Tuple`
@@ -50,13 +43,8 @@ the start and end points).
 For example, a global domain from 80S to 80N, 180W to 180E and 200m depth with spacing of 1 degree horizontally and 10m vertically
 is constructed like this:
 
-```jldoctest
-julia> grid = RegularLatLonGrid(size=(360,160,20), lat = (-80,80), lon = (-180,180), z = (0,-200)) 
-domain: x ∈ [-180.0, 180.0], y ∈ [-80.0, 80.0], z ∈ [0.0, -200.0]
-topology (Tx, Ty, Tz):     (Periodic, Bounded, Bounded)
-resolution (Nx, Ny, Nz):   (360, 160, 20)
-halo size (Hx, Hy, Hz):    (2, 2, 2)
-grid spacing (Δx, Δy, Δz): (1.0, 1.0, 10.0)
+```@repl 1
+grid = RegularLatLonGrid(size=(360,160,20), lat = (-80,80), lon = (-180,180), z = (0,-200)) 
 ```
 
 ## Individuals
@@ -76,26 +64,9 @@ Values of the parameters can be changed using [`update_bgc_params`](@ref) and [`
 
 In the example shown below, we change the value of `kDOC`, which is the remineralization rate for `DOC`:
 
-```jldoctest
-julia> new_params = Dict("kDOC" => 0.01) # no need to include all parameters
-Dict{String, Float64} with 1 entry:
-  "kDOC" => 0.01
-
-julia> update_bgc_params(new_params)
-Dict{String, Float64} with 13 entries:
-  "kc"   => 0.04
-  "kDOC" => 0.01
-  "κhP"  => 0.0
-  "kPON" => 3.85802e-7
-  "kDON" => 3.85802e-7
-  "κh"   => 0.0
-  "κv"   => 0.0
-  "kDOP" => 3.85802e-7
-  "kPOP" => 3.85802e-7
-  "kw"   => 0.046
-  "Nit"  => 3.85802e-7
-  "kPOC" => 3.85802e-7
-  "κvP"  => 0.0
+```@repl 1
+new_params = Dict("kDOC" => 0.01) # no need to include all parameters
+update_bgc_params(new_params)
 ```
 
 `phyt_params` can be changed in the same way.
@@ -129,24 +100,24 @@ tracer. Second element is a 10-element `NamedTuple`, each element is a `Float64`
 
 An example of the `NamedTuple` is listed below:
 
-```julia
-initial_condition = (DIC=20.0, NH4=0.2, NO3=0.5, PO4=0.03, DOC=1.0, DON=0.1, DOP=0.05, POC=0.0, PON=0.0,POP=0.0)
-rand_noise = (DIC=0.0, NH4=0.0, NO3=0.0, PO4=0.0, DOC=0.0, DON=0.0, DOP=0.0, POC=0.0, PON=0.0,POP=0.0)
+```@repl 1
+initial_condition = (DIC=20.0, NH4=0.2, NO3=0.5, PO4=0.03, DOC=1.0, DON=0.1, DOP=0.05, POC=0.0, PON=0.0,POP=0.0);
+rand_noise = (DIC=0.0, NH4=0.0, NO3=0.0, PO4=0.0, DOC=0.0, DON=0.0, DOP=0.0, POC=0.0, PON=0.0,POP=0.0);
 nut_initial = (initial_condition = initial_condition, rand_noise = rand_noise)
 ```
 
 And example of the `Dict` is listed below:
 
-```julia
+```@repl 1
 nut_init = Dict(
-    DIC => "path/to/DIC.bin",
-    NH4 => "path/to/NH4.bin",
-    NO3 => "path/to/NO3.bin",
-    PO4 => "path/to/PO4.bin",
-    DOC => "path/to/DOC.bin",
-    DON => "path/to/DON.bin",
-    DOP => "path/to/DOP.bin",
-    POC => "path/to/POC.bin",
-    PON => "path/to/PON.bin",
-    POP => "path/to/POP.bin")
+    "DIC" => "path/to/DIC.bin",
+    "NH4" => "path/to/NH4.bin",
+    "NO3" => "path/to/NO3.bin",
+    "PO4" => "path/to/PO4.bin",
+    "DOC" => "path/to/DOC.bin",
+    "DON" => "path/to/DON.bin",
+    "DOP" => "path/to/DOP.bin",
+    "POC" => "path/to/POC.bin",
+    "PON" => "path/to/PON.bin",
+    "POP" => "path/to/POP.bin");
 ```

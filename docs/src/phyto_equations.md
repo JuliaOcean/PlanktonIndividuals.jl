@@ -28,18 +28,18 @@ PS=PC \cdot Bm
 ```
 
 ```math
-PC=PC_{max}\cdot (1-e^{\frac{-\alpha \cdot I\cdot Chl}{PC_{max}\cdot Bm}})
+PC=PC_{max}\cdot (1-e^{\frac{-\alpha\Phi \cdot I\cdot Chl}{PC_{max}\cdot Bm}})
 ```
 
 ```math
 PC_{max}= PCmax \cdot Sz^{PC_b}
 ```
 
-where ``PS`` is cell-specific photosynthesis rate (mmol C/cell/s) and ``PC_{max}`` is scaled by a power-law relationship of cell size (``Sz``).
+where ``PS`` is cell-specific light limited photosynthesis rate (``mmol~C~cell^{-1}~s^{-1}``). ``PC`` is carbon-specific light limited photosynthesis rate (``mmol~C~(mmol~C)^{-1}~s^{-1}``). ``PC_{max}`` is light-saturated photosynthesis rate (``mmol~C~(mmol~C)^{-1}~s^{-1})`` and is scaled by a power-law relationship of cell size (``Sz``), $I$ is the flux of photosynthetically active radiation (PAR, ``\mu mol~photons~m^{-2}~s^{-1}``).
 
 ## Nutrient Uptake
 
-Nutrient uptake rates (``VNH4``, ``VNO3``, and ``VPO4``) are cell-specific (mmol N/cell/s or mmol P/cell/s) and include intracellular nutrient limitation:
+Nutrient uptake rates (``VNH4``, ``VNO3``, and ``VPO4``) are cell-specific (``mmol~N~cell^{-1}~s^{-1}`` or ``mmol~P~cell^{-1}~s^{-1}``) and include intracellular nutrient limitation (Droop limitation):
 
 ```math
 \begin{align}
@@ -71,7 +71,7 @@ VPO4_{cell} &= VPO4max \cdot Sz^{VP_b} \cdot Bm \nonumber
 \end{align}
 ```
 
-where ``VNH4max``, ``VNO3max``, and ``VPO4max`` are constant parameters (see [Parameters](@ref parameters)) while ``VNH4_{cell}``, ``VNO3_{cell}``, and ``VPO4_{cell}`` are cell-specific maximum uptake rates (mmol N/cell/s or mmol P/cell/s) depending on cell size, ``Sz``.
+where ``VNH4max``, ``VNO3max``, and ``VPO4max`` are constant parameters (see [Parameters](@ref parameters)) while ``VNH4_{cell}``, ``VNO3_{cell}``, and ``VPO4_{cell}`` are cell-specific maximum uptake rates (``mmol~N~cell^{-1}~s^{-1}`` or ``mmol~P~cell^{-1}~s^{-1}``) depending on cell size, ``Sz``.
 
 ## Reserve Update
 
@@ -101,7 +101,7 @@ BS_P &= Pq/R_{PC} \cdot k_{mtb} \nonumber
 k_{mtb}= kmtb_{max} \cdot Sz^{kmtb_b}
 ```
 
-The minimum of these rates gives the actual biosynthesis rate, ``BS`` (mmol C/cell/s), and the difference between carbon-based biosynthesis rate and ``BS`` gives the excretion rate, ``ExuC`` (mmol C/cell/s).
+The minimum of these rates gives the actual biosynthesis rate, ``BS`` (``mmol~C~cell^{-1}~s^{-1}``), and the difference between carbon-based biosynthesis rate and ``BS`` gives the excretion rate, ``ExuC`` (``mmol~C~cell^{-1}~s^{-1}``).
 
 ```math
 BS = min(BS_C, BS_N, BS_P)
@@ -149,42 +149,100 @@ chl &= chl + S_{chl} \cdot \Delta T \nonumber
 
 ## Cell division
 
-Cell size, ``Sz``, is used to indicate cell division. For the smallest cell, ``Sz=1.0`` and ``Bm=Cquota``. Cells start to divide at ``Sz=2.0`` and the probability of individual cell division is then given by a sigmoidal function of ``Sz``.
+Relative cell size, ``Sz``, is used to indicate cell division. Cells will not divide if ``Sz<2.0`` and the probability of individual cell division (``P_D``) is then given by a sigmoidal function of ``Sz`` with different cell division strategies.
 
 ```math
 Sz = (Bm + Cq) / Cquota
 ```
 
 ```math
-P_{divide} = rand(Bernoulli(P_{dvid}*(tanh(stp_{dvid}*(Sz-b))+1)))
+P_D = rand(Bernoulli(P_{dvid}*S_{dvid}))
 ```
 
-``P_{divide}`` is computed every hour no matter what time step the model is.
+where ``S_{dvid}`` represents the sigmoidal function in different cell division strategies (listed below) and ``P_D`` is computed every 10 min (when model time step is smaller than 10 min) or every time step (when model time step is larger than 10 min).
+
+### Sizer
+
+The probability of cell division is a function of cell size and increases as the cell size gets larger.
+
+```math
+S_{dvid} = tanh(stp_D * (Sz - reg_D)) + 1.0
+```
+
+### Adder
+
+The probability of cell division is a function of the difference between current cell size and initial cell size (``iSz``) and increases as the difference gets larger.
+
+```math
+S_{dvid} = tanh(stp_D * (Sz - iSz - reg_D)) + 1.0
+```
+
+### Timer
+
+The probability of cell division is a function of clock time and increases in the dark.
+
+```math
+S_{dvid} = tanh(stp_D * (t - reg_D)) + 1.0
+```
+
+### Sizer+Timer
+
+The probability of cell division is a multiplication of a function of clock time and a function of cell size.
+
+```math
+S_{dvid} = (tanh(stp1_D * (Sz - reg1_D)) + 1.0) * (tanh(stp2_D * (t - reg2_D)) + 1.0)
+```
+
+### Adder+Timer
+
+The probability of cell division is a multiplication of a function of clock time and a function of the difference of current cell size and initial cell size.
+
+```math
+S_{dvid} = (tanh(stp1_D * (Sz - iSz - reg1_D)) + 1.0) * (tanh(stp2_D * (t - reg2_D)) + 1.0)
+```
+!!! tip "Parameters of cell division"
+    ``stp1_D``, ``reg1_D``, ``stp2_D``, and ``reg2_D`` may be different for different cell division strategies.
+
+## Grazing
+
+For now, the model does not have individuals of grazers. Instead, a quadratic grazing term is parameterized and implemented in the model to represent the grazing loss of cells. For each individual, the probability to be grazed (``P_G``) is calculated as below.
+
+```math
+P_G =  P_{graz} * pop
+```
+where `pop` is the number of individuals in the grid cell where the individual stays.
 
 ## Parameters
 
-| Symbol            | Param   | Default | Unit              | Description                       |
-|-------------------|---------|---------|-------------------|-----------------------------------|
-| ``PCmax``         | PCmax   | 4.2e-5  | ``s^{-1}``        | Maximum photosynthesis rate       |
-| ``VNH4max``       | VNH4max | 6.9e-6  | ``s^{-1}``        | Maximum ammonium uptake rate      |
-| ``VNO3max``       | VNO3max | 6.9e-6  | ``s^{-1}``        | Maximum nitrate uptake rate       |
-| ``VPO4max``       | VPO4max | 1.2e-6  | ``s^{-1}``        | Maximum phosphate uptake rate     |
-| ``PC_b``          | PC_b    | 0.6     |                   | Shape parameter for PC            |
-| ``VN_b``          | VN_b    | 0.6     |                   | Shape parameter for VNH4 and VNO3 |
-| ``VP_b``          | VP_b    | 0.6     |                   | Shape parameter for VPO4          |
-| ``K^{sat}_{NH4}`` | ksatNH4 | 0.005   | ``mmol~N/m^3``    | Half-saturation constant for NH4  |
-| ``K^{sat}_{NO3}`` | ksatNO3 | 0.010   | ``mmol~N/m^3``    | Half-saturation constant for NO3  |
-| ``K^{sat}_{PO4}`` | ksatPO4 | 0.003   | ``mmol~P/m^3``    | Half-saturation constant for PO4  |
-| ``Nqmax``         | Nqmax   | 0.12    | ``mmol~N/mmol~C`` | Maximum N quota in cell           |
-| ``Nqmin``         | Nqmin   | 0.05    | ``mmol~N/mmol~C`` | Minimum N quota in cell           |
-| ``Pqmax``         | Pqmax   | 0.01    | ``mmol~P/mmol~C`` | Maximum P quota in cell           |
-| ``Pqmin``         | Pqmax   | 0.004   | ``mmol~P/mmol~C`` | Minimum P quota in cell           |
-| ``R_{NC}``        | R_NC    | 16/106  | ``mmol~N/mmol~C`` | N:C ratio in function biomass     |
-| ``R_{PC}``        | R_PC    | 1/106   | ``mmol~P/mmol~C`` | P:C ratio in function biomass     |
-| ``kmtb_{max}``    | k_mtb   | 3.5e-5  | ``s^{-1}``        | Maximum metabolic rate            |
-| ``kmtb_b``        |k\_mtb\_b| 0.25    |                   | Shape parameter for k_mtb         |
-| ``respir_a``      | respir_a| 1.2e-6  | ``s^{-1}``        | Maximum respiration rate          |
-| ``respir_b``      | respir_b| 0.6     |                   | Shape parameter for respir_a      |
-| ``chl\text{:}N``  | Chl2N   | 3.0     | ``mg~chl/mmol~N`` | Maximum Chl:N in cell             |
-| ``P_{dvid}``      | P_dvid  | 5.0e-5  | ``s^{-1}``        | Probability of division per second|
-| ``stp_{dvid}``    | stp_dvid| 6.0     |                   | Steepness of division function    |
+| Symbol            | Param    | Default | Unit                     | Description                       |
+|-------------------|----------|---------|--------------------------|-----------------------------------|
+| ``Cquota``        | Cquota   | 1.8e-11 | ``mmol~C~cell^{-1}``     | carbon quota when ``Sz = 1.0``    |
+| ``PCmax``         | PCmax    | 4.2e-5  | ``s^{-1}``               | Maximum photosynthesis rate       |
+| ``\alpha``        |``\alpha``| 2.0e-2  | ``m^2~mgChl^{-1}``       | Irradiance absorption coeff       |
+| ``\Phi``          |``\Phi``  | 4.0e-5  | ``mmol~C~ / \mu mol~photons``| Maximum quantum yield             |
+| ``VNH4max``       | VNH4max  | 6.9e-6  | ``s^{-1}``               | Maximum ammonium uptake rate      |
+| ``VNO3max``       | VNO3max  | 6.9e-6  | ``s^{-1}``               | Maximum nitrate uptake rate       |
+| ``VPO4max``       | VPO4max  | 1.2e-6  | ``s^{-1}``               | Maximum phosphate uptake rate     |
+| ``PC_b``          | PC_b     | 0.6     |                          | Shape parameter for PC            |
+| ``VN_b``          | VN_b     | 0.6     |                          | Shape parameter for VNH4 and VNO3 |
+| ``VP_b``          | VP_b     | 0.6     |                          | Shape parameter for VPO4          |
+| ``K^{sat}_{NH4}`` | ksatNH4  | 0.005   | ``mmol~N/m^3``           | Half-saturation constant for NH4  |
+| ``K^{sat}_{NO3}`` | ksatNO3  | 0.010   | ``mmol~N/m^3``           | Half-saturation constant for NO3  |
+| ``K^{sat}_{PO4}`` | ksatPO4  | 0.003   | ``mmol~P/m^3``           | Half-saturation constant for PO4  |
+| ``Nqmax``         | Nqmax    | 0.12    | ``mmol~N/mmol~C``        | Maximum N quota in cell           |
+| ``Nqmin``         | Nqmin    | 0.05    | ``mmol~N/mmol~C``        | Minimum N quota in cell           |
+| ``Pqmax``         | Pqmax    | 0.01    | ``mmol~P/mmol~C``        | Maximum P quota in cell           |
+| ``Pqmin``         | Pqmax    | 0.004   | ``mmol~P/mmol~C``        | Minimum P quota in cell           |
+| ``R_{NC}``        | R_NC     | 16/106  | ``mmol~N/mmol~C``        | N:C ratio in function biomass     |
+| ``R_{PC}``        | R_PC     | 1/106   | ``mmol~P/mmol~C``        | P:C ratio in function biomass     |
+| ``kmtb_{max}``    | k_mtb    | 3.5e-5  | ``s^{-1}``               | Maximum metabolic rate            |
+| ``kmtb_b``        |k\_mtb\_b | 0.25    |                          | Shape parameter for k_mtb         |
+| ``respir_a``      | respir_a | 1.2e-6  | ``s^{-1}``               | Maximum respiration rate          |
+| ``respir_b``      | respir_b | 0.6     |                          | Shape parameter for respir_a      |
+| ``chl\text{:}N``  | Chl2N    | 3.0     | ``mg~chl/mmol~N``        | Maximum Chl:N in cell             |
+| ``P_{dvid}``      | P_dvid   | 5.0e-5  | ``s^{-1}``               | Probability of division per second|
+| ``stp1_D``        | dvid_stp | 6.0     |                          | Steepness of division function    |
+| ``reg1_D``        | dvid_reg | 1.9     |                          | Regulation of division function   |
+| ``stp2_D``        | dvid_stp2| 2.0     |                          | Steepness of division function    |
+| ``reg2_D``        | dvid_reg2| 12.0    |                          | Regulation of division function   |
+| ``P_{graz}``      | P_graz   | 0.0     | ``s^{-1}``               | Probability of grazing per second |

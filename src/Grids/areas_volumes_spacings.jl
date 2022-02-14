@@ -1,56 +1,39 @@
 #####
 ##### Calculate the areas, volumes and spacings of different kind of `AbstractGrid`
-##### Currently for RegularRectilinearGrid and RegularLatLonGrid
+##### Currently for RectilinearGrid and LatLonGrid
 #####
 
 #####
-##### RegularRectilinearGrid
+##### RectilinearGrid, halo points included
 #####
-@inline ΔxC(i, j, k, g::RegularRectilinearGrid) = g.Δx
-@inline ΔyC(i, j, k, g::RegularRectilinearGrid) = g.Δy
-@inline ΔzC(i, j, k, g::RegularRectilinearGrid) = g.Δz
+@inline ΔxC(i, j, k, g::RectilinearGrid) = g.Δx
+@inline ΔyC(i, j, k, g::RectilinearGrid) = g.Δy
+@inline ΔzC(i, j, k, g::RectilinearGrid) = @inbounds g.dzC[k]
 
-@inline ΔxF(i, j, k, g::RegularRectilinearGrid) = g.Δx
-@inline ΔyF(i, j, k, g::RegularRectilinearGrid) = g.Δy
-@inline ΔzF(i, j, k, g::RegularRectilinearGrid) = g.Δz
+@inline ΔxF(i, j, k, g::RectilinearGrid) = g.Δx
+@inline ΔyF(i, j, k, g::RectilinearGrid) = g.Δy
+@inline ΔzF(i, j, k, g::RectilinearGrid) = @inbounds g.dzF[k]
 
-@inline Ax(i, j, k, g::RegularRectilinearGrid) = g.Δy * g.Δz
-@inline Ay(i, j, k, g::RegularRectilinearGrid) = g.Δx * g.Δz
-@inline Az(i, j, k, g::RegularRectilinearGrid) = g.Δx * g.Δy
+@inline Ax(i, j, k, g::RectilinearGrid) = @inbounds g.Δy * g.dzF[k]
+@inline Ay(i, j, k, g::RectilinearGrid) = @inbounds g.Δx * g.dzF[k]
+@inline Az(i, j, k, g::RectilinearGrid) = g.Δx * g.Δy
 
 
-@inline volume(i, j, k, g::RegularRectilinearGrid) = Az(i, j, k, g) * g.Δz
-
-#####
-##### RegularLatLonGrid (degree to meter), halo points included
-#####
-@inline ΔxC(i, j, k, g::RegularLatLonGrid) = @inbounds g.dxC[i,j]
-@inline ΔyC(i, j, k, g::RegularLatLonGrid) = @inbounds g.dyC[i,j]
-@inline ΔzC(i, j, k, g::RegularLatLonGrid) = g.Δz
-
-@inline ΔxF(i, j, k, g::RegularLatLonGrid) = @inbounds g.dxF[i,j]
-@inline ΔyF(i, j, k, g::RegularLatLonGrid) = @inbounds g.dyF[i,j]
-@inline ΔzF(i, j, k, g::RegularLatLonGrid) = ΔzC(i, j, k, g)
-
-@inline Ax(i, j, k, g::RegularLatLonGrid) = @inbounds g.Ax[i,j]
-@inline Ay(i, j, k, g::RegularLatLonGrid) = @inbounds g.Ay[i,j]
-@inline Az(i, j, k, g::RegularLatLonGrid) = @inbounds g.Az[i,j]
-
-@inline volume(i, j, k, g::RegularLatLonGrid) = @inbounds g.Vol[i,j]
+@inline volume(i, j, k, g::RectilinearGrid) = @inbounds g.Δx * g.Δy * g.dzF[k]
 
 #####
-##### VerticallyStretchedLatLonGrid (degree to meter), halo points included
+##### LatLonGrid (degree to meter), halo points included
 #####
-@inline ΔxC(i, j, k, g::VerticallyStretchedLatLonGrid) = @inbounds g.dxC[i,j]
-@inline ΔyC(i, j, k, g::VerticallyStretchedLatLonGrid) = @inbounds g.dyC[i,j]
-@inline ΔzC(i, j, k, g::VerticallyStretchedLatLonGrid) = @inbounds g.dzC[k]
+@inline ΔxC(i, j, k, g::LatLonGrid) = @inbounds g.dxC[i,j]
+@inline ΔyC(i, j, k, g::LatLonGrid) = @inbounds g.dyC[i,j]
+@inline ΔzC(i, j, k, g::LatLonGrid) = @inbounds g.dzC[k]
 
-@inline ΔxF(i, j, k, g::VerticallyStretchedLatLonGrid) = @inbounds g.dxF[i,j]
-@inline ΔyF(i, j, k, g::VerticallyStretchedLatLonGrid) = @inbounds g.dyF[i,j]
-@inline ΔzF(i, j, k, g::VerticallyStretchedLatLonGrid) = @inbounds g.dzF[k]
+@inline ΔxF(i, j, k, g::LatLonGrid) = @inbounds g.dxF[i,j]
+@inline ΔyF(i, j, k, g::LatLonGrid) = @inbounds g.dyF[i,j]
+@inline ΔzF(i, j, k, g::LatLonGrid) = @inbounds g.dzF[k]
 
-@inline Ax(i, j, k, g::VerticallyStretchedLatLonGrid) = @inbounds g.Ax[i,j,k]
-@inline Ay(i, j, k, g::VerticallyStretchedLatLonGrid) = @inbounds g.Ay[i,j,k]
-@inline Az(i, j, k, g::VerticallyStretchedLatLonGrid) = @inbounds g.Az[i,j]
+@inline Ax(i, j, k, g::LatLonGrid) = @inbounds g.Ax[i,j,k]
+@inline Ay(i, j, k, g::LatLonGrid) = @inbounds g.Ay[i,j,k]
+@inline Az(i, j, k, g::LatLonGrid) = @inbounds g.Az[i,j]
 
-@inline volume(i, j, k, g::VerticallyStretchedLatLonGrid) = @inbounds g.Vol[i,j,k]
+@inline volume(i, j, k, g::LatLonGrid) = @inbounds g.Vol[i,j,k]

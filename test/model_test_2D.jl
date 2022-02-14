@@ -1,12 +1,24 @@
 using PlanktonIndividuals, Serialization
 
-grid = RegularRectilinearGrid(size = (16, 16, 1), spacing = (2, 2, 2), halo = (2, 2, 2))
+grid = RectilinearGrid(size = (16, 16, 1), x = (0,32), y = (0,32), z = (0,-32))
 
 model = PlanktonModel(CPU(), grid) 
 
-TP = sum((interior(model.nutrients.PO4.data, grid) .+ 
-          interior(model.nutrients.DOP.data, grid) .+ 
-          interior(model.nutrients.POP.data, grid)) .* grid.Δx .* grid.Δy .* grid.Δz)
+function tot_mass(nut, g)
+    mass = zeros(g.Nx, g.Ny, g.Nz)
+    for i in 1:g.Nx
+        for j in 1:g.Ny
+            for k in 1:g.Nz
+                mass[i,j,k] = nut[i+g.Hx, j+g.Hy, k+g.Hz] * PlanktonIndividuals.Grids.volume(i+g.Hx, j+g.Hy, k+g.Hz, g)
+            end
+        end
+    end
+    return sum(mass)
+end
+
+TP = tot_mass(model.nutrients.PO4.data, grid) +
+     tot_mass(model.nutrients.DOP.data, grid) +
+     tot_mass(model.nutrients.POP.data, grid)
 TP = TP + sum(model.individuals.phytos.sp1.data.Pq .+ 
               model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC)
 
@@ -24,8 +36,8 @@ sim = PlanktonSimulation(model, ΔT = 60, iterations = 10, vels=(u=uvel, v=vvel,
 
 update!(sim)
 
-TPt = sum((interior(model.nutrients.PO4.data, grid) .+ 
-          interior(model.nutrients.DOP.data, grid) .+ 
-          interior(model.nutrients.POP.data, grid)) .* grid.Δx .* grid.Δy .* grid.Δz)
+TPt = tot_mass(model.nutrients.PO4.data, grid) +
+      tot_mass(model.nutrients.DOP.data, grid) +
+      tot_mass(model.nutrients.POP.data, grid)
 TPt = TPt + sum(model.individuals.phytos.sp1.data.Pq .+ 
                 model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC)

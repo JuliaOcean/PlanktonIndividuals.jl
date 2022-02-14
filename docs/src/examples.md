@@ -4,7 +4,8 @@
 - [Ocean Transect](vertical_2D_example.html) ➭ [download / url](vertical_2D_example.jl)
 - [Two-Dimensional Map](horizontal_2D_example.html) ➭ [download / url](horizontal_2D_example.jl)
 - [Three-Dimensional Domain](surface_mixing_3D_example.html) ➭ [download / url](surface_mixing_3D_example.jl)
-- [Global Ocean Example](global_ocean_2D_example.html) ➭ [download / url](global_ocean_2D_example.jl)
+- [Two-Dimensional Global Ocean Example](global_ocean_2D_example.html) ➭ [download / url](global_ocean_2D_example.jl)
+- [Three-Dimensional Global Ocean Example](global_ocean_3D_example.html) ➭ [download / url](global_ocean_3D_example.jl)
 
 ## [Running The Examples](@id examples-running)
 
