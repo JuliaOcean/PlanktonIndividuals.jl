@@ -53,3 +53,10 @@ To illustrate advective processes, we performed a one-year simulation of a passi
 
 Further development plans include implementation of macro-molecular model [@Inomura2020] and support for distributed parallelism with CUDA-aware MPI.
 
+# Acknowledgements
+
+We acknowledge contributions from the open source community at large, the paper reviewers and journal editor, as well as developers of `Julia` and its packages upon which `PlanktonIndividuals.jl` crucially depends. 
+
+Funding that supported this work was provided by the Simons Collaboration on Computational Biogeochemical Modeling of Marine Ecosystems (CBIOMES) (grant no. 549931) and Simons Collaboration on Ocean Processes and Ecology (SCOPE) (grant no. 329108).
+
+# References
