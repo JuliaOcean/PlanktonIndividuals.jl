@@ -57,6 +57,6 @@ Further development plans include implementation of macro-molecular model [@Inom
 
 We acknowledge contributions from the open source community at large, the paper reviewers and journal editor, as well as developers of `Julia` and its packages upon which `PlanktonIndividuals.jl` crucially depends. 
 
-Funding that supported this work was provided by the Simons Collaboration on Computational Biogeochemical Modeling of Marine Ecosystems (CBIOMES) (grant no. 549931) and Simons Collaboration on Ocean Processes and Ecology (SCOPE) (grant no. 329108).
+Funding that supported this work was provided by the Simons Collaboration on Computational Biogeochemical Modeling of Marine Ecosystems (CBIOMES) (grant no. 549931) and Simons Collaboration on Ocean Processes and Ecology (SCOPE) (grant no. 329108). GF was additionally funded by National Aeronautics and Space Administration award 19-PO19-0001 (NNH19ZDA001N-PO) and 19-MAP19-0018 (NNH19ZDA001N-MAP).
 
 # References
