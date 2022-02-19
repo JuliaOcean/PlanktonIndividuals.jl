@@ -19,12 +19,16 @@ The only thing that needs to be changed is `arch = CPU()` or `arch = GPU()`.
 
 ## Grid
 
-Two options are supported for the grid: `RegularRectilinearGrid` and `RegularLatLonGrid` with constant grid spacing in each
-direction; grid spacing can differ between dimensions. Both `Periodic` and `Bounded` domain options are supported for the horizontal directions, whereas the domain is always `Bounded` in the vertical direction (top and bottom).
+Two options are supported for the grid: `RectilinearGrid` and `LatLonGrid` with constant grid spacing in horizontal
+directions; grid spacing can differ between dimensions. Both `Periodic` and `Bounded` domain options are supported for the horizontal directions, whereas the domain is always `Bounded` in the vertical direction (top and bottom).
 
-The `RegularRectilinearGrid` is constructed by specifying its `size` (`Tuple`
-specifying the number of grid points in each dimension) and `spacing` (`Tuple` specifying
-the grid cell width for each dimension).
+The `RectilinearGrid` is constructed by specifying its `size` (`Tuple`
+specifying the number of grid points in each dimension) and `x`, `y`, and `z` (`Tuple` specifying
+the start and end points).
+
+```@docs
+RectilinearGrid
+```
 
 For example, a rectilinear grid with ``32 \times 64 \times 128`` grid points and grid `spacing` of ``dx=1``m, ``dy=2``m, ``dz=4``m is constructed like this:
 
@@ -33,18 +37,26 @@ using PlanktonIndividuals
 ```
 
 ```@repl 1
-grid = RegularRectilinearGrid(size=(32, 64, 128), spacing=(1.0, 2.0, 4.0))
+grid = RectilinearGrid(size=(32, 64, 128), x = (0.0,32.0meters), y = (0.0,128.0meters), z = (0.0,-512.0meter))
 ```
 
-The `RegularLatLonGrid` is constructed by specifying its `size` (`Tuple`
+The `LatLonGrid` is constructed by specifying its `size` (`Tuple`
 specifying the number of grid points in each dimension) and `lat`, `lon`, `z` (`Tuple` specifying
 the start and end points).
+
+```@docs
+LatLonGrid
+```
 
 For example, a global domain from 80S to 80N, 180W to 180E and 200m depth with spacing of 1 degree horizontally and 10m vertically
 is constructed like this:
 
 ```@repl 1
-grid = RegularLatLonGrid(size=(360,160,20), lat = (-80,80), lon = (-180,180), z = (0,-200)) 
+grid = LatLonGrid(size=(360,160,20), lat = (-80,80), lon = (-180,180), z = (0,-200)) 
+```
+
+```@docs
+LoadLatLonGrid
 ```
 
 ## Individuals
