@@ -64,6 +64,91 @@ end
     phyt_params_default(N::Int64, mode::AbstractMode)
 Generate default phytoplankton parameter values based on `AbstractMode` and species number `N`.
 """
+#=
+┌─────────┬────────────────┬────────────────────┬───────────────────────────┬──────────────────────────┐
+│         │ Micromonas sp. │ Ostreococcus tauri │ Thalassiosira weissflogii │ Thalassiosira pseudonana │
+├─────────┼────────────────┼────────────────────┼───────────────────────────┼──────────────────────────┤
+│ PRO:DNA │          34.83 │              22.75 │                     67.99 │                   135.36 │
+│ RNA:DNA │           1.73 │               1.71 │                      3.70 │                     6.49 │
+│ CHL:DNA │           3.45 │               2.16 │                      9.83 │                    18.05 │
+│     CH% │             19 │                 30 │                        21 │                       18 │
+└─────────┴────────────────┴────────────────────┴───────────────────────────┴──────────────────────────┘
+=#
+function phyt_params_default(N::Int64, mode::MacroMolecularMode)
+    params=Dict(
+        "Nsuper"   => [1],       # Number of phyto cells each super individual represents
+        "C_DNA"    => [1.8e-13], # DNA C quota of phyto cells (mmolC/cell)
+        "mean"     => [1.2],     # Mean of the normal distribution of initial phyto individuals
+        "var"      => [0.3],     # Variance of the normal distribution of initial phyto individuals
+        "RNA2DNA"  => [1.73],    # Initial RNA:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        "PRO2DNA"  => [34.83],   # Initial protein:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        "Chl2DNA"  => [3.45],    # Initial Chla:DNA ratio in phytoplankton (mgChl/mmolC) from Micromonas sp.
+        "α"        => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
+        "Φ"        => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
+        "T⁺"       => [305.0],   # Maximal temperature for growth
+        "Ea"       => [5.3e4],   # Free energy
+        "PCmax"    => [4.2e-5],  # Maximum primary production rate (per second)
+        "VDOCmax"  => [0.0],     # Maximum DOC uptake rate (mmol C/mmol C/second)
+        "VNH4max"  => [6.9e-6],  # Maximum N uptake rate (mmol N/mmol C/second)
+        "VNO3max"  => [6.9e-6],  # Maximum N uptake rate (mmol N/mmol C/second)
+        "VPO4max"  => [1.2e-6],  # Maximum P uptake rate (mmol P/mmol C/second)
+        "PC_b"     => [0.6],     # Shape parameter for size
+        "VDOC_b"   => [0.6],     # Shape parameter for size
+        "VN_b"     => [0.6],     # Shape parameter for size
+        "VP_b"     => [0.6],     # Shape parameter for size
+        "KsatNH4"  => [0.005],   # Half-saturation coeff (mmol N/m³)
+        "KsatNO3"  => [0.010],   # Half-saturation coeff (mmol N/m³)
+        "KsatPO4"  => [0.003],   # Half-saturation coeff (mmol P/m³)
+        "KsatDOC"  => [0.0],     # Half-saturation coeff (mmol C/m³)
+        "NSTmax"   => [0.12],    # Maximum N reserve in cell (mmol N/mmol C)
+        "NSTmin"   => [0.05],    # Minimum N reserve in cell (mmol N/mmol C)
+        "PSTmax"   => [0.01],    # Maximum P reserve in cell (mmol P/mmol C)
+        "PSTmin"   => [0.004],   # Minimum P reserve in cell (mmol P/mmol C)
+        "CHmax"    => [0.4],     # Maximum Carbohydrate in cell (mmol C/mmol C)
+        "CHmin"    => [0.1],     # Minimum Carbohydrate in cell (mmol C/mmol C)
+        "respir_a" => [1.2e-6],  # Respiration rate(per second)
+        "respir_b" => [0.6],     # Shape parameter for size
+        "k_pro_a"  => [1.0e-5],  # Protein synthesis rate (mmol C/mmol C/second)
+        "k_sat_pro"=> [3.0e-13], # Hafl saturation constent for protein synthesis
+        "k_dna_a"  => [1.0e-5],  # DNA synthesis rate (mmol C/mmol C/second)
+        "k_sat_dna"=> [1.0e-12], # Hafl saturation constent for DNA synthesis
+        "k_rna_a"  => [1.0e-5],  # RNA synthesis rate (mmol C/mmol C/second)
+        "k_sat_rna"=> [2.0e-12], # Hafl saturation constent for RNA synthesis
+        "Chl2N"    => [3.0],     # Maximum Chla:N ratio in phytoplankton
+        "R_NC_PRO" => [1/4.5],   # N:C ratio in protein (from Inomura et al 2020.)
+        "R_NC_DNA" => [1/2.9],   # N:C ratio in DNA (from Inomura et al 2020.)
+        "R_PC_DNA" => [1/11.1],  # P:C ratio in DNA
+        "R_NC_RNA" => [1/2.8],   # N:C ratio in RNA (from Inomura et al 2020.)
+        "R_PC_RNA" => [1/10.7],  # P:C ratio in RNA
+        "grz_P"    => [0.0],     # Grazing probability per second
+        "dvid_P"   => [5e-5],    # Probability of cell division per second.
+        "dvid_type"=> [1],       # The type of cell division, 1:sizer, 2:adder.
+        "dvid_stp" => [6.0],     # Steepness of sigmoidal function
+        "dvid_reg" => [1.9],     # Regulations of cell division (cell size)
+        "dvid_stp2"=> [2.0],     # Steepness of sigmoidal function
+        "dvid_reg2"=> [12.0],    # Regulations of cell division (clock time)
+        "mort_P"   => [5e-5],    # Probability of cell natural death per second
+        "mort_reg" => [0.5],     # Regulation of cell natural death
+        "grazFracC"=> [0.7],     # Fraction goes into dissolved organic pool
+        "grazFracN"=> [0.7],     # Fraction goes into dissolved organic pool
+        "grazFracP"=> [0.7],     # Fraction goes into dissolved organic pool
+        "mortFracC"=> [0.5],     # Fraction goes into dissolved organic pool
+        "mortFracN"=> [0.5],     # Fraction goes into dissolved organic pool
+        "mortFracP"=> [0.5],     # Fraction goes into dissolved organic pool
+        "ther_mort"=> [0],       # thermal mortality, 1 for on, 0 for off
+    )
+
+    if N == 1
+        return params
+    else
+        return generate_n_species_params(N, params)
+    end
+end
+
+"""
+    phyt_params_default(N::Int64, mode::AbstractMode)
+Generate default phytoplankton parameter values based on `AbstractMode` and species number `N`.
+"""
 function phyt_params_default(N::Int64, mode::QuotaMode)
     params=Dict(
         "Nsuper"   => [1],       # Number of phyto cells each super individual represents
