@@ -16,7 +16,7 @@ authors:
     affiliation: "1"
 
 affiliations:
- - name: MIT, EAPS
+ - name: Department of Earth, Atmospheric and Planetary Sciences, Massachusetts Institute of Technology
    index: 1
 
 date: 07 February 2022
@@ -39,7 +39,7 @@ The model is used to elucidate temporal and spatial variations in phytoplankton 
 # Statement of need
 Phytoplankton models, like those incorporated in ecological and biogeochemical models, are essential tools to explore and understand phytoplankton life cycles, interactions between species, population dynamics, and community structures in various water bodies (e.g. lakes, coastal waters, and open ocean) [@follows2007emergent; @geider1997dynamic]. Individual-based / Lagrangian models differ from Eulerian (population level) models in the way they represent heterogeneous populations like cells of different sizes, nutrient quotas, and life cycle stages [@hellweger2016advancing; @hellweger2014biogeographic; @clark2011individual]. 
 
-The unique power of individual-based modeling lies in the ability to track the position, biomass, and physiological state of individual cells, or plankton patches, as they move through space over time. Eulerian models in turn can only track the density of plankton biomass in “well-mixed” grids of simulated waterbodys. Furthermore, individual-based models are able to introduce randomness in individuals which allows stochastic processes (e.g. cell division, grazing, death etc.) to reproduce the diversity found in real ecosystems.
+The unique power of individual-based modeling lies in the ability to track the position, biomass, and physiological state of individual cells, or plankton patches, as they move through space over time. Eulerian models in turn can only track the density of plankton biomass in “well-mixed” grids of simulated water bodies. Furthermore, individual-based models are able to introduce randomness in individuals which allows stochastic processes (e.g. cell division, grazing, death etc.) to reproduce the diversity found in real ecosystems.
 
 Due to computational limitations, previous microbial individual-based models could only simulate a limited number of individuals, with each individual representing cell populations rather than individual cells [@hellweger2016advancing]. In order to overcome this obstacle, `PlanktonIndividuals.jl` exploits the power of Graphical Processing Units (GPUs) which were first developed for video rendering but now offer extremely efficient, highly parallelized computing power. With GPU support, the simulations in `PlanktonIndividuals.jl` are sped up for over 50 times compared with CPU simulations.
 
