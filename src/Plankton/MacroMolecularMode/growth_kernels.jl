@@ -128,12 +128,15 @@ end
 ##### calculate protein, DNA, RNA synthesis (mmol C /individual/second)
 @kernel function calc_BS_kernel!(plank, p)
     i  = @index(Global)
-    @inbounds limit_PRO = min(plank.CH[i]/(plank.CH[i] + p.k_sat_pro), plank.NST[i]/(plank.NST[i] + p.k_sat_pro * p.R_NC_PRO))
-    @inbounds limit_DNA = min(plank.CH[i]/(plank.CH[i] + p.k_sat_dna), plank.NST[i]/(plank.NST[i] + p.k_sat_dna * p.R_NC_DNA), plank.PST[i]/(plank.PST[i] + p.k_sat_dna * p.R_PC_DNA))
-    @inbounds limit_RNA = min(plank.CH[i]/(plank.CH[i] + p.k_sat_rna), plank.NST[i]/(plank.NST[i] + p.k_sat_rna * p.R_NC_RNA), plank.PST[i]/(plank.PST[i] + p.k_sat_rna * p.R_PC_RNA))
+    @inbounds limit_PRO = min(plank.CH[i]/(plank.CH[i] + p.k_sat_pro * p.Nsuper), plank.NST[i]/(plank.NST[i] + p.k_sat_pro * p.Nsuper * p.R_NC_PRO))
+    @inbounds limit_DNA = min(plank.CH[i]/(plank.CH[i] + p.k_sat_dna * p.Nsuper), plank.NST[i]/(plank.NST[i] + p.k_sat_dna * p.Nsuper * p.R_NC_DNA),
+                                plank.PST[i]/(plank.PST[i] + p.k_sat_dna * p.Nsuper * p.R_PC_DNA))
+    @inbounds limit_RNA = min(plank.CH[i]/(plank.CH[i] + p.k_sat_rna * p.Nsuper), plank.NST[i]/(plank.NST[i] + p.k_sat_rna * p.Nsuper * p.R_NC_RNA),
+                                plank.PST[i]/(plank.PST[i] + p.k_sat_rna * p.Nsuper * p.R_PC_RNA))
+
     @inbounds plank.S_PRO[i] = p.k_pro_a * plank.RNA[i] * limit_PRO
-    @inbounds plank.S_DNA[i] = p.k_pro_a * plank.PRO[i] * limit_DNA * isless(plank.DNA[i]/(p.C_DNA * p.Nsuper), 2.0)
-    @inbounds plank.S_RNA[i] = p.k_pro_a * plank.PRO[i] * limit_RNA
+    @inbounds plank.S_DNA[i] = p.k_dna_a * plank.PRO[i] * limit_DNA * isless(plank.DNA[i]/(p.C_DNA * p.Nsuper), 2.0)
+    @inbounds plank.S_RNA[i] = p.k_rna_a * plank.PRO[i] * limit_RNA
 end
 function calc_BS!(plank, p, arch)
     kernel! = calc_BS_kernel!(device(arch), 256, (size(plank.ac,1)))

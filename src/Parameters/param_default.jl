@@ -72,6 +72,12 @@ Generate default phytoplankton parameter values based on `AbstractMode` and spec
 │ RNA:DNA │           1.73 │               1.71 │                      3.70 │                     6.49 │
 │ CHL:DNA │           3.45 │               2.16 │                      9.83 │                    18.05 │
 │     CH% │             19 │                 30 │                        21 │                       18 │
+│   k_pro │       7.06e-05 │           1.50e-04 │                  7.64e-05 │                 1.17e-04 │
+│   k_dna │       1.62e-07 │           5.44e-07 │                  1.16e-07 │                 9.61e-08 │
+│   k_rna │       3.24e-07 │           6.71e-07 │                  6.60e-07 │                 6.60e-07 │
+│k_pro_sat│       4.50e-13 │           4.82e-14 │                  3.21e-11 │                 2.73e-12 │
+│k_dna_sat│       8.29e-16 │           2.07e-16 │                  1.45e-12 │                 6.01e-14 │
+│k_rna_sat│       1.00e-12 │           2.40e-14 │                  1.76e-10 │                 1.74e-11 │
 └─────────┴────────────────┴────────────────────┴───────────────────────────┴──────────────────────────┘
 =#
 function phyt_params_default(N::Int64, mode::MacroMolecularMode)
@@ -108,12 +114,12 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "CHmin"    => [0.1],     # Minimum Carbohydrate in cell (mmol C/mmol C)
         "respir_a" => [1.2e-6],  # Respiration rate(per second)
         "respir_b" => [0.6],     # Shape parameter for size
-        "k_pro_a"  => [1.0e-5],  # Protein synthesis rate (mmol C/mmol C/second)
-        "k_sat_pro"=> [3.0e-13], # Hafl saturation constent for protein synthesis
-        "k_dna_a"  => [1.0e-5],  # DNA synthesis rate (mmol C/mmol C/second)
-        "k_sat_dna"=> [1.0e-12], # Hafl saturation constent for DNA synthesis
-        "k_rna_a"  => [1.0e-5],  # RNA synthesis rate (mmol C/mmol C/second)
-        "k_sat_rna"=> [2.0e-12], # Hafl saturation constent for RNA synthesis
+        "k_pro_a"  => [6.0e-5],  # Protein synthesis rate (mmol C/mmol C/second)
+        "k_sat_pro"=> [4.5e-13], # Hafl saturation constent for protein synthesis (mmol C/cell)
+        "k_dna_a"  => [1.6e-7],  # DNA synthesis rate (mmol C/mmol C/second)
+        "k_sat_dna"=> [1.0e-15], # Hafl saturation constent for DNA synthesis (mmol C/cell)
+        "k_rna_a"  => [3.0e-7],  # RNA synthesis rate (mmol C/mmol C/second)
+        "k_sat_rna"=> [1.0e-12], # Hafl saturation constent for RNA synthesis (mmol C/cell)
         "Chl2N"    => [3.0],     # Maximum Chla:N ratio in phytoplankton
         "R_NC_PRO" => [1/4.5],   # N:C ratio in protein (from Inomura et al 2020.)
         "R_NC_DNA" => [1/2.9],   # N:C ratio in DNA (from Inomura et al 2020.)
