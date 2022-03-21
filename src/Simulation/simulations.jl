@@ -59,31 +59,15 @@ function PlanktonSimulation(model::PlanktonModel; ΔT::Int64, iterations::Int64,
                             output_writer = nothing
                             )
 
-    if vels ≠ (;)
-        if validate_velocity(vels, model.grid)
-            vel_copy!(model.timestepper.vel₀, vels.u[:,:,:,1], vels.v[:,:,:,1], vels.w[:,:,:,1], model.grid)
-        end
-
-        @assert ΔT_vel % ΔT == 0.0
-
-        if size(vels.u)[4] < floor(Int,iterations*ΔT/ΔT_vel)
-            throw(ArgumentError("Velocities provided cannot cover the time period of (iterations+1)*ΔT ($(iterations*ΔT) seconds) with ΔT_vel = $(ΔT_vel)."))
-        end
-    end
-
-    if size(PARF)[3] < floor(Int,iterations*ΔT/ΔT_PAR)
-        throw(ArgumentError("Surface PAR provided cannot cover the time period of (iterations+1)*ΔT ($(iterations*ΔT) seconds) with ΔT_PAR = $(ΔT_PAR)."))
-    end
-
-    if size(temp)[4] < floor(Int,iterations*ΔT/ΔT_temp)
-        throw(ArgumentError("Temperature provided cannot cover the time period of (iterations+1)*ΔT ($(iterations*ΔT) seconds) with ΔT_temp = $(ΔT_temp)."))
-    end
-
     input = PlanktonInput(temp, PARF, vels, ΔT_vel, ΔT_PAR, ΔT_temp)
 
     validate_bcs(model.nutrients, model.grid, iterations)
 
     sim = PlanktonSimulation(model, input, diags, ΔT, iterations, output_writer)
+
+    validate_velocity(sim, model.grid)
+    validate_PARF(sim, model.grid)
+    validate_temp(sim, model.grid)
 
     return sim
 end
@@ -108,41 +92,6 @@ function show(io::IO, sim::PlanktonSimulation)
 
 end
 
-function validate_velocity(vels, g::AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
-    u_size = (g.Nx, g.Ny, g.Nz)
-    v_size = (g.Nx, g.Ny, g.Nz)
-    w_size = (g.Nx, g.Ny, g.Nz)
-    validation = true
-
-    if isa(TX(), Bounded)
-        u_size = (g.Nx+1, g.Ny, g.Nz)
-    end
-
-    if isa(TY(), Bounded)
-        v_size = (g.Nx, g.Ny+1, g.Nz)
-    end
-
-    if isa(TZ(), Bounded)
-        w_size = (g.Nx, g.Ny, g.Nz+1)
-    end
-
-    if size(vels.u)[1:3] ≠ u_size
-        validation = false
-        throw(ArgumentError("Dimension mismatch: the size of u must be $(u_size), for $(TX) topology."))
-    end
-
-    if size(vels.v)[1:3] ≠ v_size
-        validation = false
-        throw(ArgumentError("Dimension mismatch: the size of v must be $(v_size), for $(TY) topology."))
-    end
-
-    if size(vels.w)[1:3] ≠ w_size
-        validation = false
-        throw(ArgumentError("Dimension mismatch: the size of w must be $(w_size), for $(TZ) topology."))
-    end
-
-    return validation
-end
 
 function short_show(diags::PlanktonDiagnostics)
     return string("\n", "│   ├── diagnostics of tracers: $(keys(diags.tracer))\n", 

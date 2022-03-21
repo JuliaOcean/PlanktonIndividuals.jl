@@ -1,7 +1,7 @@
 module Simulation
 
 export PlanktonSimulation
-export update!, vel_copy!
+export update!, vel_copy!, set_vels_fields!, set_PARF_fields!, set_temp_fields!
 
 using CUDA
 using StructArrays
@@ -22,8 +22,8 @@ using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMo
 import Base: show
 
 
-include("utils.jl")
 include("simulations.jl")
+include("utils.jl")
 include("update.jl")
 
 end

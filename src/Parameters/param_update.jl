@@ -21,16 +21,17 @@ function update_bgc_params(tmp::Dict)
 end
 
 """
-    update_phyt_params(tmp::Dict, mode::AbstractMode)
+    update_phyt_params(tmp::Dict, N::Int64, mode::AbstractMode)
 Update parameter values based on a `Dict` provided by user
 
 Keyword Arguments
 =================
 - `tmp` is a `Dict` containing the parameters needed to be upadated
+- `N` is a `Int64` indicating the number of species
 - `mode` is the mode of phytoplankton physiology resolved in the model
 """
-function update_phyt_params(tmp::Dict, mode::AbstractMode)
-    parameters = phyt_params_default(1,mode)
+function update_phyt_params(tmp::Dict; N::Int64 = 1, mode::AbstractMode = QuotaMode())
+    parameters = phyt_params_default(N,mode)
     tmp_keys = collect(keys(tmp))
     pkeys = collect(keys(parameters))
     for key in tmp_keys

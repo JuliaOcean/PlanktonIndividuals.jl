@@ -3,7 +3,7 @@ function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
                           xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN),
                           iS  = zeros(maxN), Sz  = zeros(maxN), Bm  = zeros(maxN), Chl = zeros(maxN),
                           gen = zeros(maxN), age = zeros(maxN), ac  = zeros(maxN), idx = zeros(maxN),
-                          PS  = zeros(maxN), resp= zeros(maxN), 
+                          PS  = zeros(maxN), resp= zeros(maxN), Th  = zeros(maxN),
                           graz= zeros(maxN), mort= zeros(maxN), dvid= zeros(maxN)
                           ) 
     data = replace_storage(array_type(arch), rawdata)

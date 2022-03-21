@@ -117,7 +117,7 @@ function write_individuals_to_jld2(phytos::NamedTuple, filepath, t, iter, atts)
         for sp in keys(phytos)
             spi = NamedTuple{atts}([getproperty(phytos[sp].data, att) for att in atts])
             for att in atts
-                file["timeseries/$att/$iter"] = Array(spi[att])
+                file["timeseries/$sp/$att/$iter"] = Array(spi[att])
             end
         end
     end
