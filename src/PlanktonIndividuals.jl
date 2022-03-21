@@ -21,7 +21,7 @@ export
     set_bc!,
 
     # Simulation
-    PlanktonSimulation, update!, vel_copy!,
+    PlanktonSimulation, update!, vel_copy!, set_vels_fields!, set_PARF_fields!, set_temp_fields!,
 
     # Parameters
     default_PARF, default_temperature,
