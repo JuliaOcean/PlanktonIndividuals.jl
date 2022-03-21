@@ -8,7 +8,7 @@ Only one part of the whole velocity fields can be constructed into a `PlanktonSi
 `model.iteration` might no be 1, but the velocity fields need to start from 1 (same for PARF or temperature fields).
 
 """
-function update!(sim::PlanktonSimulation; time_offset = (vels = false, PAFR = false, temp = false))
+function update!(sim::PlanktonSimulation; time_offset = (vels = false, PARF = false, temp = false))
     if sim.input.vels ≠ (;)
         for i in 1:sim.iterations
             model_t_vels = time_offset.vels ? (i-1)*sim.ΔT : sim.model.t
