@@ -85,8 +85,7 @@ end
 @kernel function calc_ρChl_kernel!(plank, par, p)
     i = @index(Global)
     @inbounds Bm = functional_C_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i])
-    @inbounds plank.ρChl[i] = plank.PS[i]/max(1.0e-10, plank.PRO[i] + plank.DNA[i] + plank.RNA[i]) * p.Chl2N / 
-                             max(1.0e-10, par[i] * p.α * p.Φ * plank.Chl[i]/max(1.0e-10, plank.PRO[i] + plank.DNA[i] + plank.RNA[i])) *
+    @inbounds plank.ρChl[i] = plank.PS[i]/max(1.0e-10, Bm) * p.Chl2N / max(1.0e-10, par[i] * p.α * p.Φ * plank.Chl[i]/max(1.0e-10, Bm)) *
                              isless(1.0e-1, par[i]) * plank.ac[i]
 end
 function calc_ρChl!(plank, par, p, arch)
@@ -99,7 +98,8 @@ end
 ##### calculate respiration (mmolC/individual/second)
 @kernel function calc_respir_kernel!(plank, T, p)
     i = @index(Global)
-    @inbounds plank.resp[i] = p.respir_a * (plank.PRO[i] + plank.DNA[i] + plank.RNA[i])* tempFunc(T[i], p) * plank.ac[i]
+    @inbounds Bm = functional_C_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i])
+    @inbounds plank.resp[i] = p.respir_a * Bm * tempFunc(T[i], p) * plank.ac[i]
 end
 function calc_respir!(plank, T, p, arch)
     kernel! = calc_respir_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -126,7 +126,7 @@ function update_quotas_2!(plank, ΔT, p, arch)
 end
 
 ##### calculate protein, DNA, RNA synthesis (mmol C /individual/second)
-@kernel function calc_BS_kernel!(plank, p)
+@kernel function calc_BS_kernel!(plank, T, p)
     i  = @index(Global)
     @inbounds limit_PRO = min(plank.CH[i]/(plank.CH[i] + p.k_sat_pro * p.Nsuper), plank.NST[i]/(plank.NST[i] + p.k_sat_pro * p.Nsuper * p.R_NC_PRO))
     @inbounds limit_DNA = min(plank.CH[i]/(plank.CH[i] + p.k_sat_dna * p.Nsuper), plank.NST[i]/(plank.NST[i] + p.k_sat_dna * p.Nsuper * p.R_NC_DNA),
@@ -134,13 +134,13 @@ end
     @inbounds limit_RNA = min(plank.CH[i]/(plank.CH[i] + p.k_sat_rna * p.Nsuper), plank.NST[i]/(plank.NST[i] + p.k_sat_rna * p.Nsuper * p.R_NC_RNA),
                                 plank.PST[i]/(plank.PST[i] + p.k_sat_rna * p.Nsuper * p.R_PC_RNA))
 
-    @inbounds plank.S_PRO[i] = p.k_pro_a * plank.RNA[i] * limit_PRO
-    @inbounds plank.S_DNA[i] = p.k_dna_a * plank.PRO[i] * limit_DNA * isless(plank.DNA[i]/(p.C_DNA * p.Nsuper), 2.0)
-    @inbounds plank.S_RNA[i] = p.k_rna_a * plank.PRO[i] * limit_RNA
+    @inbounds plank.S_PRO[i] = p.k_pro_a * plank.RNA[i] * limit_PRO * tempFunc(T[i], p)
+    @inbounds plank.S_DNA[i] = p.k_dna_a * plank.PRO[i] * limit_DNA * tempFunc(T[i], p) * isless(plank.DNA[i]/(p.C_DNA * p.Nsuper), 2.0)
+    @inbounds plank.S_RNA[i] = p.k_rna_a * plank.PRO[i] * limit_RNA * tempFunc(T[i], p)
 end
-function calc_BS!(plank, p, arch)
+function calc_BS!(plank, T, p, arch)
     kernel! = calc_BS_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, p)
+    event = kernel!(plank, T, p)
     wait(device(arch), event)
     return nothing
 end

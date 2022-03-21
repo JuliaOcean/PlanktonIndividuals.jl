@@ -12,7 +12,7 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
 
     update_quotas_2!(plank, ΔT, p, arch)
 
-    calc_BS!(plank, p, arch)
+    calc_BS!(plank, nuts.T, p, arch)
     update_biomass!(plank, p, ΔT, arch)
 
     ##### probabilities of grazing, mortality, and cell division
