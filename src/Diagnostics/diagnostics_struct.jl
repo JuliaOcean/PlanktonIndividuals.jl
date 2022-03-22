@@ -104,9 +104,9 @@ function plank_avail_diags(mode::AbstractMode)
     if isa(mode, CarbonMode)
         nothing
     elseif isa(mode, QuotaMode)
-        plank_avail  = (:num, :graz, :mort, :dvid, :PS, :BS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :exu, :Bm, :Cq, :Nq, :Pq, :Chl)
+        plank_avail = (:num, :graz, :mort, :dvid, :PS, :BS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :exu, :Bm, :Cq, :Nq, :Pq, :Chl)
     elseif isa(mode, MacroMolecularMode)
-        plank_avail = (:num, :graz, :mort, :dvid, :PS, :resp, :Bm, :Chl)
+        plank_avail = (:num, :graz, :mort, :dvid, :PS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :S_PRO, :S_DNA, :S_RNA, :exu, :CH, :NST, :PST, :PRO, :DNA, :RNA, :Chl)
     end
     return plank_avail
 end

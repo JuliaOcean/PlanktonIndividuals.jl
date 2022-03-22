@@ -92,7 +92,7 @@ end
     return C_tot
 end
 @inline function total_N_biomass(PRO, DNA, RNA, NST, p)
-    N_tot = PRO * p.R_NC_RPO + DNA * p.R_NC_DNA + RNA * p.R_NC_RNA + NST
+    N_tot = PRO * p.R_NC_PRO + DNA * p.R_NC_DNA + RNA * p.R_NC_RNA + NST
     return N_tot
 end
 @inline function total_P_biomass(DNA, RNA, PST, p)

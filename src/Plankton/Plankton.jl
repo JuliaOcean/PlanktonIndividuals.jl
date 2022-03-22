@@ -68,18 +68,18 @@ generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::C
     Carbon.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
 plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
-    MacroMolecular.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture)
+    MacroMolecular.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
 plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
-    MacroMolecular.plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture)
+    MacroMolecular.plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::AbstractMode)
 
 plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode) =
-    Quota.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture)
+    Quota.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
 plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::QuotaMode) =
-    Quota.plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture)
+    Quota.plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::AbstractMode)
 
 plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::CarbonMode) =
-    Carbon.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture)
+    Carbon.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
 plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::CarbonMode) =
-    Carbon.plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture)
+    Carbon.plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::AbstractMode)
 
 end

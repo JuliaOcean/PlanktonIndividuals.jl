@@ -1,4 +1,4 @@
-function plankton_update!(plank, nuts, rnd, p, plk, diags_spcs, ΔT, t, arch::Architecture)
+function plankton_update!(plank, nuts, rnd, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
     plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch)
 
     calc_consume!(plk.DIC.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, arch)
@@ -36,7 +36,7 @@ function plankton_update!(plank, nuts, rnd, p, plk, diags_spcs, ΔT, t, arch::Ar
     diags_proc!(diags_spcs.num, plank.ac, plank.ac, plank.xi, plank.yi, plank.zi, arch)
 end
 
-function plankton_update!(plank, nuts, rnd, p, plk, nothing::Nothing, ΔT, t, arch::Architecture)
+function plankton_update!(plank, nuts, rnd, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::AbstractMode)
     plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch)
 
     calc_consume!(plk.DIC.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, arch)

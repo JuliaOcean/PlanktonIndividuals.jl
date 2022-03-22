@@ -21,8 +21,8 @@ end
     C_tot = total_C_biomass(PRO, DNA, RNA, CH)
     N_tot = total_N_biomass(PRO, DNA, RNA, NST, p)
     P_tot = total_P_biomass(DNA, RNA, PST, p)
-    regQN = max(0.0, min(1.0, (p.Nqmax - N_tot / max(1.0e-10, C_tot)) / (p.Nqmax - p.Nqmin)))
-    regQP = max(0.0, min(1.0, (p.Pqmax - P_tot / max(1.0e-10, C_tot)) / (p.Pqmax - p.Pqmin)))
+    regQN = max(0.0, min(1.0, (p.NSTmax - N_tot / max(1.0e-10, C_tot)) / (p.NSTmax - p.NSTmin)))
+    regQP = max(0.0, min(1.0, (p.PSTmax - P_tot / max(1.0e-10, C_tot)) / (p.PSTmax - p.PSTmin)))
     VNH4 = p.VNH4max * regQN * NH4/max(1.0e-10, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm * ac
     VNO3 = p.VNO3max * regQN * NO3/max(1.0e-10, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm * ac
     VPO4 = p.VPO4max * regQP * PO4/max(1.0e-10, PO4+p.KsatPO4) * tempFunc(temp, p) * Bm * ac
@@ -34,7 +34,7 @@ end
     @inbounds plank.PS[i] = calc_PS(nuts.par[i], nuts.T[i], plank.Chl[i], plank.PRO[i], plank.DNA[i], plank.RNA[i], p) * plank.ac[i]
 
     @inbounds plank.VNH4[i], plank.VNO3[i], plank.VPO4[i] = 
-                            calc_NP_uptake(nuts.NH4[i], nuts.NO3[i], nut.PO4[i], nuts.T[i],
+                            calc_NP_uptake(nuts.NH4[i], nuts.NO3[i], nuts.PO4[i], nuts.T[i],
                                         plank.CH[i], plank.NST[i], plank.PST[i], plank.PRO[i],
                                         plank.DNA[i], plank.RNA[i], p, plank.ac[i])
 end
@@ -64,7 +64,7 @@ end
 @inline function calc_DOC_uptake(DOC, temp, CH, PRO, DNA, RNA, p)
     Bm = functional_C_biomass(PRO, DNA, RNA)
     C_tot = total_C_biomass(PRO, DNA, RNA, CH)
-    regQ = max(0.0, min(1.0, (p.Cqmax - CH / max(1.0e-10, C_tot)) / (p.Cqmax - p.Cqmin)))
+    regQ = max(0.0, min(1.0, (p.CHmax - CH / max(1.0e-10, C_tot)) / (p.CHmax - p.CHmin)))
     VN = p.VDOCmax * regQ * DOC/max(1.0e-10, DOC+p.KsatDOC) * tempFunc(temp, p) * Bm
     return VN
 end
@@ -154,7 +154,7 @@ end
     @inbounds plank.CH[i]  -= ΔT *(plank.S_PRO[i] + plank.S_DNA[i] + plank.S_RNA[i] + plank.exu[i])
     @inbounds plank.NST[i] -= ΔT *(plank.S_PRO[i] * p.R_NC_PRO + plank.S_DNA[i] * p.R_NC_DNA + plank.S_RNA[i] * p.R_NC_RNA)
     @inbounds plank.PST[i] -= ΔT *(plank.S_DNA[i] * p.R_PC_DNA + plank.S_RNA[i] * p.R_PC_RNA)
-    @inbounds plank.Chl[i] += ΔT * plank.S_pro[i] * p.R_NC_PRO * plank.ρChl[i]
+    @inbounds plank.Chl[i] += ΔT * plank.S_PRO[i] * p.R_NC_PRO * plank.ρChl[i]
     @inbounds plank.age[i] += ΔT / 3600.0 * plank.ac[i]
 end
 function update_biomass!(plank, p, ΔT, arch)
