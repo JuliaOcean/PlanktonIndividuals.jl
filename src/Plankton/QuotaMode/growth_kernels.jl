@@ -1,6 +1,6 @@
 ##### temperature function
 # @inline function tempFunc(temp, p)
-#     TFunc = max(1.0e-10, exp(p.TAe * (1.0/(temp+273.15) - (1.0/p.TRef)))) * p.TCoeff
+#     TFunc = max(1.0e-30, exp(p.TAe * (1.0/(temp+273.15) - (1.0/p.TRef)))) * p.TCoeff
 #     return TFunc
 # end
 @inline function tempFunc(temp, p)
@@ -14,29 +14,29 @@ end
 @inline function calc_PS(par, temp, Chl, Bm, Sz, p)
     αI  = par * p.α * p.Φ
     PCm = p.PCmax * Sz^p.PC_b * tempFunc(temp, p)
-    PS  = PCm * (1.0 - exp(-αI / max(1.0e-10, PCm) * Chl / max(1.0e-10, Bm))) * Bm
+    PS  = PCm * (1.0 - exp(-αI / max(1.0e-30, PCm) * Chl / max(1.0e-30, Bm))) * Bm
     return PS
 end
 
 ##### calculate nutrient uptake rate (mmolN/individual/second)
 @inline function calc_NH4_uptake(NH4, temp, Cq, Nq, Bm, Sz, p)
-    regQ = max(0.0, min(1.0, (p.Nqmax - (Nq + Bm * p.R_NC) / max(1.0e-10, Bm + Cq)) / (p.Nqmax - p.Nqmin)))
-    VN = p.VNH4max * Sz^p.VN_b * regQ * NH4/max(1.0e-10, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm
+    regQ = max(0.0, min(1.0, (p.Nqmax - (Nq + Bm * p.R_NC) / max(1.0e-30, Bm + Cq)) / (p.Nqmax - p.Nqmin)))
+    VN = p.VNH4max * Sz^p.VN_b * regQ * NH4/max(1.0e-30, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm
     return VN
 end
 @inline function calc_NO3_uptake(NO3, temp, Cq, Nq, Bm, Sz, p)
-    regQ = max(0.0, min(1.0, (p.Nqmax - (Nq + Bm * p.R_NC) / max(1.0e-10, Bm + Cq)) / (p.Nqmax - p.Nqmin)))
-    VN = p.VNO3max * Sz^p.VN_b * regQ * NO3/max(1.0e-10, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm
+    regQ = max(0.0, min(1.0, (p.Nqmax - (Nq + Bm * p.R_NC) / max(1.0e-30, Bm + Cq)) / (p.Nqmax - p.Nqmin)))
+    VN = p.VNO3max * Sz^p.VN_b * regQ * NO3/max(1.0e-30, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm
     return VN
 end
 @inline function calc_PO4_uptake(PO4, temp, Cq, Pq, Bm, Sz, p)
-    regQ = max(0.0, min(1.0, (p.Pqmax - (Pq + Bm * p.R_PC) / max(1.0e-10, Bm + Cq)) / (p.Pqmax - p.Pqmin)))
-    VN = p.VPO4max * Sz^p.VP_b * regQ * PO4/max(1.0e-10, PO4+p.KsatPO4) * tempFunc(temp, p) * Bm
+    regQ = max(0.0, min(1.0, (p.Pqmax - (Pq + Bm * p.R_PC) / max(1.0e-30, Bm + Cq)) / (p.Pqmax - p.Pqmin)))
+    VN = p.VPO4max * Sz^p.VP_b * regQ * PO4/max(1.0e-30, PO4+p.KsatPO4) * tempFunc(temp, p) * Bm
     return VN
 end
 @inline function calc_DOC_uptake(DOC, temp, Cq, Bm, Sz, p)
-    regQ = max(0.0, min(1.0, (p.Cqmax - Cq / max(1.0e-10, Bm + Cq)) / (p.Cqmax - p.Cqmin)))
-    VN = p.VDOCmax * Sz^p.VDOC_b * regQ * DOC/max(1.0e-10, DOC+p.KsatDOC) * tempFunc(temp, p) * Bm
+    regQ = max(0.0, min(1.0, (p.Cqmax - Cq / max(1.0e-30, Bm + Cq)) / (p.Cqmax - p.Cqmin)))
+    VN = p.VDOCmax * Sz^p.VDOC_b * regQ * DOC/max(1.0e-30, DOC+p.KsatDOC) * tempFunc(temp, p) * Bm
     return VN
 end
 
@@ -92,8 +92,8 @@ end
 ##### calculate ρChl
 @kernel function calc_ρChl_kernel!(plank, par, p)
     i = @index(Global)
-    @inbounds plank.ρChl[i] = plank.PS[i]/max(1.0e-10, plank.Bm[i]) * p.Chl2N / 
-                             max(1.0e-10, par[i] * p.α * p.Φ * plank.Chl[i]/plank.Bm[i]) *
+    @inbounds plank.ρChl[i] = plank.PS[i]/max(1.0e-30, plank.Bm[i]) * p.Chl2N / 
+                             max(1.0e-30, par[i] * p.α * p.Φ * plank.Chl[i]/plank.Bm[i]) *
                              isless(1.0e-1, par[i]) * plank.ac[i]
 end
 function calc_ρChl!(plank, par, p, arch)

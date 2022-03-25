@@ -16,10 +16,9 @@ function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
     param_names=(:Nsuper, :C_DNA, :mean, :var, :PRO2DNA, :RNA2DNA, :Chl2DNA, :α, :Φ, :T⁺, :Ea,
                  :PCmax, :VDOCmax, :VNO3max, :VNH4max, :VPO4max, :KsatDOC, :KsatNH4, :KsatNO3,
                  :KsatPO4, :CHmax, :CHmin, :NSTmax, :NSTmin, :PSTmax, :PSTmin,
-                 :Chl2N, :R_NC_PRO, :R_NC_DNA, :R_NC_RNA, :R_PC_DNA, :R_PC_RNA, :respir_a,
-                 :k_pro_a, :k_sat_pro, :k_rna_a, :k_sat_rna, :k_dna_a, :k_sat_dna, 
-                 :grz_P, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
-                 :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP, :ther_mort)
+                 :Chl2N, :R_NC_PRO, :R_NC_DNA, :R_NC_RNA, :R_PC_DNA, :R_PC_RNA, :respir,
+                 :k_pro, :k_sat_pro, :k_rna, :k_sat_rna, :k_dna, :k_sat_dna, 
+                 :dvid_P, :grz_P, :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP)
 
     pkeys = collect(keys(params))
     tmp = zeros(length(param_names))
@@ -39,12 +38,6 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     var = plank.p.var
     C_DNA = plank.p.C_DNA
     Nsuper = plank.p.Nsuper
-    CHmax = plank.p.CHmax
-    CHmin = plank.p.CHmin
-    NSTmax = plank.p.NSTmax
-    NSTmin = plank.p.NSTmin
-    PSTmax = plank.p.PSTmax
-    PSTmin = plank.p.PSTmin
     RNA2DNA = plank.p.RNA2DNA
     PRO2DNA = plank.p.PRO2DNA
     Chl2DNA = plank.p.Chl2DNA
@@ -67,26 +60,14 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     plank.data.DNA .= max.(1.0, plank.data.DNA .* var .+ mean) .* C_DNA .* Nsuper .* plank.data.ac   # DNA
     plank.data.RNA .= plank.data.DNA .* RNA2DNA                                                      # RNA
     plank.data.PRO .= plank.data.DNA .* PRO2DNA                                                      # PRO
-    plank.data.CH  .=(plank.data.CH  .* (CHmax  - CHmin)  .+ CHmin)  .* plank.data.PRO               # Cq
-    plank.data.NST .=(plank.data.NST .* (NSTmax - NSTmin) .+ NSTmin) .* plank.data.PRO               # Nq
-    plank.data.PST .=(plank.data.PST .* (PSTmax - PSTmin) .+ NSTmin) .* plank.data.PRO               # Pq
+    plank.data.CH  .= plank.data.CH  .* 0.1 .* plank.data.PRO                                        # Cq
+    plank.data.NST .= plank.data.CH  .* 16 ./ 106                                                    # NST
+    plank.data.PST .= plank.data.CH  ./ 106                                                          # PST
     plank.data.Chl .= plank.data.DNA .* Chl2DNA                                                      # Chl
 
     mask_individuals!(plank.data, g, N, arch)
 end
 
-@inline function functional_C_biomass(PRO, DNA, RNA)
-    C_func = PRO + DNA + RNA
-    return C_func
-end
-@inline function functional_N_biomass(PRO, DNA, RNA, p)
-    N_func = PRO * p.R_NC_RPO + DNA * p.R_NC_DNA + RNA * p.R_NC_RNA
-    return N_func
-end
-@inline function functional_P_biomass(DNA, RNA, p)
-    P_func = DNA * p.R_PC_DNA + RNA * p.R_PC_RNA
-    return P_func
-end
 @inline function total_C_biomass(PRO, DNA, RNA, CH)
     C_tot = PRO + DNA + RNA + CH
     return C_tot

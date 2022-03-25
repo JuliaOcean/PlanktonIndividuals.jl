@@ -91,34 +91,29 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "Chl2DNA"  => [3.45],    # Initial Chla:DNA ratio in phytoplankton (mgChl/mmolC) from Micromonas sp.
         "α"        => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
         "Φ"        => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
-        "T⁺"       => [305.0],   # Maximal temperature for growth
+        "T⁺"       => [308.0],   # Maximal temperature for growth (K)
         "Ea"       => [5.3e4],   # Free energy
-        "PCmax"    => [4.2e-5],  # Maximum primary production rate (per second)
+        "PCmax"    => [6.2e-5],  # Maximum primary production rate (per second)
         "VDOCmax"  => [0.0],     # Maximum DOC uptake rate (mmol C/mmol C/second)
         "VNH4max"  => [6.9e-6],  # Maximum N uptake rate (mmol N/mmol C/second)
         "VNO3max"  => [6.9e-6],  # Maximum N uptake rate (mmol N/mmol C/second)
         "VPO4max"  => [1.2e-6],  # Maximum P uptake rate (mmol P/mmol C/second)
-        "PC_b"     => [0.6],     # Shape parameter for size
-        "VDOC_b"   => [0.6],     # Shape parameter for size
-        "VN_b"     => [0.6],     # Shape parameter for size
-        "VP_b"     => [0.6],     # Shape parameter for size
         "KsatNH4"  => [0.005],   # Half-saturation coeff (mmol N/m³)
         "KsatNO3"  => [0.010],   # Half-saturation coeff (mmol N/m³)
         "KsatPO4"  => [0.003],   # Half-saturation coeff (mmol P/m³)
         "KsatDOC"  => [0.0],     # Half-saturation coeff (mmol C/m³)
-        "NSTmax"   => [0.12],    # Maximum N reserve in cell (mmol N/mmol C)
-        "NSTmin"   => [0.05],    # Minimum N reserve in cell (mmol N/mmol C)
-        "PSTmax"   => [0.01],    # Maximum P reserve in cell (mmol P/mmol C)
-        "PSTmin"   => [0.004],   # Minimum P reserve in cell (mmol P/mmol C)
+        "NSTmax"   => [0.12],    # Maximum N reserve in total N (mmol N/mmol N)
+        "NSTmin"   => [0.01],    # Minimum N reserve in total N (mmol N/mmol N)
+        "PSTmax"   => [0.70],    # Maximum P reserve in total P (mmol P/mmol P)
+        "PSTmin"   => [0.40],    # Minimum P reserve in total P (mmol P/mmol P)
         "CHmax"    => [0.4],     # Maximum Carbohydrate in cell (mmol C/mmol C)
         "CHmin"    => [0.1],     # Minimum Carbohydrate in cell (mmol C/mmol C)
-        "respir_a" => [1.2e-6],  # Respiration rate(per second)
-        "respir_b" => [0.6],     # Shape parameter for size
-        "k_pro_a"  => [6.0e-5],  # Protein synthesis rate (mmol C/mmol C/second)
+        "respir"   => [1.2e-6],  # Respiration rate(per second)
+        "k_pro"    => [6.0e-5],  # Protein synthesis rate (mmol C/mmol C/second)
         "k_sat_pro"=> [4.5e-13], # Hafl saturation constent for protein synthesis (mmol C/cell)
-        "k_dna_a"  => [1.6e-7],  # DNA synthesis rate (mmol C/mmol C/second)
+        "k_dna"    => [1.6e-7],  # DNA synthesis rate (mmol C/mmol C/second)
         "k_sat_dna"=> [1.0e-15], # Hafl saturation constent for DNA synthesis (mmol C/cell)
-        "k_rna_a"  => [3.0e-7],  # RNA synthesis rate (mmol C/mmol C/second)
+        "k_rna"    => [3.0e-7],  # RNA synthesis rate (mmol C/mmol C/second)
         "k_sat_rna"=> [1.0e-12], # Hafl saturation constent for RNA synthesis (mmol C/cell)
         "Chl2N"    => [3.0],     # Maximum Chla:N ratio in phytoplankton
         "R_NC_PRO" => [1/4.5],   # N:C ratio in protein (from Inomura et al 2020.)
@@ -126,13 +121,8 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "R_PC_DNA" => [1/11.1],  # P:C ratio in DNA
         "R_NC_RNA" => [1/2.8],   # N:C ratio in RNA (from Inomura et al 2020.)
         "R_PC_RNA" => [1/10.7],  # P:C ratio in RNA
+        "dvid_P"   => [1.0e-5],  # Division probability per second
         "grz_P"    => [0.0],     # Grazing probability per second
-        "dvid_P"   => [5e-5],    # Probability of cell division per second.
-        "dvid_type"=> [1],       # The type of cell division, 1:sizer, 2:adder.
-        "dvid_stp" => [6.0],     # Steepness of sigmoidal function
-        "dvid_reg" => [1.9],     # Regulations of cell division (cell size)
-        "dvid_stp2"=> [2.0],     # Steepness of sigmoidal function
-        "dvid_reg2"=> [12.0],    # Regulations of cell division (clock time)
         "mort_P"   => [5e-5],    # Probability of cell natural death per second
         "mort_reg" => [0.5],     # Regulation of cell natural death
         "grazFracC"=> [0.7],     # Fraction goes into dissolved organic pool
@@ -141,7 +131,6 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "mortFracC"=> [0.5],     # Fraction goes into dissolved organic pool
         "mortFracN"=> [0.5],     # Fraction goes into dissolved organic pool
         "mortFracP"=> [0.5],     # Fraction goes into dissolved organic pool
-        "ther_mort"=> [0],       # thermal mortality, 1 for on, 0 for off
     )
 
     if N == 1

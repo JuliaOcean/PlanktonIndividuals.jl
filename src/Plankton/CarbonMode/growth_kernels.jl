@@ -10,7 +10,7 @@ end
 @inline function calc_PS(par, temp, Chl, Bm, p)
     αI  = par * p.α * p.Φ
     PCm = p.PCmax * tempFunc(temp, p)
-    PS  = PCm * (1.0 - exp(-αI / max(1.0e-10, PCm) * Chl / max(1.0e-10, Bm))) * Bm
+    PS  = PCm * (1.0 - exp(-αI / max(1.0e-30, PCm) * Chl / max(1.0e-30, Bm))) * Bm
     return PS
 end
 

@@ -21,7 +21,7 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
         calc_graz_quadratic!(plank, nuts, p.grz_P, arch)
         # calc_mort!(plank, p, arch)
         ##### Bernouli-like distribution
-        plank.dvid .= 0.5 .* (1.0 .- isless.(plank.DNA ./ (p.C_DNA .* p.Nsuper), 2.0))
+        plank.dvid .= p.dvid_P .* (1.0 .- isless.(plank.DNA ./ (p.C_DNA .* p.Nsuper), 2.0))
         get_probability!(plank, rnd, ΔT, arch)
 
         ##### thermal mortality (WIP)
