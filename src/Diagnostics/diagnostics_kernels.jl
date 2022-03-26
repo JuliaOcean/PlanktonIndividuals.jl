@@ -26,7 +26,7 @@ function diags_spcs!(diags_sp, plank, ac, x, y, z, mode::AbstractMode, arch::Arc
     elseif isa(mode, QuotaMode)
         diags = (:PS, :BS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :exu, :Bm, :Cq, :Nq, :Pq, :Chl)
     elseif isa(mode, MacroMolecularMode)
-        diags = (:PS, :VDOC, :VHN4, :VNO3, :VPO4, :S_PRO, :S_DNA, :S_RNA, :resp, :CH, :NST, :PST, :PRO, :DNA, :RNA, :Chl)
+        diags = (:PS, :VDOC, :VHN4, :VNO3, :VPO4, :S_PRO, :S_DNA, :S_RNA, :resp, :ρChl, :CH, :NST, :PST, :PRO, :DNA, :RNA, :Chl)
     end
 
     for diag in keys(diags_sp)
