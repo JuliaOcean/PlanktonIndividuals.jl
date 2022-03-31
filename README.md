@@ -10,6 +10,14 @@
 
 `PlanktonIndividuals.jl` is a fast individual-based model written in Julia that can be run on both CPU and GPU. It simulates the life cycle of phytoplankton cells as Lagrangian particles in the ocean while nutrients are represented as Eulerian, density-based tracers using a [3rd order advection scheme](https://mitgcm.readthedocs.io/en/latest/algorithm/adv-schemes.html#third-order-direct-space-time-with-flux-limiting). The model is used to simulate and interpret the temporal and spacial variations of phytoplankton cell densities and stoichiometry as well as growth and division behaviors induced by diel cycle and physical motions ranging from sub-mesoscale to large scale processes.
 
+## Installation
+
+To add `PlanktonIndividuals.jl` to your Julia environment:
+
+```julia
+using Pkg; Pkg.add("PlanktonIndividuals.jl")
+```
+
 ## Use Examples
 
 ### 1. Simple Flow Fields In Two Dimensions
@@ -47,18 +55,3 @@ The test suite includes zero-, one-, two-, and three-dimensional simulations usi
 using Pkg; Pkg.test("PlanktonIndividuals")
 ```
 
-## Installation
-
-To add `PlanktonIndividuals.jl` to your Julia environment:
-
-```julia
-using Pkg; Pkg.add("PlanktonIndividuals.jl")
-```
-
-or if you cloned the repository via `git` directly:
-
-```julia
-using Pkg; 
-p=PackageSpec(path="PlanktonIndividuals.jl")
-Pkg.develop()
-```
