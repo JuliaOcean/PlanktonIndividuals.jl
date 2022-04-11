@@ -33,11 +33,11 @@ function gpu_calc_loss_kernel!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, p
     index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     stride = blockDim().x * gridDim().x
     for i = index:stride:size(ac,1)
-        @inbounds CUDA.@atomic ctsdoc[x[i], y[i], z[i]] += total_C_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.CH[i]) * lossFracC * ac[i] * loss[i]
-        @inbounds CUDA.@atomic ctsdon[x[i], y[i], z[i]] += total_N_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.NST[i], p) * lossFracN * ac[i] * loss[i]
+        @inbounds CUDA.@atomic ctsdoc[x[i], y[i], z[i]] += total_C_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i]) * lossFracC * ac[i] * loss[i]
+        @inbounds CUDA.@atomic ctsdon[x[i], y[i], z[i]] += total_N_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.NST[i], plank.Chl[i], p) * lossFracN * ac[i] * loss[i]
         @inbounds CUDA.@atomic ctsdop[x[i], y[i], z[i]] += total_P_biomass(plank.DNA[i], plank.RNA[i], plank.PST[i], p) * lossFracP * ac[i] * loss[i]
-        @inbounds CUDA.@atomic ctspoc[x[i], y[i], z[i]] += total_C_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.CH[i]) * (1.0-lossFracC) * ac[i] * loss[i]
-        @inbounds CUDA.@atomic ctspon[x[i], y[i], z[i]] += total_N_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.NST[i], p) * (1.0-lossFracN) * ac[i] * loss[i]
+        @inbounds CUDA.@atomic ctspoc[x[i], y[i], z[i]] += total_C_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i]) * (1.0-lossFracC) * ac[i] * loss[i]
+        @inbounds CUDA.@atomic ctspon[x[i], y[i], z[i]] += total_N_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.NST[i], plank.Chl[i], p) * (1.0-lossFracN) * ac[i] * loss[i]
         @inbounds CUDA.@atomic ctspop[x[i], y[i], z[i]] += total_P_biomass(plank.DNA[i], plank.RNA[i], plank.PST[i], p) * (1.0-lossFracP) * ac[i] * loss[i]
     end
     return nothing
@@ -52,11 +52,11 @@ end
 function calc_loss!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank, ac, x, y, z,
                            loss, lossFracC, lossFracN, lossFracP, p, ::CPU)
     for i in 1:size(ac,1)
-        @inbounds ctsdoc[x[i], y[i], z[i]] += total_C_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.CH[i]) * lossFracC * ac[i] * loss[i]
-        @inbounds ctsdon[x[i], y[i], z[i]] += total_N_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.NST[i], p) * lossFracN * ac[i] * loss[i]
+        @inbounds ctsdoc[x[i], y[i], z[i]] += total_C_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i]) * lossFracC * ac[i] * loss[i]
+        @inbounds ctsdon[x[i], y[i], z[i]] += total_N_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.NST[i], plank.Chl[i], p) * lossFracN * ac[i] * loss[i]
         @inbounds ctsdop[x[i], y[i], z[i]] += total_P_biomass(plank.DNA[i], plank.RNA[i], plank.PST[i], p) * lossFracP * ac[i] * loss[i]
-        @inbounds ctspoc[x[i], y[i], z[i]] += total_C_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.CH[i]) * (1.0-lossFracC) * ac[i] * loss[i]
-        @inbounds ctspon[x[i], y[i], z[i]] += total_N_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.NST[i], p) * (1.0-lossFracN) * ac[i] * loss[i]
+        @inbounds ctspoc[x[i], y[i], z[i]] += total_C_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i]) * (1.0-lossFracC) * ac[i] * loss[i]
+        @inbounds ctspon[x[i], y[i], z[i]] += total_N_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.NST[i], plank.Chl[i], p) * (1.0-lossFracN) * ac[i] * loss[i]
         @inbounds ctspop[x[i], y[i], z[i]] += total_P_biomass(plank.DNA[i], plank.RNA[i], plank.PST[i], p) * (1.0-lossFracP) * ac[i] * loss[i]
     end
     return nothing

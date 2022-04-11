@@ -15,8 +15,8 @@ end
 end
 
 ##### calculate nutrient uptake rate (mmolN/individual/second)
-@inline function calc_NP_uptake(NH4, NO3, PO4, temp, NST, PST, PRO, DNA, RNA, p, ac)
-    N_tot = total_N_biomass(PRO, DNA, RNA, NST, p)
+@inline function calc_NP_uptake(NH4, NO3, PO4, temp, NST, PST, PRO, DNA, RNA, Chl, p, ac)
+    N_tot = total_N_biomass(PRO, DNA, RNA, NST, Chl, p)
     P_tot = total_P_biomass(DNA, RNA, PST, p)
     regQN = max(0.0, min(1.0, (p.NSTmax - NST / max(1.0e-30, N_tot)) / (p.NSTmax - p.NSTmin)))
     regQP = max(0.0, min(1.0, (p.PSTmax - PST / max(1.0e-30, P_tot)) / (p.PSTmax - p.PSTmin)))
@@ -33,7 +33,7 @@ end
     @inbounds plank.VNH4[i], plank.VNO3[i], plank.VPO4[i] = 
                             calc_NP_uptake(nuts.NH4[i], nuts.NO3[i], nuts.PO4[i], nuts.T[i],
                                         plank.NST[i], plank.PST[i], plank.PRO[i],
-                                        plank.DNA[i], plank.RNA[i], p, plank.ac[i])
+                                        plank.DNA[i], plank.RNA[i], plank.Chl[i], p, plank.ac[i])
 end
 function calc_inorganic_uptake!(plank, nuts, p, arch::Architecture)
     kernel! = calc_inorganic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -58,15 +58,15 @@ end
 
 ##### calculate DOC uptake rate (mmolC/individual/second)
 ##### DOC uptake needs support of photosynthesis for at least 5% of total C acquisition.
-@inline function calc_DOC_uptake(DOC, temp, CH, PRO, DNA, RNA, p)
-    C_tot = total_C_biomass(PRO, DNA, RNA, CH)
+@inline function calc_DOC_uptake(DOC, temp, CH, PRO, DNA, RNA, Chl, p)
+    C_tot = total_C_biomass(PRO, DNA, RNA, CH, Chl)
     regQ = max(0.0, min(1.0, (p.CHmax - CH / max(1.0e-30, C_tot)) / (p.CHmax - p.CHmin)))
     VN = p.VDOCmax * regQ * DOC/max(1.0e-30, DOC+p.KsatDOC) * tempFunc(temp, p) * PRO
     return VN
 end
 @kernel function calc_organic_uptake_kernel!(plank, nuts, p)
     i = @index(Global)
-    @inbounds plank.VDOC[i] = calc_DOC_uptake(nuts.DOC[i], nuts.T[i], plank.CH[i], plank.PRO[i], plank.DNA[i], plank.RNA[i], p) * plank.ac[i]
+    @inbounds plank.VDOC[i] = calc_DOC_uptake(nuts.DOC[i], nuts.T[i], plank.CH[i], plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.Chl[i], p) * plank.ac[i]
 
     @inbounds plank.VDOC[i] = plank.VDOC[i] * isless(0.05, plank.PS[i]/(plank.VDOC[i]+plank.PS[i]))
 end
@@ -80,7 +80,7 @@ end
 ##### calculate ρChl
 @kernel function calc_ρChl_kernel!(plank, par, p)
     i = @index(Global)
-    @inbounds plank.ρChl[i] = plank.PS[i]/max(1.0e-30, plank.PRO[i]) * p.Chl2N / max(1.0e-30, par[i] * p.α * p.Φ * plank.Chl[i]/max(1.0e-10, plank.PRO[i])) *
+    @inbounds plank.ρChl[i] = plank.PS[i]/max(1.0e-30, plank.PRO[i]) / max(1.0e-30, par[i] * p.α * p.Φ * plank.Chl[i]/max(1.0e-10, plank.PRO[i])) *
                              isless(1.0e-1, par[i]) * plank.ac[i]
 end
 function calc_ρChl!(plank, par, p, arch)
@@ -120,28 +120,28 @@ function update_quotas_2!(plank, ΔT, p, arch)
 end
 
 ##### calculate protein, DNA, RNA synthesis (mmol C /individual/second)
-# @kernel function calc_BS_kernel!(plank, T, p)
-#     i  = @index(Global)
-#     @inbounds limit_PRO = min(plank.CH[i]/(plank.CH[i] + p.k_sat_pro * p.Nsuper), plank.NST[i]/(plank.NST[i] + p.k_sat_pro * p.Nsuper * p.R_NC_PRO))
-#     @inbounds limit_DNA = min(plank.CH[i]/(plank.CH[i] + p.k_sat_dna * p.Nsuper), plank.NST[i]/(plank.NST[i] + p.k_sat_dna * p.Nsuper * p.R_NC_DNA),
-#                                 plank.PST[i]/(plank.PST[i] + p.k_sat_dna * p.Nsuper * p.R_PC_DNA))
-#     @inbounds limit_RNA = min(plank.CH[i]/(plank.CH[i] + p.k_sat_rna * p.Nsuper), plank.NST[i]/(plank.NST[i] + p.k_sat_rna * p.Nsuper * p.R_NC_RNA),
-#                                 plank.PST[i]/(plank.PST[i] + p.k_sat_rna * p.Nsuper * p.R_PC_RNA))
-
-#     @inbounds plank.S_PRO[i] = p.k_pro * plank.RNA[i] * limit_PRO * tempFunc(T[i], p)
-#     @inbounds plank.S_DNA[i] = p.k_dna * plank.PRO[i] * limit_DNA * tempFunc(T[i], p) * isless(plank.DNA[i]/(p.C_DNA * p.Nsuper), 2.0)
-#     @inbounds plank.S_RNA[i] = p.k_rna * plank.PRO[i] * limit_RNA * tempFunc(T[i], p)
-# end
 @kernel function calc_BS_kernel!(plank, T, p)
-    i = @index(Global)
-    @inbounds supp_C_pro = min(plank.CH[i], plank.NST[i]/p.R_NC_PRO)
-    @inbounds supp_C_dna = min(plank.CH[i], plank.NST[i]/p.R_NC_DNA, plank.PST[i]/p.R_PC_DNA)
-    @inbounds supp_C_rna = min(plank.CH[i], plank.NST[i]/p.R_NC_RNA, plank.PST[i]/p.R_PC_RNA)
+    i  = @index(Global)
+    @inbounds limit_PRO = min(plank.CH[i]/(plank.CH[i] + p.k_sat_pro * p.Nsuper), plank.NST[i]/(plank.NST[i] + p.k_sat_pro * p.Nsuper * p.R_NC_PRO))
+    @inbounds limit_DNA = min(plank.CH[i]/(plank.CH[i] + p.k_sat_dna * p.Nsuper), plank.NST[i]/(plank.NST[i] + p.k_sat_dna * p.Nsuper * p.R_NC_DNA),
+                                plank.PST[i]/(plank.PST[i] + p.k_sat_dna * p.Nsuper * p.R_PC_DNA))
+    @inbounds limit_RNA = min(plank.CH[i]/(plank.CH[i] + p.k_sat_rna * p.Nsuper), plank.NST[i]/(plank.NST[i] + p.k_sat_rna * p.Nsuper * p.R_NC_RNA),
+                                plank.PST[i]/(plank.PST[i] + p.k_sat_rna * p.Nsuper * p.R_PC_RNA))
 
-    @inbounds plank.S_PRO[i] = p.k_pro * supp_C_pro * (plank.RNA[i]/(plank.RNA[i]+p.k_sat_pro)) * tempFunc(T[i], p)
-    @inbounds plank.S_DNA[i] = p.k_dna * supp_C_dna * (plank.PRO[i]/(plank.PRO[i]+p.k_sat_dna)) * tempFunc(T[i], p) * isless(plank.DNA[i]/(p.C_DNA * p.Nsuper), 2.0)
-    @inbounds plank.S_RNA[i] = p.k_rna * supp_C_rna * (plank.PRO[i]/(plank.PRO[i]+p.k_sat_rna)) * tempFunc(T[i], p)
+    @inbounds plank.S_PRO[i] = p.k_pro * plank.RNA[i] * limit_PRO * tempFunc(T[i], p)
+    @inbounds plank.S_DNA[i] = p.k_dna * plank.PRO[i] * limit_DNA * tempFunc(T[i], p) * isless(plank.DNA[i]/(p.C_DNA * p.Nsuper), 2.0)
+    @inbounds plank.S_RNA[i] = p.k_rna * plank.PRO[i] * limit_RNA * tempFunc(T[i], p)
 end
+# @kernel function calc_BS_kernel!(plank, T, p)
+#     i = @index(Global)
+#     @inbounds supp_C_pro = min(plank.CH[i], plank.NST[i]/p.R_NC_PRO)
+#     @inbounds supp_C_dna = min(plank.CH[i], plank.NST[i]/p.R_NC_DNA, plank.PST[i]/p.R_PC_DNA)
+#     @inbounds supp_C_rna = min(plank.CH[i], plank.NST[i]/p.R_NC_RNA, plank.PST[i]/p.R_PC_RNA)
+
+#     @inbounds plank.S_PRO[i] = p.k_pro * supp_C_pro * (plank.RNA[i]/(plank.RNA[i]+p.k_sat_pro)) * tempFunc(T[i], p)
+#     @inbounds plank.S_DNA[i] = p.k_dna * supp_C_dna * (plank.PRO[i]/(plank.PRO[i]+p.k_sat_dna)) * tempFunc(T[i], p) * isless(plank.DNA[i]/(p.C_DNA * p.Nsuper), 2.0)
+#     @inbounds plank.S_RNA[i] = p.k_rna * supp_C_rna * (plank.PRO[i]/(plank.PRO[i]+p.k_sat_rna)) * tempFunc(T[i], p)
+# end
 function calc_BS!(plank, T, p, arch)
     kernel! = calc_BS_kernel!(device(arch), 256, (size(plank.ac,1)))
     event = kernel!(plank, T, p)
@@ -158,7 +158,7 @@ end
     @inbounds plank.CH[i]  -= ΔT *(plank.S_PRO[i] + plank.S_DNA[i] + plank.S_RNA[i])
     @inbounds plank.NST[i] -= ΔT *(plank.S_PRO[i] * p.R_NC_PRO + plank.S_DNA[i] * p.R_NC_DNA + plank.S_RNA[i] * p.R_NC_RNA)
     @inbounds plank.PST[i] -= ΔT *(plank.S_DNA[i] * p.R_PC_DNA + plank.S_RNA[i] * p.R_PC_RNA)
-    @inbounds plank.Chl[i] += ΔT * plank.S_PRO[i] * p.R_NC_PRO * plank.ρChl[i]
+    @inbounds plank.Chl[i] += ΔT * plank.S_PRO[i] * plank.ρChl[i] * 893.49 / 55.0 # chl unit is mgChl/cell
     @inbounds plank.age[i] += ΔT / 3600.0 * plank.ac[i]
 end
 function update_biomass!(plank, p, ΔT, arch)

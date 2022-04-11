@@ -57,23 +57,23 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     plank.data.x   .=(plank.data.x .* g.Nx) .* plank.data.ac                                         # x, unit: grid spacing, starting from 0
     plank.data.y   .=(plank.data.y .* g.Ny) .* plank.data.ac                                         # y, unit: grid spacing, starting from 0
     plank.data.z   .=(plank.data.z .* g.Nz) .* plank.data.ac                                         # z, unit: grid spacing, starting from 0
-    plank.data.DNA .= max.(1.0, plank.data.DNA .* var .+ mean) .* C_DNA .* Nsuper .* plank.data.ac   # DNA
-    plank.data.RNA .= plank.data.DNA .* RNA2DNA                                                      # RNA
-    plank.data.PRO .= plank.data.DNA .* PRO2DNA                                                      # PRO
-    plank.data.CH  .= plank.data.CH  .* 0.1 .* plank.data.PRO                                        # Cq
-    plank.data.NST .= plank.data.CH  .* 16 ./ 106                                                    # NST
-    plank.data.PST .= plank.data.CH  ./ 106                                                          # PST
-    plank.data.Chl .= plank.data.DNA .* Chl2DNA                                                      # Chl
+    plank.data.DNA .= max.(1.0, plank.data.DNA .* var .+ mean) .* C_DNA .* Nsuper .* plank.data.ac   # DNA mmolC/individual
+    plank.data.RNA .= plank.data.DNA .* RNA2DNA                                                      # RNA mmolC/individual
+    plank.data.PRO .= plank.data.DNA .* PRO2DNA                                                      # PRO mmolC/individual
+    plank.data.CH  .= plank.data.CH  .* 0.2 .* plank.data.PRO                                        # CH  mmolC/individual
+    plank.data.NST .= plank.data.CH  .* 16 ./ 106                                                    # NST mmolN/individual
+    plank.data.PST .= plank.data.CH  ./ 106                                                          # PST mmolP/individual
+    plank.data.Chl .= plank.data.DNA .* Chl2DNA * 893.49 / 55.0                                      # Chl mgChl/individual
 
     mask_individuals!(plank.data, g, N, arch)
 end
 
-@inline function total_C_biomass(PRO, DNA, RNA, CH)
-    C_tot = PRO + DNA + RNA + CH
+@inline function total_C_biomass(PRO, DNA, RNA, CH, Chl)
+    C_tot = PRO + DNA + RNA + CH + Chl / 893.49 * 55.0 
     return C_tot
 end
-@inline function total_N_biomass(PRO, DNA, RNA, NST, p)
-    N_tot = PRO * p.R_NC_PRO + DNA * p.R_NC_DNA + RNA * p.R_NC_RNA + NST
+@inline function total_N_biomass(PRO, DNA, RNA, NST, Chl, p)
+    N_tot = PRO * p.R_NC_PRO + DNA * p.R_NC_DNA + RNA * p.R_NC_RNA + NST + Chl / 893.49 * 4.0
     return N_tot
 end
 @inline function total_P_biomass(DNA, RNA, PST, p)

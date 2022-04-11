@@ -88,7 +88,7 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "var"      => [0.3],     # Variance of the normal distribution of initial phyto individuals
         "RNA2DNA"  => [1.73],    # Initial RNA:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
         "PRO2DNA"  => [34.83],   # Initial protein:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
-        "Chl2DNA"  => [3.45],    # Initial Chla:DNA ratio in phytoplankton (mgChl/mmolC) from Micromonas sp.
+        "Chl2DNA"  => [3.45],    # Initial Chla:DNA ratio in phytoplankton (mmolC/mmolC) from Micromonas sp.
         "α"        => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
         "Φ"        => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
         "T⁺"       => [308.0],   # Maximal temperature for growth (K)
