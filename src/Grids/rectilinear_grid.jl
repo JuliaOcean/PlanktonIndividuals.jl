@@ -104,10 +104,12 @@ function RectilinearGrid(;size, x, y, z,
     @views @. dzC[Nz+Hz:Nz+2*Hz] = dzF[Nz+Hz]
 
     @views @. zF[1:Hz] = zF[1+Hz:2*Hz] + dzF[1]*Hz
-    @views @. zC[1:Hz] = zC[1+Hz:2*Hz] + dzF[1]*Hz
     @views @. zF[Nz+Hz+2:Nz+2*Hz] = zF[Nz+2:Nz+Hz] - dzF[end]*Hz
     for i in 1:Hz
         zC[Nz+Hz+i] = zC[Nz+Hz+i-1] - dzF[end]
+    end
+    for i in Hz:-1:1
+        zC[i] = zC[i+1] + dzF[1]
     end
 
     landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX, TY)

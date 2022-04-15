@@ -43,3 +43,7 @@ TPt = tot_mass(model.nutrients.PO4.data, grid) +
 TPt = TPt + sum(model.individuals.phytos.sp1.data.Pq .+ 
                 model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC)
 
+
+@testset "PlanktonIndividuals 1D tests:" begin
+    @test isapprox(TP,TPt; atol=1e1)
+end 

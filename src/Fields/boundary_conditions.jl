@@ -27,9 +27,10 @@ function set_bc!(model, tracer::Symbol, pos::Symbol, bc_value::Union{Number, Abs
 
     bc_value_d = bc_value
     if isa(bc_value, AbstractArray)
-        bc_value_d = vc_value |> array_type(model.arch)
+        bc_value_d = bc_value |> array_type(model.arch)
     end
     setproperty!(model.nutrients[tracer].bc, pos, bc_value_d)
+    return nothing
 end
 
 # get boundary condition at each grid point
@@ -64,9 +65,9 @@ function validate_bcs(nut, grid, nΔT)
         bc_bottom  = nut[name].bc.bottom
         bc_top     = nut[name].bc.top
 
-        bc_size_x = (grid.Ny+2*grid.Hy, grid.Nz+2*grid.Hz)
-        bc_size_y = (grid.Nx+2*grid.Hx, grid.Nz+2*grid.Hz)
-        bc_size_z = (grid.Nx+2*grid.Hx, grid.Ny+2*grid.Hy)
+        bc_size_x = (grid.Ny, grid.Nz)
+        bc_size_y = (grid.Nx, grid.Nz)
+        bc_size_z = (grid.Nx, grid.Ny)
         
         validate_bc(bc_west, bc_size_x, nΔT)
         validate_bc(bc_east, bc_size_x, nΔT)
