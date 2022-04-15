@@ -33,9 +33,9 @@ end
 
 # add boundary conditions for DOC
 model.nutrients.DON.bc.west  = 1.0e-3 # west boundary condition of 0.1 mmol/m^2/second
-model.nutrients.DON.bc.east  = randn(20,20) .* 1e-3 # east boundary condition of -0.1 mmol/m^2/second
-model.nutrients.DON.bc.south = randn(20,20,10) .* 1e-3 # south boundary condition of 0.1 mmol/m^2/second
-model.nutrients.DON.bc.north = randn(20,20,10) .* 1e-3 # north boundary condition of -0.1 mmol/m^2/second
+model.nutrients.DON.bc.east  = randn(16,16) .* 1e-3 # east boundary condition of -0.1 mmol/m^2/second
+model.nutrients.DON.bc.south = randn(16,16,10) .* 1e-3 # south boundary condition of 0.1 mmol/m^2/second
+model.nutrients.DON.bc.north = randn(16,16,10) .* 1e-3 # north boundary condition of -0.1 mmol/m^2/second
 
 sim = PlanktonSimulation(model, ΔT = 60, iterations = 10, vels=(u=uvel, v=vvel, w=wvel)) 
 
@@ -45,3 +45,7 @@ TCt = tot_mass(model.nutrients.DIC.data, grid) +
       tot_mass(model.nutrients.DOC.data, grid) +
       tot_mass(model.nutrients.POC.data, grid)
 TCt = TCt + sum(model.individuals.phytos.sp1.data.Bm)
+
+@testset "PlanktonIndividuals 3D tests:" begin
+    @test isapprox(TC,TCt; atol=1e1)
+end 
