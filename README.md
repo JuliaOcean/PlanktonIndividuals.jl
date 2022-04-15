@@ -46,12 +46,3 @@ using PlanktonIndividuals
 p = dirname(pathof(PlanktonIndividuals))
 include(joinpath(p,"../examples/surface_mixing_3D_example.jl"))
 ```
-
-## Unit Testing
-
-The test suite includes zero-, one-, two-, and three-dimensional simulations using input files from `samples/`.
-
-```julia
-using Pkg; Pkg.test("PlanktonIndividuals")
-```
-
