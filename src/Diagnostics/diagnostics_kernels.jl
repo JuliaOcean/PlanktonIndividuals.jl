@@ -20,13 +20,13 @@ function diags_proc!(diags_proc, proc, ac, x, y, z, ::CPU)
 end
 
 function diags_spcs!(diags_sp, plank, ac, x, y, z, mode::AbstractMode, arch::Architecture)
-    diags = (:PS, :resp, :Bm, :Chl)
+    diags = (:PS, :resp, :Bm, :Chl, :Th)
     if isa(mode, CarbonMode)
         nothing
     elseif isa(mode, QuotaMode)
         diags = (:PS, :BS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :exu, :Bm, :Cq, :Nq, :Pq, :Chl)
     elseif isa(mode, MacroMolecularMode)
-        nothing
+        diags = (:PS, :VDOC, :VHN4, :VNO3, :VPO4, :S_PRO, :S_DNA, :S_RNA, :resp, :ρChl, :CH, :NST, :PST, :PRO, :DNA, :RNA, :Chl)
     end
 
     for diag in keys(diags_sp)

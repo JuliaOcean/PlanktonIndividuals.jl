@@ -7,17 +7,19 @@
 end
 
 ##### calculate photosynthesis rate (mmolC/individual/second)
-@inline function calc_PS(par, temp, Chl, Bm, Sz, p)
+@inline function calc_PS(par, temp, Chl, Bm, p)
     αI  = par * p.α * p.Φ
-    PCm = p.PCmax * Sz^p.PC_b * tempFunc(temp, p)
-    PS  = PCm * (1.0 - exp(-αI / max(1.0e-10, PCm) * Chl / max(1.0e-10, Bm))) * Bm
+    PCm = p.PCmax * tempFunc(temp, p)
+    PS  = PCm * (1.0 - exp(-αI / max(1.0e-30, PCm) * Chl / max(1.0e-30, Bm))) * Bm
     return PS
 end
 
 @kernel function calc_inorganic_uptake_kernel!(plank, nuts, p)
     i = @index(Global)
-    @inbounds plank.PS[i] = calc_PS(nuts.par[i], nuts.T[i], plank.Chl[i], plank.Bm[i], plank.Sz[i], p) * plank.ac[i]
+    @inbounds plank.PS[i] = calc_PS(nuts.par[i], nuts.T[i], plank.Chl[i], plank.Bm[i], p) * plank.ac[i]
+
 end
+
 function calc_inorganic_uptake!(plank, nuts, p, arch::Architecture)
     kernel! = calc_inorganic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
     event = kernel!(plank, nuts, p)
@@ -28,7 +30,7 @@ end
 ##### calculate respiration (mmolC/individual/second)
 @kernel function calc_respir_kernel!(plank, T, p)
     i = @index(Global)
-    @inbounds plank.resp[i] = p.respir_a * plank.Sz[i]^p.respir_b * plank.Bm[i] * tempFunc(T[i], p) * plank.ac[i]
+    @inbounds plank.resp[i] = p.respir_a * plank.Bm[i] * tempFunc(T[i], p) * plank.ac[i]
 end
 function calc_respir!(plank, T, p, arch)
     kernel! = calc_respir_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -59,6 +61,19 @@ end
 function update_cellsize!(plank, p, arch)
     kernel! = update_cellsize_kernel!(device(arch), 256, (size(plank.ac,1)))
     event = kernel!(plank, p)
+    wait(device(arch), event)
+    return nothing
+end
+
+##### track temperature history
+@kernel function calc_thermal_history_kernel!(plank, nuts, p, ΔT)
+    i = @index(Global)
+    # @inbounds plank.Th[i] += max(0, nuts.T[i] + 273.15 - p.T⁺) * ΔT / 3600
+    @inbounds plank.Th[i] += ΔT/3600 * exp(0.22 * max(0, nuts.T[i] + 273.15 - p.T⁺)) * isless(p.T⁺, nuts.T[i]+273.15)
+end
+function calc_thermal_history!(plank, nuts, p, ΔT, arch)
+    kernel! = calc_thermal_history_kernel!(device(arch), 256, (size(plank.ac,1)))
+    event = kernel!(plank, nuts, p, ΔT)
     wait(device(arch), event)
     return nothing
 end

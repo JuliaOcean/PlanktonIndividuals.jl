@@ -53,6 +53,27 @@ function start_next_plankton_file(writer::PlanktonOutputWriter)
 end
 
 ##### write a brief summary of each species at each time step into a txt file
+function write_species_dynamics(t::Int64, phytos, filepath, mode::MacroMolecularMode)
+    for i in 1:length(phytos)
+        file = joinpath(filepath, "dynamic_species"*lpad(i,3,"0")*".txt")
+        pop = dot(phytos[i].data.ac, phytos[i].data.ac)
+        gen_ave =  dot(phytos[i].data.gen, phytos[i].data.ac) / pop
+        age_ave =  dot(phytos[i].data.age, phytos[i].data.ac) / pop
+        PRO_ave =  dot(phytos[i].data.PRO, phytos[i].data.ac) / pop
+        DNA_ave =  dot(phytos[i].data.DNA, phytos[i].data.ac) / pop
+        RNA_ave =  dot(phytos[i].data.RNA, phytos[i].data.ac) / pop
+        CH_ave  =  dot(phytos[i].data.CH,  phytos[i].data.ac) / pop
+        NST_ave =  dot(phytos[i].data.NST, phytos[i].data.ac) / pop
+        PST_ave =  dot(phytos[i].data.PST, phytos[i].data.ac) / pop
+        Chl_ave =  dot(phytos[i].data.Chl, phytos[i].data.ac) / pop
+        day = t÷86400
+        hour = t%86400/3600
+        io = open(file,"a");
+        println(io,@sprintf("%3.0f  %2.2f  %6.0f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E  %.8E  %.8E",
+                            day,hour,pop,gen_ave,age_ave,PRO_ave,DNA_ave,RNA_ave,CH_ave,NST_ave,PST_ave,Chl_ave))
+        close(io);
+    end
+end
 function write_species_dynamics(t::Int64, phytos, filepath, mode::QuotaMode)
     for i in 1:length(phytos)
         file = joinpath(filepath, "dynamic_species"*lpad(i,3,"0")*".txt")
@@ -96,7 +117,7 @@ function write_individuals_to_jld2(phytos::NamedTuple, filepath, t, iter, atts)
         for sp in keys(phytos)
             spi = NamedTuple{atts}([getproperty(phytos[sp].data, att) for att in atts])
             for att in atts
-                file["timeseries/$att/$iter"] = Array(spi[att])
+                file["timeseries/$sp/$att/$iter"] = Array(spi[att])
             end
         end
     end

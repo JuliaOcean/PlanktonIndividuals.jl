@@ -1,4 +1,4 @@
-function plankton_update!(plank, nuts, rnd, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::CarbonMode)
+function plankton_update!(plank, nuts, rnd, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
     plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch)
 
     calc_consume!(plk.DIC.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, arch)
