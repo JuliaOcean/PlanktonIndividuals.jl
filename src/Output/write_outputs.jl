@@ -1,5 +1,5 @@
 ##### write model outputs
-function write_output!(writer::Union{PlanktonOutputWriter, Nothing}, model::PlanktonModel, diags::Union{PlanktonDiagnostics,Nothing}, ΔT)
+function write_output!(writer::Union{PlanktonOutputWriter, Nothing}, model::PlanktonModel, diags::PlanktonDiagnostics, ΔT)
     if isa(writer, Nothing)
         return nothing
     else
@@ -64,7 +64,7 @@ function write_species_dynamics(t::Int64, phytos, filepath, mode::QuotaMode)
         Cq_ave  =  dot(phytos[i].data.Cq,  phytos[i].data.ac) / pop
         Nq_ave  =  dot(phytos[i].data.Nq,  phytos[i].data.ac) / pop
         Pq_ave  =  dot(phytos[i].data.Pq,  phytos[i].data.ac) / pop
-        Chl_ave =  dot(phytos[i].data.chl, phytos[i].data.ac) / pop
+        Chl_ave =  dot(phytos[i].data.Chl, phytos[i].data.ac) / pop
         day = t÷86400
         hour = t%86400/3600
         io = open(file,"a");
