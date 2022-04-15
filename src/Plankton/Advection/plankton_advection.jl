@@ -1,14 +1,3 @@
-##### update coordinates of each individual using Explicit Euler (aka Euler Forward) integration
-function plankton_advection!(plank, velos, g::AbstractGrid, vel, ΔT, arch::Architecture)
-    vel_interpolate!(velos.u1, velos.v1, velos.w1, plank.x, plank.y, plank.z, plank.ac, 
-                     vel.u.data, vel.v.data, vel.w.data, g, arch)
-
-    calc_coord!(plank, plank, velos.u1, velos.v1, velos.w1, plank.ac, ΔT, 1.0, arch)
-    particle_boundaries!(plank, plank.ac, g, arch)
-
-    return nothing
-end
-
 ##### update coordinates of each individual using RK4 integration
 function plankton_advection!(plank, velos, g::AbstractGrid, vel₀, vel½, vel₁, ΔT, arch::Architecture)
     vel_interpolate!(velos.u1, velos.v1, velos.w1, plank.x, plank.y, plank.z, plank.ac, 
@@ -66,20 +55,31 @@ function plankton_advection!(plank, velos, g::AbstractGrid, vel₀, vel½, vel�
     return nothing
 end
 
-##### update coordinates of each individual using quasiAB2 integration
-function plankton_advection!(plank, velos, g::AbstractGrid, χ, vel₁, ΔT, arch::Architecture)
-    ##### time step n
-    vel_interpolate!(velos.u1, velos.v1, velos.w1, plank.x, plank.y, plank.z, plank.ac, 
-                     vel₁.u.data, vel₁.v.data, vel₁.w.data, g, arch)
+# ##### update coordinates of each individual using quasiAB2 integration
+# function plankton_advection!(plank, velos, g::AbstractGrid, χ, vel₁, ΔT, arch::Architecture)
+#     ##### time step n
+#     vel_interpolate!(velos.u1, velos.v1, velos.w1, plank.x, plank.y, plank.z, plank.ac, 
+#                      vel₁.u.data, vel₁.v.data, vel₁.w.data, g, arch)
 
-    ##### AB2
-    calc_vel_ab2!(velos, χ, arch)
-    calc_coord!(plank, plank, velos.u1, velos.v1, velos.w1, plank.ac, ΔT, 1.0, arch)
+#     ##### AB2
+#     calc_vel_ab2!(velos, χ, arch)
+#     calc_coord!(plank, plank, velos.u1, velos.v1, velos.w1, plank.ac, ΔT, 1.0, arch)
 
-    ##### time step n-1
-    velos.u2 .= velos.u1
-    velos.v2 .= velos.v1
-    velos.w2 .= velos.w1
+#     ##### time step n-1
+#     velos.u2 .= velos.u1
+#     velos.v2 .= velos.v1
+#     velos.w2 .= velos.w1
 
-    return nothing
-end
+#     return nothing
+# end
+
+# ##### update coordinates of each individual using Explicit Euler (aka Euler Forward) integration
+# function plankton_advection!(plank, velos, g::AbstractGrid, vel, ΔT, arch::Architecture)
+#     vel_interpolate!(velos.u1, velos.v1, velos.w1, plank.x, plank.y, plank.z, plank.ac, 
+#                      vel.u.data, vel.v.data, vel.w.data, g, arch)
+
+#     calc_coord!(plank, plank, velos.u1, velos.v1, velos.w1, plank.ac, ΔT, 1.0, arch)
+#     particle_boundaries!(plank, plank.ac, g, arch)
+
+#     return nothing
+# end

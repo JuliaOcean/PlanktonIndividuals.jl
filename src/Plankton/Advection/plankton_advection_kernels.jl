@@ -66,16 +66,16 @@ function calc_vel_rk4!(velos, arch::Architecture)
     return nothing
 end
 
-##### calculate final velocities by AB2
-@kernel function calc_ab2_kernel!(velos, χ)
-    i = @index(Global)
-    velos.u1[i] = (1.5 + χ) * velos.u1[i] - (0.5 + χ) * velos.u2[i] 
-    velos.v1[i] = (1.5 + χ) * velos.v1[i] - (0.5 + χ) * velos.v2[i] 
-    velos.w1[i] = (1.5 + χ) * velos.w1[i] - (0.5 + χ) * velos.w2[i] 
-end
-function calc_vel_ab2!(velos, χ, arch::Architecture)
-    kernel! = calc_ab2_kernel!(device(arch), 256, (size(velos.u1,1)))
-    event = kernel!(velos, χ)
-    wait(device(arch), event)
-    return nothing
-end
+# ##### calculate final velocities by AB2
+# @kernel function calc_ab2_kernel!(velos, χ)
+#     i = @index(Global)
+#     velos.u1[i] = (1.5 + χ) * velos.u1[i] - (0.5 + χ) * velos.u2[i] 
+#     velos.v1[i] = (1.5 + χ) * velos.v1[i] - (0.5 + χ) * velos.v2[i] 
+#     velos.w1[i] = (1.5 + χ) * velos.w1[i] - (0.5 + χ) * velos.w2[i] 
+# end
+# function calc_vel_ab2!(velos, χ, arch::Architecture)
+#     kernel! = calc_ab2_kernel!(device(arch), 256, (size(velos.u1,1)))
+#     event = kernel!(velos, χ)
+#     wait(device(arch), event)
+#     return nothing
+# end

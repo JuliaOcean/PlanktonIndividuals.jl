@@ -83,6 +83,10 @@ function PlanktonSimulation(model::PlanktonModel; ΔT::Int64, iterations::Int64,
 
     validate_bcs(model.nutrients, model.grid, iterations)
 
+    if diags == nothing
+        diags = PlanktonDiagnostics(model)
+    end
+
     sim = PlanktonSimulation(model, input, diags, ΔT, iterations, output_writer)
 
     return sim

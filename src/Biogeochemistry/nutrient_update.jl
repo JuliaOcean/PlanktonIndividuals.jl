@@ -42,15 +42,15 @@ function nut_update!(nutrients, Gcs, nut_temp, arch::Architecture, g::AbstractGr
     fill_halo_nut!(nutrients, g)
 end
 
-function nut_update!(nutrients, Gcs, nut_temp, arch::Architecture, g::AbstractGrid, params, consume, ΔT, iter)
-    # compute biogeochemical forcings of nutrients,for each time step
-    nut_forcing!(Gcs, nut_temp, nutrients, params, ΔT)
+# function nut_update!(nutrients, Gcs, nut_temp, arch::Architecture, g::AbstractGrid, params, consume, ΔT, iter)
+#     # compute biogeochemical forcings of nutrients,for each time step
+#     nut_forcing!(Gcs, nut_temp, nutrients, params, ΔT)
 
-    ##### apply boundary conditions
-    apply_bcs!(Gcs, nutrients, g, iter, ΔT, arch)
+#     ##### apply boundary conditions
+#     apply_bcs!(Gcs, nutrients, g, iter, ΔT, arch)
 
-    # apply forcing tendency
-    apply_tendency!(nutrients, Gcs, consume, ΔT, g, arch)
+#     # apply forcing tendency
+#     apply_tendency!(nutrients, Gcs, consume, ΔT, g, arch)
 
-    fill_halo_nut!(nutrients, g)
-end
+#     fill_halo_nut!(nutrients, g)
+# end
