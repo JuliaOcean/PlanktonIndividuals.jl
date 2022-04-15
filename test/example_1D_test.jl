@@ -3,7 +3,7 @@ using PlanktonIndividuals, Serialization
 grid = RectilinearGrid(size = (1, 1, 16), x = (0,32), y = (0,32), z = (0,-32), 
                               topology = (Bounded, Bounded, Bounded), halo = (2, 2, 2))
 
-model = PlanktonModel(CPU(), grid) 
+model = PlanktonModel(CPU(), grid, mode = MacroMolecularMode()) 
 
 function tot_mass(nut, g)
     mass = zeros(g.Nx, g.Ny, g.Nz)
@@ -20,8 +20,9 @@ end
 TP = tot_mass(model.nutrients.PO4.data, grid) +
      tot_mass(model.nutrients.DOP.data, grid) +
      tot_mass(model.nutrients.POP.data, grid)
-TP = TP + sum(model.individuals.phytos.sp1.data.Pq .+ 
-              model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC)
+TP = TP + sum(model.individuals.phytos.sp1.data.PST .+ 
+              model.individuals.phytos.sp1.data.DNA .* model.individuals.phytos.sp1.p.R_PC_DNA .+
+              model.individuals.phytos.sp1.data.RNA .* model.individuals.phytos.sp1.p.R_PC_RNA)
 
 uvel = zeros(2,1,16,11)
 vvel = zeros(1,2,16,11)
@@ -40,8 +41,9 @@ update!(sim)
 TPt = tot_mass(model.nutrients.PO4.data, grid) +
       tot_mass(model.nutrients.DOP.data, grid) +
       tot_mass(model.nutrients.POP.data, grid)
-TPt = TPt + sum(model.individuals.phytos.sp1.data.Pq .+ 
-                model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC)
+TPt = TPt + sum(model.individuals.phytos.sp1.data.PST .+ 
+               model.individuals.phytos.sp1.data.DNA .* model.individuals.phytos.sp1.p.R_PC_DNA .+
+               model.individuals.phytos.sp1.data.RNA .* model.individuals.phytos.sp1.p.R_PC_RNA)
 
 
 @testset "PlanktonIndividuals 1D tests:" begin
