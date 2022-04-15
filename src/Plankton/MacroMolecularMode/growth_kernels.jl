@@ -152,13 +152,14 @@ end
 ##### update C, N, P reserves, protein, DNA, RNA, Chla
 @kernel function update_biomass_kernel!(plank, p, ΔT)
     i = @index(Global)
+    S_Chl = plank.S_PRO[i] * plank.ρChl[i]
     @inbounds plank.PRO[i] += ΔT * plank.S_PRO[i]
     @inbounds plank.DNA[i] += ΔT * plank.S_DNA[i]
     @inbounds plank.RNA[i] += ΔT * plank.S_RNA[i]
-    @inbounds plank.CH[i]  -= ΔT *(plank.S_PRO[i] + plank.S_DNA[i] + plank.S_RNA[i])
-    @inbounds plank.NST[i] -= ΔT *(plank.S_PRO[i] * p.R_NC_PRO + plank.S_DNA[i] * p.R_NC_DNA + plank.S_RNA[i] * p.R_NC_RNA)
+    @inbounds plank.CH[i]  -= ΔT *(plank.S_PRO[i] + plank.S_DNA[i] + plank.S_RNA[i] + S_Chl)
+    @inbounds plank.NST[i] -= ΔT *(plank.S_PRO[i] * p.R_NC_PRO + plank.S_DNA[i] * p.R_NC_DNA + plank.S_RNA[i] * p.R_NC_RNA + S_Chl*4.0/55.0)
     @inbounds plank.PST[i] -= ΔT *(plank.S_DNA[i] * p.R_PC_DNA + plank.S_RNA[i] * p.R_PC_RNA)
-    @inbounds plank.Chl[i] += ΔT * plank.S_PRO[i] * plank.ρChl[i] * 893.49 / 55.0 # chl unit is mgChl/cell
+    @inbounds plank.Chl[i] += ΔT * S_Chl * 893.49 / 55.0 # chl unit is mgChl/cell
     @inbounds plank.age[i] += ΔT / 3600.0 * plank.ac[i]
 end
 function update_biomass!(plank, p, ΔT, arch)
