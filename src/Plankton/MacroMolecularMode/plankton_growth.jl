@@ -13,7 +13,12 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
     update_quotas_2!(plank, ΔT, p, arch)
 
     calc_BS!(plank, nuts.T, p, arch)
+
     update_biomass!(plank, p, ΔT, arch)
+
+    calc_exudation!(plank, p, arch)
+
+    update_CH!(plank, arch)
 
     ##### probabilities of grazing, mortality, and cell division
     ##### check the probabilities every 10 time steps or 1 hour whichever is shorter

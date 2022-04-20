@@ -132,16 +132,6 @@ end
     @inbounds plank.S_DNA[i] = p.k_dna * plank.PRO[i] * limit_DNA * tempFunc(T[i], p) * isless(plank.DNA[i]/(p.C_DNA * p.Nsuper), 2.0)
     @inbounds plank.S_RNA[i] = p.k_rna * plank.PRO[i] * limit_RNA * tempFunc(T[i], p)
 end
-# @kernel function calc_BS_kernel!(plank, T, p)
-#     i = @index(Global)
-#     @inbounds supp_C_pro = min(plank.CH[i], plank.NST[i]/p.R_NC_PRO)
-#     @inbounds supp_C_dna = min(plank.CH[i], plank.NST[i]/p.R_NC_DNA, plank.PST[i]/p.R_PC_DNA)
-#     @inbounds supp_C_rna = min(plank.CH[i], plank.NST[i]/p.R_NC_RNA, plank.PST[i]/p.R_PC_RNA)
-
-#     @inbounds plank.S_PRO[i] = p.k_pro * supp_C_pro * (plank.RNA[i]/(plank.RNA[i]+p.k_sat_pro)) * tempFunc(T[i], p)
-#     @inbounds plank.S_DNA[i] = p.k_dna * supp_C_dna * (plank.PRO[i]/(plank.PRO[i]+p.k_sat_dna)) * tempFunc(T[i], p) * isless(plank.DNA[i]/(p.C_DNA * p.Nsuper), 2.0)
-#     @inbounds plank.S_RNA[i] = p.k_rna * supp_C_rna * (plank.PRO[i]/(plank.PRO[i]+p.k_sat_rna)) * tempFunc(T[i], p)
-# end
 function calc_BS!(plank, T, p, arch)
     kernel! = calc_BS_kernel!(device(arch), 256, (size(plank.ac,1)))
     event = kernel!(plank, T, p)
@@ -152,7 +142,7 @@ end
 ##### update C, N, P reserves, protein, DNA, RNA, Chla
 @kernel function update_biomass_kernel!(plank, p, ΔT)
     i = @index(Global)
-    S_Chl = plank.S_PRO[i] * plank.ρChl[i]
+    @inbounds S_Chl = plank.S_PRO[i] * plank.ρChl[i]
     @inbounds plank.PRO[i] += ΔT * plank.S_PRO[i]
     @inbounds plank.DNA[i] += ΔT * plank.S_DNA[i]
     @inbounds plank.RNA[i] += ΔT * plank.S_RNA[i]
@@ -165,6 +155,30 @@ end
 function update_biomass!(plank, p, ΔT, arch)
     kernel! = update_biomass_kernel!(device(arch), 256, (size(plank.ac,1)))
     event = kernel!(plank, p, ΔT)
+    wait(device(arch), event)
+    return nothing
+end
+
+##### calculate exudation of carbon. Nitrogen and phosphorus will not be exuded for now
+@kernel function calc_exudation_kernel!(plank, p)
+    i = @index(Global)
+    @inbounds tot_C = total_C_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i])
+    @inbounds plank.exu[i] = max(0.0, plank.CH[i] - p.CHmax * tot_C)
+end
+function calc_exudation!(plank, p, arch)
+    kernel! = calc_exudation_kernel!(device(arch), 256, (size(plank.ac,1)))
+    event = kernel!(plank, p)
+    wait(device(arch), event)
+    return nothing
+end
+
+@kernel function update_CH_kernel!(plank)
+    i = @index(Global)
+    @inbounds plank.CH[i] -= plank.exu[i]
+end
+function update_CH!(plank, arch)
+    kernel! = update_CH_kernel!(device(arch), 256, (size(plank.ac,1)))
+    event = kernel!(plank)
     wait(device(arch), event)
     return nothing
 end
