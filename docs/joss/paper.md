@@ -50,7 +50,7 @@ Our package is unique in the way that it is tailored to the analysis of marine e
 
 To illustrate the two representations of advective processes in the model (Eulerian + Lagrangian), we performed a one-year simulation of a passive tracer, initialized to a concentration of 1 below 50m depth and 0 above 50m depth, along with 512 particles moving in three dimensions (\autoref{fig:3D}).
 
-![Model results of a 3-dimensional setup. The map shows the concentration of a passive tracer. White dots represent the individuals with their trajectories shown in white liens. \label{fig:3D}](global_ocean_3D_example.png)
+![Model results of a 3-dimensional setup. The map shows the concentration of a passive tracer. White dots represent the individuals with their trajectories shown in white lines. \label{fig:3D}](global_ocean_3D_example.png)
 
 Further development plans include implementation of macro-molecular model [@Inomura2020] and support for distributed parallelism with CUDA-aware MPI.
 
