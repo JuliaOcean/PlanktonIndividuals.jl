@@ -72,6 +72,17 @@ function calc_mort!(plank, p, arch)
     return nothing
 end
 
+@kernel function calc_MM_mort_kernel!(plank, p)
+    i = @index(Global)
+    @inbounds plank.mort[i] = p.mort_P * (tanh(1.0*(plank.age[i] - p.mort_reg)) + 1.0) * plank.ac[i]
+end
+function calc_MM_mort!(plank, p, arch)
+    kernel! = calc_MM_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
+    event = kernel!(plank, p)
+    wait(device(arch), event)
+    return nothing
+end
+
 ##### generate the random results from probabilities of grazing, mortality and cell division
 function get_probability!(plank, rnd, ΔT, arch)
     ##### generate random numbers (0,1) 

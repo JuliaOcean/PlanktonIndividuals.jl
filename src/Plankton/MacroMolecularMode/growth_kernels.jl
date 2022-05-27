@@ -10,7 +10,7 @@ end
 @inline function calc_PS(par, temp, Chl, PRO, p)
     αI  = par * p.α * p.Φ
     PCm = p.PCmax * tempFunc(temp, p)
-    PS  = PCm * (1.0 - exp(-αI / max(1.0e-30, PCm) * Chl / max(1.0e-10, PRO))) * PRO
+    PS  = PCm * (1.0 - exp(-αI / max(1.0e-30, PCm) * Chl / max(1.0e-30, PRO))) * PRO
     return PS
 end
 
@@ -20,9 +20,9 @@ end
     P_tot = total_P_biomass(DNA, RNA, PST, p)
     regQN = max(0.0, min(1.0, (p.NSTmax - NST / max(1.0e-30, N_tot)) / (p.NSTmax - p.NSTmin)))
     regQP = max(0.0, min(1.0, (p.PSTmax - PST / max(1.0e-30, P_tot)) / (p.PSTmax - p.PSTmin)))
-    VNH4 = p.VNH4max * regQN * NH4/max(1.0e-10, NH4+p.KsatNH4) * tempFunc(temp, p) * PRO * ac
-    VNO3 = p.VNO3max * regQN * NO3/max(1.0e-10, NO3+p.KsatNO3) * tempFunc(temp, p) * PRO * ac
-    VPO4 = p.VPO4max * regQP * PO4/max(1.0e-10, PO4+p.KsatPO4) * tempFunc(temp, p) * PRO * ac
+    VNH4 = p.VNH4max * regQN * NH4/max(1.0e-30, NH4+p.KsatNH4) * tempFunc(temp, p) * PRO * ac
+    VNO3 = p.VNO3max * regQN * NO3/max(1.0e-30, NO3+p.KsatNO3) * tempFunc(temp, p) * PRO * ac
+    VPO4 = p.VPO4max * regQP * PO4/max(1.0e-30, PO4+p.KsatPO4) * tempFunc(temp, p) * PRO * ac
     return VNH4, VNO3, VPO4
 end
 
@@ -80,7 +80,7 @@ end
 ##### calculate ρChl
 @kernel function calc_ρChl_kernel!(plank, par, p)
     i = @index(Global)
-    @inbounds plank.ρChl[i] = plank.PS[i]/max(1.0e-30, plank.PRO[i]) / max(1.0e-30, par[i] * p.α * p.Φ * plank.Chl[i]/max(1.0e-10, plank.PRO[i])) *
+    @inbounds plank.ρChl[i] = plank.PS[i]/max(1.0e-30, plank.PRO[i]) / max(1.0e-30, par[i] * p.α * p.Φ * plank.Chl[i]/max(1.0e-30, plank.PRO[i])) *
                              isless(1.0e-1, par[i]) * plank.ac[i]
 end
 function calc_ρChl!(plank, par, p, arch)

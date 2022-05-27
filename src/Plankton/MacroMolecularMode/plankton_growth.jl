@@ -24,15 +24,10 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
     ##### check the probabilities every 10 time steps or 1 hour whichever is shorter
     if t%(ΔT*(min(10,3600÷ΔT))) == 0 
         calc_graz_quadratic!(plank, nuts, p.grz_P, arch)
-        # calc_mort!(plank, p, arch)
+        calc_MM_mort!(plank, p, arch)
         ##### Bernouli-like distribution
         plank.dvid .= p.dvid_P .* (1.0 .- isless.(plank.DNA ./ (p.C_DNA .* p.Nsuper), 2.0))
         get_probability!(plank, rnd, ΔT, arch)
-
-        ##### thermal mortality (WIP)
-        # if p.ther_mort == 1
-        #     thermal_mort!(plank, nuts, p)
-        # end
     else
         @inbounds plank.graz .= 0.0
         @inbounds plank.mort .= 0.0
