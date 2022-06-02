@@ -112,7 +112,7 @@ md"""
 """
 
 # ╔═╡ 49c7d833-6fe1-4619-ace3-e2f6aaefac32
-md"""Now we plot the plankton population as funcion of time."""
+md"""Now we plot the plankton population as function of time."""
 
 # ╔═╡ 96f04030-7b7e-42ec-8cf6-7becc98d1f4e
 md""" And then the environmental variables."""
