@@ -17,7 +17,7 @@ Keyword Arguments (Optional)
 - `plankton` : a `Tuple` containing the names of physiological processes of plankton individuals to be diagnosed.
 - `time_interval` : The time interval that diagnostics is averaged, an hour (3600 seconds) by default.
 """
-function PlanktonDiagnostics(model; tracer=(;),
+function PlanktonDiagnostics(model; tracer=(),
                             plankton=(:num, :graz, :mort, :dvid),
                             time_interval::Int64 = 3600)
     
