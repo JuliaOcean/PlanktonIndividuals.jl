@@ -17,7 +17,7 @@ Keyword Arguments (Optional)
 - `plankton` : a `Tuple` containing the names of physiological processes of plankton individuals to be diagnosed.
 - `time_interval` : The time interval that diagnostics is averaged, an hour (3600 seconds) by default.
 """
-function PlanktonDiagnostics(model; tracer=(:PAR,),
+function PlanktonDiagnostics(model; tracer=(;),
                             plankton=(:num, :graz, :mort, :dvid),
                             time_interval::Int64 = 3600)
     
@@ -37,8 +37,9 @@ function PlanktonDiagnostics(model; tracer=(:PAR,),
         tr = zeros(total_size) |> array_type(model.arch)
         push!(trs, tr)
     end
-    tr_d = zeros(total_size) |> array_type(model.arch)
-    tr_default = (PAR = tr_d,)
+    tr_d1 = zeros(total_size) |> array_type(model.arch)
+    tr_d2 = zeros(total_size) |> array_type(model.arch)
+    tr_default = (PAR = tr_d1, T = tr_d2)
 
     diag_tr = NamedTuple{tracer}(trs)
     diag_tr = merge(diag_tr, tr_default) # add PAR as default diagnostic
