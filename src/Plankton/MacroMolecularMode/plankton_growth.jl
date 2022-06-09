@@ -26,7 +26,8 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
         calc_graz_quadratic!(plank, nuts, p.grz_P, arch)
         calc_MM_mort!(plank, p, arch)
         ##### Bernouli-like distribution
-        plank.dvid .= p.dvid_P .* (1.0 .- isless.(plank.DNA ./ (p.C_DNA .* p.Nsuper), 2.0))
+        calc_MM_dvid!(plank, p, arch)
+        # plank.dvid .= p.dvid_P .* (1.0 .- isless.(plank.DNA ./ (p.C_DNA * p.Nsuper), 2.0))
         get_probability!(plank, rnd, ΔT, arch)
     else
         @inbounds plank.graz .= 0.0

@@ -47,6 +47,17 @@ function calc_dvid!(plank, dvid_type, p, t, arch)
     return nothing
 end
 
+@kernel function calc_MM_dvid_kernel!(plank, p)
+    i = @index(Global)
+    @inbounds plank.dvid[i] = p.dvid_P * isless(2.0, plank.DNA[i]/(p.C_DNA*p.Nsuper))
+end
+function calc_MM_dvid!(plank, p, arch)
+    kernel! = calc_MM_dvid_kernel!(device(arch), 256, (size(plank.ac,1)))
+    event = kernel!(plank, p)
+    wait(device(arch), event)
+    return nothing
+end
+
 ##### calculate the probability of grazing
 ##### quadratic grazing
 @kernel function calc_graz_quadratic_kernel!(plank, nuts, P)

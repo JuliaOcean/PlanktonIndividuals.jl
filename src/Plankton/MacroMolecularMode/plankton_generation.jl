@@ -13,7 +13,7 @@ function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
-    param_names=(:Nsuper, :C_DNA, :mean, :var, :PRO2DNA, :RNA2DNA, :Chl2DNA, :α, :Φ, :T⁺, :Ea,
+    param_names=(:Nsuper, :C_DNA, :mean, :var, :PRO2DNA, :RNA2DNA, :CH2DNA, :Chl2DNA, :α, :Φ, :T⁺, :Ea,
                  :PCmax, :VDOCmax, :VNO3max, :VNH4max, :VPO4max, :KsatDOC, :KsatNH4, :KsatNO3,
                  :KsatPO4, :CHmax, :CHmin, :NSTmax, :NSTmin, :PSTmax, :PSTmin,
                  :Chl2N, :R_NC_PRO, :R_NC_DNA, :R_NC_RNA, :R_PC_DNA, :R_PC_RNA, :respir,
@@ -40,13 +40,16 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     Nsuper = plank.p.Nsuper
     RNA2DNA = plank.p.RNA2DNA
     PRO2DNA = plank.p.PRO2DNA
+    CH2DNA  = plank.p.CH2DNA
     Chl2DNA = plank.p.Chl2DNA
 
     plank.data.ac[1:N]  .= 1.0                                                                             # activity
     plank.data.gen[1:N] .= 1.0                                                                             # generation
     plank.data.age[1:N] .= 0.0                                                                             # age
 
-    randn!(rng_type(arch), plank.data.DNA)
+    rand!(rng_type(arch), plank.data.DNA)
+    rand!(rng_type(arch), plank.data.RNA)
+    rand!(rng_type(arch), plank.data.PRO)
     rand!(rng_type(arch), plank.data.x)
     rand!(rng_type(arch), plank.data.y)
     rand!(rng_type(arch), plank.data.z)
@@ -54,15 +57,23 @@ function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture
     rand!(rng_type(arch), plank.data.NST)
     rand!(rng_type(arch), plank.data.PST)
 
+    plank.data.DNA .= plank.data.DNA .* var .+ 1.0                # range: (1.0,1.0+var)
+    plank.data.RNA .= plank.data.RNA .* var .* 2.0 .+ 1.0 .- var  # range: (1.0-var,1.0+var)
+    plank.data.PRO .= plank.data.PRO .* var .* 2.0 .+ 1.0 .- var  # range: (1.0-var,1.0+var)
+    plank.data.CH  .= plank.data.CH  .* var .* 2.0 .+ 1.0 .- var  # range: (1.0-var,1.0+var)
+    plank.data.NST .= plank.data.NST .* var .* 2.0 .+ 1.0 .- var  # range: (1.0-var,1.0+var)
+    plank.data.PST .= plank.data.PST .* var .* 2.0 .+ 1.0 .- var  # range: (1.0-var,1.0+var)
+
+
     plank.data.x   .=(plank.data.x .* g.Nx) .* plank.data.ac                                         # x, unit: grid spacing, starting from 0
     plank.data.y   .=(plank.data.y .* g.Ny) .* plank.data.ac                                         # y, unit: grid spacing, starting from 0
     plank.data.z   .=(plank.data.z .* g.Nz) .* plank.data.ac                                         # z, unit: grid spacing, starting from 0
-    plank.data.DNA .= max.(1.0, plank.data.DNA .* var .+ mean) .* C_DNA .* Nsuper .* plank.data.ac   # DNA mmolC/individual
-    plank.data.RNA .= plank.data.DNA .* RNA2DNA                                                      # RNA mmolC/individual
-    plank.data.PRO .= plank.data.DNA .* PRO2DNA                                                      # PRO mmolC/individual
-    plank.data.CH  .= plank.data.CH  .* 0.2 .* plank.data.PRO                                        # CH  mmolC/individual
-    plank.data.NST .= plank.data.CH  .* 16 ./ 106                                                    # NST mmolN/individual
-    plank.data.PST .= plank.data.CH  ./ 106                                                          # PST mmolP/individual
+    plank.data.DNA .= plank.data.DNA .* C_DNA .* Nsuper .* plank.data.ac                             # DNA mmolC/individual
+    plank.data.RNA .= plank.data.RNA .* C_DNA .* Nsuper .* plank.data.ac .* RNA2DNA                  # RNA mmolC/individual
+    plank.data.PRO .= plank.data.PRO .* C_DNA .* Nsuper .* plank.data.ac .* PRO2DNA                  # PRO mmolC/individual
+    plank.data.CH  .= plank.data.CH  .* plank.data.DNA .* CH2DNA                                     # CH  mmolC/individual
+    plank.data.NST .= plank.data.NST .* plank.data.CH .* 16 ./ 106                                   # NST mmolN/individual
+    plank.data.PST .= plank.data.PST .* plank.data.CH ./ 106                                         # PST mmolP/individual
     plank.data.Chl .= plank.data.DNA .* Chl2DNA * 893.49 / 55.0                                      # Chl mgChl/individual
 
     mask_individuals!(plank.data, g, N, arch)
