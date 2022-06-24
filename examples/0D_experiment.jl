@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.19.5
 
 using Markdown
 using InteractiveUtils
@@ -52,7 +52,7 @@ And we setup diagnostics.
 
 # ╔═╡ c199e085-dec2-45e0-88a1-ac409604ad00
 diags = PlanktonDiagnostics(model; tracer=(:PAR, :NH4, :NO3, :DOC),
-                                   plankton = (:num, :graz, :mort, :dvid, :PS, :BS),
+                                   plankton = (:num, :graz, :mort, :dvid, :PS, :BS, :Chl),
                                    time_interval = 300seconds)
 
 # ╔═╡ 16295dcc-febe-4350-83e5-e563f51077d1
@@ -81,18 +81,17 @@ md"""
 # ╔═╡ 632bfd5d-2879-4669-88f7-779c5ff6aa78
 update!(sim)
 
-# ╔═╡ 3ddc5181-28fe-41d9-9947-0f059d99709e
-md"""
-## 5. Results Vizualization
-"""
-
 # ╔═╡ c41e9408-89e6-47ad-93cd-7d65bb173972
-md"""
-Open the output file
+md"""## 5. Access Results
+
+Results have been stored in a `jld2` file. Let's open the file, look inside, and retrieve results.
 """
 
 # ╔═╡ dfad80f2-375e-4264-9ea4-5ad69ef9a766
 file = jldopen(sim.output_writer.diags_file, "r")
+
+# ╔═╡ a2972c30-ec4a-4c8b-bdb4-86d682d3ca1f
+keys(file["timeseries"])
 
 # ╔═╡ 21e59e96-2a01-41a6-b1dd-234048501f23
 md"""
@@ -107,41 +106,72 @@ md"""
 Read results into arrays and close file.
 """
 
-# ╔═╡ 4d09f435-976b-4b86-b0b7-7931bf4bd99d
-begin
-	num  = zeros(288) 
-	dvid = zeros(288)
-	mort = zeros(288)
-	PS   = zeros(288)
-	for (i, iter) in enumerate(iterations)
-		num[i]  = file["timeseries/sp1/num/$iter"][1,1,1]
-		dvid[i] = file["timeseries/sp1/dvid/$iter"][1,1,1]
-		mort[i] = file["timeseries/sp1/mort/$iter"][1,1,1]
-		PS[i]   = file["timeseries/sp1/PS/$iter"][1,1,1]
-	end
-	close(file)
-end
-
-# ╔═╡ 49c7d833-6fe1-4619-ace3-e2f6aaefac32
+# ╔═╡ 3ddc5181-28fe-41d9-9947-0f059d99709e
 md"""
-Now we plot the results
+## 6. Vizualize Results
 """
 
-# ╔═╡ d642e1ee-7e66-46d6-9f92-8b29279e7ad9
-begin
-	p1 = plot(collect(1:300:300*288) ./ 3600, num, title = "population", legend=:none, fmt=:png, bottom_margin = 5mm)
-	p2 = plot(collect(1:300:300*288) ./ 3600, dvid ./ num .* 60, title = "division rate (per hour)", legend=:none, fmt=:png, bottom_margin = 5mm)
-	p3 = plot(collect(1:300:300*288) ./ 3600, mort ./ num .* 60, title = "mortarlity rate (per hour)", legend=:none, fmt=:png, bottom_margin = 5mm)
-	p4 = plot(collect(1:300:300*288) ./ 3600, PS ./ num .* 12 .* 1e12 .* 3600, title = "photosynthesis rate (fg C/cell/hour)", legend=:none, fmt=:png, bottom_margin = 5mm)
-	nothing
-end
+# ╔═╡ 49c7d833-6fe1-4619-ace3-e2f6aaefac32
+md"""Now we plot the plankton population as function of time."""
 
-# ╔═╡ f3ac2cf9-5b6c-453f-ac2f-f082277e0cbb
-plot(p1, p2, p3, p4, layout = (4,1), size=(600,600), titlefont = (12))
+# ╔═╡ 96f04030-7b7e-42ec-8cf6-7becc98d1f4e
+md""" And then the environmental variables."""
 
 # ╔═╡ 882365f6-b010-46e7-b1f3-96caadc87e5f
 TableOfContents()
 
+
+# ╔═╡ af28b25a-d245-450f-b447-ef22c26cc201
+md"""## Appendix: Helper Functions"""
+
+# ╔═╡ 4f6ec534-ede4-46ac-9fbc-ff4406601aa1
+function get_time_series!(file,name,array)
+	f = jldopen(file, "r")
+	for (i, iter) in enumerate(iterations)
+		array[i]  = f["timeseries/$name/$iter"][1,1,1]
+	end
+	close(f)
+end
+
+# ╔═╡ 274e2725-c4a1-4655-9cd9-a1ac8a509d12
+begin
+	(PAR, NH4, NO3, DOC) = (zeros(288),zeros(288),zeros(288),zeros(288))
+	fil2 = sim.output_writer.diags_file
+	get_time_series!(fil2,"PAR",PAR)
+	get_time_series!(fil2,"NH4",NH4)
+	get_time_series!(fil2,"NO3",NO3)
+	get_time_series!(fil2,"DOC",DOC)
+end
+
+# ╔═╡ 4d09f435-976b-4b86-b0b7-7931bf4bd99d
+begin
+	(num,dvid,mort,PS,Chl) = (zeros(288),zeros(288),zeros(288),zeros(288),zeros(288))
+	fil = sim.output_writer.diags_file
+	get_time_series!(fil,"sp1/num",num)
+	get_time_series!(fil,"sp1/dvid",dvid)
+	get_time_series!(fil,"sp1/mort",mort)
+	get_time_series!(fil,"sp1/PS",PS)
+	get_time_series!(fil,"sp1/Chl",Chl)
+end
+
+# ╔═╡ d642e1ee-7e66-46d6-9f92-8b29279e7ad9
+let
+	p1 = plot(collect(1:300:300*288) ./ 3600, num, title = "population", legend=:none, fmt=:png, bottom_margin = 5mm)
+	p2 = plot(collect(1:300:300*288) ./ 3600, dvid ./ num .* 60, title = "division rate (per hour)", legend=:none, fmt=:png, bottom_margin = 5mm)
+	p3 = plot(collect(1:300:300*288) ./ 3600, mort ./ num .* 60, title = "mortarlity rate (per hour)", legend=:none, fmt=:png, bottom_margin = 5mm)
+	p4 = plot(collect(1:300:300*288) ./ 3600, PS ./ num .* 12 .* 1e12 .* 3600, title = "photosynthesis rate (fg C/cell/hour)", legend=:none, fmt=:png, bottom_margin = 5mm)
+	plot(p1, p2, p3, p4, layout = (4,1), size=(600,600), titlefont = (12))
+end
+
+# ╔═╡ 5ab1c2a0-b1c0-4c4f-bd27-17b8b06ada72
+let
+	p1 = plot(collect(1:300:300*288) ./ 3600, PAR, title = "PAR", legend=:none, fmt=:png, bottom_margin = 5mm)
+	p2 = plot(collect(1:300:300*288) ./ 3600, NH4, title = "NH4", legend=:none, fmt=:png, bottom_margin = 5mm)
+	p3 = plot(collect(1:300:300*288) ./ 3600, NO3, title = "NO3", legend=:none, fmt=:png, bottom_margin = 5mm)
+	p4 = plot(collect(1:300:300*288) ./ 3600, DOC, title = "DOC", legend=:none, fmt=:png, bottom_margin = 5mm)
+	p5 = plot(collect(1:300:300*288) ./ 3600, Chl, title = "Chl", legend=:none, fmt=:png, bottom_margin = 5mm)
+	plot(p1, p2, p3, p4, p5, layout = (5,1), size=(600,600), titlefont = (12))
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -162,7 +192,7 @@ PlutoUI = "~0.7.32"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.0"
+julia_version = "1.7.2"
 manifest_format = "2.0"
 
 [[deps.AbstractFFTs]]
@@ -536,6 +566,12 @@ git-tree-sha1 = "f6250b16881adf048549549fba48b1161acdac8c"
 uuid = "c1c5ebd0-6772-5130-a774-d5fcae4a789d"
 version = "3.100.1+0"
 
+[[deps.LERC_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "bf36f528eec6634efc60d7ec062008f171071434"
+uuid = "88015f11-f218-50d7-93a8-a6af411a945d"
+version = "3.0.0+1"
+
 [[deps.LLVM]]
 deps = ["CEnum", "LLVMExtra_jll", "Libdl", "Printf", "Unicode"]
 git-tree-sha1 = "f8dcd7adfda0dddaf944e62476d823164cccc217"
@@ -544,9 +580,9 @@ version = "4.7.1"
 
 [[deps.LLVMExtra_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "62115afed394c016c2d3096c5b85c407b48be96b"
+git-tree-sha1 = "67cc5406b15bd04ff72a45f628bec61d36078908"
 uuid = "dad2f222-ce93-54a1-a47d-0025e8a3acab"
-version = "0.0.13+1"
+version = "0.0.13+3"
 
 [[deps.LZO_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -625,10 +661,10 @@ uuid = "4b2f31a3-9ecc-558c-b454-b3730dcb73e9"
 version = "2.35.0+0"
 
 [[deps.Libtiff_jll]]
-deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Pkg", "Zlib_jll", "Zstd_jll"]
-git-tree-sha1 = "340e257aada13f95f98ee352d316c3bed37c8ab9"
+deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "LERC_jll", "Libdl", "Pkg", "Zlib_jll", "Zstd_jll"]
+git-tree-sha1 = "c9551dd26e31ab17b86cbd00c2ede019c08758eb"
 uuid = "89763e89-9b03-5906-acba-b20f662cd828"
-version = "4.3.0+0"
+version = "4.3.0+1"
 
 [[deps.Libuuid_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -795,9 +831,9 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [[deps.Qt5Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "xkbcommon_jll"]
-git-tree-sha1 = "ad368663a5e20dbb8d6dc2fddeefe4dae0781ae8"
+git-tree-sha1 = "c6c0f690d0cc7caddb74cef7aa847b824a16b256"
 uuid = "ea2cea3b-5b76-57ae-a6ef-0a8af62496e1"
-version = "5.15.3+0"
+version = "5.15.3+1"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -1206,16 +1242,21 @@ version = "0.9.1+5"
 # ╠═0cc1d551-d419-4573-907b-dadfdb39e2da
 # ╟─0fcd4f42-1ac4-4a0e-86f6-16e6454246d2
 # ╠═632bfd5d-2879-4669-88f7-779c5ff6aa78
-# ╟─3ddc5181-28fe-41d9-9947-0f059d99709e
 # ╟─c41e9408-89e6-47ad-93cd-7d65bb173972
 # ╠═dfad80f2-375e-4264-9ea4-5ad69ef9a766
+# ╠═a2972c30-ec4a-4c8b-bdb4-86d682d3ca1f
 # ╟─21e59e96-2a01-41a6-b1dd-234048501f23
 # ╠═e9224442-e4ec-4475-a9af-aadd42a8e8e5
 # ╟─f436d0fa-1427-4da7-a28e-ec596c818546
+# ╠═274e2725-c4a1-4655-9cd9-a1ac8a509d12
 # ╠═4d09f435-976b-4b86-b0b7-7931bf4bd99d
+# ╟─3ddc5181-28fe-41d9-9947-0f059d99709e
 # ╟─49c7d833-6fe1-4619-ace3-e2f6aaefac32
-# ╠═d642e1ee-7e66-46d6-9f92-8b29279e7ad9
-# ╠═f3ac2cf9-5b6c-453f-ac2f-f082277e0cbb
+# ╟─d642e1ee-7e66-46d6-9f92-8b29279e7ad9
+# ╟─96f04030-7b7e-42ec-8cf6-7becc98d1f4e
+# ╟─5ab1c2a0-b1c0-4c4f-bd27-17b8b06ada72
 # ╟─882365f6-b010-46e7-b1f3-96caadc87e5f
+# ╟─af28b25a-d245-450f-b447-ef22c26cc201
+# ╟─4f6ec534-ede4-46ac-9fbc-ff4406601aa1
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
