@@ -65,13 +65,14 @@ end
 Generate default phytoplankton parameter values based on `AbstractMode` and species number `N`.
 """
 #=
+CH includes cabohydrate and lipids
 ┌─────────┬────────────────┬────────────────────┬───────────────────────────┬──────────────────────────┐
 │         │ Micromonas sp. │ Ostreococcus tauri │ Thalassiosira weissflogii │ Thalassiosira pseudonana │
 ├─────────┼────────────────┼────────────────────┼───────────────────────────┼──────────────────────────┤
 │ PRO:DNA │          34.83 │              22.75 │                     67.99 │                   135.36 │
 │ RNA:DNA │           1.73 │               1.71 │                      3.70 │                     6.49 │
 │ CHL:DNA │           3.45 │               2.16 │                      9.83 │                    18.05 │
-│     CH% │             19 │                 30 │                        21 │                       18 │
+│  CH:DNA │          23.32 │              19.01 │                     79.26 │                   121.48 │
 │   k_pro │       7.06e-05 │           1.50e-04 │                  7.64e-05 │                 1.17e-04 │
 │   k_dna │       1.62e-07 │           5.44e-07 │                  1.16e-07 │                 9.61e-08 │
 │   k_rna │       3.24e-07 │           6.71e-07 │                  6.60e-07 │                 6.60e-07 │
@@ -88,6 +89,7 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "var"      => [0.3],     # Variance of the normal distribution of initial phyto individuals
         "RNA2DNA"  => [1.73],    # Initial RNA:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
         "PRO2DNA"  => [34.83],   # Initial protein:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        "CH2DNA"   => [23.3],    # Initial carbohydrate+lipid:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
         "Chl2DNA"  => [3.45],    # Initial Chla:DNA ratio in phytoplankton (mmolC/mmolC) from Micromonas sp.
         "α"        => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
         "Φ"        => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
