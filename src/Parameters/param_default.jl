@@ -232,7 +232,8 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "dvid_reg2"=> [12.0],    # Regulations of cell division (sizer)
         "mort_P"   => [5e-5],    # Probability of cell natural death per second
         "mort_reg" => [0.5],     # Regulation of cell natural death
-        "Th_reg"   => [8.0],     # Regulation of cell natural death
+        "Th_reg"   => [8.0],     # Regulation of cell thermal death
+        "Th_stp"   => [0.8],     # Steepness of cell thermal death
         "grazFracC"=> [0.7],     # Fraction goes into dissolved organic pool
         "mortFracC"=> [0.5],     # Fraction goes into dissolved organic pool
         "ther_mort"=> [0],       # thermal mortality, 1 for on, 0 for off
