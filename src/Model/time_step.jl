@@ -56,6 +56,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
 
     ##### diagnostics for nutrients
     @inbounds diags.tracer.PAR .+= model.timestepper.par
+    @inbounds diags.tracer.T .+= model.timestepper.temp
     for key in keys(diags.tracer)
         if key in keys(model.nutrients)
             @inbounds diags.tracer[key] .+= model.nutrients[key].data
