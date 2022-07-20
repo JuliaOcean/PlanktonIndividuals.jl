@@ -1,8 +1,8 @@
 ##### temperature function
 @inline function tempFunc(temp, p)
-    k = exp(-p.Ea/(8.3145*(temp+273.15)))#*(1.0-exp(temp+273.15 - p.T⁺))
+    k = exp(-p.Ea/(8.3145*(temp+273.15)))#*(1.0-exp(temp - p.T⁺))
     k = max(0.0, k)
-    OGT_rate = exp(-p.Ea/(8.3145*(p.T⁺-2)))
+    OGT_rate = exp(-p.Ea/(8.3145*(p.T⁺+273.15-2)))
     # return k/OGT_rate
     return min(1.0, k/OGT_rate)
 end
@@ -70,7 +70,7 @@ end
 @kernel function calc_thermal_history_kernel!(plank, nuts, p, ΔT)
     i = @index(Global)
     # @inbounds plank.Th[i] += max(0, nuts.T[i] + 273.15 - p.T⁺) * ΔT / 3600
-    @inbounds plank.Th[i] += ΔT/3600 * exp(0.22 * max(0, nuts.T[i] + 273.15 - p.T⁺)) * isless(p.T⁺, nuts.T[i]+273.15)
+    @inbounds plank.Th[i] += ΔT/3600 * exp(0.22 * max(0, nuts.T[i] - p.T⁺)) * isless(p.T⁺, nuts.T[i])
 end
 function calc_thermal_history!(plank, nuts, p, ΔT, arch)
     kernel! = calc_thermal_history_kernel!(device(arch), 256, (size(plank.ac,1)))
