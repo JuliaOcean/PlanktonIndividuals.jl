@@ -93,7 +93,7 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "Chl2DNA"  => [3.45],    # Initial Chla:DNA ratio in phytoplankton (mmolC/mmolC) from Micromonas sp.
         "α"        => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
         "Φ"        => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
-        "T⁺"       => [35.0],   # Maximal temperature for growth (C)
+        "T⁺"       => [35.0],    # Maximal temperature for growth (C)
         "Ea"       => [5.3e4],   # Free energy
         "PCmax"    => [6.2e-5],  # Maximum primary production rate (per second)
         "VDOCmax"  => [0.0],     # Maximum DOC uptake rate (mmol C/mmol C/second)
@@ -217,7 +217,7 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "Chl2C"    => [0.10],    # Chla:C ratio in phytoplankton (mgChl/mmolC)
         "α"        => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
         "Φ"        => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
-        "T⁺"       => [30.0],   # Maximal temperature for growth (C)
+        "T⁺"       => [30.0],    # Maximal temperature for growth (C)
         "Ea"       => [5.3e4],   # Free energy
         "PCmax"    => [4.2e-5],  # Maximum primary production rate (per second)
         "PC_b"     => [0.6],     # Shape parameter for size
