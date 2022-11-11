@@ -2,7 +2,7 @@
 @inline function tempFunc(temp, p)
     k = exp(-p.Ea/(8.3145*(temp+273.15)))#*(1.0-exp(temp - p.T⁺))
     k = max(0.0, k)
-    OGT_rate = exp(-p.Ea/(8.3145*(p.T⁺+273.15-2)))
+    OGT_rate = exp(-p.Ea/(8.3145*(p.T⁺+273.15)))
     # return k/OGT_rate
     return min(1.0, k/OGT_rate)
 end
