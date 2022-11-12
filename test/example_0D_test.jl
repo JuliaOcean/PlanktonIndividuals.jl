@@ -34,7 +34,7 @@ TP = TP + sum(model.individuals.phytos.sp1.data.Pq .+
               model.individuals.phytos.sp5.data.Bm .* model.individuals.phytos.sp5.p.R_PC)
 
 
-sim = PlanktonSimulation(model, ΔT = 60, iterations = 10)
+sim = PlanktonSimulation(model, ΔT = 60.0, iterations = 10)
 
 update!(sim)
 
