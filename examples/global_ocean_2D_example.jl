@@ -84,9 +84,8 @@ model = PlanktonModel(CPU(), grid;
                       N_species = 1,
                       N_individual = 360,
                       max_individuals = 360*8,
-                      bgc_params = update_bgc_params(bgc_parameter),
-                      phyt_params = update_phyt_params(phyt_parameter, CarbonMode())
-                      ) 
+                      bgc_params = bgc_parameter,
+                      phyt_params = phyt_parameter) 
 
 # ╔═╡ b1b650bf-c997-4bba-a033-15e5897e1479
 md"""
