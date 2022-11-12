@@ -8,7 +8,7 @@ function test_output()
                                    plankton = (:num, :graz, :mort, :dvid, :PS),
                                    iteration_interval = 1)
 
-    sim = PlanktonSimulation(model, ΔT = 60, iterations = 4, diags = diags) 
+    sim = PlanktonSimulation(model, ΔT = 60.0, iterations = 4, diags = diags) 
 
     sim.output_writer = PlanktonOutputWriter(dir = "./result",
                                              write_log = true,
