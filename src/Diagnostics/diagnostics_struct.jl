@@ -1,13 +1,13 @@
 mutable struct PlanktonDiagnostics
     plankton::NamedTuple       # for each species
     tracer::NamedTuple         # for tracers
-    time_interval::Int64       # time interval that the diagnostics is time averaged
+    iteration_interval::Int64  # time interval that the diagnostics is time averaged
 end
 
 """
     PlanktonDiagnostics(model; tracer=(:PAR, :NH4, :NO3, :DOC),
                         plankton=(:num, :graz, :mort, :dvid),
-                        time_interval = 3600)
+                        time_interval = 1)
 
 Generate a `PlanktonDiagnostics` structure.
 
@@ -15,11 +15,11 @@ Keyword Arguments (Optional)
 ============================
 - `tracer` : a `Tuple` containing the names of nutrient fields to be diagnosed.
 - `plankton` : a `Tuple` containing the names of physiological processes of plankton individuals to be diagnosed.
-- `time_interval` : The time interval that diagnostics is averaged, an hour (3600 seconds) by default.
+- `iteration_interval` : The number of timesteps that diagnostics is averaged, 1 iteration by default.
 """
 function PlanktonDiagnostics(model; tracer=(),
                             plankton=(:num, :graz, :mort, :dvid),
-                            time_interval::Int64 = 3600)
+                            iteration_interval::Int64 = 1)
     
     @assert isa(tracer, Tuple)
     @assert isa(plankton, Tuple)
@@ -68,7 +68,7 @@ function PlanktonDiagnostics(model; tracer=(),
     end
     diag_sp = NamedTuple{plank_name}(procs)
 
-    diagnostics = PlanktonDiagnostics(diag_sp, diag_tr, time_interval)
+    diagnostics = PlanktonDiagnostics(diag_sp, diag_tr, iteration_interval)
 
     return diagnostics
 end
@@ -77,7 +77,7 @@ function show(io::IO, diags::PlanktonDiagnostics)
     print(io, "PlanktonDiagnostics:\n",
               "├── diagnostics of tracers: $(keys(diags.tracer))\n",
               "├── diagnostics of individuals: $(keys(diags.plankton.sp1))\n",
-              "└── save averaged diagnostics every $(diags.time_interval) seconds")
+              "└── save averaged diagnostics every $(diags.iteration_interval) timesteps")
 end
 
 function diag_avail(tracer, plank, mode::AbstractMode)

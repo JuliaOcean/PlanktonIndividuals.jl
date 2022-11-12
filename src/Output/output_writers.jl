@@ -6,7 +6,7 @@ mutable struct PlanktonOutputWriter
     diags_file::String
     plankton_file::String
     plankton_include::Tuple
-    plankton_time_interval::Int
+    plankton_iteration_interval::Int
     max_filesize::Number # in Bytes
     part_diags::Int
     part_plankton::Int
@@ -20,7 +20,7 @@ end
                                save_diags = false,
                                save_plankton = false,
                                plankton_include = (:x, :y, :z, :Sz),
-                               plankton_time_interval = 3600,
+                               plankton_iteration_interval = 1,
                                max_filesize = Inf,
                                )
 Generate a `PlanktonOutputWriter` structure which includes settings for model outputs
@@ -34,7 +34,7 @@ Keyword Arguments (Optional)
 - `save_diags`: write diagnostics to disk, default: `false`.
 - `save_plankton`: write plankton to disk, default: `false`.
 - `plankton_include`: list of plankton properties to save, default: `(:x, :y, :z, :Sz)`.
-- `plankton_time_interval`: The time interval that plankton are saved, an hour (3600 seconds) by default.
+- `plankton_iteration_interval`: The time interval that plankton are saved, 1 timestep by default.
 - `max_filesize`: The writer will stop writing to the output file once the file size exceeds `max_filesize`,
                     and write to a new one with a consistent naming scheme ending in `part1`, `part2`, etc.
                     default: `Inf`.
@@ -46,7 +46,7 @@ function PlanktonOutputWriter(;dir = "./results",
                                save_diags = false,
                                save_plankton = false,
                                plankton_include = (:x, :y, :z, :Sz),
-                               plankton_time_interval = 3600,
+                               plankton_iteration_interval = 1,
                                max_filesize = Inf
                                )
 
@@ -64,7 +64,7 @@ function PlanktonOutputWriter(;dir = "./results",
     end
 
     return PlanktonOutputWriter(dir, write_log, save_diags, save_plankton, diags_file, plankton_file,
-                                plankton_include, plankton_time_interval, max_filesize, 1, 1)
+                                plankton_include, plankton_iteration_interval, max_filesize, 1, 1)
 end
 
 function show(io::IO, writer::PlanktonOutputWriter)
@@ -87,7 +87,7 @@ end
 function save_inds_string(writer::PlanktonOutputWriter)
     if writer.save_plankton
         return "individuals are saved as $(writer.plankton_file)\n
-                ├── every $(writer.plankton_time_interval) seconds\n
+                ├── every $(writer.plankton_iteration_interval) seconds\n
                 ├── including: $(writer.plankton_include)"
     else
         return "individuals are not saved"

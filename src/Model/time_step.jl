@@ -10,8 +10,9 @@ Keyword Arguments
 - `resultpath` (optional): The file path to store model output. 
 """
 function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
-    model.t = model.t+ΔT
+    # model.t = model.t+ΔT
     model.iteration = model.iteration+1
+    model.t = model.iteration * ΔT 
 
     @inbounds model.timestepper.vel½.u.data .= (model.timestepper.vel₀.u.data .+ model.timestepper.vel₁.u.data) .* 0.5
     @inbounds model.timestepper.vel½.v.data .= (model.timestepper.vel₀.v.data .+ model.timestepper.vel₁.v.data) .* 0.5
