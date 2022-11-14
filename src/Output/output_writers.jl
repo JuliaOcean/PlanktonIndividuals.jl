@@ -86,9 +86,9 @@ function save_diags_string(writer::PlanktonOutputWriter)
 end
 function save_inds_string(writer::PlanktonOutputWriter)
     if writer.save_plankton
-        return "individuals are saved as $(writer.plankton_file)\n
-                ├── every $(writer.plankton_iteration_interval) seconds\n
-                ├── including: $(writer.plankton_include)"
+        return string("individuals are saved as $(writer.plankton_file)\n",
+                      "│   ├── every $(writer.plankton_iteration_interval) seconds\n",
+                      "│   └── including: $(writer.plankton_include)")
     else
         return "individuals are not saved"
     end
