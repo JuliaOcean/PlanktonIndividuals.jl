@@ -220,9 +220,7 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "T⁺"       => [30.0],    # Maximal temperature for growth (C)
         "Ea"       => [5.3e4],   # Free energy
         "PCmax"    => [4.2e-5],  # Maximum primary production rate (per second)
-        "PC_b"     => [0.6],     # Shape parameter for size
         "respir_a" => [1.2e-6],  # Respiration rate(per second)
-        "respir_b" => [0.6],     # Shape parameter for size
         "grz_P"    => [0.0],     # Grazing probability per second
         "dvid_P"   => [5e-5],    # Probability of cell division per second.
         "dvid_type"=> [1],       # The type of cell division, 1:sizer, 2:adder.
