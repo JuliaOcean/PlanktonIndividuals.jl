@@ -162,10 +162,6 @@ function phyt_params_default(N::Int64, mode::QuotaMode)
         "VNH4max"  => [6.9e-6],  # Maximum N uptake rate (mmol N/mmol C/second)
         "VNO3max"  => [6.9e-6],  # Maximum N uptake rate (mmol N/mmol C/second)
         "VPO4max"  => [1.2e-6],  # Maximum P uptake rate (mmol P/mmol C/second)
-        "PC_b"     => [0.6],     # Shape parameter for size
-        "VDOC_b"   => [0.6],     # Shape parameter for size
-        "VN_b"     => [0.6],     # Shape parameter for size
-        "VP_b"     => [0.6],     # Shape parameter for size
         "KsatNH4"  => [0.005],   # Half-saturation coeff (mmol N/m³)
         "KsatNO3"  => [0.010],   # Half-saturation coeff (mmol N/m³)
         "KsatPO4"  => [0.003],   # Half-saturation coeff (mmol P/m³)
@@ -177,9 +173,7 @@ function phyt_params_default(N::Int64, mode::QuotaMode)
         "Cqmax"    => [0.4],     # Maximum C quota in cell (mmol C/mmol C)
         "Cqmin"    => [0.1],     # Minimum C quota in cell (mmol C/mmol C)
         "k_mtb"    => [3.5e-5],  # Metabolic rate (per second)
-        "k_mtb_b"  => [0.25],    # Metabolic rate
         "respir_a" => [1.2e-6],  # Respiration rate(per second)
-        "respir_b" => [0.6],     # Shape parameter for size
         "Chl2N"    => [3.0],     # Maximum Chla:N ratio in phytoplankton
         "R_NC"     => [16/106],  # N:C ratio in cell biomass
         "R_PC"     => [1/106],   # N:C ratio in cell biomass
