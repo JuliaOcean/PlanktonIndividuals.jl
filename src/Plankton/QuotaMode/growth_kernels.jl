@@ -20,22 +20,30 @@ end
 
 ##### calculate nutrient uptake rate (mmolN/individual/second)
 @inline function calc_NH4_uptake(NH4, temp, Cq, Nq, Bm, p)
-    regQ = max(0.0, min(1.0, (p.Nqmax - (Nq + Bm * p.R_NC) / max(1.0e-30, Bm + Cq)) / (p.Nqmax - p.Nqmin)))
+    # regQ = max(0.0, min(1.0, (p.Nqmax - (Nq + Bm * p.R_NC) / max(1.0e-30, Bm + Cq)) / (p.Nqmax - p.Nqmin)))
+    Qn = (Nq + Bm * p.R_NC)/max(1.0e-30, Bm + Cq)
+    regQ = (1.0 - Qn / p.Nqmax) * (1.0/(0.01 + 1.0 - Qn / p.Nqmax))
     VN = p.VNH4max * regQ * NH4/max(1.0e-30, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm
     return VN
 end
 @inline function calc_NO3_uptake(NO3, temp, Cq, Nq, Bm, p)
-    regQ = max(0.0, min(1.0, (p.Nqmax - (Nq + Bm * p.R_NC) / max(1.0e-30, Bm + Cq)) / (p.Nqmax - p.Nqmin)))
+    # regQ = max(0.0, min(1.0, (p.Nqmax - (Nq + Bm * p.R_NC) / max(1.0e-30, Bm + Cq)) / (p.Nqmax - p.Nqmin)))
+    Qn = (Nq + Bm * p.R_NC)/max(1.0e-30, Bm + Cq)
+    regQ = (1.0 - Qn / p.Nqmax) * (1.0/(0.01 + 1.0 - Qn / p.Nqmax))
     VN = p.VNO3max * regQ * NO3/max(1.0e-30, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm
     return VN
 end
 @inline function calc_PO4_uptake(PO4, temp, Cq, Pq, Bm, p)
-    regQ = max(0.0, min(1.0, (p.Pqmax - (Pq + Bm * p.R_PC) / max(1.0e-30, Bm + Cq)) / (p.Pqmax - p.Pqmin)))
+    # regQ = max(0.0, min(1.0, (p.Pqmax - (Pq + Bm * p.R_PC) / max(1.0e-30, Bm + Cq)) / (p.Pqmax - p.Pqmin)))
+    Qp = (Pq + Bm * p.R_PC)/max(1.0e-30, Bm + Cq)
+    regQ = (1.0 - Qp / p.Pqmax) * (1.0/(0.01 + 1.0 - Qp / p.Pqmax))
     VN = p.VPO4max * regQ * PO4/max(1.0e-30, PO4+p.KsatPO4) * tempFunc(temp, p) * Bm
     return VN
 end
 @inline function calc_DOC_uptake(DOC, temp, Cq, Bm, p)
-    regQ = max(0.0, min(1.0, (p.Cqmax - Cq / max(1.0e-30, Bm + Cq)) / (p.Cqmax - p.Cqmin)))
+    # regQ = max(0.0, min(1.0, (p.Cqmax - Cq / max(1.0e-30, Bm + Cq)) / (p.Cqmax - p.Cqmin)))
+    Qc = Cq/max(1.0e-30, Bm + Cq)
+    regQ = (1.0 - Qc / p.Cqmax) * (1.0/(0.01 + 1.0 - Qc / p.Cqmax))
     VN = p.VDOCmax * regQ * DOC/max(1.0e-30, DOC+p.KsatDOC) * tempFunc(temp, p) * Bm
     return VN
 end
