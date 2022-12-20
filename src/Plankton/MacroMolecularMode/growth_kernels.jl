@@ -23,7 +23,7 @@ end
     R_NST = NST / max(1.0e-30, N_tot)
     R_PST = PST / max(1.0e-30, P_tot)
     regQN = (1.0 - R_NST / p.NSTmax) * (1.0/(0.01 + 1.0 - R_NST / p.NSTmax))
-    regQP = (1.0 - R_PST / p.PSTmax) * (1.0/(0.01 + 1.0 - R_NST / p.NSTmax))
+    regQP = (1.0 - R_PST / p.PSTmax) * (1.0/(0.01 + 1.0 - R_PST / p.PSTmax))
     VNH4 = p.VNH4max * regQN * NH4/max(1.0e-30, NH4+p.KsatNH4) * tempFunc(temp, p) * PRO * ac
     VNO3 = p.VNO3max * regQN * NO3/max(1.0e-30, NO3+p.KsatNO3) * tempFunc(temp, p) * PRO * ac
     VPO4 = p.VPO4max * regQP * PO4/max(1.0e-30, PO4+p.KsatPO4) * tempFunc(temp, p) * PRO * ac
