@@ -53,7 +53,7 @@ And we setup diagnostics.
 # ╔═╡ c199e085-dec2-45e0-88a1-ac409604ad00
 diags = PlanktonDiagnostics(model; tracer=(:PAR, :NH4, :NO3, :DOC),
                                    plankton = (:num, :graz, :mort, :dvid, :PS, :BS, :Chl),
-                                   time_interval = 300seconds)
+                                   iteration_interval = 1)
 
 # ╔═╡ 16295dcc-febe-4350-83e5-e563f51077d1
 md"""
