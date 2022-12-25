@@ -6,7 +6,7 @@ function default_PARF(grid, ΔT, iterations)
     PAR = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3871666666666666, 87.10258333333333, 475.78150000000016, 929.2737916666669,
            1232.3633333333337, 1638.918916666667, 1823.7921666666664, 1906.2769583333336, 1776.0280416666667,
            1678.5026249999999, 1410.216666666667, 815.4129583333336, 525.104, 135.993, 2.9493750000000003, 0.0, 0.0, 0.0,]
-    total_days = (ΔT * iterations) ÷ 86400 + 1
+    total_days = Int((ΔT * iterations) ÷ 86400 + 1)
     PAR_day = zeros(grid.Nx, grid.Ny, 24)
     for i in 1:24
         PAR_day[:,:,i] .= PAR[i]
@@ -24,7 +24,7 @@ function default_temperature(grid, ΔT, iterations)
             26.646446609406727, 26.75, 26.87059047744874, 27.0, 27.12940952255126, 27.25, 27.353553390593273,
             27.43301270189222, 27.482962913144533, 27.5, 27.482962913144533, 27.43301270189222, 27.353553390593273,
             27.25, 27.12940952255126, 27.0, 26.87059047744874, 26.75]
-    total_days = (ΔT * iterations) ÷ 86400 + 1
+    total_days = Int((ΔT * iterations) ÷ 86400 + 1)
     temp_day = zeros(grid.Nx, grid.Ny, grid.Nz, 24)
     for i in 1:24
         temp_day[:,:,end,i] .= temp[i]
@@ -162,10 +162,6 @@ function phyt_params_default(N::Int64, mode::QuotaMode)
         "VNH4max"  => [6.9e-6],  # Maximum N uptake rate (mmol N/mmol C/second)
         "VNO3max"  => [6.9e-6],  # Maximum N uptake rate (mmol N/mmol C/second)
         "VPO4max"  => [1.2e-6],  # Maximum P uptake rate (mmol P/mmol C/second)
-        "PC_b"     => [0.6],     # Shape parameter for size
-        "VDOC_b"   => [0.6],     # Shape parameter for size
-        "VN_b"     => [0.6],     # Shape parameter for size
-        "VP_b"     => [0.6],     # Shape parameter for size
         "KsatNH4"  => [0.005],   # Half-saturation coeff (mmol N/m³)
         "KsatNO3"  => [0.010],   # Half-saturation coeff (mmol N/m³)
         "KsatPO4"  => [0.003],   # Half-saturation coeff (mmol P/m³)
@@ -177,9 +173,7 @@ function phyt_params_default(N::Int64, mode::QuotaMode)
         "Cqmax"    => [0.4],     # Maximum C quota in cell (mmol C/mmol C)
         "Cqmin"    => [0.1],     # Minimum C quota in cell (mmol C/mmol C)
         "k_mtb"    => [3.5e-5],  # Metabolic rate (per second)
-        "k_mtb_b"  => [0.25],    # Metabolic rate
         "respir_a" => [1.2e-6],  # Respiration rate(per second)
-        "respir_b" => [0.6],     # Shape parameter for size
         "Chl2N"    => [3.0],     # Maximum Chla:N ratio in phytoplankton
         "R_NC"     => [16/106],  # N:C ratio in cell biomass
         "R_PC"     => [1/106],   # N:C ratio in cell biomass
@@ -220,9 +214,7 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "T⁺"       => [30.0],    # Maximal temperature for growth (C)
         "Ea"       => [5.3e4],   # Free energy
         "PCmax"    => [4.2e-5],  # Maximum primary production rate (per second)
-        "PC_b"     => [0.6],     # Shape parameter for size
         "respir_a" => [1.2e-6],  # Respiration rate(per second)
-        "respir_b" => [0.6],     # Shape parameter for size
         "grz_P"    => [0.0],     # Grazing probability per second
         "dvid_P"   => [5e-5],    # Probability of cell division per second.
         "dvid_type"=> [1],       # The type of cell division, 1:sizer, 2:adder.

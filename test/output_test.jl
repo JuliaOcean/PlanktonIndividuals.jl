@@ -6,15 +6,15 @@ function test_output()
     model = PlanktonModel(CPU(), grid; mode = QuotaMode()) 
     diags = PlanktonDiagnostics(model; tracer=(:PAR,),
                                    plankton = (:num, :graz, :mort, :dvid, :PS),
-                                   time_interval = 60seconds)
+                                   iteration_interval = 1)
 
-    sim = PlanktonSimulation(model, ΔT = 60, iterations = 4, diags = diags) 
+    sim = PlanktonSimulation(model, ΔT = 60.0, iterations = 4, diags = diags) 
 
     sim.output_writer = PlanktonOutputWriter(dir = "./result",
                                              write_log = true,
                                              save_diags = true,
                                              save_plankton = true,
-                                             plankton_time_interval = 60,
+                                             plankton_iteration_interval = 1,
                                              max_filesize = 256KiB)
     
     @test sim.output_writer isa PlanktonOutputWriter

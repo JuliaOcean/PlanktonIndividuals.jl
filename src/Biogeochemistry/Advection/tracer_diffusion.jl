@@ -6,8 +6,8 @@
 ##### Laplacian diffusion operator
 @inline function κ∇²(i, j, k, grid, κˣ, κʸ, κᶻ, c)
     return 1/volume(i, j, k, grid) * (δx⁺(i, j, k, grid, diffusive_flux_x, κˣ, c) +
-                       δy⁺(i, j, k, grid, diffusive_flux_y, κʸ, c) +
-                       δz⁺(i, j, k, grid, diffusive_flux_z, κᶻ, c))
+                                      δy⁺(i, j, k, grid, diffusive_flux_y, κʸ, c) +
+                                      δz⁺(i, j, k, grid, diffusive_flux_z, κᶻ, c))
 end
 
 ##### calculate the tendency by diffusion for tracer c
@@ -34,5 +34,3 @@ function nut_diffusion!(Gcs, arch::Architecture, g, nutrients, κˣ, κʸ, κᶻ
 
     return nothing
 end
-nut_diffusion!(Gcs, arch::Architecture, g, nutrients, κ, ΔT) =
-    nut_diffusion!(Gcs, arch::Architecture, g, nutrients, κ, κ, κ, ΔT)

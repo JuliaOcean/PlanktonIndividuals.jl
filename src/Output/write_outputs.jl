@@ -9,17 +9,17 @@ function write_output!(writer::Union{PlanktonOutputWriter, Nothing}, model::Plan
         end
 
         if writer.save_diags
-            if model.t % (diags.time_interval) == 0.0
+            if model.iteration % diags.iteration_interval == 0.0
                 if filesize(writer.diags_file) ≥ writer.max_filesize
                     start_next_diags_file(writer)
                 end
                 write_diags_to_jld2(diags, writer.diags_file, model.t, model.iteration,
-                                    diags.time_interval/ΔT, model.grid)
+                                    diags.iteration_interval, model.grid)
             end
         end
 
         if writer.save_plankton
-            if model.t % (writer.plankton_time_interval) == 0.0
+            if model.iteration % writer.plankton_iteration_interval == 0.0
                 if filesize(writer.plankton_file) ≥ writer.max_filesize
                     start_next_plankton_file(writer)
                 end
@@ -53,7 +53,7 @@ function start_next_plankton_file(writer::PlanktonOutputWriter)
 end
 
 ##### write a brief summary of each species at each time step into a txt file
-function write_species_dynamics(t::Int64, phytos, filepath, mode::MacroMolecularMode)
+function write_species_dynamics(t::Float64, phytos, filepath, mode::MacroMolecularMode)
     for i in 1:length(phytos)
         file = joinpath(filepath, "dynamic_species"*lpad(i,3,"0")*".txt")
         pop = dot(phytos[i].data.ac, phytos[i].data.ac)
@@ -74,7 +74,7 @@ function write_species_dynamics(t::Int64, phytos, filepath, mode::MacroMolecular
         close(io);
     end
 end
-function write_species_dynamics(t::Int64, phytos, filepath, mode::QuotaMode)
+function write_species_dynamics(t::Float64, phytos, filepath, mode::QuotaMode)
     for i in 1:length(phytos)
         file = joinpath(filepath, "dynamic_species"*lpad(i,3,"0")*".txt")
         pop = dot(phytos[i].data.ac, phytos[i].data.ac)
@@ -94,7 +94,7 @@ function write_species_dynamics(t::Int64, phytos, filepath, mode::QuotaMode)
         close(io);
     end
 end
-function write_species_dynamics(t::Int64, phytos, filepath, mode::CarbonMode)
+function write_species_dynamics(t::Float64, phytos, filepath, mode::CarbonMode)
     for i in 1:length(phytos)
         file = joinpath(filepath, "dynamic_species"*lpad(i,3,"0")*".txt")
         pop = dot(phytos[i].data.ac, phytos[i].data.ac)

@@ -27,7 +27,7 @@ function nut_update!(nutrients, Gcs, nut_temp, arch::Architecture, g::AbstractGr
     nut_advection!(nutrients, nut_temp, Gcs, vel, g, ΔT, arch)
 
     ##### compute nutrient diffusion,for each time step
-    nut_diffusion!(Gcs, arch, g, nutrients, params["κh"], ΔT)
+    nut_diffusion!(Gcs, arch, g, nutrients, params["κh"], params["κh"], params["κv"], ΔT)
 
     ##### compute biogeochemical forcings of nutrients,for each time step
     zero_fields!(nut_temp)

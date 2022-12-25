@@ -42,7 +42,11 @@ function validate_temp(sim::PlanktonSimulation, g::AbstractGrid{TX, TY, TZ}) whe
         throw(ArgumentError("Dimension mismatch: the size of temperature must be $(temp_size)."))
     end
 
-    @assert sim.input.ΔT_temp % sim.ΔT == 0.0
+    if floor(Int, sim.input.ΔT_temp / sim.ΔT) * sim.ΔT == sim.input.ΔT_temp
+        nothing
+    else
+        throw(ArgumentError("ΔT_temp must be an integer times of $(sim.ΔT)."))
+    end
 
     if size(sim.input.temp)[4] < floor(Int,sim.iterations*sim.ΔT/sim.input.ΔT_temp)
         throw(ArgumentError("Temperature provided cannot cover the time period of (iterations+1)*ΔT ($(sim.iterations*sim.ΔT) seconds) with ΔT_temp = $(sim.input.ΔT_temp)."))
@@ -60,7 +64,11 @@ function validate_PARF(sim::PlanktonSimulation, g::AbstractGrid{TX, TY, TZ}) whe
         throw(ArgumentError("Dimension mismatch: the size of PARF must be $(PARF_size)."))
     end
 
-    @assert sim.input.ΔT_PAR % sim.ΔT == 0.0
+    if floor(Int, sim.input.ΔT_PAR / sim.ΔT) * sim.ΔT == sim.input.ΔT_PAR
+        nothing
+    else
+        throw(ArgumentError("ΔT_PAR must be an integer times of $(sim.ΔT)."))
+    end
 
     if size(sim.input.PARF)[3] < floor(Int,sim.iterations*sim.ΔT/sim.input.ΔT_PAR)
         throw(ArgumentError("Surface PAR provided cannot cover the time period of (iterations+1)*ΔT ($(sim.iterations*sim.ΔT) seconds) with ΔT_PAR = $(sim.input.ΔT_PAR)."))
@@ -103,7 +111,11 @@ function validate_velocity(sim::PlanktonSimulation, g::AbstractGrid{TX, TY, TZ})
             throw(ArgumentError("Dimension mismatch: the size of w must be $(w_size), for $(TZ) topology."))
         end
 
-        @assert sim.input.ΔT_vel % sim.ΔT == 0.0
+        if floor(Int, sim.input.ΔT_vel / sim.ΔT) * sim.ΔT == sim.input.ΔT_vel
+            nothing
+        else
+            throw(ArgumentError("ΔT_vel must be an integer times of $(sim.ΔT)."))
+        end
 
         if size(sim.input.vels.u)[4] < floor(Int,sim.iterations*sim.ΔT/sim.input.ΔT_vel)
             throw(ArgumentError("Velocities provided cannot cover the time period of (iterations+1)*ΔT ($(sim.iterations*sim.ΔT) seconds) with ΔT_vel = $(sim.input.ΔT_vel)."))
