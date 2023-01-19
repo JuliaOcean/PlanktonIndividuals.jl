@@ -25,10 +25,10 @@ end
 
 @kernel function find_NPT_kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop)
     i = @index(Global)
-    @inbounds nuts.NH4[i] = max(1.0e-30, NH4[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.NO3[i] = max(1.0e-30, NO3[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.PO4[i] = max(1.0e-30, PO4[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.DOC[i] = max(1.0e-30, DOC[x[i], y[i], z[i]]) * ac[i]
+    @inbounds nuts.NH4[i] = max(0.0, NH4[x[i], y[i], z[i]]) * ac[i]
+    @inbounds nuts.NO3[i] = max(0.0, NO3[x[i], y[i], z[i]]) * ac[i]
+    @inbounds nuts.PO4[i] = max(0.0, PO4[x[i], y[i], z[i]]) * ac[i]
+    @inbounds nuts.DOC[i] = max(0.0, DOC[x[i], y[i], z[i]]) * ac[i]
     @inbounds nuts.par[i] = par[x[i], y[i], z[i]] * ac[i]
     @inbounds nuts.T[i]   =temp[x[i], y[i], z[i]] * ac[i]
     @inbounds nuts.pop[i] = pop[x[i], y[i], z[i]] * ac[i]
