@@ -80,7 +80,7 @@ The model first updates C, N, and P reserves based on photosynthesis rate (``PS`
 ```math
 \begin{align}
 Cq &= Cq+PS \cdot \Delta T \nonumber \\
-Nq &= Nq+VNO3+VNH4 \cdot \Delta T \nonumber \\
+Nq &= Nq+(VNO3+VNH4) \cdot \Delta T \nonumber \\
 Pq &= Pq+VPO4 \cdot \Delta T \nonumber
 \end{align}
 ```
