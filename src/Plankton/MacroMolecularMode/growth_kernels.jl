@@ -41,8 +41,7 @@ end
 end
 function calc_inorganic_uptake!(plank, nuts, p, arch::Architecture)
     kernel! = calc_inorganic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, nuts, p)
-    wait(device(arch), event)
+    kernel!(plank, nuts, p)
     return nothing
 end
 
@@ -55,8 +54,7 @@ end
 end
 function update_quotas_1!(plank, ΔT, arch)
     kernel! = update_quotas_1_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, ΔT)
-    wait(device(arch), event)
+    kernel!(plank, ΔT)
     return nothing
 end
 
@@ -78,8 +76,7 @@ end
 end
 function calc_organic_uptake!(plank, nuts, p, arch::Architecture)
     kernel! = calc_organic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, nuts, p)
-    wait(device(arch), event)
+    kernel!(plank, nuts, p)
     return nothing
 end
 
@@ -91,8 +88,7 @@ end
 end
 function calc_ρChl!(plank, par, p, arch)
     kernel! = calc_ρChl_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, par, p)
-    wait(device(arch), event)
+    kernel!(plank, par, p)
     return nothing
 end
 
@@ -103,8 +99,7 @@ end
 end
 function calc_respir!(plank, T, p, arch)
     kernel! = calc_respir_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, T, p)
-    wait(device(arch), event)
+    kernel!(plank, T, p)
     return nothing
 end
 
@@ -120,8 +115,7 @@ end
 end
 function update_quotas_2!(plank, ΔT, p, arch)
     kernel! = update_quotas_2_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, ΔT, p)
-    wait(device(arch), event)
+    kernel!(plank, ΔT, p)
     return nothing
 end
 
@@ -140,8 +134,7 @@ end
 end
 function calc_BS!(plank, T, p, arch)
     kernel! = calc_BS_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, T, p)
-    wait(device(arch), event)
+    kernel!(plank, T, p)
     return nothing
 end
 
@@ -160,8 +153,7 @@ end
 end
 function update_biomass!(plank, p, ΔT, arch)
     kernel! = update_biomass_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, p, ΔT)
-    wait(device(arch), event)
+    kernel!(plank, p, ΔT)
     return nothing
 end
 
@@ -173,8 +165,7 @@ end
 end
 function calc_exudation!(plank, p, arch)
     kernel! = calc_exudation_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, p)
-    wait(device(arch), event)
+    kernel!(plank, p)
     return nothing
 end
 
@@ -184,7 +175,6 @@ end
 end
 function update_CH!(plank, arch)
     kernel! = update_CH_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank)
-    wait(device(arch), event)
+    kernel!(plank)
     return nothing
 end

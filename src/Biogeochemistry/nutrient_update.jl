@@ -13,12 +13,9 @@
 end
 function apply_tendency!(nuts, Gcs, consume, ΔT, g::AbstractGrid, arch::Architecture)
     kernel! = apply_tendency_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
-    barrier = Event(device(arch))
-    events = []
     for name in nut_names
-        event = kernel!(nuts[name].data, Gcs[name].data, consume[name].data, ΔT, g, dependencies=barrier)
+        kernel!(nuts[name].data, Gcs[name].data, consume[name].data, ΔT, g)
     end
-    wait(device(arch), MultiEvent(Tuple(events)))
     return nothing
 end
     

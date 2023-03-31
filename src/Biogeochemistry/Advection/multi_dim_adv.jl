@@ -11,13 +11,9 @@
 end
 function calc_Gcsˣ!(Gcs, nut, u, g::AbstractGrid, ΔT, arch::Architecture)
     kernel! = calc_Gcˣ_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
-    barrier = Event(device(arch))
-    events = []
     for name in nut_names
-        event = kernel!(Gcs[name].data, nut[name].data, u, g, ΔT, dependencies=barrier)
-        push!(events,event)
+        kernel!(Gcs[name].data, nut[name].data, u, g, ΔT)
     end
-    wait(device(arch), MultiEvent(Tuple(events)))
     return nothing
 end
 
@@ -32,13 +28,9 @@ end
 end
 function calc_Gcsʸ!(Gcs, nut, v, g::AbstractGrid, ΔT, arch::Architecture)
     kernel! = calc_Gcʸ_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
-    barrier = Event(device(arch))
-    events = []
     for name in nut_names
-        event = kernel!(Gcs[name].data, nut[name].data, v, g, ΔT, dependencies=barrier)
-        push!(events,event)
+        kernel!(Gcs[name].data, nut[name].data, v, g, ΔT)
     end
-    wait(device(arch), MultiEvent(Tuple(events)))
     return nothing
 end
 
@@ -53,13 +45,9 @@ end
 end
 function calc_Gcsᶻ!(Gcs, nut, w, g::AbstractGrid, ΔT, arch::Architecture)
     kernel! = calc_Gcᶻ_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
-    barrier = Event(device(arch))
-    events = []
     for name in nut_names
-        event = kernel!(Gcs[name].data, nut[name].data, w, g, ΔT, dependencies=barrier)
-        push!(events,event)
+        kernel!(Gcs[name].data, nut[name].data, w, g, ΔT)
     end
-    wait(device(arch), MultiEvent(Tuple(events)))
     return nothing
 end
 
@@ -74,13 +62,9 @@ end
 end
 function multi_dim_x!(nut_temp, Gcs, nut, u, g::AbstractGrid, ΔT, arch::Architecture)
     kernel! = multi_dim_x_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
-    barrier = Event(device(arch))
-    events = []
     for name in nut_names
-        event = kernel!(nut_temp[name].data, Gcs[name].data, nut[name].data, u, g, ΔT, dependencies=barrier)
-        push!(events,event)
+        kernel!(nut_temp[name].data, Gcs[name].data, nut[name].data, u, g, ΔT)
     end
-    wait(device(arch), MultiEvent(Tuple(events)))
     return nothing
 end
 
@@ -95,13 +79,9 @@ end
 end
 function multi_dim_y!(nut_temp, Gcs, nut, v, g::AbstractGrid, ΔT, arch::Architecture)
     kernel! = multi_dim_y_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
-    barrier = Event(device(arch))
-    events = []
     for name in nut_names
-        event = kernel!(nut_temp[name].data, Gcs[name].data, nut[name].data, v, g, ΔT, dependencies=barrier)
-        push!(events,event)
+        kernel!(nut_temp[name].data, Gcs[name].data, nut[name].data, v, g, ΔT)
     end
-    wait(device(arch), MultiEvent(Tuple(events)))
     return nothing
 end
 
@@ -116,13 +96,9 @@ end
 end
 function multi_dim_z!(nut_temp, Gcs, nut, w, g::AbstractGrid, ΔT, arch::Architecture)
     kernel! = multi_dim_z_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
-    barrier = Event(device(arch))
-    events = []
     for name in nut_names
-        event = kernel!(nut_temp[name].data, Gcs[name].data, nut[name].data, w, g, ΔT, dependencies=barrier)
-        push!(events,event)
+        kernel!(nut_temp[name].data, Gcs[name].data, nut[name].data, w, g, ΔT)
     end
-    wait(device(arch), MultiEvent(Tuple(events)))
     return nothing
 end
 
