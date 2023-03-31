@@ -28,16 +28,12 @@ Run PlanktonIndividuals on one GPU node.
 struct GPU <: Architecture end
 
 device(::CPU) = KernelAbstractions.CPU()
-device(::GPU) = CUDAKernels.CUDADevice()
+device(::GPU) = CUDABackend()
 
 array_type(::CPU) = Array
-if CUDA.has_cuda()
-    array_type(::GPU) = CuArray
-end
+array_type(::GPU) = CuArray
 
 rng_type(::CPU) = MersenneTwister()
-if CUDA.has_cuda()
-    rng_type(::GPU) = CURAND.default_rng()
-end
+rng_type(::GPU) = CURAND.default_rng()
 
 end
