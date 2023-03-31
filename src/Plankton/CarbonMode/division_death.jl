@@ -34,8 +34,7 @@ end
 end
 function get_tind!(idx, con, con_ind, de_ind, arch)
     kernel! = get_tind_kernel!(device(arch), 256, (size(idx,1)))
-    event = kernel!(idx, con, con_ind, de_ind)
-    wait(device(arch), event)
+    kernel!(idx, con, con_ind, de_ind)
     return nothing
 end
 
@@ -59,8 +58,7 @@ end
 end
 function copy_daughter_individuals!(plank, con, idx::AbstractArray{Int64,1}, arch)
     kernel! = copy_daughter_individuals_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, con, idx)
-    wait(device(arch), event)
+    kernel!(plank, con, idx)
     return nothing
 end
 
@@ -77,8 +75,7 @@ end
 end
 function divide_to_half!(plank, arch)
     kernel! = divide_to_half_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank)
-    wait(device(arch), event)
+    kernel!(plank)
     return nothing
 end
 function divide!(plank, deactive_ind, arch::Architecture)

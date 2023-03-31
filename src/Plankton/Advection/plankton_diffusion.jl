@@ -7,8 +7,7 @@
 end
 function calc_diffusion!(plank, rnd, κx, κy, κz, ΔT, arch::Architecture)
     kernel! = calc_diffusion_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, rnd, κx, κy, κz, ΔT)
-    wait(device(arch), event)
+    kernel!(plank, rnd, κx, κy, κz, ΔT)
 
     return nothing
 end

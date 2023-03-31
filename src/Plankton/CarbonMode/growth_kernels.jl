@@ -23,8 +23,7 @@ end
 
 function calc_inorganic_uptake!(plank, nuts, p, arch::Architecture)
     kernel! = calc_inorganic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, nuts, p)
-    wait(device(arch), event)
+    kernel!(plank, nuts, p)
     return nothing
 end
 
@@ -35,8 +34,7 @@ end
 end
 function calc_respir!(plank, T, p, arch)
     kernel! = calc_respir_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, T, p)
-    wait(device(arch), event)
+    kernel!(plank, T, p)
     return nothing
 end
 
@@ -48,8 +46,7 @@ end
 end
 function update_quotas!(plank, ΔT, arch)
     kernel! = update_quotas_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, ΔT)
-    wait(device(arch), event)
+    kernel!(plank, ΔT)
     return nothing
 end
 
@@ -61,8 +58,7 @@ end
 end
 function update_cellsize!(plank, p, arch)
     kernel! = update_cellsize_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, p)
-    wait(device(arch), event)
+    kernel!(plank, p)
     return nothing
 end
 
@@ -74,7 +70,6 @@ end
 end
 function calc_thermal_history!(plank, nuts, p, ΔT, arch)
     kernel! = calc_thermal_history_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, nuts, p, ΔT)
-    wait(device(arch), event)
+    kernel!(plank, nuts, p, ΔT)
     return nothing
 end

@@ -3,7 +3,7 @@ module MacroMolecular
 export plankton_update!
 export construct_plankton, generate_plankton!
 
-using KernelAbstractions: @kernel, @index, Event, MultiEvent, wait
+using KernelAbstractions: @kernel, @index
 using KernelAbstractions.Extras.LoopInfo: @unroll
 using CUDA
 using StructArrays

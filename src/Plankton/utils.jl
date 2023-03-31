@@ -18,8 +18,7 @@ end
 end
 function find_inds!(plank, g::AbstractGrid, arch::Architecture)
     kernel! = find_inds_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, g)
-    wait(device(arch), event)
+    kernel!(plank, g)
     return nothing
 end
 
@@ -35,8 +34,7 @@ end
 end
 function find_NPT!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop, arch::Architecture)
     kernel! = find_NPT_kernel!(device(arch), 256, (size(ac,1)))
-    event = kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop)
-    wait(device(arch), event)
+    kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop)
     return nothing
 end
 
@@ -76,8 +74,7 @@ end
 end
 function calc_par!(par, arch::Architecture, Chl, PARF, g::AbstractGrid, kc, kw)
     kernel! = calc_par_kernel!(device(arch), (16,16), (g.Nx, g.Ny))
-    event = kernel!(par, Chl, PARF, g, kc, kw)
-    wait(device(arch), event)
+    kernel!(par, Chl, PARF, g, kc, kw)
     return nothing
 end
 
@@ -90,7 +87,6 @@ end
 end
 function mask_individuals!(plank, g::AbstractGrid, N, arch)
     kernel! = mask_individuals_kernel!(device(arch), 256, (N,))
-    event = kernel!(plank, g)
-    wait(device(arch), event)
+    kernel!(plank, g)
     return nothing
 end

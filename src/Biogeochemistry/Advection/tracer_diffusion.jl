@@ -22,15 +22,9 @@ end
 
 function nut_diffusion!(Gcs, arch::Architecture, g, nutrients, κˣ, κʸ, κᶻ, ΔT)
     calc_diffusion_kernel! = calc_diffusion!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
-    barrier = Event(device(arch))
-
-    events=[]
     for name in nut_names
-        event = calc_diffusion_kernel!(Gcs[name].data, g, κˣ, κʸ, κᶻ, nutrients[name].data, ΔT, dependencies=barrier)
-        push!(events, event)
+        calc_diffusion_kernel!(Gcs[name].data, g, κˣ, κʸ, κᶻ, nutrients[name].data, ΔT)
     end
-
-    wait(device(arch), MultiEvent(Tuple(events)))
 
     return nothing
 end

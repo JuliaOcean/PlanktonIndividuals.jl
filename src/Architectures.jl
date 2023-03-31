@@ -5,7 +5,8 @@ export array_type, rng_type
 export device
 
 using CUDA
-using KernelAbstractions, CUDAKernels
+using KernelAbstractions
+using CUDA.CUDAKernels
 using Random
 
 """

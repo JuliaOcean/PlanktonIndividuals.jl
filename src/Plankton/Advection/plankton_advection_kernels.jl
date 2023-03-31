@@ -18,8 +18,7 @@ end
 end
 function particle_boundaries!(plank, ac, g::AbstractGrid, arch::Architecture)
     kernel! = particle_boundaries_kernel!(device(arch), 256, (size(ac,1)))
-    event = kernel!(plank, ac, g)
-    wait(device(arch), event)
+    kernel!(plank, ac, g)
     return nothing
 end
 
@@ -33,8 +32,7 @@ end
 
 function vel_interpolate!(uₜ, vₜ, wₜ, x, y, z, ac, u, v, w, g::AbstractGrid, arch::Architecture)
     kernel! = vel_interpolate_kernel!(device(arch), 256, (size(ac,1)))
-    event = kernel!(uₜ, vₜ, wₜ, x, y, z, ac, u, v, w, g)
-    wait(device(arch), event)
+    kernel!(uₜ, vₜ, wₜ, x, y, z, ac, u, v, w, g)
     return nothing
 end
 
@@ -47,8 +45,7 @@ end
 end
 function calc_coord!(velos, plank, u, v, w, ac, ΔT, weight::Float64, arch::Architecture)
     kernel! = calc_coord_kernel!(device(arch), 256, (size(ac,1)))
-    event = kernel!(velos, plank, u, v, w, ac, ΔT, weight)
-    wait(device(arch), event)
+    kernel!(velos, plank, u, v, w, ac, ΔT, weight)
     return nothing
 end
 
@@ -61,8 +58,7 @@ end
 end
 function calc_vel_rk4!(velos, arch::Architecture)
     kernel! = calc_rk4_kernel!(device(arch), 256, (size(velos.u1,1)))
-    event = kernel!(velos)
-    wait(device(arch), event)
+    kernel!(velos)
     return nothing
 end
 
@@ -75,7 +71,6 @@ end
 # end
 # function calc_vel_ab2!(velos, χ, arch::Architecture)
 #     kernel! = calc_ab2_kernel!(device(arch), 256, (size(velos.u1,1)))
-#     event = kernel!(velos, χ)
-#     wait(device(arch), event)
+#     kernel!(velos, χ)
 #     return nothing
 # end

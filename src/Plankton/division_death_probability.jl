@@ -42,8 +42,7 @@ end
 end
 function calc_dvid!(plank, dvid_type, p, t, arch)
     kernel! = calc_dvid_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, dvid_type, p, t)
-    wait(device(arch), event)
+    kernel!(plank, dvid_type, p, t)
     return nothing
 end
 
@@ -53,8 +52,7 @@ end
 end
 function calc_MM_dvid!(plank, p, arch)
     kernel! = calc_MM_dvid_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, p)
-    wait(device(arch), event)
+    kernel!(plank, p)
     return nothing
 end
 
@@ -66,8 +64,7 @@ end
 end
 function calc_graz_quadratic!(plank, nuts, P, arch)
     kernel! = calc_graz_quadratic_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, nuts, P)
-    wait(device(arch), event)
+    kernel!(plank, nuts, P)
     return nothing
 end
 
@@ -78,8 +75,7 @@ end
 end
 function calc_mort!(plank, p, arch)
     kernel! = calc_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, p)
-    wait(device(arch), event)
+    kernel!(plank, p)
     return nothing
 end
 
@@ -90,8 +86,7 @@ end
 end
 function calc_thermal_mort!(plank, p, arch)
     kernel! = calc_thermal_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, p)
-    wait(device(arch), event)
+    kernel!(plank, p)
     return nothing
 end
 
@@ -102,8 +97,7 @@ end
 end
 function calc_MM_mort!(plank, p, arch)
     kernel! = calc_MM_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
-    event = kernel!(plank, p)
-    wait(device(arch), event)
+    kernel!(plank, p)
     return nothing
 end
 
