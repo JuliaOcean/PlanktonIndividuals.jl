@@ -19,15 +19,15 @@ end
 end
 
 ##### calculate nutrient uptake rate (mmolN/individual/second)
-@inline function calc_NP_uptake(NH4, temp, Cq, Nq, Pq, Bm, p)
+@inline function calc_NP_uptake(NH4, NO3, PO4, temp, Cq, Nq, Pq, Bm, p, ac)
     # regQ = max(0.0, min(1.0, (p.Nqmax - (Nq + Bm * p.R_NC) / max(1.0e-30, Bm + Cq)) / (p.Nqmax - p.Nqmin)))
     Qn = (Nq + Bm * p.R_NC)/max(1.0e-30, Bm + Cq)
     Qp = (Pq + Bm * p.R_PC)/max(1.0e-30, Bm + Cq)
     regQN = max(0.0, min(1.0, (1.0 - Qn / p.Nqmax) * (1.0/(0.01 + 1.0 - Qn / p.Nqmax))))
     regQP = max(0.0, min(1.0, (1.0 - Qp / p.Pqmax) * (1.0/(0.01 + 1.0 - Qp / p.Pqmax))))
-    VNH4 = p.VNH4max * regQN * NH4/max(1.0e-30, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm
-    VNO3 = p.VNO3max * regQN * NO3/max(1.0e-30, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm
-    VPO4 = p.VPO4max * regQP * PO4/max(1.0e-30, PO4+p.KsatPO4) * tempFunc(temp, p) * Bm
+    VNH4 = p.VNH4max * regQN * NH4/max(1.0e-30, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm * ac
+    VNO3 = p.VNO3max * regQN * NO3/max(1.0e-30, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm * ac
+    VPO4 = p.VPO4max * regQP * PO4/max(1.0e-30, PO4+p.KsatPO4) * tempFunc(temp, p) * Bm * ac
     return VNH4, VNO3, VPO4
 end
 
@@ -44,8 +44,9 @@ end
     @inbounds plank.PS[i] = calc_PS(nuts.par[i], nuts.T[i], plank.Chl[i], plank.Bm[i], p) * plank.ac[i]
 
     @inbounds plank.VNH4[i], plank.VNO3[i], plank.VPO4[i] = 
-                        calc_NP_uptake(nuts.NH4[i], nuts.T[i], plank.Cq[i], plank.Nq[i], plank.Pq[i], 
-                                        plank.Bm[i], p) * plank.ac[i]
+                        calc_NP_uptake(nuts.NH4[i], nuts.NO3[i], nuts.PO4[i], nuts.T[i],
+                                        plank.Cq[i], plank.Nq[i], plank.Pq[i],
+                                        plank.Bm[i], p, plank.ac[i])
 end
 function calc_inorganic_uptake!(plank, nuts, p, arch::Architecture)
     kernel! = calc_inorganic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
