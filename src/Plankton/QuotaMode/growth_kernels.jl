@@ -25,9 +25,9 @@ end
     Qp = (Pq + Bm * p.R_PC)/max(1.0e-30, Bm + Cq)
     regQN = max(0.0, min(1.0, (1.0 - Qn / p.Nqmax) * (1.0/(0.01 + 1.0 - Qn / p.Nqmax))))
     regQP = max(0.0, min(1.0, (1.0 - Qp / p.Pqmax) * (1.0/(0.01 + 1.0 - Qp / p.Pqmax))))
-    VNH4 = p.VNH4max * regQ * NH4/max(1.0e-30, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm
-    VNO3 = p.VNO3max * regQ * NO3/max(1.0e-30, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm
-    VPO4 = p.VPO4max * regQ * PO4/max(1.0e-30, PO4+p.KsatPO4) * tempFunc(temp, p) * Bm
+    VNH4 = p.VNH4max * regQN * NH4/max(1.0e-30, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm
+    VNO3 = p.VNO3max * regQN * NO3/max(1.0e-30, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm
+    VPO4 = p.VPO4max * regQP * PO4/max(1.0e-30, PO4+p.KsatPO4) * tempFunc(temp, p) * Bm
     return VNH4, VNO3, VPO4
 end
 
