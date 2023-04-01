@@ -31,7 +31,7 @@ function default_temperature(grid, ΔT, iterations)
     end
     # vertical temperature gradient
     for j in grid.Nz-1:-1:1
-        CUDA.@allowscalar temp_day[:,:,j,:] .= temp_day[:,:,j+1,:] .+ 0.04 * grid.zC[j]
+        CUDA.@allowscalar temp_day[:,:,j,:] .= temp_day[:,:,j+1,:] .+ 4.0e-4 * grid.zC[j]
     end
     temp_domain = repeat(temp_day, outer = (1,1,1,total_days))
     return temp_domain
