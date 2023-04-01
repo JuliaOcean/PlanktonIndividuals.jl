@@ -43,7 +43,7 @@ end
     i = @index(Global)
     @inbounds plank.PS[i] = calc_PS(nuts.par[i], nuts.T[i], plank.Chl[i], plank.Bm[i], p) * plank.ac[i]
 
-    @inbounds plank.VNH4[i], plank.VNO3[i], plank.VPO4[i] = 
+    @inbounds plank.VNH4[i], plank.VNO3[i], plank.VPO4[i] =
                         calc_NP_uptake(nuts.NH4[i], nuts.NO3[i], nuts.PO4[i], nuts.T[i],
                                         plank.Cq[i], plank.Nq[i], plank.Pq[i],
                                         plank.Bm[i], p, plank.ac[i])
