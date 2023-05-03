@@ -96,7 +96,7 @@ bgc_parameter = Dict("kDOC" => 0.0, # Remineralization rate for DOC
 model = PlanktonModel(CPU(), grid;
 					  mode = CarbonMode(),
                       N_species = 1,
-                      N_individual = 2^10,
+                      N_individual = [2^10],
                       max_individuals = 2^13,
                       bgc_params = bgc_parameter,
                       phyt_params = phyt_parameter) 

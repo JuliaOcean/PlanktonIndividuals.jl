@@ -56,7 +56,7 @@ Next we setup the individual-based model by specifying the architecture, grid, a
 
 # ╔═╡ 7735454f-bc9f-4dad-8c40-2e5bba096307
 model = PlanktonModel(arch, grid; N_species = 1, 
-								  N_individual = 2^7,
+								  N_individual = [2^7],
 								  max_individuals = 2^7*8)
 
 # ╔═╡ f07a08bb-f4e4-4300-9913-15efad0408b1
