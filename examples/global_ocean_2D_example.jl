@@ -82,7 +82,7 @@ Then we update new parameter values in the model.
 model = PlanktonModel(CPU(), grid;
 					  mode = CarbonMode(),
                       N_species = 1,
-                      N_individual = 360,
+                      N_individual = [360],
                       max_individuals = 360*8,
                       bgc_params = bgc_parameter,
                       phyt_params = phyt_parameter) 

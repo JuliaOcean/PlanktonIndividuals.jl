@@ -14,8 +14,8 @@ end
     PlanktonModel(arch::Architecture, grid::AbstractGrid;
                   mode = QuotaMode(),
                   N_species = 1,
-                  N_individual = 1024,
-                  max_individuals = 8*1024,
+                  N_individual = [1024],
+                  max_individuals = 1024*8,
                   bgc_params = nothing, 
                   phyt_params = nothing,
                   nut_initial = default_nut_init(),
@@ -33,8 +33,10 @@ Keyword Arguments (Optional)
 ============================
 - `mode` : Phytoplankton physiology mode, choose among CarbonMode(), QuotaMode(), or MacroMolecularMode().
 - `N_species` : Number of species.
-- `N_individual` : Number of individuals per species.
-- `max_individuals` : Maximum number of individuals per species the model can hold.
+- `N_individual` : Number of individuals per species, should be a vector with `N_species` elements.
+- `max_individuals` : Maximum number of individuals for each species the model can hold,
+                    usually take the maximum of all the species and apply a factor to account for the growth
+                    of individuals during one simulation.
 - `bgc_params` : Parameter set for biogeochemical processes modeled in the model, use default if `nothing`, 
                     use `Dict` to update parameters, the format and names of parameters can be found by running `bgc_params_default()`.
 - `phyt_params` : Parameter set for physiological processes of individuals modeled in the model, use default if `nothing`,
@@ -46,7 +48,7 @@ Keyword Arguments (Optional)
 function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        mode = QuotaMode(),
                        N_species::Int64 = 1,
-                       N_individual::Int64 = 1024,
+                       N_individual::Vector{Int64} = [1024],
                        max_individuals::Int64 = 8*1024,
                        bgc_params = nothing, 
                        phyt_params = nothing,
@@ -54,7 +56,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        t::Float64 = 0.0,
                        )
 
-    @assert N_individual ≤ max_individuals
+    @assert maximum(N_individual) ≤ max_individuals
 
     if arch == GPU() && !has_cuda()
         throw(ArgumentError("Cannot create a GPU model. No CUDA-enabled GPU was detected!"))
@@ -102,6 +104,6 @@ function show(io::IO, model::PlanktonModel)
     print(io, "PlanktonModel:\n",
               "├── grid: $(short_show(model.grid))\n",
               "├── $(model.mode) is selected for phytoplankton physiology\n",
-              "├── individuals: $(Nsp) phytoplankton species each with $(N) individuals\n",
+              "├── individuals: $(Nsp) phytoplankton species with $(N) individuals for each species\n",
               "└── maximum number of individuals: $(cap) per species")
 end

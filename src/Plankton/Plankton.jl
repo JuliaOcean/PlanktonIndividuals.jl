@@ -24,10 +24,15 @@ using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMo
 function generate_individuals(params::Dict, arch::Architecture, Nsp, N, maxN, g::AbstractGrid, mode::AbstractMode)
     plank_names = Symbol[]
     plank_data=[]
+
+    if length(N) ≠ Nsp
+        throw(ArgumentError("The length of `N_individual` must be $(Nsp), the same as `N_species`, each species has its own initial condition"))
+    end
+
     for i in 1:Nsp
         name = Symbol("sp"*string(i))
         plank = construct_plankton(arch, i, params, maxN, mode::AbstractMode)
-        generate_plankton!(plank, N, g, arch, mode)
+        generate_plankton!(plank, N[i], g, arch, mode)
         push!(plank_names, name)
         push!(plank_data, plank)
     end

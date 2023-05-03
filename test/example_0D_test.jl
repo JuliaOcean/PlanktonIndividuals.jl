@@ -4,7 +4,7 @@ grid = RectilinearGrid(size = (1, 1, 1), x = (0,32), y = (0,32), z = (0,-32))
 
 model = PlanktonModel(CPU(), grid;
                       N_species = 5,
-                      N_individual = 1024,
+                      N_individual = [1024,1024,1024,1024,1024],
                       max_individuals = 1024*10)
 
 function tot_mass(nut, g)
@@ -54,4 +54,4 @@ TPt=TPt + sum(model.individuals.phytos.sp1.data.Pq .+
 
 @testset "PlanktonIndividuals 0D tests:" begin
     @test isapprox(TP,TPt; atol=1e1)
-end 
+end
