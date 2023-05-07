@@ -35,8 +35,15 @@ end
     # regQ = max(0.0, min(1.0, (p.Cqmax - Cq / max(1.0e-30, Bm + Cq)) / (p.Cqmax - p.Cqmin)))
     Qc = Cq/max(1.0e-30, Bm + Cq)
     regQ = max(0.0, min(1.0, (1.0 - Qc / p.Cqmax) * (1.0/(0.01 + 1.0 - Qc / p.Cqmax))))
-    VN = p.VDOCmax * regQ * DOC/max(1.0e-30, DOC+p.KsatDOC) * tempFunc(temp, p) * Bm
-    return VN
+    VC = p.VDOCmax * regQ * DOC/max(1.0e-30, DOC+p.KsatDOC) * tempFunc(temp, p) * Bm
+    return VC
+end
+
+@inline function calc_N_fixation(temp, Cq, Nq, Bm, p)
+    Qn = (Nq + Bm * p.R_NC)/max(1.0e-30, Bm + Cq)
+    regQN = max(0.0, min(1.0, (1.0 - Qn / p.Nqmax) * (1.0/(0.01 + 1.0 - Qn / p.Nqmax))))
+    N_fix = p.N_fix * regQN * tempFunc(temp, p) * Bm
+    return N_fix
 end
 
 @kernel function calc_inorganic_uptake_kernel!(plank, nuts, p)
@@ -47,6 +54,9 @@ end
                         calc_NP_uptake(nuts.NH4[i], nuts.NO3[i], nuts.PO4[i], nuts.T[i],
                                         plank.Cq[i], plank.Nq[i], plank.Pq[i],
                                         plank.Bm[i], p, plank.ac[i])
+    if p.N_fix > 0.0
+        @inbounds plank.VNH4[i] += calc_N_fixation(nuts.T[i], plank.Cq[i], plank.Nq[i], plank.Bm[i], p)
+    end
 end
 function calc_inorganic_uptake!(plank, nuts, p, arch::Architecture)
     kernel! = calc_inorganic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
