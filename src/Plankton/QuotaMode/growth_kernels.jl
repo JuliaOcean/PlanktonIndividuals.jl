@@ -152,9 +152,10 @@ function update_biomass!(plank, p, ΔT, arch)
 end
 
 ##### update cell size
+##### only calculate functional biomass
 @kernel function update_cellsize_kernel!(plank, p)
     i = @index(Global)
-    @inbounds plank.Sz[i] = (plank.Bm[i] + plank.Cq[i]) / (p.Cquota * p.Nsuper)
+    @inbounds plank.Sz[i] = plank.Bm[i] / (p.Cquota * p.Nsuper)
 end
 function update_cellsize!(plank, p, arch)
     kernel! = update_cellsize_kernel!(device(arch), 256, (size(plank.ac,1)))

@@ -71,7 +71,7 @@ end
 ##### calculate the probability of mortality
 @kernel function calc_mort_kernel!(plank, p)
     i = @index(Global)
-    @inbounds plank.mort[i] = p.mort_P * (tanh(6.0*(p.mort_reg - plank.Sz[i])) + 1.0) * plank.ac[i]
+    @inbounds plank.mort[i] = p.mort_P * (tanh(20.0*(p.mort_reg - plank.Sz[i])) + 1.0) * plank.ac[i]
 end
 function calc_mort!(plank, p, arch)
     kernel! = calc_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
