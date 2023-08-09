@@ -18,12 +18,12 @@ end
 @inline function calc_NP_uptake(NH4, NO3, PO4, temp, NST, PST, PRO, DNA, RNA, Chl, p, ac)
     N_tot = total_N_biomass(PRO, DNA, RNA, NST, Chl, p)
     P_tot = total_P_biomass(DNA, RNA, PST, p)
-    # regQN = max(0.0, min(1.0, (p.NSTmax - NST / max(1.0e-30, N_tot)) / (p.NSTmax - p.NSTmin)))
-    # regQP = max(0.0, min(1.0, (p.PSTmax - PST / max(1.0e-30, P_tot)) / (p.PSTmax - p.PSTmin)))
     R_NST = NST / max(1.0e-30, N_tot)
     R_PST = PST / max(1.0e-30, P_tot)
-    regQN = max(0.0, min(1.0, (1.0 - R_NST / p.NSTmax) * (1.0/(0.01 + 1.0 - R_NST / p.NSTmax))))
-    regQP = max(0.0, min(1.0, (1.0 - R_PST / p.PSTmax) * (1.0/(0.01 + 1.0 - R_PST / p.PSTmax))))
+    fNST = max(0.0, min(1.0, R_NST / p.NSTmax))
+    fPST = max(0.0, min(1.0, R_PST / p.PSTmax))
+    regQN = (1.0 - fNST) * (1.0/(0.01 + 1.0 - fNST))
+    regQP = (1.0 - fPST) * (1.0/(0.01 + 1.0 - fPST))
     VNH4 = p.VNH4max * regQN * NH4/max(1.0e-30, NH4+p.KsatNH4) * tempFunc(temp, p) * PRO * ac
     VNO3 = p.VNO3max * regQN * NO3/max(1.0e-30, NO3+p.KsatNO3) * tempFunc(temp, p) * PRO * ac
     VPO4 = p.VPO4max * regQP * PO4/max(1.0e-30, PO4+p.KsatPO4) * tempFunc(temp, p) * PRO * ac
