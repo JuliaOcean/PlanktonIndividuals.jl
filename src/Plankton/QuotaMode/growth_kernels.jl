@@ -22,10 +22,10 @@ end
 @inline function calc_NP_uptake(NH4, NO3, PO4, temp, Cq, Nq, Pq, Bm, p, ac)
     Qn = (Nq + Bm * p.R_NC)/max(1.0e-30, Bm + Cq)
     Qp = (Pq + Bm * p.R_PC)/max(1.0e-30, Bm + Cq)
-    fQn = max(0.0, min(1.0, Qn / p.Nqmax))
-    fQp = max(0.0, min(1.0, Qp / p.Pqmax))
-    regQN = (1.0 - fQn) * (1.0/(0.01 + 1.0 - fQn))
-    regQP = (1.0 - fQp) * (1.0/(0.01 + 1.0 - fQp))
+    fQn = max(0.0, min(1.0, 1.0 - Qn / p.Nqmax))
+    fQp = max(0.0, min(1.0, 1.0 - Qp / p.Pqmax))
+    regQN = fQn^4 / (1.0e-4 + fQn^4)
+    regQP = fQp^4 / (1.0e-4 + fQp^4)
     VNH4 = p.VNH4max * regQN * NH4/max(1.0e-30, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm * ac
     VNO3 = p.VNO3max * regQN * NO3/max(1.0e-30, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm * ac
     VPO4 = p.VPO4max * regQP * PO4/max(1.0e-30, PO4+p.KsatPO4) * tempFunc(temp, p) * Bm * ac
