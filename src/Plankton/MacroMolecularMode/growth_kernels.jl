@@ -63,8 +63,8 @@ end
 @inline function calc_DOC_uptake(DOC, temp, CH, PRO, DNA, RNA, Chl, p)
     C_tot = total_C_biomass(PRO, DNA, RNA, CH, Chl)
     R_CH = CH / max(1.0e-30, C_tot)
-    regQ = max(0.0, min(1.0, (1.0 - R_CH / p.CHmax) * (1.0/(0.01 + 1.0 - R_CH / p.CHmax))))
-    # regQ = max(0.0, min(1.0, (p.CHmax - CH / max(1.0e-30, C_tot)) / (p.CHmax - p.CHmin)))
+    fCST = max(0.0, min(1.0, 1.0 - R_CH / p.CHmax))
+    regQ = fCST^4 / (1.0e-4 + fCST^4)
     VN = p.VDOCmax * regQ * DOC/max(1.0e-30, DOC+p.KsatDOC) * tempFunc(temp, p) * PRO
     return VN
 end

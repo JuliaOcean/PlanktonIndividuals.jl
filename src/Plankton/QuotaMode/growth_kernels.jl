@@ -33,9 +33,9 @@ end
 end
 
 @inline function calc_DOC_uptake(DOC, temp, Cq, Bm, p)
-    # regQ = max(0.0, min(1.0, (p.Cqmax - Cq / max(1.0e-30, Bm + Cq)) / (p.Cqmax - p.Cqmin)))
     Qc = Cq/max(1.0e-30, Bm + Cq)
-    regQ = max(0.0, min(1.0, (1.0 - Qc / p.Cqmax) * (1.0/(0.01 + 1.0 - Qc / p.Cqmax))))
+    fQc = max(0.0, min(1.0, 1.0 - Qc / p.Cqmax))
+    regQ = fQc^4 / (1.0e-4 + fQc^4)
     VN = p.VDOCmax * regQ * DOC/max(1.0e-30, DOC+p.KsatDOC) * tempFunc(temp, p) * Bm
     return VN
 end
