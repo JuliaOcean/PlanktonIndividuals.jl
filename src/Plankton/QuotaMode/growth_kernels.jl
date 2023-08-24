@@ -1,19 +1,23 @@
-##### temperature function
-# @inline function tempFunc(temp, p)
-#     TFunc = max(1.0e-30, exp(p.TAe * (1.0/(temp+273.15) - (1.0/p.TRef)))) * p.TCoeff
-#     return TFunc
-# end
-@inline function tempFunc(temp, p)
-    k = exp(-p.Ea/(8.3145*(temp+273.15)))*(1.0-exp(temp - p.T⁺))
+##### temperature function for photosynthesis
+@inline function tempFunc_PS(temp, p)
+    k = exp(-p.Ea/(8.3145*(temp+273.15)))*(1.0-exp(temp - p.Tmax))
     k = max(0.0, k)
-    OGT_rate = exp(-p.Ea/(8.3145*(p.T⁺+273.15-2)))
+    OGT_rate = exp(-p.Ea/(8.3145*(p.Topt+273.15)))
+    return k/OGT_rate
+end
+
+##### temperature function for nutrient uptakes
+@inline function tempFunc(temp, p)
+    k = exp(-p.Ea/(8.3145*(temp+273.15)))
+    k = max(0.0, k)
+    OGT_rate = exp(-p.Ea/(8.3145*(p.Topt+273.15)))
     return k/OGT_rate
 end
 
 ##### calculate photosynthesis rate (mmolC/individual/second)
 @inline function calc_PS(par, temp, Chl, Bm, p)
     αI  = par * p.α * p.Φ
-    PCm = p.PCmax * tempFunc(temp, p)
+    PCm = p.PCmax * tempFunc_PS(temp, p)
     PS  = PCm * (1.0 - exp(-αI / max(1.0e-30, PCm) * Chl / max(1.0e-30, Bm))) * Bm
     return PS
 end

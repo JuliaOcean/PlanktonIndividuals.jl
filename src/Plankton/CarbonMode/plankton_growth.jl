@@ -18,7 +18,7 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
 
         ##### thermal mortality (WIP)
         if p.ther_mort == 1
-            calc_thermal_mort!(plank, p, arch)
+            calc_thermal_mort!(plank, nuts, p, arch)
         else
             calc_mort!(plank, p, arch)
         end
@@ -29,10 +29,4 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
         @inbounds plank.mort .= 0.0
         @inbounds plank.dvid .= 0.0
     end
-
-    # ##### reset thermal history factor every day
-    # if t%86400 == 0
-    #     plank.Th .= 0.0
-    # end
-
 end
