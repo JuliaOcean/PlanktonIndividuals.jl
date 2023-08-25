@@ -15,10 +15,10 @@ end
 end
 
 ##### calculate photosynthesis rate (mmolC/individual/second)
-@inline function calc_PS(par, temp, Chl, Bm, p)
+@inline function calc_PS(par, temp, Chl, Bm, Th, p)
     αI  = par * p.α * p.Φ
-    if p.ther_mort == 1
-        PCm = p.PCmax * tempFunc(temp, p)
+    if p.thermal_history == 1
+        PCm = p.PCmax * tempFunc(temp, p) * shape_func_dec(Th, p.TH_ps, 1.0e-2)
     else
         PCm = p.PCmax * tempFunc_PS(temp, p)
     end
@@ -28,7 +28,7 @@ end
 
 @kernel function calc_inorganic_uptake_kernel!(plank, nuts, p)
     i = @index(Global)
-    @inbounds plank.PS[i] = calc_PS(nuts.par[i], nuts.T[i], plank.Chl[i], plank.Bm[i], p) * plank.ac[i]
+    @inbounds plank.PS[i] = calc_PS(nuts.par[i], nuts.T[i], plank.Chl[i], plank.Bm[i], plank.Th[i], p) * plank.ac[i]
 end
 
 function calc_inorganic_uptake!(plank, nuts, p, arch::Architecture)
@@ -75,7 +75,7 @@ end
 ##### track temperature history
 @kernel function calc_thermal_history_kernel!(plank, nuts, p, ΔT)
     i = @index(Global)
-    @inbounds plank.Th[i] += ΔT/3600 * exp(0.22 * max(0, nuts.T[i] - p.Topt)) * isless(p.Topt, nuts.T[i])
+    @inbounds plank.Th[i] += ΔT/3600 * exp(nuts.T[i] - p.Topt) * isless(p.Topt, nuts.T[i])
 end
 function calc_thermal_history!(plank, nuts, p, ΔT, arch)
     kernel! = calc_thermal_history_kernel!(device(arch), 256, (size(plank.ac,1)))

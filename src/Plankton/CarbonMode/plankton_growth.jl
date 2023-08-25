@@ -17,7 +17,7 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
         calc_dvid!(plank, divide_type(p.dvid_type), p, t, arch)
 
         ##### thermal mortality (WIP)
-        if p.ther_mort == 1
+        if p.thermal_history == 1
             calc_thermal_mort!(plank, nuts, p, arch)
         else
             calc_mort!(plank, p, arch)

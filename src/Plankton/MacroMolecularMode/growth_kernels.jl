@@ -28,10 +28,8 @@ end
     P_tot = total_P_biomass(DNA, RNA, PST, p)
     R_NST = NST / max(1.0e-30, N_tot)
     R_PST = PST / max(1.0e-30, P_tot)
-    fNST = max(0.0, min(1.0, 1.0 - R_NST / p.NSTmax))
-    fPST = max(0.0, min(1.0, 1.0 - R_PST / p.PSTmax))
-    regQN = fNST^4 / (1.0e-4 + fNST^4)
-    regQP = fPST^4 / (1.0e-4 + fPST^4)
+    regQN = shape_func_dec(R_NST, p.NSTmax, 1.0e-4)
+    regQP = shape_func_dec(R_PST, p.PSTmax, 1.0e-4)
     VNH4 = p.VNH4max * regQN * NH4/max(1.0e-30, NH4+p.KsatNH4) * tempFunc(temp, p) * PRO * ac
     VNO3 = p.VNO3max * regQN * NO3/max(1.0e-30, NO3+p.KsatNO3) * tempFunc(temp, p) * PRO * ac
     VPO4 = p.VPO4max * regQP * PO4/max(1.0e-30, PO4+p.KsatPO4) * tempFunc(temp, p) * PRO * ac
@@ -71,8 +69,7 @@ end
 @inline function calc_DOC_uptake(DOC, temp, CH, PRO, DNA, RNA, Chl, p)
     C_tot = total_C_biomass(PRO, DNA, RNA, CH, Chl)
     R_CH = CH / max(1.0e-30, C_tot)
-    fCST = max(0.0, min(1.0, 1.0 - R_CH / p.CHmax))
-    regQ = fCST^4 / (1.0e-4 + fCST^4)
+    regQ = shape_func_dec(R_CH, p.CHmax, 1.0e-4)
     VN = p.VDOCmax * regQ * DOC/max(1.0e-30, DOC+p.KsatDOC) * tempFunc(temp, p) * PRO
     return VN
 end
