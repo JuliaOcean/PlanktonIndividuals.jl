@@ -109,7 +109,8 @@ end
 ##### calculate the probability of mortality for MMM
 @kernel function calc_MM_mort_kernel!(plank, p)
     i = @index(Global)
-    @inbounds plank.mort[i] = p.mort_P * (tanh(1.0*(plank.age[i] - p.mort_reg)) + 1.0) * plank.ac[i]
+    # @inbounds plank.mort[i] = p.mort_P * (tanh(1.0*(plank.age[i] - p.mort_reg)) + 1.0) * plank.ac[i]
+    @inbounds plank.mort[i] = p.mort_P * shape_func_inc(plank.age[i], p.mort_reg, 1e-4) * plank.ac[i]
 end
 function calc_MM_mort!(plank, p, arch)
     kernel! = calc_MM_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
