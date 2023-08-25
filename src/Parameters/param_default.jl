@@ -206,32 +206,32 @@ end
 
 function phyt_params_default(N::Int64, mode::CarbonMode)
     params=Dict(
-        "Nsuper"   => [1],       # Number of phyto cells each super individual represents
-        "Cquota"   => [1.8e-11], # C quota of phyto cells at size = 1.0
-        "mean"     => [1.2],     # Mean of the normal distribution of initial phyto individuals
-        "var"      => [0.3],     # Variance of the normal distribution of initial phyto individuals
-        "Chl2C"    => [0.10],    # Chla:C ratio in phytoplankton (mgChl/mmolC)
-        "α"        => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
-        "Φ"        => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
-        "Topt"     => [27.0],    # Optimal temperature for growth (C)
-        "Tmax"     => [30.0],    # Maximal temperature for growth (C)
-        "Ea"       => [5.3e4],   # Free energy
-        "PCmax"    => [4.2e-5],  # Maximum primary production rate (per second)
-        "respir_a" => [1.2e-6],  # Respiration rate(per second)
-        "grz_P"    => [0.0],     # Grazing probability per second
-        "dvid_P"   => [5e-5],    # Probability of cell division per second.
-        "dvid_type"=> [1],       # The type of cell division, 1:sizer, 2:adder.
-        "dvid_stp" => [6.0],     # Steepness of sigmoidal function
-        "dvid_reg" => [1.9],     # Regulations of cell division (sizer)
-        "dvid_stp2"=> [2.0],     # Steepness of sigmoidal function
-        "dvid_reg2"=> [12.0],    # Regulations of cell division (sizer)
-        "mort_P"   => [5e-5],    # Probability of cell natural death per second
-        "mort_reg" => [0.5],     # Regulation of cell natural death
-        "Th_reg"   => [8.0],     # Regulation of cell thermal death
-        "Th_stp"   => [0.8],     # Steepness of cell thermal death
-        "grazFracC"=> [0.7],     # Fraction goes into dissolved organic pool
-        "mortFracC"=> [0.5],     # Fraction goes into dissolved organic pool
-        "ther_mort"=> [0],       # thermal mortality, 1 for on, 0 for off
+        "Nsuper"           => [1],       # Number of phyto cells each super individual represents
+        "Cquota"           => [1.8e-11], # C quota of phyto cells at size = 1.0
+        "mean"             => [1.2],     # Mean of the normal distribution of initial phyto individuals
+        "var"              => [0.3],     # Variance of the normal distribution of initial phyto individuals
+        "Chl2C"            => [0.10],    # Chla:C ratio in phytoplankton (mgChl/mmolC)
+        "α"                => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
+        "Φ"                => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
+        "Topt"             => [27.0],    # Optimal temperature for growth (C)
+        "Tmax"             => [30.0],    # Maximal temperature for growth (C)
+        "Ea"               => [5.3e4],   # Free energy
+        "PCmax"            => [4.2e-5],  # Maximum primary production rate (per second)
+        "respir_a"         => [1.2e-6],  # Respiration rate(per second)
+        "grz_P"            => [0.0],     # Grazing probability per second
+        "dvid_P"           => [5e-5],    # Probability of cell division per second.
+        "dvid_type"        => [1],       # The type of cell division, 1:sizer, 2:adder.
+        "dvid_stp"         => [6.0],     # Steepness of sigmoidal function
+        "dvid_reg"         => [1.9],     # Regulations of cell division (sizer)
+        "dvid_stp2"        => [2.0],     # Steepness of sigmoidal function
+        "dvid_reg2"        => [12.0],    # Regulations of cell division (sizer)
+        "mort_P"           => [5e-5],    # Probability of cell natural death per second
+        "mort_reg"         => [0.5],     # Regulation of cell natural death
+        "TH_ps"            => [100.0],   # Maximal thermal history for growth rate
+        "TH_mort"          => [100.0],   # Maximal thermal history for mortality
+        "grazFracC"        => [0.7],     # Fraction goes into dissolved organic pool
+        "mortFracC"        => [0.5],     # Fraction goes into dissolved organic pool
+        "thermal_history"  => [0],       # thermal history, 1 for on, 0 for off
     )
 
     if N == 1

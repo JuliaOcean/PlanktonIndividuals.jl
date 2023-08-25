@@ -78,6 +78,7 @@ function calc_par!(par, arch::Architecture, Chl, PARF, g::AbstractGrid, kc, kw)
     return nothing
 end
 
+##### mask individuals due to land shape
 @kernel function mask_individuals_kernel!(plank, g::AbstractGrid)
     i = @index(Global)
     @inbounds xi = unsafe_trunc(Int, (plank.x[i]+1) * plank.ac[i]) + g.Hx 

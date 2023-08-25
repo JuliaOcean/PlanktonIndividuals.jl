@@ -5,6 +5,20 @@ struct Timer <: division_type end
 struct Sizer_Timer <: division_type end
 struct Adder_Timer <: division_type end
 
+##### shape function - decrease from 1.0 to 0.0 while x increase from 0.0 to 1.0
+@inline function shape_func_dec(x, xmax, k)
+    fx = max(0.0, min(1.0, 1.0 - x / xmax))
+    reg = fx^4 / (k + fx^4)
+    return reg
+end
+
+##### shape function - increase from 1.0 to 0.0 while x increase from 0.0 to 1.0
+@inline function shape_func_inc(x, xmax, k)
+    fx = max(0.0, min(1.0, 1.0 - x / xmax))
+    reg = fx^4 / (k + fx^4)
+    return 1.0 - reg
+end
+
 ##### calculate probability of cell division
 @inline calc_division(::Sizer, Sz, iS, t, stp, reg, stp2, reg2, P) = P * (tanh(stp*(Sz - reg)) + 1.0)
 
@@ -71,7 +85,8 @@ end
 ##### calculate the probability of mortality
 @kernel function calc_mort_kernel!(plank, p)
     i = @index(Global)
-    @inbounds plank.mort[i] = p.mort_P * (tanh(20.0*(p.mort_reg - plank.Sz[i])) + 1.0) * plank.ac[i]
+    # @inbounds plank.mort[i] = p.mort_P * (tanh(20.0*(p.mort_reg - plank.Sz[i])) + 1.0) * plank.ac[i]
+    @inbounds plank.mort[i] = p.mort_P * shape_func_dec(plank.Sz[i], p.mort_reg, 1.0e-5) * plank.ac[i]
 end
 function calc_mort!(plank, p, arch)
     kernel! = calc_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -82,8 +97,8 @@ end
 ##### calculate the probability of mortality caused by thermal exposure
 @kernel function calc_thermal_mort_kernel!(plank, nuts, p)
     i = @index(Global)
-    @inbounds plank.mort[i] = p.mort_P * (tanh(p.Th_stp*(plank.Th[i] - p.Th_reg)) + 1.0) *
-                                plank.ac[i] * isless(p.Tmax, nuts.T[i])
+    @inbounds plank.mort[i] = p.mort_P * shape_func_inc(plank.Th[i], p.TH_mort, 1.0e-3) *
+                              plank.ac[i] * isless(p.Tmax, nuts.T[i])
 end
 function calc_thermal_mort!(plank, nuts, p, arch)
     kernel! = calc_thermal_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
