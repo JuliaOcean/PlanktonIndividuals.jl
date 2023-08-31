@@ -43,19 +43,20 @@ Generate default biogeochemical parameter values
 """
 function bgc_params_default()
     params = Dict(
-        "kw"       => 0.046,              # PAR attenuation (/m)
-        "kc"       => 0.04,               # PAR attenuation (m²/mgChl)
-        "kDOC"     => 1/30/86400,         # Remineralization rate for DOC, turn over time: a month (per second)
-        "Nit"      => 1/30/86400,         # Nitrification rate for NH4
-        "kDON"     => 1/30/86400,         # Remineralization rate for DON, turn over time: a month (per second)
-        "kDOP"     => 1/30/86400,         # Remineralization rate for DON, turn over time: a month (per second)
-        "kPOC"     => 1/30/86400,         # Remineralization rate for POC, turn over time: a month (per second)
-        "kPON"     => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
-        "kPOP"     => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
-        "κh"       => 0.0e-6,             # Horizontal diffusion
-        "κv"       => 0.0e-6,             # Vertical diffusion
-        "κhP"      => 0.0e-6,             # Horizontal diffusion for individuals
-        "κvP"      => 0.0e-6,             # Vertical diffusion for individuals
+        "kw"           => 0.046,              # PAR attenuation (/m)
+        "kc"           => 0.04,               # PAR attenuation (m²/mgChl)
+        "kDOC"         => 1/30/86400,         # Remineralization rate for DOC, turn over time: a month (per second)
+        "Nit"          => 1/30/86400,         # Nitrification rate for NH4
+        "kDON"         => 1/30/86400,         # Remineralization rate for DON, turn over time: a month (per second)
+        "kDOP"         => 1/30/86400,         # Remineralization rate for DON, turn over time: a month (per second)
+        "kPOC"         => 1/30/86400,         # Remineralization rate for POC, turn over time: a month (per second)
+        "kPON"         => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
+        "kPOP"         => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
+        "κh"           => 0.0e-6,             # Horizontal diffusion
+        "κv"           => 0.0e-6,             # Vertical diffusion
+        "κhP"          => 0.0e-6,             # Horizontal diffusion for individuals
+        "κvP"          => 0.0e-6,             # Vertical diffusion for individuals
+        "shared_graz"  => 1.0,                # Using shared grazing or not - default is yes - 1.0
     )
     return params
 end
