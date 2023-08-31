@@ -22,7 +22,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     @inbounds model.timestepper.Chl .= 0.0
     @inbounds model.timestepper.pop .= 0.0
     ##### plankton advection, diffusion, and physiological update
-    if model.bgc_params.shared_graz == 1.0 # shared grazing
+    if model.bgc_params["shared_graz"] == 1.0 # shared grazing
         for sp in keys(model.individuals.phytos)
             ##### RK4
             plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
@@ -49,7 +49,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                                 model.timestepper.rnd, model.individuals.phytos[sp].p,
                                 model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch, model.mode)
         end
-    else # model.bgc_params.shared_graz ≠ 1.0 - species-specific grazing
+    else # model.bgc_params["shared_graz"] ≠ 1.0 - species-specific grazing
         for sp in keys(model.individuals.phytos)
             ##### RK4
             plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
