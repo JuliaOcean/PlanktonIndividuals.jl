@@ -12,7 +12,7 @@ struct Adder_Timer <: division_type end
     return reg
 end
 
-##### shape function - increase from 1.0 to 0.0 while x increase from 0.0 to 1.0
+##### shape function - increase from 0.0 to 1.0 while x increase from 0.0 to 1.0
 @inline function shape_func_inc(x, xmax, k)
     fx = max(0.0, min(1.0, 1.0 - x / xmax))
     reg = fx^4 / (k + fx^4)
@@ -20,17 +20,17 @@ end
 end
 
 ##### calculate probability of cell division
-@inline calc_division(::Sizer, Sz, iS, t, stp, reg, stp2, reg2, P) = P * (tanh(stp*(Sz - reg)) + 1.0)
+@inline calc_division(::Sizer, Sz, iS, t, reg, reg2, P) = P * shape_func_inc(Sz, reg, 1.0e-3)
 
-@inline calc_division(::Adder, Sz, iS, t, stp, reg, stp2, reg2, P) = P * (tanh(stp*(Sz - iS - reg)) + 1.0)
+@inline calc_division(::Adder, Sz, iS, t, reg, reg2, P) = P * shape_func_inc(Sz-iS, reg, 1.0e-3)
 
-@inline calc_division(::Timer, Sz, iS, t, stp, reg, stp2, reg2, P) = P * (tanh(stp*(t%86400/3600 - reg)) + 1.0)
+@inline calc_division(::Timer, Sz, iS, t, reg, reg2, P) = P * shape_func_inc(t%86400/3600, reg, 1.0e-5)
 
-@inline calc_division(::Sizer_Timer, Sz, iS, t, stp, reg, stp2, reg2, P) = 
-                        P * (tanh(stp*(Sz - reg)) + 1.0) * (tanh(stp2*(t%86400/3600 - reg2)) + 1.0)
+@inline calc_division(::Sizer_Timer, Sz, iS, t, reg, reg2, P) =
+                        P * shape_func_inc(Sz, reg, 1.0e-3) * shape_func_inc(t%86400/3600, reg2, 1.0-5)
 
-@inline calc_division(::Adder_Timer, Sz, iS, t, stp, reg, stp2, reg2, P) = 
-                        P * (tanh(stp*(Sz - iS - reg)) + 1.0) * (tanh(stp2*(t%86400/3600 - reg2)) + 1.0)
+@inline calc_division(::Adder_Timer, Sz, iS, t, reg, reg2, P) =
+                        P * shape_func_inc(Sz-iS, reg, 1.0e-3) * shape_func_inc(t%86400/3600, reg2, 1.0e-5)
 
 @inline function divide_type(dvid_type)
     if dvid_type == 1
@@ -50,8 +50,8 @@ end
 
 @kernel function calc_dvid_kernel!(plank, dvid_type, p, t)
     i = @index(Global)
-    @inbounds plank.dvid[i] = calc_division(dvid_type, plank.Sz[i], plank.iS[i], t, 
-                                            p.dvid_stp, p.dvid_reg, p.dvid_stp2, p.dvid_reg2, p.dvid_P) * 
+    @inbounds plank.dvid[i] = calc_division(dvid_type, plank.Sz[i], plank.iS[i], t,
+                                            p.dvid_reg, p.dvid_reg2, p.dvid_P) *
                                             isless(2.0 * p.Cquota * p.Nsuper, plank.Bm[i]) * plank.ac[i]
 end
 function calc_dvid!(plank, dvid_type, p, t, arch)

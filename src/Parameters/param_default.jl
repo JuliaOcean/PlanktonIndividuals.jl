@@ -181,11 +181,9 @@ function phyt_params_default(N::Int64, mode::QuotaMode)
         "R_NC"     => [16/106],  # N:C ratio in cell biomass
         "R_PC"     => [1/106],   # N:C ratio in cell biomass
         "grz_P"    => [0.0],     # Grazing probability per second
-        "dvid_P"   => [5e-5],    # Probability of cell division per second.
+        "dvid_P"   => [1e-4],    # Probability of cell division per second.
         "dvid_type"=> [1],       # The type of cell division, 1:sizer, 2:adder.
-        "dvid_stp" => [6.0],     # Steepness of sigmoidal function
-        "dvid_reg" => [1.9],     # Regulations of cell division (cell size)
-        "dvid_stp2"=> [2.0],     # Steepness of sigmoidal function
+        "dvid_reg" => [2.5],     # Regulations of cell division (cell size)
         "dvid_reg2"=> [12.0],    # Regulations of cell division (clock time)
         "mort_P"   => [5e-5],    # Probability of cell natural death per second
         "mort_reg" => [0.5],     # Regulation of cell natural death
@@ -222,9 +220,7 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "grz_P"            => [0.0],     # Grazing probability per second
         "dvid_P"           => [5e-5],    # Probability of cell division per second.
         "dvid_type"        => [1],       # The type of cell division, 1:sizer, 2:adder.
-        "dvid_stp"         => [6.0],     # Steepness of sigmoidal function
         "dvid_reg"         => [1.9],     # Regulations of cell division (sizer)
-        "dvid_stp2"        => [2.0],     # Steepness of sigmoidal function
         "dvid_reg2"        => [12.0],    # Regulations of cell division (sizer)
         "mort_P"           => [5e-5],    # Probability of cell natural death per second
         "mort_reg"         => [0.5],     # Regulation of cell natural death
