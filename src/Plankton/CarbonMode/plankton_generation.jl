@@ -9,8 +9,8 @@ function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
     data = replace_storage(array_type(arch), rawdata)
 
     param_names=(:Nsuper, :Cquota, :mean, :var, :α, :Φ, :Topt, :Tmax, :Ea, :PCmax, :Chl2C, :respir_a,
-                 :grz_P, :dvid_type, :dvid_P, :dvid_stp, :dvid_reg, :dvid_stp2, :dvid_reg2,
-                 :mort_P, :mort_reg, :TH_ps, :TH_mort, :grazFracC, :mortFracC, :thermal_history)
+                 :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, :mort_P, :mort_reg, :TH_ps, :TH_mort,
+                 :grazFracC, :mortFracC, :thermal_history)
 
     pkeys = collect(keys(params))
     tmp = zeros(length(param_names))
