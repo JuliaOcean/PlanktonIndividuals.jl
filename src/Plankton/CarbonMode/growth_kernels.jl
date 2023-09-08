@@ -75,7 +75,7 @@ end
 ##### track temperature history
 @kernel function calc_thermal_history_kernel!(plank, nuts, p, ΔT)
     i = @index(Global)
-    @inbounds plank.Th[i] = plank.Th[i] * (1.0 - 1e-1 * ΔT/3600) +
+    @inbounds plank.Th[i] = plank.Th[i] * (1.0 - p.T_repair * ΔT/3600) +
                             ΔT/3600 * (nuts.T[i] - p.Topt) * isless(p.Topt, nuts.T[i])
 end
 function calc_thermal_history!(plank, nuts, p, ΔT, arch)
