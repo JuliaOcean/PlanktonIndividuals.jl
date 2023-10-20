@@ -1,16 +1,18 @@
 function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
     rawdata = StructArray(x   = zeros(maxN), y   = zeros(maxN), z   = zeros(maxN),
                           xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN),
-                          iS  = zeros(maxN), Sz  = zeros(maxN), Bm  = zeros(maxN), Chl = zeros(maxN),
-                          gen = zeros(maxN), age = zeros(maxN), ac  = zeros(maxN), idx = zeros(maxN),
-                          PS  = zeros(maxN), resp= zeros(maxN), Th  = zeros(maxN),
+                          iS  = zeros(maxN), Sz  = zeros(maxN),
+                          Bm  = zeros(maxN), Bd  = zeros(maxN), Chl = zeros(maxN),
+                          gen = zeros(maxN), age = zeros(maxN),
+                          ac  = zeros(maxN), idx = zeros(maxN),
+                          PS  = zeros(maxN), BS  = zeros(maxN), RS  = zeros(maxN),
+                          TD  = zeros(maxN), RP  = zeros(maxN),
                           graz= zeros(maxN), mort= zeros(maxN), dvid= zeros(maxN)
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
-    param_names=(:Nsuper, :Cquota, :mean, :var, :α, :Φ, :Topt, :Tmax, :Ea, :PCmax, :Chl2C, :respir_a,
-                 :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, :mort_P, :mort_reg, :TH_ps, :TH_mort,
-                 :grazFracC, :mortFracC, :T_repair, :thermal_history)
+    param_names=(:Nsuper, :Cquota, :mean, :var, :α, :Φ, :Topt, :Tmax, :Ea, :PCmax, :Chl2C, :respir, :f_T2B,
+                 :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, :mort_P, :mort_reg, :grazFracC, :mortFracC, :thermal)
 
     pkeys = collect(keys(params))
     tmp = zeros(length(param_names))

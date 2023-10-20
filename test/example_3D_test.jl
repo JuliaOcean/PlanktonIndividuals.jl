@@ -48,4 +48,4 @@ TCt = TCt + sum(model.individuals.phytos.sp1.data.Bm)
 
 @testset "PlanktonIndividuals 3D tests:" begin
     @test isapprox(TC,TCt; atol=1e2)
-end 
+end

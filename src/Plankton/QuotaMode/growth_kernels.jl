@@ -99,7 +99,7 @@ end
 ##### calculate respiration (mmolC/individual/second)
 @kernel function calc_respir_kernel!(plank, T, p)
     i = @index(Global)
-    @inbounds plank.resp[i] = p.respir_a * plank.Bm[i] * tempFunc(T[i], p) * plank.ac[i]
+    @inbounds plank.resp[i] = p.respir * plank.Bm[i] * tempFunc(T[i], p) * plank.ac[i]
 end
 function calc_respir!(plank, T, p, arch)
     kernel! = calc_respir_kernel!(device(arch), 256, (size(plank.ac,1)))
