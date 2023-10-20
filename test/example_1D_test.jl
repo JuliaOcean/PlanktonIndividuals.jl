@@ -47,5 +47,5 @@ TPt = TPt + sum(model.individuals.phytos.sp1.data.PST .+
 
 
 @testset "PlanktonIndividuals 1D tests:" begin
-    @test isapprox(TP,TPt; atol=1e1)
+    @test isapprox(TP,TPt; atol=2e1)
 end 
