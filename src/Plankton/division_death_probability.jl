@@ -85,7 +85,6 @@ end
 ##### calculate the probability of mortality
 @kernel function calc_mort_kernel!(plank, p)
     i = @index(Global)
-    # @inbounds plank.mort[i] = p.mort_P * (tanh(20.0*(p.mort_reg - plank.Sz[i])) + 1.0) * plank.ac[i]
     @inbounds plank.mort[i] = p.mort_P * shape_func_dec(plank.Sz[i], p.mort_reg, 1.0e-5) * plank.ac[i]
 end
 function calc_mort!(plank, p, arch)
@@ -97,8 +96,7 @@ end
 ##### calculate the probability of mortality caused by thermal exposure
 @kernel function calc_thermal_mort_kernel!(plank, nuts, p)
     i = @index(Global)
-    @inbounds plank.mort[i] = p.mort_P * shape_func_inc(plank.Th[i], p.TH_mort, 1.0e-3) *
-                              plank.ac[i] * isless(p.Tmax, nuts.T[i])
+    @inbounds plank.mort[i] = (1.0 - isless(plank.Bd, plank.Bm)) * plank.ac[i] * isless(p.Tmax, nuts.T[i])
 end
 function calc_thermal_mort!(plank, nuts, p, arch)
     kernel! = calc_thermal_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -109,7 +107,6 @@ end
 ##### calculate the probability of mortality for MMM
 @kernel function calc_MM_mort_kernel!(plank, p)
     i = @index(Global)
-    # @inbounds plank.mort[i] = p.mort_P * (tanh(1.0*(plank.age[i] - p.mort_reg)) + 1.0) * plank.ac[i]
     @inbounds plank.mort[i] = p.mort_P * shape_func_inc(plank.age[i], p.mort_reg, 1e-4) * plank.ac[i]
 end
 function calc_MM_mort!(plank, p, arch)

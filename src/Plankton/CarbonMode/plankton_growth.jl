@@ -1,6 +1,12 @@
 ##### update physiological attributes of each individual
 function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
-    calc_inorganic_uptake!(plank, nuts, p, arch)
+    calc_PS!(plank, nuts, p, arch)
+
+    calc_BS!(plank, nuts.T, p, arch)
+
+    calc_repair!(plank, nuts.T, p, arch)
+
+    calc_thermal_damage!(plank, nuts.T, p, arch)
 
     calc_respir!(plank, nuts.T, p, arch)
 
@@ -8,16 +14,14 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
 
     update_cellsize!(plank, p, arch)
 
-    calc_thermal_history!(plank, nuts, p, ΔT, arch)
-
     ##### probabilities of grazing, mortality, and cell division
     ##### check the probabilities every 10 time steps or 1 hour whichever is shorter
     if t%(ΔT*(min(10,3600÷ΔT))) == 0 
         calc_graz_quadratic!(plank, nuts, p.grz_P, arch)
         calc_dvid!(plank, divide_type(p.dvid_type), p, t, arch)
 
-        ##### thermal mortality (WIP)
-        if p.thermal_history == 1
+        ##### thermal mortality
+        if p.thermal == 1.0
             calc_thermal_mort!(plank, nuts, p, arch)
         else
             calc_mort!(plank, p, arch)

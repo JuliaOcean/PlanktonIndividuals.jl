@@ -3,7 +3,7 @@ function gpu_calc_consume_kernel!(ctsdic, plank, ac, x, y, z, ΔT)
     index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     stride = blockDim().x * gridDim().x
     for i = index:stride:size(ac,1)
-        @inbounds CUDA.@atomic ctsdic[x[i], y[i], z[i]] += (plank.resp[i] - plank.PS[i]) * ΔT * ac[i]
+        @inbounds CUDA.@atomic ctsdic[x[i], y[i], z[i]] += (plank.RS[i] - plank.PS[i]) * ΔT * ac[i]
     end
     return nothing
 end
@@ -13,7 +13,7 @@ function calc_consume!(ctsdic, plank, ac, x, y, z, ΔT, ::GPU)
 end
 function calc_consume!(ctsdic, plank, ac, x, y, z, ΔT, ::CPU)
     for i in 1:size(ac,1)
-        @inbounds ctsdic[x[i], y[i], z[i]] += (plank.resp[i] - plank.PS[i]) * ΔT * ac[i]
+        @inbounds ctsdic[x[i], y[i], z[i]] += (plank.RS[i] - plank.PS[i]) * ΔT * ac[i]
     end
     return nothing
 end

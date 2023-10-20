@@ -176,7 +176,7 @@ function phyt_params_default(N::Int64, mode::QuotaMode)
         "Cqmax"    => [0.4],     # Maximum C quota in cell (mmol C/mmol C)
         "Cqmin"    => [0.1],     # Minimum C quota in cell (mmol C/mmol C)
         "k_mtb"    => [3.5e-5],  # Metabolic rate (per second)
-        "respir_a" => [1.2e-6],  # Respiration rate(per second)
+        "respir"   => [1.2e-6],  # Respiration rate(per second)
         "Chl2N"    => [3.0],     # Maximum Chla:N ratio in phytoplankton
         "R_NC"     => [16/106],  # N:C ratio in cell biomass
         "R_PC"     => [1/106],   # N:C ratio in cell biomass
@@ -205,31 +205,29 @@ end
 
 function phyt_params_default(N::Int64, mode::CarbonMode)
     params=Dict(
-        "Nsuper"           => [1],       # Number of phyto cells each super individual represents
-        "Cquota"           => [1.8e-11], # C quota of phyto cells at size = 1.0
-        "mean"             => [1.2],     # Mean of the normal distribution of initial phyto individuals
-        "var"              => [0.3],     # Variance of the normal distribution of initial phyto individuals
-        "Chl2C"            => [0.10],    # Chla:C ratio in phytoplankton (mgChl/mmolC)
-        "α"                => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
-        "Φ"                => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
-        "Topt"             => [27.0],    # Optimal temperature for growth (C)
-        "Tmax"             => [30.0],    # Maximal temperature for growth (C)
-        "Ea"               => [5.3e4],   # Free energy
-        "PCmax"            => [4.2e-5],  # Maximum primary production rate (per second)
-        "respir_a"         => [1.2e-6],  # Respiration rate(per second)
-        "grz_P"            => [0.0],     # Grazing probability per second
-        "dvid_P"           => [5e-5],    # Probability of cell division per second.
-        "dvid_type"        => [1],       # The type of cell division, 1:sizer, 2:adder.
-        "dvid_reg"         => [1.9],     # Regulations of cell division (sizer)
-        "dvid_reg2"        => [12.0],    # Regulations of cell division (sizer)
-        "mort_P"           => [5e-5],    # Probability of cell natural death per second
-        "mort_reg"         => [0.5],     # Regulation of cell natural death
-        "TH_ps"            => [100.0],   # Maximal thermal history for growth rate
-        "TH_mort"          => [100.0],   # Maximal thermal history for mortality
-        "grazFracC"        => [0.7],     # Fraction goes into dissolved organic pool
-        "mortFracC"        => [0.5],     # Fraction goes into dissolved organic pool
-        "thermal_history"  => [0],       # thermal history, 1 for on, 0 for off
-        "T_repair"         => [1.0e-2],  # thermal history, 1 for on, 0 for off
+        "Nsuper"    => [1],       # Number of phyto cells each super individual represents
+        "Cquota"    => [1.8e-11], # C quota of phyto cells at size = 1.0
+        "mean"      => [1.2],     # Mean of the normal distribution of initial phyto individuals
+        "var"       => [0.3],     # Variance of the normal distribution of initial phyto individuals
+        "Chl2C"     => [0.10],    # Chla:C ratio in phytoplankton (mgChl/mmolC)
+        "α"         => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
+        "Φ"         => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
+        "Topt"      => [27.0],    # Optimal temperature for growth (C)
+        "Tmax"      => [30.0],    # Maximal temperature for growth (C)
+        "Ea"        => [5.3e4],   # Free energy
+        "PCmax"     => [4.2e-5],  # Maximum primary production rate (per second)
+        "respir"    => [1.2e-6],  # Respiration rate(per second)
+        "f_T2B"     => [1.0e-16], # Thermal damage rate (mmolC/K/s)
+        "grz_P"     => [0.0],     # Grazing probability per second
+        "dvid_P"    => [5e-5],    # Probability of cell division per second.
+        "dvid_type" => [1],       # The type of cell division, 1:sizer, 2:adder.
+        "dvid_reg"  => [1.9],     # Regulations of cell division (sizer)
+        "dvid_reg2" => [12.0],    # Regulations of cell division (sizer)
+        "mort_P"    => [5e-5],    # Probability of cell natural death per second
+        "mort_reg"  => [0.5],     # Regulation of cell natural death
+        "grazFracC" => [0.7],     # Fraction goes into dissolved organic pool
+        "mortFracC" => [0.5],     # Fraction goes into dissolved organic pool
+        "thermal"   => [1.0],     # thermal damage, 1 for on, 0 for off
     )
 
     if N == 1
