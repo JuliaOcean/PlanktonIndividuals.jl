@@ -101,9 +101,9 @@ function tracer_avail_diags()
 end
 
 function plank_avail_diags(mode::AbstractMode)
-    plank_avail = (:num, :graz, :mort, :dvid, :PS, :resp, :Bm, :Chl, :Th)
+    plank_avail = (:num, :graz, :mort, :dvid, :PS, :Bm, :Chl)
     if isa(mode, CarbonMode)
-        nothing
+        plank_avail = (:num, :graz, :mort, :dvid, :PS, :BS, :RP, :TD, :RS, :Bm, :Bd, :Chl)
     elseif isa(mode, QuotaMode)
         plank_avail = (:num, :graz, :mort, :dvid, :PS, :BS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :exu, :Bm, :Cq, :Nq, :Pq, :Chl)
     elseif isa(mode, MacroMolecularMode)
