@@ -14,10 +14,10 @@ end
     return min(1.0, k/OGT_rate)
 end
 
-##### allocation of functional biomass between biosynthesis and repair
-@inline function gamma_alloc(Bm, Bd)
-    # γ = max(0.0, temp - p.Topt) / (p.Tmax - p.Topt)
-    γ = Bd / max(1.0e-30, Bm)
+##### allocation of functional biomass to repair
+##### only functional when damaged biomass is greater than 0.0
+@inline function gamma_alloc(temp, Bd, p)
+    γ = max(0.0, temp - p.Topt) / (p.Tmax - p.Topt) * isless(0.0, Bd)
     γ = min(1.0, γ)
     return γ
 end
@@ -48,7 +48,7 @@ end
 ##### calculate repair rate (mmolC/individual/second)
 @kernel function calc_repair_kernel!(plank, T, p)
     i = @index(Global)
-    @inbounds plank.RP[i] = plank.PS[i] * gamma_alloc(plank.Bm[i], plank.Bd[i])
+    @inbounds plank.RP[i] = plank.PS[i] * gamma_alloc(T[i], plank.Bd[i], p)
 end
 function calc_repair!(plank, T, p, arch)
     kernel! = calc_repair_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -59,7 +59,7 @@ end
 ##### calculate biosynthesis rate (mmolC/individual/second)
 @kernel function calc_BS_kernel!(plank, T, p)
     i = @index(Global)
-    @inbounds plank.BS[i] = plank.PS[i] * (1.0 - gamma_alloc(plank.Bm[i], plank.Bd[i]))
+    @inbounds plank.BS[i] = plank.PS[i] * (1.0 - gamma_alloc(T[i], plank.Bd[i], p))
 end
 function calc_BS!(plank, T, p, arch)
     kernel! = calc_BS_kernel!(device(arch), 256, (size(plank.ac,1)))
