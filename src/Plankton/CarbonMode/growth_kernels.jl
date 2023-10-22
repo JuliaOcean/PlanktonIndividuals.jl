@@ -70,7 +70,10 @@ end
 ##### calculate thermal damage rate (mmolC/individual/second)
 @kernel function calc_thermal_damage_kernel!(plank, T, p)
     i = @index(Global)
-    @inbounds plank.TD[i] = (T[i] - p.Topt) * p.f_T2B * isless(p.Topt, T[i]) * isless(0.0, p.thermal)
+    @inbounds plank.TD[i] = (T[i] - p.Topt) * p.f_T2B *
+                            isless(p.Topt, T[i]) *
+                            isless(plank.Bd[i], plank.Bm[i]) *
+                            isless(0.0, p.thermal)
 end
 function calc_thermal_damage!(plank, T, p, arch)
     kernel! = calc_thermal_damage_kernel!(device(arch), 256, (size(plank.ac, 1)))
