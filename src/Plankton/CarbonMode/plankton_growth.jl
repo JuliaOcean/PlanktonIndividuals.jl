@@ -6,7 +6,7 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
 
     calc_repair!(plank, nuts.T, p, arch)
 
-    calc_thermal_damage!(plank, nuts.T, p, arch)
+    calc_thermal_damage!(plank, nuts.T, p, ΔT, arch)
 
     calc_respir!(plank, nuts.T, p, arch)
 

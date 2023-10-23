@@ -68,16 +68,18 @@ function calc_BS!(plank, T, p, arch)
 end
 
 ##### calculate thermal damage rate (mmolC/individual/second)
-@kernel function calc_thermal_damage_kernel!(plank, T, p)
+##### keep thermal damage between 0.0 and healthy biomass (Bm-Bd)
+@kernel function calc_thermal_damage_kernel!(plank, T, p, ΔT)
     i = @index(Global)
     @inbounds plank.TD[i] = (T[i] - p.Topt) * p.f_T2B *
                             isless(p.Topt, T[i]) *
                             isless(plank.Bd[i], plank.Bm[i]) *
                             isless(0.0, p.thermal)
+    @inbounds plank.TD[i] = max(0.0, min(plank.TD[i], (plank.Bm[i] - plank.Bd[i]) / ΔT))
 end
-function calc_thermal_damage!(plank, T, p, arch)
+function calc_thermal_damage!(plank, T, p, ΔT, arch)
     kernel! = calc_thermal_damage_kernel!(device(arch), 256, (size(plank.ac, 1)))
-    kernel!(plank, T, p)
+    kernel!(plank, T, p, ΔT)
     return nothing
 end
 
@@ -95,9 +97,8 @@ end
 ##### update C quotas
 @kernel function update_quotas_kernel!(plank, ΔT)
     i = @index(Global)
-    @inbounds plank.Bm[i]  += (plank.BS[i] - plank.RS[i] - plank.TD[i] + plank.RP[i]) * ΔT
+    @inbounds plank.Bm[i]  += (plank.BS[i] - plank.RS[i]) * ΔT
     @inbounds plank.Bd[i]  += (plank.TD[i] - plank.RP[i]) * ΔT
-    @inbounds plank.age[i] += ΔT / 3600.0 * plank.ac[i]
 end
 function update_quotas!(plank, ΔT, arch)
     kernel! = update_quotas_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -110,6 +111,7 @@ end
     i = @index(Global)
     @inbounds plank.Sz[i]  = plank.Bm[i] / (p.Cquota * p.Nsuper)
     @inbounds plank.Chl[i] = plank.Bm[i] * p.Chl2C
+    @inbounds plank.age[i] = plank.age[i] + ΔT / 3600.0 * plank.ac[i]
 end
 function update_cellsize!(plank, p, arch)
     kernel! = update_cellsize_kernel!(device(arch), 256, (size(plank.ac,1)))
