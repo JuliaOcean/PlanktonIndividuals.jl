@@ -99,6 +99,7 @@ end
     i = @index(Global)
     @inbounds plank.Bm[i]  += (plank.BS[i] - plank.RS[i]) * ΔT
     @inbounds plank.Bd[i]  += (plank.TD[i] - plank.RP[i]) * ΔT
+    @inbounds plank.age[i] += ΔT / 3600.0 * plank.ac[i]
 end
 function update_quotas!(plank, ΔT, arch)
     kernel! = update_quotas_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -111,7 +112,6 @@ end
     i = @index(Global)
     @inbounds plank.Sz[i]  = plank.Bm[i] / (p.Cquota * p.Nsuper)
     @inbounds plank.Chl[i] = plank.Bm[i] * p.Chl2C
-    @inbounds plank.age[i] = plank.age[i] + ΔT / 3600.0 * plank.ac[i]
 end
 function update_cellsize!(plank, p, arch)
     kernel! = update_cellsize_kernel!(device(arch), 256, (size(plank.ac,1)))
