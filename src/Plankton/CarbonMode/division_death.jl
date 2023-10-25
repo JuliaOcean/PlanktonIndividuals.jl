@@ -83,6 +83,5 @@ function divide!(plank, deactive_ind, arch::Architecture)
     get_tind!(plank.idx, plank.dvid, Int.(con_ind), deactive_ind, arch)
     copy_daughter_individuals!(plank, plank.dvid, Int.(plank.idx), arch)
     divide_to_half!(plank, arch)
-    # println("time step ends")
     return nothing
 end
