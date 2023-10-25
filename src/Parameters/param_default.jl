@@ -217,7 +217,7 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "Ea"        => [5.3e4],   # Free energy
         "PCmax"     => [4.2e-5],  # Maximum primary production rate (per second)
         "respir"    => [1.2e-6],  # Respiration rate(per second)
-        "f_T2B"     => [1.0e-16], # Thermal damage rate (mmolC/K/s)
+        "f_T2B"     => [2.7e-6],  # Thermal damage rate (1.0/K/s)
         "grz_P"     => [0.0],     # Grazing probability per second
         "dvid_P"    => [5e-5],    # Probability of cell division per second.
         "dvid_type" => [1],       # The type of cell division, 1:sizer, 2:adder.
