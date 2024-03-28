@@ -23,11 +23,12 @@ makedocs(;
              "Examples"  => "examples.md",
              "Benchmarks"  => "benchmarks.md",
              "Library" => "library.md",
-             "Function index" => "function_index.md"
-             ],
+             "Function index" => "function_index.md" ],
+         warnonly = [:cross_references,:missing_docs],
+         doctest = false,
          repo="https://github.com/JuliaOcean/PlanktonIndividuals.jl/blob/{commit}{path}#L{line}",
          sitename = "PlanktonIndividuals.jl",
-         authors="ZhenWu <zhenwu@mit.edu>",
+         authors="Zhen Wu <zhenwu@mit.edu>",
 )
 
 for i in examples
@@ -35,7 +36,7 @@ for i in examples
     fil_out=joinpath(@__DIR__,"build", "examples",i[1:end-2]*"html")
     PlutoSliderServer.export_notebook(fil_in)
     mv(fil_in[1:end-2]*"html",fil_out)
-    cp(fil_in,fil_out[1:end-4]*"jl")
+    #cp(fil_in,fil_out[1:end-4]*"jl")
 end
 
 deploydocs(repo="github.com/JuliaOcean/PlanktonIndividuals.jl.git")
