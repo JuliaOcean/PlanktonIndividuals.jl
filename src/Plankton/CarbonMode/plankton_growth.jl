@@ -22,7 +22,7 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
 
         ##### thermal mortality
         if p.thermal == 1.0
-            calc_thermal_mort!(plank, nuts, p, arch)
+            calc_thermal_mort!(plank, arch)
         else
             calc_mort!(plank, p, arch)
         end
