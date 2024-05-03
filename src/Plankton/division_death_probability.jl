@@ -94,9 +94,10 @@ function calc_mort!(plank, p, arch)
 end
 
 ##### calculate the probability of mortality caused by thermal exposure
+##### when damaged biomass is greater than 99% of total biomass
 @kernel function calc_thermal_mort_kernel!(plank, nuts, p)
     i = @index(Global)
-    @inbounds plank.mort[i] = (1.0 - isless(plank.Bd, plank.Bm)) * plank.ac[i] * isless(p.Tmax, nuts.T[i])
+    @inbounds plank.mort[i] = (1.0 - isless(plank.Bd, plank.Bm*0.99)) * plank.ac[i]
 end
 function calc_thermal_mort!(plank, nuts, p, arch)
     kernel! = calc_thermal_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
