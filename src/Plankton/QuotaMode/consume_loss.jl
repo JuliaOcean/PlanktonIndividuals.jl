@@ -1,5 +1,5 @@
 ##### deal with nutrients uptake
-function calc_consume_kernel!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, plank, ac, x, y, z, ΔT)
+@kernel function calc_consume_kernel!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, plank, ac, x, y, z, ΔT)
     i = @index(Global)
     @inbounds KernelAbstractions.@atomic ctsdic[x[i], y[i], z[i]] += (plank.resp[i] - plank.PS[i]) * ΔT * ac[i]
     @inbounds KernelAbstractions.@atomic ctsdoc[x[i], y[i], z[i]] += (plank.exu[i] - plank.VDOC[i]) * ΔT * ac[i]
@@ -14,7 +14,7 @@ function calc_consume!(ctsdic, ctsdoc, ctsnh4, ctsno3, ctspo4, plank, ac, x, y, 
 end
 
 ##### deal with grazed or dead individuals
-function calc_loss_kernel!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank, ac, x, y, z,
+@kernel function calc_loss_kernel!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank, ac, x, y, z,
                            loss, lossFracC, lossFracN, lossFracP, R_NC, R_PC)
     i = @index(Global)
     @inbounds KernelAbstractions.@atomic ctsdoc[x[i], y[i], z[i]] += (plank.Bm[i] + plank.Cq[i]) * lossFracC * ac[i] * loss[i]

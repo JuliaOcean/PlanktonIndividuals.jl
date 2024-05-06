@@ -1,7 +1,7 @@
 #####
 ##### record diagnostics of plankton processes at each time step
 #####
-function diags_proc_kernel!(diags_proc, proc, ac, x, y, z)
+@kernel function diags_proc_kernel!(diags_proc, proc, ac, x, y, z)
     i = @index(Global)
     @inbounds KernelAbstractions.@atomic diags_proc[x[i], y[i], z[i]] += proc[i] * ac[i]
 end

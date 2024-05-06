@@ -39,7 +39,7 @@ function find_NPT!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop, arch::
 end
 
 ##### calculate Chla and individual counts based on the status of plankton individuals
-function acc_counts_kernel!(ctsChl, ctspop, Chl, ac, x, y, z)
+@kernel function acc_counts_kernel!(ctsChl, ctspop, Chl, ac, x, y, z)
     i = @index(Global)
     @inbounds KernelAbstractions.@atomic ctsChl[x[i], y[i], z[i]] += Chl[i] * ac[i]
     @inbounds KernelAbstractions.@atomic ctspop[x[i], y[i], z[i]] += ac[i]
