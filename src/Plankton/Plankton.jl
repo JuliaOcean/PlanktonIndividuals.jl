@@ -9,7 +9,7 @@ export find_inds!, find_NPT!, acc_counts!, calc_par!
 using CUDA
 using StructArrays
 using Random
-using KernelAbstractions: @index, @kernel
+using KernelAbstractions
 using KernelAbstractions.Extras.LoopInfo: @unroll
 
 using PlanktonIndividuals.Architectures: device, Architecture, GPU, CPU, rng_type
