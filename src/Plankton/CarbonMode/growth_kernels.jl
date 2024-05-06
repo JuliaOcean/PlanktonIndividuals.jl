@@ -48,24 +48,24 @@ function calc_PS!(plank, nuts, p, arch::Architecture)
 end
 
 ##### calculate repair rate (mmolC/individual/second)
-@kernel function calc_repair_kernel!(plank, T, p)
+@kernel function calc_repair_kernel!(plank)
     i = @index(Global)
     @inbounds plank.RP[i] = plank.PS[i] * gamma_alloc(plank.Bm[i], plank.Bd[i])
 end
-function calc_repair!(plank, T, p, arch)
+function calc_repair!(plank, arch)
     kernel! = calc_repair_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, T, p)
+    kernel!(plank)
     return nothing
 end
 
 ##### calculate biosynthesis rate (mmolC/individual/second)
-@kernel function calc_BS_kernel!(plank, T, p)
+@kernel function calc_BS_kernel!(plank)
     i = @index(Global)
     @inbounds plank.BS[i] = plank.PS[i] * (1.0 - gamma_alloc(plank.Bm[i], plank.Bd[i]))
 end
-function calc_BS!(plank, T, p, arch)
+function calc_BS!(plank, arch)
     kernel! = calc_BS_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, T, p)
+    kernel!(plank)
     return nothing
 end
 
