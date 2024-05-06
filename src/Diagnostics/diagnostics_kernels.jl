@@ -1,22 +1,14 @@
 #####
 ##### record diagnostics of plankton processes at each time step
 #####
-
-function gpu_diags_proc_kernel!(diags_proc, proc, ac, x, y, z)
-    index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
-    stride = blockDim().x * gridDim().x
-    for i = index:stride:size(ac,1)
-        @inbounds CUDA.@atomic diags_proc[x[i], y[i], z[i]] += proc[i] * ac[i]
-    end
+function diags_proc_kernel!(diags_proc, proc, ac, x, y, z)
+    i = @index(Global)
+    @inbounds KernelAbstractions.@atomic diags_proc[x[i], y[i], z[i]] += proc[i] * ac[i]
 end
-function diags_proc!(diags_proc, proc, ac, x, y, z, ::GPU)
-    @cuda threads=256 blocks=ceil(Int, size(ac,1)/256) gpu_diags_proc_kernel!(diags_proc, proc, ac, x, y, z)
+function diags_proc!(diags_proc, proc, ac, x, y, z, arch)
+    kernel! = diags_proc_kernel!(device(arch), 256, (size(ac,1)))
+    kernel!(diags_proc, proc, ac, x, y, z)
     return nothing 
-end
-function diags_proc!(diags_proc, proc, ac, x, y, z, ::CPU)
-    for i in 1:size(ac,1)
-        @inbounds diags_proc[x[i], y[i], z[i]] += proc[i] * ac[i]
-    end
 end
 
 function diags_spcs!(diags_sp, plank, ac, x, y, z, mode::AbstractMode, arch::Architecture)

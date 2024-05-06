@@ -39,25 +39,15 @@ function find_NPT!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop, arch::
 end
 
 ##### calculate Chla and individual counts based on the status of plankton individuals
-@inline function gpu_acc_counts_kernel!(ctsChl, ctspop, Chl, ac, x, y, z)
-    index = (blockIdx().x - 1) * blockDim().x + threadIdx().x
-    stride = blockDim().x * gridDim().x
-    for i = index:stride:size(ac,1)
-        @inbounds CUDA.@atomic ctsChl[x[i], y[i], z[i]] += Chl[i] * ac[i]
-        @inbounds CUDA.@atomic ctspop[x[i], y[i], z[i]] += ac[i]
-    end
-    return nothing
+function acc_counts_kernel!(ctsChl, ctspop, Chl, ac, x, y, z)
+    i = @index(Global)
+    @inbounds KernelAbstractions.@atomic ctsChl[x[i], y[i], z[i]] += Chl[i] * ac[i]
+    @inbounds KernelAbstractions.@atomic ctspop[x[i], y[i], z[i]] += ac[i]
 end
-function acc_counts!(ctsChl, ctspop, Chl, ac, x, y, z, ::GPU)
-    @cuda threads=256 blocks=ceil(Int, size(ac,1)/256) gpu_acc_counts_kernel!(ctsChl, ctspop, Chl, ac, x, y, z)
+function acc_counts!(ctsChl, ctspop, Chl, ac, x, y, z, arch)
+    kernel! = acc_counts_kernel!(device(arch), 256, (size(ac,1)))
+    kernel!(ctsChl, ctspop, Chl, ac, x, y, z)
     return nothing 
-end
-function acc_counts!(ctsChl, ctspop, Chl, ac, x, y, z, ::CPU)
-    for i in 1:size(ac,1)
-        @inbounds ctsChl[x[i], y[i], z[i]] += Chl[i] * ac[i]
-        @inbounds ctspop[x[i], y[i], z[i]] += ac[i]
-    end
-    return nothing
 end
 
 ##### calculate PAR field based on Chla field and depth
