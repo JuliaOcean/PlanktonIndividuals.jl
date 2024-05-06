@@ -7,7 +7,7 @@ export tracer_avail_diags, plank_avail_diags
 using CUDA
 using KernelAbstractions
 
-using PlanktonIndividuals.Architectures
+using PlanktonIndividuals.Architectures: device, Architecture, GPU, CPU, rng_type
 using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Fields
 
