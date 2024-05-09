@@ -5,9 +5,9 @@
 @inline get_zf_index(z) = z + 1
 
 ##### 1-based indexing for grid centers (excluding halo regions)
-@inline get_xc_index(x) = x + 0.5 
-@inline get_yc_index(y) = y + 0.5 
-@inline get_zc_index(z) = z + 0.5 
+@inline get_xc_index(x) = x + 0.5f0 
+@inline get_yc_index(y) = y + 0.5f0 
+@inline get_zc_index(z) = z + 0.5f0 
 
 ##### trilinear interpolation
 @inline ψ₀₀₀(xd, yd, zd) = (1 - xd) * (1 - yd) * (1 - zd)

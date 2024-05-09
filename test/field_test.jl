@@ -110,16 +110,17 @@ end
 function test_boundary_conditions()
     grid = RectilinearGrid(size = (4, 4, 4), x = (0,32), y = (0,32), z = (0,-32))
     model = PlanktonModel(CPU(), grid; mode = CarbonMode()) 
+    FT = model.FT
     set_bc!(model; tracer = :DIC, pos = :west, bc_value = 0.1)
-    @test model.nutrients.DIC.bc.west == 0.1
+    @test model.nutrients.DIC.bc.west == FT(0.1)
     set_bc!(model; tracer = :DIC, pos = :west, bc_value = ones(4,4))
-    @test model.nutrients.DIC.bc.west == ones(4,4)
+    @test model.nutrients.DIC.bc.west == ones(FT, 4,4)
     set_bc!(model; tracer = :DIC, pos = :west, bc_value = ones(4,4,10))
-    @test model.nutrients.DIC.bc.west == ones(4,4,10)
+    @test model.nutrients.DIC.bc.west == ones(FT, 4,4,10)
 
     Gcs = nutrients_init(CPU(), grid)
     apply_bcs!(Gcs, model.nutrients, model.grid, 10, 1, CPU())
-    @test Gcs.DIC.data[3,3:6,3:6] == ones(4,4) ./ 8.0
+    @test Gcs.DIC.data[3,3:6,3:6] == ones(FT, 4,4) ./ FT(8.0)
 
 end
 

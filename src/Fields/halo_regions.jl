@@ -19,9 +19,9 @@
 @inline  fill_halo_north_vel!(c, H::Int, N::Int, ::Bounded)  = @views @. c[:, N+H+2:N+2H, :] = c[:, N+H+1:N+H+1, :]
 @inline fill_halo_bottom_vel!(c, H::Int, N::Int, ::Bounded)  = @views @. c[:, :, N+H+2:N+2H] = c[:, :, N+H+1:N+H+1]
 
-@inline   fill_halo_east_Gc!(c, H::Int, N::Int, ::Bounded) = @views @. c[N+H+1:N+2H, :, :] = 0.0
-@inline  fill_halo_north_Gc!(c, H::Int, N::Int, ::Bounded) = @views @. c[:, N+H+1:N+2H, :] = 0.0
-@inline fill_halo_bottom_Gc!(c, H::Int, N::Int, ::Bounded) = @views @. c[:, :, N+H+1:N+2H] = 0.0
+@inline   fill_halo_east_Gc!(c, H::Int, N::Int, ::Bounded) = @views @. c[N+H+1:N+2H, :, :] = 0.0f0
+@inline  fill_halo_north_Gc!(c, H::Int, N::Int, ::Bounded) = @views @. c[:, N+H+1:N+2H, :] = 0.0f0
+@inline fill_halo_bottom_Gc!(c, H::Int, N::Int, ::Bounded) = @views @. c[:, :, N+H+1:N+2H] = 0.0f0
 
 fill_halo_east_vel!(c, H::Int, N::Int, TX::Periodic) = fill_halo_east!(c, H, N, TX)
 fill_halo_north_vel!(c, H::Int, N::Int, TY::Periodic) = fill_halo_north!(c, H, N, TY)

@@ -126,18 +126,21 @@ function validate_velocity(sim::PlanktonSimulation, g::AbstractGrid{FT, TX, TY, 
     end
 end
 
-function set_vels_fields!(sim::PlanktonSimulation, uv, vv, wv) 
-    sim.input.vels = (u = uv, v = vv, w = wv)
+function set_vels_fields!(sim::PlanktonSimulation, uv, vv, wv)
+    FT = sim.model.FT 
+    sim.input.vels = (u = FT.(uv), v = FT.(vv), w = FT.(wv))
     validate_velocity(sim, sim.model.grid)
     return nothing
 end
 function set_PARF_fields!(sim::PlanktonSimulation, PARF) 
-    sim.input.PARF = PARF
+    FT = sim.model.FT 
+    sim.input.PARF = FT.(PARF)
     validate_PARF(sim, sim.model.grid)
     return nothing
 end
 function set_temp_fields!(sim::PlanktonSimulation, temp) 
-    sim.input.temp = temp
+    FT = sim.model.FT 
+    sim.input.temp = FT.(temp)
     validate_temp(sim, sim.model.grid)
     return nothing
 end

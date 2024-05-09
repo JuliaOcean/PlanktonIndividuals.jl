@@ -1,17 +1,17 @@
-struct RectilinearGrid{FT, TX, TY, TZ} <: AbstractGrid{FT, TX, TY, TZ}
+struct RectilinearGrid{FT, TX, TY, TZ, V, A3} <: AbstractGrid{FT, TX, TY, TZ}
     # corrdinates at cell centers, unit: meter
-    xC::Vector{FT}
-    yC::Vector{FT}
-    zC::Vector{FT}
+    xC::V
+    yC::V
+    zC::V
     # corrdinates at cell faces, unit: meter
-    xF::Vector{FT}
-    yF::Vector{FT}
-    zF::Vector{FT}
+    xF::V
+    yF::V
+    zF::V
     # grid spacing, unit: meter
     Δx::FT
     Δy::FT
-    dzC::Vector{FT}
-    dzF::Vector{FT}
+    dzC::V
+    dzF::V
     # number of grid points
     Nx::Int
     Ny::Int
@@ -21,7 +21,7 @@ struct RectilinearGrid{FT, TX, TY, TZ} <: AbstractGrid{FT, TX, TY, TZ}
     Hy::Int
     Hz::Int
     # landmask to indicate where is the land
-    landmask::AbstractArray{FT,3}
+    landmask::A3
 end
 
 """
@@ -96,7 +96,7 @@ function RectilinearGrid(;size, x, y, z,
     dzC = zeros(FT, Nz+2Hz)
 
     zF[1+Hz:Nz+Hz+1] .= FT.(z)
-    zC[1+Hz:Nz+Hz] .= (zF[1+Hz:Nz+Hz] .+ zF[2+Hz:Nz+Hz+1]) ./ 2
+    zC[1+Hz:Nz+Hz] .= (zF[1+Hz:Nz+Hz] .+ zF[2+Hz:Nz+Hz+1]) ./ 2.0f0
     dzF[1+Hz:Nz+Hz] .= zF[1+Hz:Nz+Hz] .- zF[2+Hz:Nz+Hz+1]
     dzC[1+Hz:Nz+Hz-1] .= zC[1+Hz:Nz+Hz-1] .- zC[2+Hz:Nz+Hz]
 
@@ -117,7 +117,7 @@ function RectilinearGrid(;size, x, y, z,
 
     landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, FT, TX, TY)
 
-    return RectilinearGrid{FT, TX, TY, TZ}(
+    return RectilinearGrid{FT, TX, TY, TZ, typeof(xF), typeof(landmask)}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, dzC, dzF, Nx, Ny, Nz, Hx, Hy, Hz, landmask)
 end
 

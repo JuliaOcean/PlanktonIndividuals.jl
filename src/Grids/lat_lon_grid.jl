@@ -1,30 +1,30 @@
-struct LatLonGrid{FT, TX, TY, TZ} <: AbstractGrid{FT, TX, TY, TZ}
+struct LatLonGrid{FT, TX, TY, TZ, V, A2, A3} <: AbstractGrid{FT, TX, TY, TZ}
     # corrdinates at cell centers, unit: degree
-    xC::Vector{FT}
-    yC::Vector{FT}
+    xC::V
+    yC::V
     # corrdinates at cell centers, unit: meter
-    zC::Vector{FT}
+    zC::V
     # corrdinates at cell faces, unit: degree
-    xF::Vector{FT}
-    yF::Vector{FT}
+    xF::V
+    yF::V
     # corrdinates at cell faces, unit: meter
-    zF::Vector{FT}
+    zF::V
     # grid spacing, unit: degree
     Δx::FT
     Δy::FT
     # grid spacing from center to center, unit: meter
-    dxC::AbstractArray{FT,2}
-    dyC::AbstractArray{FT,2}
-    dzC::Vector{FT}
+    dxC::A2
+    dyC::A2
+    dzC::V
     # grid spacing from face to face, unit: meter
-    dxF::AbstractArray{FT,2}
-    dyF::AbstractArray{FT,2}
-    dzF::Vector{FT}
+    dxF::A2
+    dyF::A2
+    dzF::V
     # areas and volume, unit: m² or m³
-    Ax::AbstractArray{FT,3}
-    Ay::AbstractArray{FT,3}
-    Az::AbstractArray{FT,2}
-    Vol::AbstractArray{FT,3}
+    Ax::A3
+    Ay::A3
+    Az::A2
+    Vol::A3
     # number of grid points
     Nx::Int
     Ny::Int
@@ -34,7 +34,7 @@ struct LatLonGrid{FT, TX, TY, TZ} <: AbstractGrid{FT, TX, TY, TZ}
     Hy::Int
     Hz::Int
     # landmask to indicate where is the land
-    landmask::AbstractArray{FT,3}
+    landmask::A3
 end
 
 """
@@ -119,7 +119,7 @@ function LatLonGrid(;size, lat, lon, z,
     Vol = zeros(FT, Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
 
     zF[1+Hz:Nz+Hz+1] .= FT.(z)
-    zC[1+Hz:Nz+Hz] .= (zF[1+Hz:Nz+Hz] .+ zF[2+Hz:Nz+Hz+1]) ./ 2
+    zC[1+Hz:Nz+Hz] .= (zF[1+Hz:Nz+Hz] .+ zF[2+Hz:Nz+Hz+1]) ./ 2.0f0
     dzF[1+Hz:Nz+Hz] .= zF[1+Hz:Nz+Hz] .- zF[2+Hz:Nz+Hz+1]
     dzC[1+Hz:Nz+Hz-1] .= zC[1+Hz:Nz+Hz-1] .- zC[2+Hz:Nz+Hz]
 
@@ -166,7 +166,7 @@ function LatLonGrid(;size, lat, lon, z,
 
     landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, FT, TX, TY)
 
-    return LatLonGrid{FT, TX, TY, TZ}(
+    return LatLonGrid{FT, TX, TY, TZ, typeof(xF), typeof(dxC), typeof(Vol)}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, dxC, dyC, dzC, dxF, dyF, dzF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz, landmask)
 end
 
@@ -217,8 +217,8 @@ function LoadLatLonGrid(;grid_info, size, lat, lon,
     xF = collect(FT, range(lon₁ - Hx * Δx, lon₁ + (Nx + Hx - 1) * Δx, length = Nx + 2 * Hx))
     yF = collect(FT, range(lat₁ - Hy * Δy, lat₁ + (Ny + Hy - 1) * Δy, length = Ny + 2 * Hy))
 
-    xC = collect(FT, range(lon₁ + (0.5 - Hx) * Δx, lon₁ + (Nx + Hx - 0.5) * Δx, length = Nx + 2 * Hx))
-    yC = collect(FT, range(lat₁ + (0.5 - Hy) * Δy, lat₁ + (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy))
+    xC = collect(FT, range(lon₁ + (0.5f0 - Hx) * Δx, lon₁ + (Nx + Hx - 0.5f0) * Δx, length = Nx + 2 * Hx))
+    yC = collect(FT, range(lat₁ + (0.5f0 - Hy) * Δy, lat₁ + (Ny + Hy - 0.5f0) * Δy, length = Ny + 2 * Hy))
 
     zF = zeros(FT, Nz+2Hz)
     zC = zeros(FT, Nz+2Hz)
@@ -239,7 +239,7 @@ function LoadLatLonGrid(;grid_info, size, lat, lon,
     zF[1+Hz:Nz+Hz+1] = FT.(grid_info.RF)
     zC[1+Hz:Nz+Hz] = FT.(grid_info.RC)
     dzF[1+Hz:Nz+Hz] = FT.(grid_info.DRF)
-    dzC[1+Hz:Nz+Hz] = FT.(grid_info.DRC); dzC[1+Hz] *= 2.0 # First laryer only has half of the grid
+    dzC[1+Hz:Nz+Hz] = FT.(grid_info.DRC);  dzC[1+Hz] *= 2.0f0 # First laryer only has half of the grid
     dxC[1+Hx:Nx+Hx, 1+Hy:Ny+Hy] = FT.(grid_info.DXC)
     dxF[1+Hx:Nx+Hx, 1+Hy:Ny+Hy] = FT.(grid_info.DXG)
     dyC[1+Hx:Nx+Hx, 1+Hy:Ny+Hy] = FT.(grid_info.DYC)
@@ -304,7 +304,7 @@ function LoadLatLonGrid(;grid_info, size, lat, lon,
 
     landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, FT, TX, TY)
 
-    return LatLonGrid{FT, TX, TY, TZ}(
+    return LatLonGrid{FT, TX, TY, TZ, typeof(xF), typeof(dxC), typeof(Vol)}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, dxC, dyC, dzC, dxF, dyF, dzF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz, landmask)
 end
 

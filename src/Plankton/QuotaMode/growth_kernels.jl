@@ -1,16 +1,16 @@
 ##### temperature function for photosynthesis
 @inline function tempFunc_PS(temp, p)
-    k = exp(-p.Ea/(8.3145*(temp+273.15)))*(1.0-exp(temp - p.Tmax))
-    k = max(0.0, k)
-    OGT_rate = exp(-p.Ea/(8.3145*(p.Topt+273.15)))
+    k = exp(-p.Ea/(8.3145f0*(temp+273.15f0)))*(1.0f0-exp(temp - p.Tmax))
+    k = max(0.0f0, k)
+    OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
     return k/OGT_rate
 end
 
 ##### temperature function for nutrient uptakes
 @inline function tempFunc(temp, p)
-    k = exp(-p.Ea/(8.3145*(temp+273.15)))
-    k = max(0.0, k)
-    OGT_rate = exp(-p.Ea/(8.3145*(p.Topt+273.15)))
+    k = exp(-p.Ea/(8.3145f0*(temp+273.15f0)))
+    k = max(0.0f0, k)
+    OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
     return k/OGT_rate
 end
 
@@ -18,26 +18,26 @@ end
 @inline function calc_PS(par, temp, Chl, Bm, p)
     αI  = par * p.α * p.Φ
     PCm = p.PCmax * tempFunc_PS(temp, p)
-    PS  = PCm * (1.0 - exp(-αI / max(1.0e-30, PCm) * Chl / max(1.0e-30, Bm))) * Bm
+    PS  = PCm * (1.0f0 - exp(-αI / max(1.0f-30, PCm) * Chl / max(1.0f-30, Bm))) * Bm
     return PS
 end
 
 ##### calculate nutrient uptake rate (mmolN/individual/second)
 @inline function calc_NP_uptake(NH4, NO3, PO4, temp, Cq, Nq, Pq, Bm, p, ac)
-    Qn = (Nq + Bm * p.R_NC)/max(1.0e-30, Bm + Cq)
-    Qp = (Pq + Bm * p.R_PC)/max(1.0e-30, Bm + Cq)
-    regQN = shape_func_dec(Qn, p.Nqmax, 1.0e-4)
-    regQP = shape_func_dec(Qp, p.Pqmax, 1.0e-4)
-    VNH4 = p.VNH4max * regQN * NH4/max(1.0e-30, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm * ac
-    VNO3 = p.VNO3max * regQN * NO3/max(1.0e-30, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm * ac
-    VPO4 = p.VPO4max * regQP * PO4/max(1.0e-30, PO4+p.KsatPO4) * tempFunc(temp, p) * Bm * ac
+    Qn = (Nq + Bm * p.R_NC)/max(1.0f-30, Bm + Cq)
+    Qp = (Pq + Bm * p.R_PC)/max(1.0f-30, Bm + Cq)
+    regQN = shape_func_dec(Qn, p.Nqmax, 1.0f-4)
+    regQP = shape_func_dec(Qp, p.Pqmax, 1.0f-4)
+    VNH4 = p.VNH4max * regQN * NH4/max(1.0f-30, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm * ac
+    VNO3 = p.VNO3max * regQN * NO3/max(1.0f-30, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm * ac
+    VPO4 = p.VPO4max * regQP * PO4/max(1.0f-30, PO4+p.KsatPO4) * tempFunc(temp, p) * Bm * ac
     return VNH4, VNO3, VPO4
 end
 
 @inline function calc_DOC_uptake(DOC, temp, Cq, Bm, p)
-    Qc = Cq/max(1.0e-30, Bm + Cq)
-    regQ = shape_func_dec(Qc, p.Cqmax, 1.0e-4)
-    VN = p.VDOCmax * regQ * DOC/max(1.0e-30, DOC+p.KsatDOC) * tempFunc(temp, p) * Bm
+    Qc = Cq/max(1.0f-30, Bm + Cq)
+    regQ = shape_func_dec(Qc, p.Cqmax, 1.0f-4)
+    VN = p.VDOCmax * regQ * DOC/max(1.0f-30, DOC+p.KsatDOC) * tempFunc(temp, p) * Bm
     return VN
 end
 
@@ -75,7 +75,7 @@ end
     i = @index(Global)
     @inbounds plank.VDOC[i] = calc_DOC_uptake(nuts.DOC[i], nuts.T[i], plank.Cq[i], plank.Bm[i], p) * plank.ac[i]
 
-    @inbounds plank.VDOC[i] = plank.VDOC[i] * isless(0.01, plank.PS[i]/(plank.VDOC[i]+plank.PS[i]))
+    @inbounds plank.VDOC[i] = plank.VDOC[i] * isless(1.0f-2, plank.PS[i]/(plank.VDOC[i]+plank.PS[i]))
 end
 function calc_organic_uptake!(plank, nuts, p, arch::Architecture)
     kernel! = calc_organic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -86,9 +86,9 @@ end
 ##### calculate ρChl
 @kernel function calc_ρChl_kernel!(plank, par, p)
     i = @index(Global)
-    @inbounds plank.ρChl[i] = plank.PS[i]/max(1.0e-30, plank.Bm[i]) * p.Chl2N / 
-                             max(1.0e-30, par[i] * p.α * p.Φ * plank.Chl[i]/plank.Bm[i]) *
-                             isless(1.0e-1, par[i]) * plank.ac[i]
+    @inbounds plank.ρChl[i] = plank.PS[i]/max(1.0f-30, plank.Bm[i]) * p.Chl2N / 
+                             max(1.0f-30, par[i] * p.α * p.Φ * plank.Chl[i]/plank.Bm[i]) *
+                             isless(1.0f-1, par[i]) * plank.ac[i]
 end
 function calc_ρChl!(plank, par, p, arch)
     kernel! = calc_ρChl_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -112,10 +112,10 @@ end
 @kernel function update_quotas_2_kernel!(plank, ΔT, p)
     i = @index(Global)
     @inbounds plank.Cq[i] = plank.Cq[i] + (plank.VDOC[i] - plank.resp[i]) * ΔT
-    @inbounds plank.Cq[i] = plank.Cq[i] + max(0.0, (0.0 - plank.Cq[i]))
-    @inbounds plank.Bm[i] = plank.Bm[i] - max(0.0, (0.0 - plank.Cq[i]))
-    @inbounds plank.Nq[i] = plank.Nq[i] + max(0.0, (0.0 - plank.Cq[i])) * p.R_NC
-    @inbounds plank.Pq[i] = plank.Pq[i] + max(0.0, (0.0 - plank.Cq[i])) * p.R_PC
+    @inbounds plank.Cq[i] = plank.Cq[i] + max(0.0f0, (0.0f0 - plank.Cq[i]))
+    @inbounds plank.Bm[i] = plank.Bm[i] - max(0.0f0, (0.0f0 - plank.Cq[i]))
+    @inbounds plank.Nq[i] = plank.Nq[i] + max(0.0f0, (0.0f0 - plank.Cq[i])) * p.R_NC
+    @inbounds plank.Pq[i] = plank.Pq[i] + max(0.0f0, (0.0f0 - plank.Cq[i])) * p.R_PC
 end
 function update_quotas_2!(plank, ΔT, p, arch)
     kernel! = update_quotas_2_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -128,7 +128,7 @@ end
     i = @index(Global)
     @inbounds plank.BS[i] = min(plank.Cq[i], plank.Nq[i]/p.R_NC, plank.Pq[i]/p.R_PC) * 
                            p.k_mtb * plank.ac[i]
-    @inbounds plank.exu[i]= max(0.0, plank.Cq[i] - min(plank.Cq[i], plank.Nq[i]/p.R_NC, plank.Pq[i]/p.R_PC)) *
+    @inbounds plank.exu[i]= max(0.0f0, plank.Cq[i] - min(plank.Cq[i], plank.Nq[i]/p.R_NC, plank.Pq[i]/p.R_PC)) *
                            p.k_mtb * plank.ac[i]
 end
 function calc_BS!(plank, p, arch)
@@ -145,7 +145,7 @@ end
     @inbounds plank.Nq[i]  -= ΔT * plank.BS[i] * p.R_NC
     @inbounds plank.Pq[i]  -= ΔT * plank.BS[i] * p.R_PC
     @inbounds plank.Chl[i] += ΔT * plank.BS[i] * p.R_NC * plank.ρChl[i]
-    @inbounds plank.age[i] += ΔT / 3600.0 * plank.ac[i]
+    @inbounds plank.age[i] += ΔT / 3600.0f0 * plank.ac[i]
 end
 function update_biomass!(plank, p, ΔT, arch)
     kernel! = update_biomass_kernel!(device(arch), 256, (size(plank.ac,1)))

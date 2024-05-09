@@ -5,8 +5,8 @@
     return x
 end
 @inline function particle_boundary_condition(x, xl, xr, ::Bounded)
-    x > xr && return xr - (x - xr) * 1.0
-    x < xl && return xl + (xl - x) * 1.0
+    x > xr && return xr - (x - xr) * 1.0f0
+    x < xl && return xl + (xl - x) * 1.0f0
     return x
 end
 
@@ -37,13 +37,13 @@ function vel_interpolate!(uₜ, vₜ, wₜ, x, y, z, ac, u, v, w, g::AbstractGri
 end
 
 ##### calculate intermediate coordinates
-@kernel function calc_coord_kernel!(velos, plank, u, v, w, ac, ΔT, weight::Float64)
+@kernel function calc_coord_kernel!(velos, plank, u, v, w, ac, ΔT, weight::AbstractFloat)
     i = @index(Global)
     @inbounds velos.x[i] = plank.x[i] + weight * u[i] * ΔT * ac[i]
     @inbounds velos.y[i] = plank.y[i] + weight * v[i] * ΔT * ac[i]
     @inbounds velos.z[i] = plank.z[i] - weight * w[i] * ΔT * ac[i] # index increases when w is negtive
 end
-function calc_coord!(velos, plank, u, v, w, ac, ΔT, weight::Float64, arch::Architecture)
+function calc_coord!(velos, plank, u, v, w, ac, ΔT, weight::AbstractFloat, arch::Architecture)
     kernel! = calc_coord_kernel!(device(arch), 256, (size(ac,1)))
     kernel!(velos, plank, u, v, w, ac, ΔT, weight)
     return nothing
@@ -52,9 +52,9 @@ end
 ##### calculate final velocities by RK4
 @kernel function calc_rk4_kernel!(velos)
     i = @index(Global)
-    velos.u1[i] = (velos.u1[i] + 2*velos.u2[i] + 2*velos.u3[i] + velos.u4[i])/6 
-    velos.v1[i] = (velos.v1[i] + 2*velos.v2[i] + 2*velos.v3[i] + velos.v4[i])/6 
-    velos.w1[i] = (velos.w1[i] + 2*velos.w2[i] + 2*velos.w3[i] + velos.w4[i])/6 
+    velos.u1[i] = (velos.u1[i] + 2*velos.u2[i] + 2*velos.u3[i] + velos.u4[i])/6.0f0
+    velos.v1[i] = (velos.v1[i] + 2*velos.v2[i] + 2*velos.v3[i] + velos.v4[i])/6.0f0
+    velos.w1[i] = (velos.w1[i] + 2*velos.w2[i] + 2*velos.w3[i] + velos.w4[i])/6.0f0
 end
 function calc_vel_rk4!(velos, arch::Architecture)
     kernel! = calc_rk4_kernel!(device(arch), 256, (size(velos.u1,1)))

@@ -20,9 +20,9 @@ end
     @inbounds KernelAbstractions.@atomic ctsdoc[x[i], y[i], z[i]] += (plank.Bm[i] + plank.Cq[i]) * lossFracC * ac[i] * loss[i]
     @inbounds KernelAbstractions.@atomic ctsdon[x[i], y[i], z[i]] += (plank.Bm[i]*R_NC + plank.Nq[i]) * lossFracN * ac[i] * loss[i]
     @inbounds KernelAbstractions.@atomic ctsdop[x[i], y[i], z[i]] += (plank.Bm[i]*R_PC + plank.Pq[i]) * lossFracP * ac[i] * loss[i]
-    @inbounds KernelAbstractions.@atomic ctspoc[x[i], y[i], z[i]] += (plank.Bm[i] + plank.Cq[i]) * (1.0-lossFracC) * ac[i] * loss[i]
-    @inbounds KernelAbstractions.@atomic ctspon[x[i], y[i], z[i]] += (plank.Bm[i]*R_NC + plank.Nq[i]) * (1.0-lossFracN) * ac[i] * loss[i]
-    @inbounds KernelAbstractions.@atomic ctspop[x[i], y[i], z[i]] += (plank.Bm[i]*R_PC + plank.Pq[i]) * (1.0-lossFracP) * ac[i] * loss[i]
+    @inbounds KernelAbstractions.@atomic ctspoc[x[i], y[i], z[i]] += (plank.Bm[i] + plank.Cq[i]) * (1.0f0-lossFracC) * ac[i] * loss[i]
+    @inbounds KernelAbstractions.@atomic ctspon[x[i], y[i], z[i]] += (plank.Bm[i]*R_NC + plank.Nq[i]) * (1.0f0-lossFracN) * ac[i] * loss[i]
+    @inbounds KernelAbstractions.@atomic ctspop[x[i], y[i], z[i]] += (plank.Bm[i]*R_PC + plank.Pq[i]) * (1.0f0-lossFracP) * ac[i] * loss[i]
 end
 function calc_loss!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank, ac, x, y, z,
     loss, lossFracC, lossFracN, lossFracP, R_NC, R_PC, arch)
