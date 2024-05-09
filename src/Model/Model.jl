@@ -4,7 +4,6 @@ export PlanktonModel
 export TimeStep!
 
 using CUDA
-using Metal
 using StructArrays
 using LinearAlgebra
 

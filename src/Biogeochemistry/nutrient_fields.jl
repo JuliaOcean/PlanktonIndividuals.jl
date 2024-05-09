@@ -25,7 +25,7 @@ Set up initial nutrient fields according to `grid`.
 
 Arguments
 =================
-- `arch`: `CPU()`, `CuGPU()` or `MtlGPU()`. The computer architecture used to time-step `model`.
+- `arch`: `CPU()` or `GPU()`. The computer architecture used to time-step `model`.
 - `grid`: The resolution and discrete geometry on which nutrient fields are solved.
 - `source`: A `NamedTuple` containing 10 numbers each of which is the uniform initial 
             condition of one tracer, or a `Dict` containing the file paths pointing to

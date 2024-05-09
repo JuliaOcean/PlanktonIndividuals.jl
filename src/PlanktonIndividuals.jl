@@ -40,7 +40,6 @@ export
     KiB, MiB, GiB, TiB
 
 using CUDA
-using Metal
 using Pkg.Artifacts
 
 import Base: show
@@ -109,9 +108,6 @@ function __init__()
             @debug "$dev: $(CUDA.name(dev))"
         end
         CUDA.allowscalar(false)
-    end
-    if Metal.functional()
-        @debug "M-series GPU detected:"
     end
 end
 
