@@ -21,7 +21,7 @@ using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMo
 #####
 ##### generate individuals of multiple species
 #####
-function generate_individuals(params::Dict, arch::Architecture, Nsp, N, maxN, g::AbstractGrid, mode::AbstractMode)
+function generate_individuals(params::Dict, arch::Architecture, Nsp::Int, N::Vector{Int}, maxN::Int, FT::DataType, g::AbstractGrid, mode::AbstractMode)
     plank_names = Symbol[]
     plank_data=[]
 
@@ -31,7 +31,7 @@ function generate_individuals(params::Dict, arch::Architecture, Nsp, N, maxN, g:
 
     for i in 1:Nsp
         name = Symbol("sp"*string(i))
-        plank = construct_plankton(arch, i, params, maxN, mode::AbstractMode)
+        plank = construct_plankton(arch, i, params, maxN, FT, mode::AbstractMode)
         generate_plankton!(plank, N[i], g, arch, mode)
         push!(plank_names, name)
         push!(plank_data, plank)
@@ -54,14 +54,14 @@ import .MacroMolecular
 #####
 ##### some workarounds for function names
 #####
-construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN, mode::MacroMolecularMode) = 
-    MacroMolecular.construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
+construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType, mode::MacroMolecularMode) = 
+    MacroMolecular.construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
 
-construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN, mode::QuotaMode) = 
-    Quota.construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
+construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType, mode::QuotaMode) = 
+    Quota.construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
 
-construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN, mode::CarbonMode) = 
-    Carbon.construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
+construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType, mode::CarbonMode) = 
+    Carbon.construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
 
 generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::MacroMolecularMode) =
     MacroMolecular.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)

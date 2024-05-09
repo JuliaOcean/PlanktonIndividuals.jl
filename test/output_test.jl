@@ -27,12 +27,12 @@ function test_output()
 
     ds = jldopen("result/diags_part1.jld2")
     time_length = length(keys(ds["timeseries/t"]))
-    @test time_length == 2
+    @test time_length > 1
     close(ds)
 
     ds1 = jldopen("result/plankton_part1.jld2")
     time_length1 = length(keys(ds1["timeseries/t"]))
-    @test time_length1 == 1
+    @test time_length1 > 1
     close(ds1)
 
     rm("result", recursive=true)

@@ -1,8 +1,8 @@
 """
-    vel_copy!(vel::NamedTuple, u, v, w, g::AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
+    vel_copy!(vel::NamedTuple, u, v, w, g::AbstractGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
 Copy external velocities into `PlanktonModel`
 """
-function vel_copy!(vel::NamedTuple, u, v, w, g::AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
+function vel_copy!(vel::NamedTuple, u, v, w, g::AbstractGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
     copy_interior_u!(vel.u.data, u, g, TX())
     copy_interior_v!(vel.v.data, v, g, TY())
     copy_interior_w!(vel.w.data, w, g, TZ())
@@ -33,7 +33,7 @@ end
     copyto!(view(c, g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz+1), t)
 end
 
-function validate_temp(sim::PlanktonSimulation, g::AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
+function validate_temp(sim::PlanktonSimulation, g::AbstractGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
     temp_size = (g.Nx, g.Ny, g.Nz)
     validation = true
 
@@ -55,7 +55,7 @@ function validate_temp(sim::PlanktonSimulation, g::AbstractGrid{TX, TY, TZ}) whe
     return validation
 end
 
-function validate_PARF(sim::PlanktonSimulation, g::AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
+function validate_PARF(sim::PlanktonSimulation, g::AbstractGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
     PARF_size = (g.Nx, g.Ny)
     validation = true
 
@@ -77,7 +77,7 @@ function validate_PARF(sim::PlanktonSimulation, g::AbstractGrid{TX, TY, TZ}) whe
     return validation
 end
 
-function validate_velocity(sim::PlanktonSimulation, g::AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
+function validate_velocity(sim::PlanktonSimulation, g::AbstractGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
     if sim.input.vels ≠ (;)
         u_size = (g.Nx, g.Ny, g.Nz)
         v_size = (g.Nx, g.Ny, g.Nz)

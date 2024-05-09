@@ -15,33 +15,34 @@ mutable struct timestepper
     nuts::AbstractArray # a StructArray of nutrients of each individual
 end
 
-function timestepper(arch::Architecture, g::AbstractGrid, maxN)
-    vel₀ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
-    vel½ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
-    vel₁ = (u = Field(arch, g), v = Field(arch, g), w = Field(arch, g))
+function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN)
+    vel₀ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
+    vel½ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
+    vel₁ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
 
-    Gcs = nutrients_init(arch, g)
-    nut_temp = nutrients_init(arch, g)
-    plk = nutrients_init(arch, g)
+    Gcs = nutrients_init(arch, g, FT)
+    nut_temp = nutrients_init(arch, g, FT)
+    plk = nutrients_init(arch, g, FT)
 
-    par = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
-    Chl = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
-    pop = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
+    par = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
+    Chl = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
+    pop = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
 
-    temp = zeros(g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
-    PARF = zeros(g.Nx, g.Ny) |> array_type(arch)
+    temp = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
+    PARF = zeros(FT, g.Nx, g.Ny) |> array_type(arch)
 
-    rnd = StructArray(x = zeros(maxN), y = zeros(maxN), z = zeros(maxN))
+    rnd = StructArray(x = zeros(FT, maxN), y = zeros(FT, maxN), z = zeros(FT, maxN))
     rnd_d = replace_storage(array_type(arch), rnd)
 
-    velos = StructArray(x  = zeros(maxN), y  = zeros(maxN), z  = zeros(maxN),
-                        u1 = zeros(maxN), v1 = zeros(maxN), w1 = zeros(maxN),
-                        u2 = zeros(maxN), v2 = zeros(maxN), w2 = zeros(maxN),
+    velos = StructArray(x  = zeros(FT, maxN), y  = zeros(FT, maxN), z  = zeros(FT, maxN),
+                        u1 = zeros(FT, maxN), v1 = zeros(FT, maxN), w1 = zeros(FT, maxN),
+                        u2 = zeros(FT, maxN), v2 = zeros(FT, maxN), w2 = zeros(FT, maxN),
                         )
     velos_d = replace_storage(array_type(arch), velos)
 
-    nuts = StructArray(NH4 = zeros(maxN), NO3 = zeros(maxN), PO4 = zeros(maxN), DOC = zeros(maxN),
-                       par = zeros(maxN), T   = zeros(maxN), pop = zeros(maxN))
+    nuts = StructArray(NH4 = zeros(FT, maxN), NO3 = zeros(FT, maxN), PO4 = zeros(FT, maxN), 
+                       DOC = zeros(FT, maxN),
+                       par = zeros(FT, maxN), T   = zeros(FT, maxN), pop = zeros(FT, maxN))
     nuts_d = replace_storage(array_type(arch), nuts)
 
     ts = timestepper(Gcs, nut_temp, vel₀, vel½, vel₁, PARF, temp, plk, par, Chl, pop, rnd_d, velos_d, nuts_d)

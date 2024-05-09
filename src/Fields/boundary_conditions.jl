@@ -19,35 +19,48 @@ function default_bcs()
 end
 
 """
-    set_bc!(model, tracer::Symbol, pos::Symbol, bc_value::Union{Number, AbstractArray})
-Set the boundary condition of `tracer` on `pos` with `bc_value`.
+    set_bc!(model; tracer::Symbol, pos::Symbol, bc_value::Union{Number, AbstractArray})
+Set the boundary condition of `tracer` on `pos` with `bc_value` of DataType `FT`.
+
+Keyword Arguments
+=================
+- `tracer`: the tracer of which the boundary condition will be set.
+- `pos`: the position of the bounday condition to be set, e.g., `:east`, `:top` etc.
+- `bc_value`: the value that will be used to set the boundary condition.
 """
-function set_bc!(model, tracer::Symbol, pos::Symbol, bc_value::Union{Number, AbstractArray})
+function set_bc!(model; tracer::Symbol, pos::Symbol, bc_value::Union{Number, AbstractArray})
     @assert tracer in nut_names
 
+    FT = model.FT
     bc_value_d = bc_value
     if isa(bc_value, AbstractArray)
-        bc_value_d = bc_value |> array_type(model.arch)
+        bc_value_d = FT.(bc_value) |> array_type(model.arch)
     end
     setproperty!(model.nutrients[tracer].bc, pos, bc_value_d)
     return nothing
 end
 
 # get boundary condition at each grid point
-@inline getbc(bc::Number, i, j, t) = bc
-@inline getbc(bc::AbstractArray{Float64,2}, i, j, t) = bc[i,j]
-@inline getbc(bc::AbstractArray{Float64,3}, i, j, t) = bc[i,j,t]
+@inline function getbc(bc::Union{Number, AbstractArray}, i, j, t)
+    if typeof(bc) <: Number
+        return bc
+    elseif typeof(bc) <: AbstractArray{eltype(bc),2}
+        return bc[i,j]
+    elseif typeof(bc) <: AbstractArray{eltype(bc),3}
+        return bc[i,j,t]
+    end
+end
 
 # validate boundary conditions, check if the grid information is compatible with nutrient field
 function validate_bc(bc, bc_size, nΔT)
-    if typeof(bc) <: AbstractArray{Float64,2} 
+    if typeof(bc) <: AbstractArray{eltype(bc),2} 
         if size(bc) == bc_size
             return nothing
         else
             throw(ArgumentError("BC west: grid mismatch, size(bc) must equal to $(bc_size) for a constant flux boundary condition."))
         end
     end
-    if typeof(bc) <: AbstractArray{Float64,3}
+    if typeof(bc) <: AbstractArray{eltype(bc),3}
         if size(bc) == (bc_size..., nΔT)
             return nothing
         else

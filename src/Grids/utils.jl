@@ -1,7 +1,7 @@
 #####
 ##### replace the storage place of the grid information based on the architecture
 #####
-function replace_grid_storage(arch::Architecture, grid::LatLonGrid{TX, TY, TZ}) where {TX, TY, TZ}
+function replace_grid_storage(arch::Architecture, grid::LatLonGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
     zF  = grid.zF |> array_type(arch)
     zC  = grid.zC |> array_type(arch)
     dxC = grid.dxC |> array_type(arch)
@@ -16,18 +16,18 @@ function replace_grid_storage(arch::Architecture, grid::LatLonGrid{TX, TY, TZ}) 
     Vol = grid.Vol |> array_type(arch)
     landmask = grid.landmask |> array_type(arch)
 
-    return LatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(zF), typeof(dxC), typeof(Vol)}(
+    return LatLonGrid{FT, TX, TY, TZ}(
         grid.xC, grid.yC, zC, grid.xF, grid.yF, zF, grid.Δx, grid.Δy, dxC, dyC, dzC,
         dxF, dyF, dzF, Ax, Ay, Az, Vol, grid.Nx, grid.Ny, grid.Nz, grid.Hx, grid.Hy, grid.Hz, landmask)
 end
 
-function replace_grid_storage(arch::Architecture, grid::RectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ}
+function replace_grid_storage(arch::Architecture, grid::RectilinearGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
     zF  = grid.zF |> array_type(arch)
     zC  = grid.zC |> array_type(arch)
     dzC = grid.dzC |> array_type(arch)
     dzF = grid.dzF |> array_type(arch)
     landmask = grid.landmask |> array_type(arch)
-    return RectilinearGrid{TX, TY, TZ, typeof(grid.xF), typeof(zF), typeof(landmask)}(
+    return RectilinearGrid{FT, TX, TY, TZ}(
         grid.xC, grid.yC, zC, grid.xF, grid.yF, zF, grid.Δx, grid.Δy, dzC, dzF,
         grid.Nx, grid.Ny, grid.Nz, grid.Hx, grid.Hy, grid.Hz, landmask)
 end
@@ -36,8 +36,8 @@ end
 ##### adapt the grid struct to GPU
 #####
 
-Adapt.adapt_structure(to, grid::RectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ} =
-    RectilinearGrid{TX, TY, TZ, typeof(grid.xF), typeof(Adapt.adapt(to, grid.zF)), typeof(Adapt.adapt(to, grid.landmask))}(
+Adapt.adapt_structure(to, grid::RectilinearGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ} =
+    RectilinearGrid{FT, TX, TY, TZ}(
         grid.xC, grid.yC,
         Adapt.adapt(to, grid.zC),
         grid.xF, grid.yF,
@@ -49,9 +49,8 @@ Adapt.adapt_structure(to, grid::RectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ} 
         grid.Hx, grid.Hy, grid.Hz,
         Adapt.adapt(to, grid.landmask))
 
-Adapt.adapt_structure(to, grid::LatLonGrid{TX, TY, TZ}) where {TX, TY, TZ} =
-    LatLonGrid{TX, TY, TZ, typeof(grid.xF), typeof(Adapt.adapt(to, grid.zF)), 
-                                            typeof(Adapt.adapt(to, grid.dxC)), typeof(Adapt.adapt(to, grid.Vol))}(
+Adapt.adapt_structure(to, grid::LatLonGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ} =
+    LatLonGrid{FT, TX, TY, TZ}(
         grid.xC, grid.yC,
         Adapt.adapt(to, grid.zC),
         grid.xF, grid.yF,
@@ -74,9 +73,9 @@ Adapt.adapt_structure(to, grid::LatLonGrid{TX, TY, TZ}) where {TX, TY, TZ} =
 #####
 ##### validate the land mask
 #####
-function landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX, TY)
-    if landmask == nothing
-        landmask = ones(Nx, Ny, Nz)
+function landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, FT, TX, TY)
+    if isnothing(landmask)
+        landmask = ones(FT, Nx, Ny, Nz)
     else
         if Base.size(landmask) ≠ (Nx, Ny, Nz)
             throw(ArgumentError("landmask: grid mismatch, size(landmask) must equal to (grid.Nx, grid.Ny, grid.Nz)."))

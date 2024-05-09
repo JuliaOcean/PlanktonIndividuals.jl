@@ -14,10 +14,10 @@ using Adapt
 using PlanktonIndividuals.Architectures
 
 """
-    AbstractGrid{TX, TY, TZ}
-Abstract type for grids with elements of type `Float64` and topology `{TX, TY, TZ}`.
+    AbstractGrid{FT, TX, TY, TZ}
+Abstract type for grids with elements of type `FT` and topology `{TX, TY, TZ}`.
 """
-abstract type AbstractGrid{TX, TY, YZ} end
+abstract type AbstractGrid{FT, TX, TY, YZ} end
 
 """
     AbstractTopology

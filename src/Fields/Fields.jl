@@ -19,19 +19,20 @@ include("halo_regions.jl")
 include("boundary_conditions.jl")
 include("apply_bcs.jl")
 
-struct Field
-    data::AbstractArray{Float64,3}
+struct Field{FT}
+    data::AbstractArray{FT,3}
     bc::BoundaryConditions
 end
 
 """
-    Field(arch::Architecture, grid::AbstractGrid; bcs = default_bcs())
+    Field(arch::Architecture, grid::AbstractGrid, FT::DataType; bcs = default_bcs())
 Construct a `Field` on `grid` with data and boundary conditions on architecture `arch`
+with DataType `FT`.
 """
-function Field(arch::Architecture, grid::AbstractGrid; bcs = default_bcs())
+function Field(arch::Architecture, grid::AbstractGrid, FT::DataType; bcs = default_bcs())
     total_size = (grid.Nx+grid.Hx*2, grid.Ny+grid.Hy*2, grid.Nz+grid.Hz*2)
-    data = zeros(total_size) |> array_type(arch)
-    return Field(data,bcs)
+    data = zeros(FT, total_size) |> array_type(arch)
+    return Field{FT}(data,bcs)
 end
 
 @inline interior(c, grid) = c[grid.Hx+1:grid.Hx+grid.Nx, grid.Hy+1:grid.Hy+grid.Ny, grid.Hz+1:grid.Hz+grid.Nz]
