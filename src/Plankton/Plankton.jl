@@ -12,7 +12,7 @@ using Random
 using KernelAbstractions
 using KernelAbstractions.Extras.LoopInfo: @unroll
 
-using PlanktonIndividuals.Architectures: device, Architecture, GPU, CPU, rng_type
+using PlanktonIndividuals.Architectures: device, Architecture, rng_type
 using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Diagnostics
 

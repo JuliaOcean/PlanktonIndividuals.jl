@@ -62,8 +62,11 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
 
     @assert maximum(N_individual) ≤ max_individuals
 
-    if arch == GPU() && !has_cuda()
+    if arch == CuGPU() && !has_cuda()
         throw(ArgumentError("Cannot create a GPU model. No CUDA-enabled GPU was detected!"))
+    end
+    if arch == MtlGPU() && !Metal.functional()
+        throw(ArgumentError("Cannot create a GPU model. No M-series GPU was detected!"))
     end
 
     grid_d = replace_grid_storage(arch, grid)

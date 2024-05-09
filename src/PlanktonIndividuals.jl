@@ -6,7 +6,7 @@ end
 
 export
     # Architectures
-    Architecture, GPU, CPU,
+    Architecture, CUGPU, MtlGPU, CPU,
 
     # Grids
     RectilinearGrid,
@@ -40,6 +40,7 @@ export
     KiB, MiB, GiB, TiB
 
 using CUDA
+using Metal
 using Pkg.Artifacts
 
 import Base: show
@@ -103,7 +104,14 @@ using .Units
 
 function __init__()
     if CUDA.has_cuda()
+        @debug "CUDA-enabled GPU detected:"
+        for (gpu, dev) in enumerate(CUDA.devices())
+            @debug "$dev: $(CUDA.name(dev))"
+        end
         CUDA.allowscalar(false)
+    end
+    if Metal.functional()
+        @debug "M-series GPU detected:"
     end
 end
 
