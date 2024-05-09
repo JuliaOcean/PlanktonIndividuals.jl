@@ -6,7 +6,7 @@ end
 
 export
     # Architectures
-    Architecture, CUGPU, MtlGPU, CPU,
+    Architecture, GPU, CPU,
 
     # Grids
     RectilinearGrid,
