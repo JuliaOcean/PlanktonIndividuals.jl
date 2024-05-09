@@ -51,13 +51,13 @@ Keyword Arguments (Optional)
 function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        FT = Float32,
                        mode = QuotaMode(),
-                       N_species::Int64 = 1,
-                       N_individual::Vector{Int64} = [1024],
-                       max_individuals::Int64 = 8*1024,
+                       N_species::Int = 1,
+                       N_individual::Vector{Int} = [1024],
+                       max_individuals::Int = 8*1024,
                        bgc_params = nothing, 
                        phyt_params = nothing,
                        nut_initial = default_nut_init(),
-                       t::Float64 = 0.0,
+                       t::AbstractFloat = 0.0f0,
                        )
 
     @assert maximum(N_individual) ≤ max_individuals
@@ -69,23 +69,21 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
     grid_d = replace_grid_storage(arch, grid)
 
     if isa(phyt_params, Nothing)
-        phyt_params_final = phyt_params_default(N_species, mode)
+        phyt_params = phyt_params_default(N_species, mode)
+        phyt_params_final = update_phyt_params(phyt_params, FT; N = N_species, mode = mode)
+    elseif isa(phyt_params, Dict)
+        phyt_params_final = update_phyt_params(phyt_params, FT; N = N_species, mode = mode)
     else
-        if isa(phyt_params, Dict)
-            phyt_params_final = update_phyt_params(phyt_params; N = N_species, mode = mode)
-        else
-            throw(ArgumentError("Phytoplankton parameters must be either Nothing or Dict!")) 
-        end
+        throw(ArgumentError("Phytoplankton parameters must be either Nothing or Dict!")) 
     end
 
     if isa(bgc_params, Nothing)
-        bgc_params_final = bgc_params_default()
+        bgc_params = bgc_params_default(FT)
+        bgc_params_final = update_bgc_params(bgc_params, FT)
+    elseif isa(bgc_params, Dict)
+        bgc_params_final = update_bgc_params(bgc_params, FT)
     else
-        if isa(bgc_params, Dict)
-            bgc_params_final = update_bgc_params(bgc_params)
-        else
-            throw(ArgumentError("Phytoplankton parameters must be either Nothing or Dict!")) 
-        end
+        throw(ArgumentError("Phytoplankton parameters must be either Nothing or Dict!")) 
     end
 
     inds = generate_individuals(phyt_params_final, arch, N_species, N_individual, max_individuals, FT, grid_d, mode)

@@ -53,7 +53,7 @@ function generate_nutrients(arch::Architecture, g::AbstractGrid,
                 end
 
                 if size(tmp) == (g.Nx, g.Ny, g.Nz)
-                    @views @. nut[name].data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] = tmp[:,:,:]
+                    @views @. nut[name].data[g.Hx+1:g.Hx+g.Nx, g.Hy+1:g.Hy+g.Ny, g.Hz+1:g.Hz+g.Nz] = FT.(tmp[:,:,:])
                 else
                     throw(ArgumentError("NUT_INIT:  grid mismatch"))
                 end
@@ -63,7 +63,7 @@ function generate_nutrients(arch::Architecture, g::AbstractGrid,
                 end
                 lower = FT(1.0 - source.rand_noise[name])
                 upper = FT(1.0 + source.rand_noise[name])
-                nut[name].data .= fill(FT(source.initial_condition[name]),total_size) .* rand(lower:1e-4:upper, total_size) |> array_type(arch)
+                nut[name].data .= fill(FT(source.initial_condition[name]),total_size) .* rand(lower:1.0f-4:upper, total_size) |> array_type(arch)
             end
         end
 

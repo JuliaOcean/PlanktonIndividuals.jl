@@ -1,7 +1,7 @@
 ##### calculate simple remineralization of DOM and POM as well as a simple nitrification
 function nut_forcing!(F, nut_temp, nut, params, ΔT)
     for name in nut_names
-        @inbounds nut_temp[name].data .= max.(0.0, nut[name].data)
+        @inbounds nut_temp[name].data .= max.(0.0f0, nut[name].data)
     end
 
     @inbounds F.DIC.data .= F.DIC.data .+ nut_temp.DOC.data .* params["kDOC"] .* ΔT

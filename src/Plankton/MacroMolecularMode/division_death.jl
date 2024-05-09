@@ -1,6 +1,6 @@
-##### deactivate grazed or dead individuals
-function deactivate!(plank, loss)
-    @inbounds plank.ac .*= (1.0 .- loss)
+##### inactivate grazed or dead individuals
+function inactivate!(plank, loss)
+    @inbounds plank.ac .*= (1.0f0 .- loss)
 end
 
 ##### grazing and grazing loss
@@ -10,8 +10,8 @@ function grazing!(plank, arch::Architecture, plk, p)
                plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.graz, 
                p.grazFracC, p.grazFracN, p.grazFracP, p, arch)
     
-    ##### deactivate grazed individuals
-    deactivate!(plank, plank.graz)
+    ##### inactivate grazed individuals
+    inactivate!(plank, plank.graz)
 
     return nothing
 end
@@ -23,15 +23,15 @@ function mortality!(plank, arch::Architecture, plk, p)
                plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.mort, 
                p.mortFracC, p.mortFracN, p.mortFracP, p, arch)
     
-    ##### deactivate dead individuals
-    deactivate!(plank, plank.mort)
+    ##### inactivate dead individuals
+    inactivate!(plank, plank.mort)
 
     return nothing
 end
 
 @kernel function get_tind_kernel!(idx, con, con_ind, de_ind)
     i = @index(Global, Linear)
-    if con[i] == 1.0
+    if con[i] == 1.0f0
         idx[i] = de_ind[con_ind[i]]
     end
 end
@@ -44,7 +44,7 @@ end
 ##### copy ready to divide individuals to inactive rows
 @kernel function copy_daughter_individuals_kernel!(plank, con, idx)
     i = @index(Global, Linear)
-    if (con[i] == 1.0) & (idx[i] ≠ 0)
+    if (con[i] == 1.0f0) & (idx[i] ≠ 0)
         @inbounds plank.x[idx[i]]    = plank.x[i]
         @inbounds plank.y[idx[i]]    = plank.y[i]
         @inbounds plank.z[idx[i]]    = plank.z[i]
@@ -62,7 +62,7 @@ end
         @inbounds plank.mort[idx[i]] = plank.mort[i]
     end
 end
-function copy_daughter_individuals!(plank, con, idx::AbstractArray{Int64,1}, arch)
+function copy_daughter_individuals!(plank, con, idx::AbstractArray{Int,1}, arch)
     kernel! = copy_daughter_individuals_kernel!(device(arch), 256, (size(plank.ac,1)))
     kernel!(plank, con, idx)
     return nothing
@@ -71,15 +71,15 @@ end
 ##### cell division
 @kernel function divide_to_half_kernel!(plank)
     i = @index(Global)
-    @inbounds plank.PRO[i] *= (2.0 - plank.dvid[i]) / 2 
-    @inbounds plank.DNA[i] *= (2.0 - plank.dvid[i]) / 2 
-    @inbounds plank.RNA[i] *= (2.0 - plank.dvid[i]) / 2 
-    @inbounds plank.CH[i]  *= (2.0 - plank.dvid[i]) / 2 
-    @inbounds plank.NST[i] *= (2.0 - plank.dvid[i]) / 2 
-    @inbounds plank.PST[i] *= (2.0 - plank.dvid[i]) / 2 
-    @inbounds plank.Chl[i] *= (2.0 - plank.dvid[i]) / 2 
+    @inbounds plank.PRO[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.DNA[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.RNA[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.CH[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.NST[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PST[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.Chl[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.gen[i] += plank.dvid[i]
-    @inbounds plank.age[i] *= (1.0 - plank.dvid[i])
+    @inbounds plank.age[i] *= (1.0f0 - plank.dvid[i])
 end
 function divide_to_half!(plank, arch)
     kernel! = divide_to_half_kernel!(device(arch), 256, (size(plank.ac,1)))

@@ -5,6 +5,7 @@ export array_type, rng_type
 export device
 
 using CUDA
+using GPUArrays
 using KernelAbstractions
 using CUDA.CUDAKernels
 using Random
@@ -23,9 +24,10 @@ struct CPU <: Architecture end
 
 """
     GPU <: Architecture
-Run PlanktonIndividuals on one GPU node.
+Run PlanktonIndividuals on one CUDA GPU node.
 """
 struct GPU <: Architecture end
+
 
 device(::CPU) = KernelAbstractions.CPU()
 device(::GPU) = CUDABackend()

@@ -24,10 +24,10 @@ end
 
 @kernel function find_NPT_kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, par, temp, pop)
     i = @index(Global)
-    @inbounds nuts.NH4[i] = max(0.0, NH4[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.NO3[i] = max(0.0, NO3[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.PO4[i] = max(0.0, PO4[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.DOC[i] = max(0.0, DOC[x[i], y[i], z[i]]) * ac[i]
+    @inbounds nuts.NH4[i] = max(0.0f0, NH4[x[i], y[i], z[i]]) * ac[i]
+    @inbounds nuts.NO3[i] = max(0.0f0, NO3[x[i], y[i], z[i]]) * ac[i]
+    @inbounds nuts.PO4[i] = max(0.0f0, PO4[x[i], y[i], z[i]]) * ac[i]
+    @inbounds nuts.DOC[i] = max(0.0f0, DOC[x[i], y[i], z[i]]) * ac[i]
     @inbounds nuts.par[i] = par[x[i], y[i], z[i]] * ac[i]
     @inbounds nuts.T[i]   =temp[x[i], y[i], z[i]] * ac[i]
     @inbounds nuts.pop[i] = pop[x[i], y[i], z[i]] * ac[i]
@@ -58,7 +58,7 @@ end
         jj = j + g.Hy
         kk = k + g.Hz
         atten = (Chl[ii,jj,kk]/volume(ii, jj, kk, g) * kc + kw) * ΔzF(ii, jj, kk, g)
-        par[ii,jj,kk] = PARF[i,j] * (1.0 - exp(-atten)) / atten
+        par[ii,jj,kk] = PARF[i,j] * (1.0f0 - exp(-atten)) / atten
         PARF[i,j] = PARF[i,j] * exp(-atten)
     end
 end

@@ -8,7 +8,7 @@ function plankton_advection!(plank, velos, g::AbstractGrid, vel₀, vel½, vel�
     velos.v2 .= velos.v1
     velos.w2 .= velos.w1
 
-    calc_coord!(velos, plank, velos.u1, velos.v1, velos.w1, plank.ac, ΔT, 0.5, arch)
+    calc_coord!(velos, plank, velos.u1, velos.v1, velos.w1, plank.ac, ΔT, 0.5f0, arch)
     particle_boundaries!(velos, plank.ac, g, arch)
 
     ##### stage 2
@@ -20,7 +20,7 @@ function plankton_advection!(plank, velos, g::AbstractGrid, vel₀, vel½, vel�
     velos.v2 .+= velos.v1 .* 2
     velos.w2 .+= velos.w1 .* 2
 
-    calc_coord!(velos, plank, velos.u1, velos.v1, velos.w1, plank.ac, ΔT, 0.5, arch)
+    calc_coord!(velos, plank, velos.u1, velos.v1, velos.w1, plank.ac, ΔT, 0.5f0, arch)
     particle_boundaries!(velos, plank.ac, g, arch)
 
     ##### stage 3
@@ -32,7 +32,7 @@ function plankton_advection!(plank, velos, g::AbstractGrid, vel₀, vel½, vel�
     velos.v2 .+= velos.v1 .* 2
     velos.w2 .+= velos.w1 .* 2
 
-    calc_coord!(velos, plank, velos.u1, velos.v1, velos.w1, plank.ac, ΔT, 1.0, arch)
+    calc_coord!(velos, plank, velos.u1, velos.v1, velos.w1, plank.ac, ΔT, 1.0f0, arch)
     particle_boundaries!(velos, plank.ac, g, arch)
 
     ##### stage 4
@@ -49,7 +49,7 @@ function plankton_advection!(plank, velos, g::AbstractGrid, vel₀, vel½, vel�
     velos.v2 .= velos.v2 ./ 6
     velos.w2 .= velos.w2 ./ 6
 
-    calc_coord!(plank, plank, velos.u2, velos.v2, velos.w2, plank.ac, ΔT, 1.0, arch)
+    calc_coord!(plank, plank, velos.u2, velos.v2, velos.w2, plank.ac, ΔT, 1.0f0, arch)
     particle_boundaries!(plank, plank.ac, g, arch)
     
     return nothing

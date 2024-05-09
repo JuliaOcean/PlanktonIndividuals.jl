@@ -6,7 +6,7 @@ function plankton_update!(plank, nuts, rnd, p, plk, diags_spcs, ΔT, t, arch::Ar
     diags_spcs!(diags_spcs, plank, plank.ac, plank.xi, plank.yi, plank.zi, mode, arch)
 
     ##### check the probabilities every 10 time steps or 1 hour whichever is shorter
-    if t%(ΔT*(min(10,3600÷ΔT))) == 0 
+    if t%(ΔT*(min(10.0f0,3600.0f0÷ΔT))) == 0.0f0
         ##### grazing and its diagnostic
         diags_proc!(diags_spcs.graz, plank.graz, plank.ac, plank.xi, plank.yi, plank.zi, arch)
 
@@ -23,7 +23,7 @@ function plankton_update!(plank, nuts, rnd, p, plk, diags_spcs, ΔT, t, arch::Ar
         ##### division
         ##### check if the number of individuals exceeded
         dvidnum = dot(plank.dvid, plank.ac)
-        deactive_ind = findall(x -> x == 0.0, plank.ac)
+        deactive_ind = findall(x -> x == 0.0f0, plank.ac)
         if dvidnum > length(deactive_ind)
             throw(ArgumentError("number of individual exceeds the capacity"))
         end

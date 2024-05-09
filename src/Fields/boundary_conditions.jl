@@ -32,9 +32,9 @@ function set_bc!(model; tracer::Symbol, pos::Symbol, bc_value::Union{Number, Abs
     @assert tracer in nut_names
 
     FT = model.FT
-    bc_value_d = bc_value
-    if isa(bc_value, AbstractArray)
-        bc_value_d = FT.(bc_value) |> array_type(model.arch)
+    bc_value_d = FT.(bc_value)
+    if isa(bc_value_d, AbstractArray)
+        bc_value_d = bc_value_d |> array_type(model.arch)
     end
     setproperty!(model.nutrients[tracer].bc, pos, bc_value_d)
     return nothing

@@ -1,17 +1,17 @@
 ##### temperature function for photosynthesis
 @inline function tempFunc_PS(temp, p)
-    k = exp(-p.Ea/(8.3145*(temp+273.15)))*(1.0-exp(temp - p.Tmax))
-    k = max(0.0, k)
-    OGT_rate = exp(-p.Ea/(8.3145*(p.Topt+273.15)))
-    return min(1.0, k/OGT_rate)
+    k = exp(-p.Ea/(8.3145f0*(temp+273.15f0)))*(1.0f0-exp(temp - p.Tmax))
+    k = max(0.0f0, k)
+    OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
+    return min(1.0f0, k/OGT_rate)
 end
 
 ##### temperature function for metabolic rates
 @inline function tempFunc(temp, p)
-    k = exp(-p.Ea/(8.3145*(temp+273.15)))
-    k = max(0.0, k)
-    OGT_rate = exp(-p.Ea/(8.3145*(p.Topt+273.15)))
-    return min(1.0, k/OGT_rate)
+    k = exp(-p.Ea/(8.3145f0*(temp+273.15f0)))
+    k = max(0.0f0, k)
+    OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
+    return min(1.0f0, k/OGT_rate)
 end
 
 ##### allocation of functional biomass to repair
@@ -19,20 +19,20 @@ end
 ##### use Bd/Bm as the allocation, more damaged biomass means more allocation to repair
 @inline function gamma_alloc(Bm, Bd)
     #γ = max(0.0, temp - p.Topt) / (p.Tmax - p.Topt) * isless(0.0, Bd)
-    γ = Bd / max(1.0e-30, Bm) * isless(0.0, Bd)
-    γ = min(1.0, γ)
+    γ = Bd / max(1.0f-30, Bm) * isless(0.0f0, Bd)
+    γ = min(1.0f0, γ)
     return γ
 end
 
 ##### calculate photosynthesis rate (mmolC/individual/second)
 @inline function calc_photosynthesis(par, temp, Chl, Bm, Bd, p)
     αI  = par * p.α * p.Φ
-    if p.thermal == 1.0
+    if p.thermal == 1.0f0
         PCm = p.PCmax * tempFunc(temp, p)
     else
         PCm = p.PCmax * tempFunc_PS(temp, p)
     end
-    PS  = PCm * (1.0 - exp(-αI / max(1.0e-30, PCm) * Chl / max(1.0e-30, Bm))) * max(0.0, Bm - Bd)
+    PS  = PCm * (1.0f0 - exp(-αI / max(1.0f-30, PCm) * Chl / max(1.0f-30, Bm))) * max(0.0f0, Bm - Bd)
     return PS
 end
 
@@ -61,7 +61,7 @@ end
 ##### calculate biosynthesis rate (mmolC/individual/second)
 @kernel function calc_BS_kernel!(plank)
     i = @index(Global)
-    @inbounds plank.BS[i] = plank.PS[i] * (1.0 - gamma_alloc(plank.Bm[i], plank.Bd[i]))
+    @inbounds plank.BS[i] = plank.PS[i] * (1.0f0 - gamma_alloc(plank.Bm[i], plank.Bd[i]))
 end
 function calc_BS!(plank, arch)
     kernel! = calc_BS_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -76,8 +76,8 @@ end
     @inbounds plank.TD[i] = (T[i] - p.Topt) * p.f_T2B * (plank.Bm[i] - plank.Bd[i])
                             isless(p.Topt, T[i]) *
                             isless(plank.Bd[i], plank.Bm[i]) *
-                            isless(0.0, p.thermal)
-    @inbounds plank.TD[i] = max(0.0, min(plank.TD[i], (plank.Bm[i] - plank.Bd[i]) / ΔT))
+                            isless(0.0f0, p.thermal)
+    @inbounds plank.TD[i] = max(0.0f0, min(plank.TD[i], (plank.Bm[i] - plank.Bd[i]) / ΔT))
 end
 function calc_thermal_damage!(plank, T, p, ΔT, arch)
     kernel! = calc_thermal_damage_kernel!(device(arch), 256, (size(plank.ac, 1)))
@@ -101,7 +101,7 @@ end
     i = @index(Global)
     @inbounds plank.Bm[i]  += (plank.BS[i] - plank.RS[i]) * ΔT
     @inbounds plank.Bd[i]  += (plank.TD[i] - plank.RP[i]) * ΔT
-    @inbounds plank.age[i] += ΔT / 3600.0 * plank.ac[i]
+    @inbounds plank.age[i] += ΔT / 3600.0f0 * plank.ac[i]
 end
 function update_quotas!(plank, ΔT, arch)
     kernel! = update_quotas_kernel!(device(arch), 256, (size(plank.ac,1)))

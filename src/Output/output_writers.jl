@@ -96,8 +96,8 @@ end
 function humanize_filesize(s::Number)
     suffix = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
     biggest_suffix = suffix[1]
-    value = Float64(s)
-    unit = 1024.0
+    value = s
+    unit = 1024.0f0
     for power in 1:length(suffix)
         unit = 1024^power
         biggest_suffix = suffix[power]

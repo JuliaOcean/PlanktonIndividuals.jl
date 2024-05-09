@@ -38,11 +38,11 @@ function default_temperature(grid, ΔT, iterations)
 end
 
 """
-    bgc_params_default()
+    bgc_params_default(FT::DataType)
 Generate default biogeochemical parameter values 
 """
-function bgc_params_default()
-    params = Dict(
+function bgc_params_default(FT)
+    params = Dict{String, FT}(
         "kw"           => 0.046,              # PAR attenuation (/m)
         "kc"           => 0.04,               # PAR attenuation (m²/mgChl)
         "kDOC"         => 1/30/86400,         # Remineralization rate for DOC, turn over time: a month (per second)
@@ -86,7 +86,6 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
     params=Dict(
         "Nsuper"   => [1],       # Number of phyto cells each super individual represents
         "C_DNA"    => [1.8e-13], # DNA C quota of phyto cells (mmolC/cell)
-        "mean"     => [1.2],     # Mean of the normal distribution of initial phyto individuals
         "var"      => [0.3],     # Variance of the normal distribution of initial phyto individuals
         "RNA2DNA"  => [1.73],    # Initial RNA:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
         "PRO2DNA"  => [34.83],   # Initial protein:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.

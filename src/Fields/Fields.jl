@@ -39,7 +39,7 @@ end
 
 function zero_fields!(a)
     for i in 1:length(a)
-        @inbounds a[i].data .= 0.0
+        @inbounds a[i].data .= 0.0f0
     end
 end
 

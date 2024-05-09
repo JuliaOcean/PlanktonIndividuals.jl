@@ -103,6 +103,10 @@ using .Units
 
 function __init__()
     if CUDA.has_cuda()
+        @debug "CUDA-enabled GPU detected:"
+        for (gpu, dev) in enumerate(CUDA.devices())
+            @debug "$dev: $(CUDA.name(dev))"
+        end
         CUDA.allowscalar(false)
     end
 end

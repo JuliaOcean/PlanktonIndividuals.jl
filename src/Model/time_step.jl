@@ -14,15 +14,15 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     model.iteration = model.iteration+1
     model.t = model.iteration * ΔT 
 
-    @inbounds model.timestepper.vel½.u.data .= (model.timestepper.vel₀.u.data .+ model.timestepper.vel₁.u.data) .* 0.5
-    @inbounds model.timestepper.vel½.v.data .= (model.timestepper.vel₀.v.data .+ model.timestepper.vel₁.v.data) .* 0.5
-    @inbounds model.timestepper.vel½.w.data .= (model.timestepper.vel₀.w.data .+ model.timestepper.vel₁.w.data) .* 0.5
+    @inbounds model.timestepper.vel½.u.data .= (model.timestepper.vel₀.u.data .+ model.timestepper.vel₁.u.data) .* 0.5f0
+    @inbounds model.timestepper.vel½.v.data .= (model.timestepper.vel₀.v.data .+ model.timestepper.vel₁.v.data) .* 0.5f0
+    @inbounds model.timestepper.vel½.w.data .= (model.timestepper.vel₀.w.data .+ model.timestepper.vel₁.w.data) .* 0.5f0
 
     zero_fields!(model.timestepper.plk)
-    @inbounds model.timestepper.Chl .= 0.0
-    @inbounds model.timestepper.pop .= 0.0
+    @inbounds model.timestepper.Chl .= 0.0f0
+    @inbounds model.timestepper.pop .= 0.0f0
     ##### plankton advection, diffusion, and physiological update
-    if model.bgc_params["shared_graz"] == 1.0 # shared grazing
+    if model.bgc_params["shared_graz"] == 1.0f0 # shared grazing
         for sp in keys(model.individuals.phytos)
             ##### RK4
             plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
@@ -74,7 +74,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
             plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts,
                                 model.timestepper.rnd, model.individuals.phytos[sp].p,
                                 model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch, model.mode)
-            @inbounds model.timestepper.pop .= 0.0
+            @inbounds model.timestepper.pop .= 0.0f0
         end
     end
 

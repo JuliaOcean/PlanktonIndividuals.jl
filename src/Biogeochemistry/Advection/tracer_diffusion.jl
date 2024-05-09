@@ -5,9 +5,9 @@
 
 ##### Laplacian diffusion operator
 @inline function κ∇²(i, j, k, grid, κˣ, κʸ, κᶻ, c)
-    return 1/volume(i, j, k, grid) * (δx⁺(i, j, k, grid, diffusive_flux_x, κˣ, c) +
-                                      δy⁺(i, j, k, grid, diffusive_flux_y, κʸ, c) +
-                                      δz⁺(i, j, k, grid, diffusive_flux_z, κᶻ, c))
+    return 1.0f0/volume(i, j, k, grid) * (δx⁺(i, j, k, grid, diffusive_flux_x, κˣ, c) +
+                                          δy⁺(i, j, k, grid, diffusive_flux_y, κʸ, c) +
+                                          δz⁺(i, j, k, grid, diffusive_flux_z, κᶻ, c))
 end
 
 ##### calculate the tendency by diffusion for tracer c

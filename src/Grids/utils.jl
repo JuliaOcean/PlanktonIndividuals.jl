@@ -2,7 +2,11 @@
 ##### replace the storage place of the grid information based on the architecture
 #####
 function replace_grid_storage(arch::Architecture, grid::LatLonGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
+    xF  = grid.xF |> array_type(arch)
+    yF  = grid.yF |> array_type(arch)
     zF  = grid.zF |> array_type(arch)
+    xC  = grid.xC |> array_type(arch)
+    yC  = grid.yC |> array_type(arch)
     zC  = grid.zC |> array_type(arch)
     dxC = grid.dxC |> array_type(arch)
     dyC = grid.dyC |> array_type(arch)
@@ -16,19 +20,24 @@ function replace_grid_storage(arch::Architecture, grid::LatLonGrid{FT, TX, TY, T
     Vol = grid.Vol |> array_type(arch)
     landmask = grid.landmask |> array_type(arch)
 
-    return LatLonGrid{FT, TX, TY, TZ}(
-        grid.xC, grid.yC, zC, grid.xF, grid.yF, zF, grid.Δx, grid.Δy, dxC, dyC, dzC,
-        dxF, dyF, dzF, Ax, Ay, Az, Vol, grid.Nx, grid.Ny, grid.Nz, grid.Hx, grid.Hy, grid.Hz, landmask)
+    return LatLonGrid{FT, TX, TY, TZ, typeof(xF), typeof(dxC), typeof(Vol)}(
+        xC, yC, zC, xF, yF, zF, grid.Δx, grid.Δy, dxC, dyC, dzC,
+        dxF, dyF, dzF, Ax, Ay, Az, Vol, grid.Nx, grid.Ny, grid.Nz, 
+        grid.Hx, grid.Hy, grid.Hz, landmask)
 end
 
 function replace_grid_storage(arch::Architecture, grid::RectilinearGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
+    xF  = grid.xF |> array_type(arch)
+    yF  = grid.yF |> array_type(arch)
     zF  = grid.zF |> array_type(arch)
+    xC  = grid.xC |> array_type(arch)
+    yC  = grid.yC |> array_type(arch)
     zC  = grid.zC |> array_type(arch)
     dzC = grid.dzC |> array_type(arch)
     dzF = grid.dzF |> array_type(arch)
     landmask = grid.landmask |> array_type(arch)
-    return RectilinearGrid{FT, TX, TY, TZ}(
-        grid.xC, grid.yC, zC, grid.xF, grid.yF, zF, grid.Δx, grid.Δy, dzC, dzF,
+    return RectilinearGrid{FT, TX, TY, TZ, typeof(xF), typeof(landmask)}(
+        xC, yC, zC, xF, yF, zF, grid.Δx, grid.Δy, dzC, dzF,
         grid.Nx, grid.Ny, grid.Nz, grid.Hx, grid.Hy, grid.Hz, landmask)
 end
 
@@ -37,10 +46,13 @@ end
 #####
 
 Adapt.adapt_structure(to, grid::RectilinearGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ} =
-    RectilinearGrid{FT, TX, TY, TZ}(
-        grid.xC, grid.yC,
+    RectilinearGrid{FT, TX, TY, TZ, typeof(Adapt.adapt(to, grid.xF)), 
+                                    typeof(Adapt.adapt(to, grid.landmask))}(
+        Adapt.adapt(to, grid.xC),
+        Adapt.adapt(to, grid.yC),
         Adapt.adapt(to, grid.zC),
-        grid.xF, grid.yF,
+        Adapt.adapt(to, grid.xF),
+        Adapt.adapt(to, grid.yF),
         Adapt.adapt(to, grid.zF),
         grid.Δx, grid.Δy,
         Adapt.adapt(to, grid.dzC),
@@ -50,10 +62,14 @@ Adapt.adapt_structure(to, grid::RectilinearGrid{FT, TX, TY, TZ}) where {FT, TX, 
         Adapt.adapt(to, grid.landmask))
 
 Adapt.adapt_structure(to, grid::LatLonGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ} =
-    LatLonGrid{FT, TX, TY, TZ}(
-        grid.xC, grid.yC,
+    LatLonGrid{FT, TX, TY, TZ, typeof(Adapt.adapt(to, grid.xF)), 
+                               typeof(Adapt.adapt(to, grid.dxC)), 
+                               typeof(Adapt.adapt(to, grid.Vol))}(
+        Adapt.adapt(to, grid.xC),
+        Adapt.adapt(to, grid.yC),
         Adapt.adapt(to, grid.zC),
-        grid.xF, grid.yF,
+        Adapt.adapt(to, grid.xF),
+        Adapt.adapt(to, grid.yF),
         Adapt.adapt(to, grid.zF),
         grid.Δx, grid.Δy,
         Adapt.adapt(to, grid.dxC),
@@ -82,7 +98,7 @@ function landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, FT, TX, TY)
         end
     end
 
-    lh = zeros(Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
+    lh = zeros(FT, Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
     lh[Hx+1:Hx+Nx, Hy+1:Hy+Ny, Hz+1:Hz+Nz] .= landmask
 
     if TX == Periodic
