@@ -1,15 +1,15 @@
-function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
-    rawdata = StructArray(x    = zeros(maxN), y    = zeros(maxN), z    = zeros(maxN),
-                          xi   = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN),
-                          CH   = zeros(maxN), NST  = zeros(maxN), PST  = zeros(maxN),
-                          PRO  = zeros(maxN), DNA  = zeros(maxN), RNA  = zeros(maxN), 
-                          Chl  = zeros(maxN), gen  = zeros(maxN), age  = zeros(maxN), 
-                          ac   = zeros(maxN), idx  = zeros(maxN),
-                          PS   = zeros(maxN), VDOC = zeros(maxN), VNH4 = zeros(maxN),
-                          VNO3 = zeros(maxN), VPO4 = zeros(maxN), ρChl = zeros(maxN),
-                          resp = zeros(maxN), S_PRO= zeros(maxN), S_DNA= zeros(maxN),
-                          S_RNA= zeros(maxN), exu  = zeros(maxN),
-                          graz = zeros(maxN), mort = zeros(maxN), dvid = zeros(maxN)
+function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
+    rawdata = StructArray(x    = zeros(FT, maxN), y    = zeros(FT, maxN), z    = zeros(FT, maxN),
+                          xi   = zeros(Int,maxN), yi   = zeros(Int,maxN), zi   = zeros(Int,maxN),
+                          CH   = zeros(FT, maxN), NST  = zeros(FT, maxN), PST  = zeros(FT, maxN),
+                          PRO  = zeros(FT, maxN), DNA  = zeros(FT, maxN), RNA  = zeros(FT, maxN), 
+                          Chl  = zeros(FT, maxN), gen  = zeros(FT, maxN), age  = zeros(FT, maxN), 
+                          ac   = zeros(FT, maxN), idx  = zeros(FT, maxN),
+                          PS   = zeros(FT, maxN), VDOC = zeros(FT, maxN), VNH4 = zeros(FT, maxN),
+                          VNO3 = zeros(FT, maxN), VPO4 = zeros(FT, maxN), ρChl = zeros(FT, maxN),
+                          resp = zeros(FT, maxN), S_PRO= zeros(FT, maxN), S_DNA= zeros(FT, maxN),
+                          S_RNA= zeros(FT, maxN), exu  = zeros(FT, maxN),
+                          graz = zeros(FT, maxN), mort = zeros(FT, maxN), dvid = zeros(FT, maxN)
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
@@ -35,7 +35,7 @@ function construct_plankton(arch::Architecture, sp::Int64, params::Dict, maxN)
     return plankton(data, p)
 end
 
-function generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
+function generate_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)
     mean = plank.p.mean
     var = plank.p.var
     C_DNA = plank.p.C_DNA

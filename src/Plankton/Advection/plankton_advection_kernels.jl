@@ -10,7 +10,7 @@ end
     return x
 end
 
-@kernel function particle_boundaries_kernel!(plank, ac, g::AbstractGrid{TX, TY, TZ}) where {TX, TY, TZ}
+@kernel function particle_boundaries_kernel!(plank, ac, g::AbstractGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
     i = @index(Global)
     @inbounds plank.x[i] = particle_boundary_condition(plank.x[i], 0, g.Nx, TX()) * ac[i]
     @inbounds plank.y[i] = particle_boundary_condition(plank.y[i], 0, g.Ny, TY()) * ac[i]

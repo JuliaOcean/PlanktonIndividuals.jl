@@ -1,7 +1,7 @@
 mutable struct PlanktonDiagnostics
     plankton::NamedTuple       # for each species
     tracer::NamedTuple         # for tracers
-    iteration_interval::Int64  # time interval that the diagnostics is time averaged
+    iteration_interval::Int    # time interval that the diagnostics is time averaged
 end
 
 """
@@ -19,7 +19,7 @@ Keyword Arguments (Optional)
 """
 function PlanktonDiagnostics(model; tracer=(),
                             plankton=(:num, :graz, :mort, :dvid),
-                            iteration_interval::Int64 = 1)
+                            iteration_interval::Int = 1)
     
     @assert isa(tracer, Tuple)
     @assert isa(plankton, Tuple)
@@ -30,15 +30,16 @@ function PlanktonDiagnostics(model; tracer=(),
     nproc = length(plankton)
     trs   = []
     procs = []
+    FT = model.FT
 
     total_size = (model.grid.Nx+model.grid.Hx*2, model.grid.Ny+model.grid.Hy*2, model.grid.Nz+model.grid.Hz*2)
 
     for i in 1:ntr
-        tr = zeros(total_size) |> array_type(model.arch)
+        tr = zeros(FT, total_size) |> array_type(model.arch)
         push!(trs, tr)
     end
-    tr_d1 = zeros(total_size) |> array_type(model.arch)
-    tr_d2 = zeros(total_size) |> array_type(model.arch)
+    tr_d1 = zeros(FT, total_size) |> array_type(model.arch)
+    tr_d2 = zeros(FT, total_size) |> array_type(model.arch)
     tr_default = (PAR = tr_d1, T = tr_d2)
 
     diag_tr = NamedTuple{tracer}(trs)
@@ -50,14 +51,14 @@ function PlanktonDiagnostics(model; tracer=(),
     for j in 1:Nsp
         procs_sp = []
         for k in 1:nproc
-            proc = zeros(total_size) |> array_type(model.arch)
+            proc = zeros(FT, total_size) |> array_type(model.arch)
             push!(procs_sp, proc)
         end
         diag_proc = NamedTuple{plankton}(procs_sp)
 
         procs_sp_d = []
         for l in 1:4
-            proc = zeros(total_size) |> array_type(model.arch)
+            proc = zeros(FT, total_size) |> array_type(model.arch)
             push!(procs_sp_d, proc)
         end
         diag_proc_default = NamedTuple{(:num, :graz, :mort, :dvid)}(procs_sp_d)

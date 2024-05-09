@@ -1,17 +1,17 @@
-struct RectilinearGrid{TX, TY, TZ, R, A1, A3} <: AbstractGrid{TX, TY, TZ}
+struct RectilinearGrid{FT, TX, TY, TZ} <: AbstractGrid{FT, TX, TY, TZ}
     # corrdinates at cell centers, unit: meter
-    xC::R
-    yC::R
-    zC::A1
+    xC::Vector{FT}
+    yC::Vector{FT}
+    zC::Vector{FT}
     # corrdinates at cell faces, unit: meter
-    xF::R
-    yF::R
-    zF::A1
+    xF::Vector{FT}
+    yF::Vector{FT}
+    zF::Vector{FT}
     # grid spacing, unit: meter
-    Δx::Float64
-    Δy::Float64
-    dzC::A1
-    dzF::A1
+    Δx::FT
+    Δy::FT
+    dzC::Vector{FT}
+    dzF::Vector{FT}
     # number of grid points
     Nx::Int
     Ny::Int
@@ -21,11 +21,12 @@ struct RectilinearGrid{TX, TY, TZ, R, A1, A3} <: AbstractGrid{TX, TY, TZ}
     Hy::Int
     Hz::Int
     # landmask to indicate where is the land
-    landmask::A3
+    landmask::AbstractArray{FT,3}
 end
 
 """
     RectilinearGrid(;size, x, y, z,
+                     FT = Float32,
                      topology = (Periodic, Periodic, Bounded),
                      landmask = nothing,
                      halo = (2, 2, 2))
@@ -44,6 +45,7 @@ Keyword Arguments (Required)
 
 Keyword Arguments (Optional)
 ============================
+- `FT`: Floating point data type. Default: `Float32`.
 - `topology` : A 3-tuple specifying the topology of the domain.
                 The topology can be either Periodic or Bounded in each direction.
 - `landmask` : a 3-dimentional array to indicate where the land is.
@@ -53,9 +55,10 @@ Keyword Arguments (Optional)
                 At least 2 halo points are needed for DST3FL advection scheme.
 """
 function RectilinearGrid(;size, x, y, z,
-                         topology = (Periodic, Periodic, Bounded),
-                         landmask = nothing,
-                         halo = (2, 2, 2))
+                          FT = Float32,
+                          topology = (Periodic, Periodic, Bounded),
+                          landmask = nothing,
+                          halo = (2, 2, 2))
     Nx, Ny, Nz = size
     Hx, Hy, Hz = halo
     TX, TY, TZ = validate_topology(topology)
@@ -69,15 +72,15 @@ function RectilinearGrid(;size, x, y, z,
     Δx = (x₂ - x₁) / Nx
     Δy = (y₂ - y₁) / Ny
 
-    xF = range(-Hx * Δx, (Nx + Hx - 1) * Δx, length = Nx + 2 * Hx)
-    yF = range(-Hy * Δy, (Ny + Hy - 1) * Δy, length = Ny + 2 * Hy)
+    xF = collect(FT, range(-Hx * Δx, (Nx + Hx - 1) * Δx, length = Nx + 2 * Hx))
+    yF = collect(FT, range(-Hy * Δy, (Ny + Hy - 1) * Δy, length = Ny + 2 * Hy))
 
-    xC = range((0.5 - Hx) * Δx, (Nx + Hx - 0.5) * Δx, length = Nx + 2 * Hx)
-    yC = range((0.5 - Hy) * Δy, (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy)
+    xC = collect(FT, range((0.5 - Hx) * Δx, (Nx + Hx - 0.5) * Δx, length = Nx + 2 * Hx))
+    yC = collect(FT, range((0.5 - Hy) * Δy, (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy))
 
     if isa(z, Tuple{<:Number, <:Number})
         z₁, z₂ = z
-        z = collect(range(z₁, z₂, length = Nz+1))
+        z = collect(FT, range(z₁, z₂, length = Nz+1))
     elseif isa(z, AbstractVector)
         z₁, z₂ = z[1], z[end]
     else
@@ -87,12 +90,12 @@ function RectilinearGrid(;size, x, y, z,
     @assert z₁ > z₂
     @assert Base.length(z) == Nz + 1
 
-    zF = zeros(Nz+2Hz)
-    zC = zeros(Nz+2Hz)
-    dzF = zeros(Nz+2Hz)
-    dzC = zeros(Nz+2Hz)
+    zF = zeros(FT, Nz+2Hz)
+    zC = zeros(FT, Nz+2Hz)
+    dzF = zeros(FT, Nz+2Hz)
+    dzC = zeros(FT, Nz+2Hz)
 
-    zF[1+Hz:Nz+Hz+1] .= Float64.(z)
+    zF[1+Hz:Nz+Hz+1] .= FT.(z)
     zC[1+Hz:Nz+Hz] .= (zF[1+Hz:Nz+Hz] .+ zF[2+Hz:Nz+Hz+1]) ./ 2
     dzF[1+Hz:Nz+Hz] .= zF[1+Hz:Nz+Hz] .- zF[2+Hz:Nz+Hz+1]
     dzC[1+Hz:Nz+Hz-1] .= zC[1+Hz:Nz+Hz-1] .- zC[2+Hz:Nz+Hz]
@@ -112,19 +115,19 @@ function RectilinearGrid(;size, x, y, z,
         zC[i] = zC[i+1] + dzF[1]
     end
 
-    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX, TY)
+    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, FT, TX, TY)
 
-    return RectilinearGrid{TX, TY, TZ, typeof(xF), typeof(zF), typeof(landmask)}(
+    return RectilinearGrid{FT, TX, TY, TZ}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, dzC, dzF, Nx, Ny, Nz, Hx, Hy, Hz, landmask)
 end
 
-function show(io::IO, g::RectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ}
+function show(io::IO, g::RectilinearGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
     xL, xR = g.xF[g.Hx+1], g.xF[g.Hx+1+g.Nx]
     yL, yR = g.yF[g.Hy+1], g.yF[g.Hy+1+g.Ny]
     zL, zR = g.zF[g.Hz+1], g.zF[g.Hz+1+g.Nz]
     dzF_min = minimum(g.dzF)
     dzF_max = maximum(g.dzF)
-    print(io, "RegularRectilinearGrid{$TX, $TY, $TZ}\n",
+    print(io, "RegularRectilinearGrid{$FT, $TX, $TY, $TZ}\n",
               "domain: x ∈ [$xL, $xR], y ∈ [$yL, $yR], z ∈ [$zL, $zR]\n",
               "topology (Tx, Ty, Tz):     ", (TX, TY, TZ), '\n',
               "resolution (Nx, Ny, Nz):   ", (g.Nx, g.Ny, g.Nz), '\n',
@@ -132,8 +135,8 @@ function show(io::IO, g::RectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ}
               "grid spacing (Δx, Δy, Δz): ", g.Δx, ", ", g.Δy, ", [min=", dzF_min, ", max=", dzF_max,"])")
 end
 
-function short_show(grid::RectilinearGrid{TX, TY, TZ}) where {TX, TY, TZ}
-    return "RegularRectilinearGrid{$TX, $TY, $TZ}(Nx=$(grid.Nx), Ny=$(grid.Ny), Nz=$(grid.Nz))"
+function short_show(grid::RectilinearGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
+    return "RegularRectilinearGrid{$FT, $TX, $TY, $TZ}(Nx=$(grid.Nx), Ny=$(grid.Ny), Nz=$(grid.Nz))"
 end
 
 

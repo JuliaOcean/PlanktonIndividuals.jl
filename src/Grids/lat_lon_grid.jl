@@ -1,30 +1,30 @@
-struct LatLonGrid{TX, TY, TZ, R, A1, A2, A3} <: AbstractGrid{TX, TY, TZ}
+struct LatLonGrid{FT, TX, TY, TZ} <: AbstractGrid{FT, TX, TY, TZ}
     # corrdinates at cell centers, unit: degree
-    xC::R
-    yC::R
+    xC::Vector{FT}
+    yC::Vector{FT}
     # corrdinates at cell centers, unit: meter
-    zC::A1
+    zC::Vector{FT}
     # corrdinates at cell faces, unit: degree
-    xF::R
-    yF::R
+    xF::Vector{FT}
+    yF::Vector{FT}
     # corrdinates at cell faces, unit: meter
-    zF::A1
+    zF::Vector{FT}
     # grid spacing, unit: degree
-    Δx::Float64
-    Δy::Float64
+    Δx::FT
+    Δy::FT
     # grid spacing from center to center, unit: meter
-    dxC::A2
-    dyC::A2
-    dzC::A1
+    dxC::AbstractArray{FT,2}
+    dyC::AbstractArray{FT,2}
+    dzC::Vector{FT}
     # grid spacing from face to face, unit: meter
-    dxF::A2
-    dyF::A2
-    dzF::A1
+    dxF::AbstractArray{FT,2}
+    dyF::AbstractArray{FT,2}
+    dzF::Vector{FT}
     # areas and volume, unit: m² or m³
-    Ax::A3
-    Ay::A3
-    Az::A2
-    Vol::A3
+    Ax::AbstractArray{FT,3}
+    Ay::AbstractArray{FT,3}
+    Az::AbstractArray{FT,2}
+    Vol::AbstractArray{FT,3}
     # number of grid points
     Nx::Int
     Ny::Int
@@ -34,11 +34,12 @@ struct LatLonGrid{TX, TY, TZ, R, A1, A2, A3} <: AbstractGrid{TX, TY, TZ}
     Hy::Int
     Hz::Int
     # landmask to indicate where is the land
-    landmask::A3
+    landmask::AbstractArray{FT,3}
 end
 
 """
     LatLonGrid(;size, lat, lon, z,
+                FT = Float32,
                 radius = 6370.0e3,
                 landmask = nothing,
                 halo = (2, 2, 2))
@@ -58,6 +59,7 @@ Keyword Arguments (Required)
 
 Keyword Arguments (Optional)
 ============================
+- `FT`: Floating point data type. Default: `Float32`.
 - `radius` : Specify the radius of the Earth used in the model, 6370.0e3 meters by default.
 - `landmask` : a 3-dimentional array to indicate where the land is.
 - `halo` : A tuple of integers that specifies the size of the halo region of cells
@@ -66,6 +68,7 @@ Keyword Arguments (Optional)
                 At least 2 halo points are needed for DST3FL advection scheme.
 """
 function LatLonGrid(;size, lat, lon, z,
+                     FT = Float32,
                      radius = 6370.0e3,
                      landmask = nothing,
                      halo = (2, 2, 2))
@@ -76,7 +79,7 @@ function LatLonGrid(;size, lat, lon, z,
 
     if isa(z, Tuple{<:Number, <:Number})
         z₁, z₂ = z
-        z = collect(range(z₁, z₂, length = Nz+1))
+        z = collect(FT, range(z₁, z₂, length = Nz+1))
     elseif isa(z, AbstractVector)
         z₁, z₂ = z[1], z[end]
     else
@@ -95,27 +98,27 @@ function LatLonGrid(;size, lat, lon, z,
     Δx = (lon₂ - lon₁) / Nx
     Δy = (lat₂ - lat₁) / Ny
 
-    xF = range(lon₁ - Hx * Δx, lon₁ + (Nx + Hx - 1) * Δx, length = Nx + 2 * Hx)
-    yF = range(lat₁ - Hy * Δy, lat₁ + (Ny + Hy - 1) * Δy, length = Ny + 2 * Hy)
+    xF = collect(FT, range(lon₁ - Hx * Δx, lon₁ + (Nx + Hx - 1) * Δx, length = Nx + 2 * Hx))
+    yF = collect(FT, range(lat₁ - Hy * Δy, lat₁ + (Ny + Hy - 1) * Δy, length = Ny + 2 * Hy))
 
-    xC = range(lon₁ + (0.5 - Hx) * Δx, lon₁ + (Nx + Hx - 0.5) * Δx, length = Nx + 2 * Hx)
-    yC = range(lat₁ + (0.5 - Hy) * Δy, lat₁ + (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy)
+    xC = collect(FT, range(lon₁ + (0.5 - Hx) * Δx, lon₁ + (Nx + Hx - 0.5) * Δx, length = Nx + 2 * Hx))
+    yC = collect(FT, range(lat₁ + (0.5 - Hy) * Δy, lat₁ + (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy))
 
     # inclue halo points
-    zF = zeros(Nz+2Hz)
-    zC = zeros(Nz+2Hz)
-    dzF = zeros(Nz+2Hz)
-    dzC = zeros(Nz+2Hz)
-    dxC = zeros(Nx+2*Hx, Ny+2*Hy)
-    dyC = zeros(Nx+2*Hx, Ny+2*Hy)
-    dxF = zeros(Nx+2*Hx, Ny+2*Hy)
-    dyF = zeros(Nx+2*Hx, Ny+2*Hy)
-    Ax = zeros(Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
-    Ay = zeros(Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
-    Az = zeros(Nx+2*Hx, Ny+2*Hy)
-    Vol = zeros(Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
+    zF = zeros(FT, Nz+2Hz)
+    zC = zeros(FT, Nz+2Hz)
+    dzF = zeros(FT, Nz+2Hz)
+    dzC = zeros(FT, Nz+2Hz)
+    dxC = zeros(FT, Nx+2*Hx, Ny+2*Hy)
+    dyC = zeros(FT, Nx+2*Hx, Ny+2*Hy)
+    dxF = zeros(FT, Nx+2*Hx, Ny+2*Hy)
+    dyF = zeros(FT, Nx+2*Hx, Ny+2*Hy)
+    Ax = zeros(FT, Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
+    Ay = zeros(FT, Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
+    Az = zeros(FT, Nx+2*Hx, Ny+2*Hy)
+    Vol = zeros(FT, Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
 
-    zF[1+Hz:Nz+Hz+1] .= Float64.(z)
+    zF[1+Hz:Nz+Hz+1] .= FT.(z)
     zC[1+Hz:Nz+Hz] .= (zF[1+Hz:Nz+Hz] .+ zF[2+Hz:Nz+Hz+1]) ./ 2
     dzF[1+Hz:Nz+Hz] .= zF[1+Hz:Nz+Hz] .- zF[2+Hz:Nz+Hz+1]
     dzC[1+Hz:Nz+Hz-1] .= zC[1+Hz:Nz+Hz-1] .- zC[2+Hz:Nz+Hz]
@@ -161,16 +164,17 @@ function LatLonGrid(;size, lat, lon, z,
         end
     end
 
-    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX, TY)
+    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, FT, TX, TY)
 
-    return LatLonGrid{TX, TY, TZ, typeof(xF), typeof(zF), typeof(dxC), typeof(Vol)}(
+    return LatLonGrid{FT, TX, TY, TZ}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, dxC, dyC, dzC, dxF, dyF, dzF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz, landmask)
 end
 
 """
     LoadLatLonGrid(;grid_info, size, lat, lon,
-                                       landmask = nothing,
-                                       halo=(2,2,2))
+                    FT = Float32,
+                    landmask = nothing,
+                    halo=(2,2,2))
 Creats a `LatLonGrid` struct with `size = (Nx, Ny, Nz)` grid points.
 
 Keyword Arguments (Required)
@@ -186,13 +190,15 @@ Keyword Arguments (Required)
 
 Keyword Arguments (Optional)
 ============================
+- `FT`: Floating point data type. Default: `Float32`.
 - `landmask` : a 3-dimentional array to indicate where the land is.
 - `halo` : A tuple of integers that specifies the size of the halo region of cells
                 surrounding the physical interior for each direction.
                 `halo` is a 3-tuple no matter for 3D, 2D, or 1D model.
                 At least 2 halo points are needed for DST3FL advection scheme.
 """
-function LoadLatLonGrid(;grid_info, size, lat, lon, landmask = nothing, halo=(2,2,2))
+function LoadLatLonGrid(;grid_info, size, lat, lon, 
+                         FT = Float32, landmask = nothing, halo=(2,2,2))
     Nx, Ny, Nz = size
     Hx, Hy, Hz = halo
     lat₁, lat₂ = lat
@@ -208,40 +214,40 @@ function LoadLatLonGrid(;grid_info, size, lat, lon, landmask = nothing, halo=(2,
     Δx = (lon₂ - lon₁) / Nx
     Δy = (lat₂ - lat₁) / Ny
 
-    xF = range(lon₁ - Hx * Δx, lon₁ + (Nx + Hx - 1) * Δx, length = Nx + 2 * Hx)
-    yF = range(lat₁ - Hy * Δy, lat₁ + (Ny + Hy - 1) * Δy, length = Ny + 2 * Hy)
+    xF = collect(FT, range(lon₁ - Hx * Δx, lon₁ + (Nx + Hx - 1) * Δx, length = Nx + 2 * Hx))
+    yF = collect(FT, range(lat₁ - Hy * Δy, lat₁ + (Ny + Hy - 1) * Δy, length = Ny + 2 * Hy))
 
-    xC = range(lon₁ + (0.5 - Hx) * Δx, lon₁ + (Nx + Hx - 0.5) * Δx, length = Nx + 2 * Hx)
-    yC = range(lat₁ + (0.5 - Hy) * Δy, lat₁ + (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy)
+    xC = collect(FT, range(lon₁ + (0.5 - Hx) * Δx, lon₁ + (Nx + Hx - 0.5) * Δx, length = Nx + 2 * Hx))
+    yC = collect(FT, range(lat₁ + (0.5 - Hy) * Δy, lat₁ + (Ny + Hy - 0.5) * Δy, length = Ny + 2 * Hy))
 
-    zF = zeros(Nz+2Hz)
-    zC = zeros(Nz+2Hz)
-    dzF = zeros(Nz+2Hz)
-    dzC = zeros(Nz+2Hz)
-    dxC = zeros(Nx+2*Hx, Ny+2*Hy)
-    dyC = zeros(Nx+2*Hx, Ny+2*Hy)
-    dxF = zeros(Nx+2*Hx, Ny+2*Hy)
-    dyF = zeros(Nx+2*Hx, Ny+2*Hy)
-    Ax = zeros(Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
-    Ay = zeros(Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
-    Az = zeros(Nx+2*Hx, Ny+2*Hy)
-    Vol = zeros(Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
-    hFW = ones(Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
-    hFS = ones(Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
-    hFC = ones(Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
+    zF = zeros(FT, Nz+2Hz)
+    zC = zeros(FT, Nz+2Hz)
+    dzF = zeros(FT, Nz+2Hz)
+    dzC = zeros(FT, Nz+2Hz)
+    dxC = zeros(FT, Nx+2*Hx, Ny+2*Hy)
+    dyC = zeros(FT, Nx+2*Hx, Ny+2*Hy)
+    dxF = zeros(FT, Nx+2*Hx, Ny+2*Hy)
+    dyF = zeros(FT, Nx+2*Hx, Ny+2*Hy)
+    Ax = zeros(FT, Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
+    Ay = zeros(FT, Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
+    Az = zeros(FT, Nx+2*Hx, Ny+2*Hy)
+    Vol = zeros(FT, Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
+    hFW = ones(FT, Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
+    hFS = ones(FT, Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
+    hFC = ones(FT, Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
 
-    zF[1+Hz:Nz+Hz+1] = Float64.(grid_info.RF)
-    zC[1+Hz:Nz+Hz] = Float64.(grid_info.RC)
-    dzF[1+Hz:Nz+Hz] = Float64.(grid_info.DRF)
-    dzC[1+Hz:Nz+Hz] = Float64.(grid_info.DRC); dzC[1+Hz] *= 2.0 # First laryer only has half of the grid
-    dxC[1+Hx:Nx+Hx, 1+Hy:Ny+Hy] = Float64.(grid_info.DXC)
-    dxF[1+Hx:Nx+Hx, 1+Hy:Ny+Hy] = Float64.(grid_info.DXG)
-    dyC[1+Hx:Nx+Hx, 1+Hy:Ny+Hy] = Float64.(grid_info.DYC)
-    dyF[1+Hx:Nx+Hx, 1+Hy:Ny+Hy] = Float64.(grid_info.DYG)
-    Az[1+Hx:Nx+Hx, 1+Hy:Ny+Hy] = Float64.(grid_info.RAC)
-    hFW[1+Hx:Nx+Hx, 1+Hy:Ny+Hy, 1+Hz:Nz+Hz] = Float64.(grid_info.hFacW)
-    hFS[1+Hx:Nx+Hx, 1+Hy:Ny+Hy, 1+Hz:Nz+Hz] = Float64.(grid_info.hFacS)
-    hFC[1+Hx:Nx+Hx, 1+Hy:Ny+Hy, 1+Hz:Nz+Hz] = Float64.(grid_info.hFacC)
+    zF[1+Hz:Nz+Hz+1] = FT.(grid_info.RF)
+    zC[1+Hz:Nz+Hz] = FT.(grid_info.RC)
+    dzF[1+Hz:Nz+Hz] = FT.(grid_info.DRF)
+    dzC[1+Hz:Nz+Hz] = FT.(grid_info.DRC); dzC[1+Hz] *= 2.0 # First laryer only has half of the grid
+    dxC[1+Hx:Nx+Hx, 1+Hy:Ny+Hy] = FT.(grid_info.DXC)
+    dxF[1+Hx:Nx+Hx, 1+Hy:Ny+Hy] = FT.(grid_info.DXG)
+    dyC[1+Hx:Nx+Hx, 1+Hy:Ny+Hy] = FT.(grid_info.DYC)
+    dyF[1+Hx:Nx+Hx, 1+Hy:Ny+Hy] = FT.(grid_info.DYG)
+    Az[1+Hx:Nx+Hx, 1+Hy:Ny+Hy] = FT.(grid_info.RAC)
+    hFW[1+Hx:Nx+Hx, 1+Hy:Ny+Hy, 1+Hz:Nz+Hz] = FT.(grid_info.hFacW)
+    hFS[1+Hx:Nx+Hx, 1+Hy:Ny+Hy, 1+Hz:Nz+Hz] = FT.(grid_info.hFacS)
+    hFC[1+Hx:Nx+Hx, 1+Hy:Ny+Hy, 1+Hz:Nz+Hz] = FT.(grid_info.hFacC)
 
     ##### fill halos
     @views @. dzF[1:Hz] = dzF[Hz+1]
@@ -296,19 +302,19 @@ function LoadLatLonGrid(;grid_info, size, lat, lon, landmask = nothing, halo=(2,
         end
     end
 
-    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX, TY)
+    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, FT, TX, TY)
 
-    return LatLonGrid{TX, TY, TZ, typeof(xF), typeof(zF), typeof(dxC), typeof(Vol)}(
+    return LatLonGrid{FT, TX, TY, TZ}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, dxC, dyC, dzC, dxF, dyF, dzF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz, landmask)
 end
 
-function show(io::IO, g::LatLonGrid{TX, TY, TZ}) where {TX, TY, TZ}
+function show(io::IO, g::LatLonGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
     xL, xR = g.xF[g.Hx+1], g.xF[g.Hx+1+g.Nx]
     yL, yR = g.yF[g.Hy+1], g.yF[g.Hy+1+g.Ny]
     zL, zR = g.zF[g.Hz+1], g.zF[g.Hz+1+g.Nz]
     dzF_min = minimum(g.dzF)
     dzF_max = maximum(g.dzF)
-    print(io, "LatLonGrid{$TX, $TY, $TZ}\n",
+    print(io, "LatLonGrid{$FT, $TX, $TY, $TZ}\n",
               "domain: x ∈ [$xL, $xR], y ∈ [$yL, $yR], z ∈ [$zL, $zR]\n",
               "topology (Tx, Ty, Tz):     ", (TX, TY, TZ), '\n',
               "resolution (Nx, Ny, Nz):   ", (g.Nx, g.Ny, g.Nz), '\n',
@@ -316,6 +322,6 @@ function show(io::IO, g::LatLonGrid{TX, TY, TZ}) where {TX, TY, TZ}
               "grid spacing (Δx, Δy, Δz): ", g.Δx, ", ", g.Δy, ", [min=", dzF_min, ", max=", dzF_max,"])")
 end
 
-function short_show(grid::LatLonGrid{TX, TY, TZ}) where {TX, TY, TZ}
-    return "LatLonGrid{$TX, $TY, $TZ}(Nx=$(grid.Nx), Ny=$(grid.Ny), Nz=$(grid.Nz))"
+function short_show(grid::LatLonGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
+    return "LatLonGrid{$FT, $TX, $TY, $TZ}(Nx=$(grid.Nx), Ny=$(grid.Ny), Nz=$(grid.Nz))"
 end

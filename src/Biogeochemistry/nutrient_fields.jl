@@ -1,9 +1,9 @@
-function nutrients_init(arch, g)
-    fields = (Field(arch, g), Field(arch, g),
-              Field(arch, g), Field(arch, g),
-              Field(arch, g), Field(arch, g),
-              Field(arch, g), Field(arch, g),
-              Field(arch, g), Field(arch, g))
+function nutrients_init(arch, g, FT = Float32)
+    fields = (Field(arch, g, FT), Field(arch, g, FT),
+              Field(arch, g, FT), Field(arch, g, FT),
+              Field(arch, g, FT), Field(arch, g, FT),
+              Field(arch, g, FT), Field(arch, g, FT),
+              Field(arch, g, FT), Field(arch, g, FT))
 
     nut = NamedTuple{nut_names}(fields)
     return nut
@@ -20,19 +20,22 @@ function default_nut_init()
 end
 
 """
-    generate_nutrients(arch, grid, source)
+    generate_nutrients(arch, grid, source, FT)
 Set up initial nutrient fields according to `grid`.
 
-Keyword Arguments
+Arguments
 =================
 - `arch`: `CPU()` or `GPU()`. The computer architecture used to time-step `model`.
 - `grid`: The resolution and discrete geometry on which nutrient fields are solved.
-- `source`: A `NamedTuple` containing 10 numbers each of which is the uniform initial condition of one tracer, 
-            or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
+- `source`: A `NamedTuple` containing 10 numbers each of which is the uniform initial 
+            condition of one tracer, or a `Dict` containing the file paths pointing to
+            the files of nutrient initial conditions.
+- `FT`: Floating point data type. Default: `Float32`.
 """
-function generate_nutrients(arch, g, source::Union{Dict,NamedTuple})
+function generate_nutrients(arch::Architecture, g::AbstractGrid, 
+                            source::Union{Dict,NamedTuple}, FT::DataType)
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
-    nut = nutrients_init(arch, g)
+    nut = nutrients_init(arch, g, FT)
     pathkeys = collect(keys(source))
 
     if typeof(source) <: NamedTuple
@@ -58,9 +61,9 @@ function generate_nutrients(arch, g, source::Union{Dict,NamedTuple})
                 if source.initial_condition[name] < 0.0
                     throw(ArgumentError("NUT_INIT:  The initial condition should be none-negetive."))
                 end
-                lower = 1.0 - source.rand_noise[name]
-                upper = 1.0 + source.rand_noise[name]
-                nut[name].data .= fill(source.initial_condition[name],total_size) .* rand(lower:1e-4:upper, total_size) |> array_type(arch)
+                lower = FT(1.0 - source.rand_noise[name])
+                upper = FT(1.0 + source.rand_noise[name])
+                nut[name].data .= fill(FT(source.initial_condition[name]),total_size) .* rand(lower:1e-4:upper, total_size) |> array_type(arch)
             end
         end
 

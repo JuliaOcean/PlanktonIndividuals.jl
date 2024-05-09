@@ -11,7 +11,7 @@ function test_fields()
     @test nut.DIC.data == zeros(8,10,6)
     @test interior(nut.DIC.data, grid) == zeros(4,6,2) 
     
-    nuts = generate_nutrients(CPU(), grid, default_nut_init())
+    nuts = generate_nutrients(CPU(), grid, default_nut_init(), Float32)
     @test maximum(nuts.DIC.data) < 23.0
     @test minimum(nuts.DIC.data) > 17.0
 
@@ -22,7 +22,7 @@ function test_fields()
 end
 function test_fill_halos()
     grid = RectilinearGrid(size = (4,6,2), x = (0,12), y = (0,12), z = (0,-8))
-    nuts = generate_nutrients(CPU(), grid, default_nut_init())
+    nuts = generate_nutrients(CPU(), grid, default_nut_init(), Float32)
     Nx,Ny,Nz = grid.Nx, grid.Ny, grid.Nz
     Hx,Hy,Hz = grid.Hx, grid.Hy, grid.Hz
 
@@ -110,11 +110,11 @@ end
 function test_boundary_conditions()
     grid = RectilinearGrid(size = (4, 4, 4), x = (0,32), y = (0,32), z = (0,-32))
     model = PlanktonModel(CPU(), grid; mode = CarbonMode()) 
-    set_bc!(model, :DIC, :west, 0.1)
+    set_bc!(model; tracer = :DIC, pos = :west, bc_value = 0.1)
     @test model.nutrients.DIC.bc.west == 0.1
-    set_bc!(model, :DIC, :west, ones(4,4))
+    set_bc!(model; tracer = :DIC, pos = :west, bc_value = ones(4,4))
     @test model.nutrients.DIC.bc.west == ones(4,4)
-    set_bc!(model, :DIC, :west, ones(4,4,10))
+    set_bc!(model; tracer = :DIC, pos = :west, bc_value = ones(4,4,10))
     @test model.nutrients.DIC.bc.west == ones(4,4,10)
 
     Gcs = nutrients_init(CPU(), grid)
