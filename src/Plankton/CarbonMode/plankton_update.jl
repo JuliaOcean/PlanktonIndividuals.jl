@@ -22,13 +22,13 @@ function plankton_update!(plank, nuts, rnd, p, plk, diags_spcs, ΔT, t, arch::Ar
 
         ##### division
         ##### check if the number of individuals exceeded
+        ##### do not copy inactive individuals
+        plank.dvid .*= plank.ac
         dvidnum = dot(plank.dvid, plank.ac)
         deactive_ind = findall(x -> x == 0.0f0, plank.ac)
         if dvidnum > length(deactive_ind)
             throw(ArgumentError("number of individual exceeds the capacity"))
         end
-        ##### do not copy inactive individuals
-        plank.dvid .*= plank.ac
         divide!(plank, deactive_ind, arch)
     end
 

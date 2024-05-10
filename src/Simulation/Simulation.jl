@@ -5,7 +5,7 @@ export update!, vel_copy!, set_vels_fields!, set_PARF_fields!, set_temp_fields!
 
 using CUDA
 using StructArrays
-using LinearAlgebra
+using LinearAlgebra: dot
 
 using PlanktonIndividuals.Architectures
 using PlanktonIndividuals.Grids

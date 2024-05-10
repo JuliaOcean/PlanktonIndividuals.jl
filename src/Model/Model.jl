@@ -5,7 +5,7 @@ export TimeStep!
 
 using CUDA
 using StructArrays
-using LinearAlgebra
+using LinearAlgebra: dot
 
 using PlanktonIndividuals.Architectures
 using PlanktonIndividuals.Grids

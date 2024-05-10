@@ -8,7 +8,7 @@ using KernelAbstractions.Extras.LoopInfo: @unroll
 using CUDA
 using StructArrays
 using Random
-using LinearAlgebra
+using LinearAlgebra: dot
 
 using PlanktonIndividuals.Architectures: device, Architecture, rng_type, array_type
 using PlanktonIndividuals.Grids
