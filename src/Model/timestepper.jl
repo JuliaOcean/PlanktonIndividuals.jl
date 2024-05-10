@@ -41,7 +41,7 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN)
     velos_d = replace_storage(array_type(arch), velos)
 
     nuts = StructArray(NH4 = zeros(FT, maxN), NO3 = zeros(FT, maxN), PO4 = zeros(FT, maxN), 
-                       DOC = zeros(FT, maxN),
+                       DOC = zeros(FT, maxN), idc = zeros(Int, maxN),
                        par = zeros(FT, maxN), T   = zeros(FT, maxN), pop = zeros(FT, maxN))
     nuts_d = replace_storage(array_type(arch), nuts)
 
