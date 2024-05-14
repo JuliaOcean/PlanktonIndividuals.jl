@@ -14,7 +14,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
 
     param_names=(:Nsuper, :Cquota, :mean, :var, :Chl2Cint, :α, :Φ, :Topt, :Tmax, :Ea,
                  :PCmax, :VDOCmax, :VNO3max, :VNH4max, :VPO4max,
-                 :KsatDOC, :KsatNH4, :KsatNO3, :KsatPO4, :Cqmax, :Cqmin, :Nqmax, :Nqmin, :Pqmax, :Pqmin,
+                 :KsatDOC, :KsatNH4, :KsatNO3, :KsatPO4, :Cqmax, :Nqmax, :Pqmax,
                  :Chl2N, :R_NC, :R_PC, :k_mtb, :respir, :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2,
                  :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP, :ther_mort)
 
@@ -37,11 +37,10 @@ function generate_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)
     Cquota = plank.p.Cquota
     Nsuper = plank.p.Nsuper
     cqmax = plank.p.Cqmax
-    cqmin = plank.p.Cqmin
     nqmax = plank.p.Nqmax
-    nqmin = plank.p.Nqmin
     pqmax = plank.p.Pqmax
-    pqmin = plank.p.Pqmin
+    R_NC = plank.p.R_NC
+    R_PC = plank.p.R_PC
     Chl2Cint = plank.p.Chl2Cint
 
     plank.data.ac[1:N]  .= 1.0f0                                                      # activity
@@ -62,9 +61,11 @@ function generate_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)
     plank.data.iS  .= max.(1.0f0, plank.data.iS .* var .+ mean) .* plank.data.ac      # init_size
     plank.data.Sz  .= copy(plank.data.iS)                                             # size
     plank.data.Bm  .= Cquota .* plank.data.Sz .* Nsuper                               # Bm
-    plank.data.Cq  .=(plank.data.Cq .* (cqmax - cqmin)  .+ cqmin) .* plank.data.Bm    # Cq
-    plank.data.Nq  .=(plank.data.Nq .* (nqmax - nqmin)  .+ nqmin) .* plank.data.Bm    # Nq
-    plank.data.Pq  .=(plank.data.Pq .* (pqmax - pqmin)  .+ pqmin) .* plank.data.Bm    # Pq
+    plank.data.Cq  .=plank.data.Cq .* cqmax .* plank.data.Bm                          # Cq
+    plank.data.Nq  .=plank.data.Nq .* (nqmax .* (plank.data.Bm .+ plank.data.Cq) .- 
+                                        plank.data.Bm .* R_NC)                        # Nq
+    plank.data.Pq  .=plank.data.Pq .* (pqmax .* (plank.data.Bm .+ plank.data.Cq) .- 
+                                        plank.data.Bm .* R_PC)                        # Nq
     plank.data.Chl .= plank.data.Bm .* Chl2Cint                                       # Chl
 
     mask_individuals!(plank.data, g, N, arch)

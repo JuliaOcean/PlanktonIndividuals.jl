@@ -16,7 +16,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
     param_names=(:Nsuper, :C_DNA, :var, :PRO2DNA, :RNA2DNA, :CH2DNA, :Chl2DNA,
                  :α, :Φ, :Topt, :Tmax, :Ea,
                  :PCmax, :VDOCmax, :VNO3max, :VNH4max, :VPO4max, :KsatDOC, :KsatNH4, :KsatNO3,
-                 :KsatPO4, :CHmax, :CHmin, :NSTmax, :NSTmin, :PSTmax, :PSTmin,
+                 :KsatPO4, :CHmax, :NSTmax, :PSTmax,
                  :Chl2N, :R_NC_PRO, :R_NC_DNA, :R_NC_RNA, :R_PC_DNA, :R_PC_RNA, :respir,
                  :k_pro, :k_sat_pro, :k_rna, :k_sat_rna, :k_dna, :k_sat_dna, 
                  :dvid_P, :grz_P, :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP,
