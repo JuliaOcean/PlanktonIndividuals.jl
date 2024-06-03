@@ -90,7 +90,6 @@ function divide!(plank, nuts, deactive_ind, arch::Architecture)
     accumulate!(+, nuts.idc, Int.(plank.dvid))
     get_tind!(plank.idx, plank.dvid, nuts.idc, deactive_ind, arch)
     copy_daughter_individuals!(plank, plank.dvid, plank.idx, arch)
-    divide_to_half!(plank, arch)
-    # println("time step ends")
+    divide_to_half!(plank, arch)    
     return nothing
 end

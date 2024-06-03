@@ -30,7 +30,8 @@ function plankton_update!(plank, nuts, rnd, p, plk, diags_spcs, ΔT, t, arch::Ar
         if dvidnum > length(deactive_ind)
             throw(ArgumentError("number of individual exceeds the capacity"))
         end
-        divide!(plank, deactive_ind, arch)
+        divide!(plank, nuts, deactive_ind, arch)
+        plank.idx .= 0
     end
 
     ##### diagnostic for individual distribution
