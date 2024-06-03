@@ -4,7 +4,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           iS  = zeros(FT, maxN), Sz  = zeros(FT, maxN),
                           Bm  = zeros(FT, maxN), Bd  = zeros(FT, maxN), Chl = zeros(FT, maxN),
                           gen = zeros(FT, maxN), age = zeros(FT, maxN),
-                          ac  = zeros(FT, maxN), idx = zeros(FT, maxN),
+                          ac  = zeros(FT, maxN), idx = zeros(Int,maxN),
                           PS  = zeros(FT, maxN), BS  = zeros(FT, maxN), RS  = zeros(FT, maxN),
                           TD  = zeros(FT, maxN), RP  = zeros(FT, maxN),
                           graz= zeros(FT, maxN), mort= zeros(FT, maxN), dvid= zeros(FT, maxN)

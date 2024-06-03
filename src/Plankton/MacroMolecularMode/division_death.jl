@@ -86,10 +86,10 @@ function divide_to_half!(plank, arch)
     kernel!(plank)
     return nothing
 end
-function divide!(plank, deactive_ind, arch::Architecture)
-    con_ind = cumsum(plank.dvid)
-    get_tind!(plank.idx, plank.dvid, Int.(con_ind), deactive_ind, arch)
-    copy_daughter_individuals!(plank, plank.dvid, Int.(plank.idx), arch)
+function divide!(plank, nuts, deactive_ind, arch::Architecture)
+    accumulate!(+, nuts.idc, Int.(plank.dvid))
+    get_tind!(plank.idx, plank.dvid, nuts.idc, deactive_ind, arch)
+    copy_daughter_individuals!(plank, plank.dvid, plank.idx, arch)
     divide_to_half!(plank, arch)
     return nothing
 end
