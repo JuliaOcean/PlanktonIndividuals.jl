@@ -1,9 +1,7 @@
 abstract type division_type end
 struct Sizer <: division_type end
-struct Adder <: division_type end
 struct Timer <: division_type end
 struct Sizer_Timer <: division_type end
-struct Adder_Timer <: division_type end
 
 ##### shape function - decrease from 1.0 to 0.0 while x increase from 0.0 to 1.0
 @inline function shape_func_dec(x, xmax, k)
@@ -20,37 +18,28 @@ end
 end
 
 ##### calculate probability of cell division
-@inline calc_division(::Sizer, Sz, iS, t, reg, reg2, P) = P * shape_func_inc(Sz, reg, 1.0f-3)
+@inline calc_division(::Sizer, Sz, t, reg, reg2, P) = P * shape_func_inc(Sz, reg, 1.0f-3)
 
-@inline calc_division(::Adder, Sz, iS, t, reg, reg2, P) = P * shape_func_inc(Sz-iS, reg, 1.0f-3)
+@inline calc_division(::Timer, Sz, t, reg, reg2, P) = P * shape_func_inc(t%86400/3600, reg, 1.0f-5)
 
-@inline calc_division(::Timer, Sz, iS, t, reg, reg2, P) = P * shape_func_inc(t%86400/3600, reg, 1.0f-5)
-
-@inline calc_division(::Sizer_Timer, Sz, iS, t, reg, reg2, P) =
+@inline calc_division(::Sizer_Timer, Sz, t, reg, reg2, P) =
                         P * shape_func_inc(Sz, reg, 1.0f-3) * shape_func_inc(t%86400/3600, reg2, 1.0f-5)
-
-@inline calc_division(::Adder_Timer, Sz, iS, t, reg, reg2, P) =
-                        P * shape_func_inc(Sz-iS, reg, 1.0f-3) * shape_func_inc(t%86400/3600, reg2, 1.0f-5)
 
 @inline function divide_type(dvid_type)
     if dvid_type == 1
         return Sizer()
     elseif dvid_type == 2
-        return Adder()
-    elseif dvid_type == 3
         return Timer()
-    elseif dvid_type == 4
+    elseif dvid_type == 3
         return Sizer_Timer()
-    elseif dvid_type == 5
-        return Adder_Timer()
     else
-        throw(ArgumentError("Wrong cell division type, must be in 1 to 5"))
+        throw(ArgumentError("Wrong cell division type, must be in 1 to 3"))
     end
 end
 
 @kernel function calc_dvid_kernel!(plank, dvid_type, p, t)
     i = @index(Global)
-    @inbounds plank.dvid[i] = calc_division(dvid_type, plank.Sz[i], plank.iS[i], t,
+    @inbounds plank.dvid[i] = calc_division(dvid_type, plank.Sz[i], t,
                                             p.dvid_reg, p.dvid_reg2, p.dvid_P) *
                                             isless(2.0f0 * p.Cquota * p.Nsuper, plank.Bm[i]) * plank.ac[i]
 end
