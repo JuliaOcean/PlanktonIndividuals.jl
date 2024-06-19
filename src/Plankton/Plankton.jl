@@ -16,7 +16,7 @@ using PlanktonIndividuals.Architectures: device, Architecture, rng_type
 using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Diagnostics
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode
+using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
 
 #####
 ##### generate individuals of multiple species
@@ -44,12 +44,14 @@ include("Advection/Advection.jl")
 include("QuotaMode/QuotaMode.jl")
 include("CarbonMode/CarbonMode.jl")
 include("MacroMolecularMode/MacroMolecularMode.jl")
+include("IronEnergyMode/IronEnergyMode.jl")
 include("utils.jl")
 
 using .Advection
 import .Quota
 import .Carbon
 import .MacroMolecular
+import .IronEnergy
 
 #####
 ##### some workarounds for function names
@@ -63,6 +65,9 @@ construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::Dat
 construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType, mode::CarbonMode) = 
     Carbon.construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
 
+construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType, mode::IronEnergyMode) = 
+    IronEnergy.construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
+
 generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::MacroMolecularMode) =
     MacroMolecular.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
@@ -72,19 +77,19 @@ generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::Q
 generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::CarbonMode) =
     Carbon.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
+generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::IronEnergyMode) =
+    IronEnergy.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
+
 plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
     MacroMolecular.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
-plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
-    MacroMolecular.plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::AbstractMode)
 
 plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode) =
     Quota.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
-plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::QuotaMode) =
-    Quota.plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::AbstractMode)
 
 plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::CarbonMode) =
     Carbon.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
-plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::CarbonMode) =
-    Carbon.plankton_update!(plank, nuts, proc, p, plk, nothing::Nothing, ΔT, t, arch::Architecture, mode::AbstractMode)
+
+plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::IronEnergyMode) =
+    IronEnergy.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
 
 end

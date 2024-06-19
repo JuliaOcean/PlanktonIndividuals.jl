@@ -6,9 +6,10 @@ end
 ##### grazing and grazing loss
 function grazing!(plank, arch::Architecture, plk, p)
     ##### calculate grazing loss
-    calc_loss!(plk.DOC.data, plk.POC.data, plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
-               plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.graz, 
-               p.grazFracC, p.grazFracN, p.grazFracP, p.R_NC, p.R_PC, arch)
+    calc_loss!(plk.NH4.data, plk.NO3.data, plk.DOC.data, plk.POC.data, 
+               plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
+               plk.DOFe.data, plk.POFe.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.graz, 
+               p.grazFracC, p.grazFracN, p.grazFracP, p.grazFracFe, p.R_NC, p.R_PC, arch)
     
     ##### inactivate grazed individuals
     inactivate!(plank, plank.graz)
@@ -19,9 +20,10 @@ end
 ##### mortality and mortality loss
 function mortality!(plank, arch::Architecture, plk, p)
     ##### calculate mortality loss
-    calc_loss!(plk.DOC.data, plk.POC.data, plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
-               plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.mort, 
-               p.mortFracC, p.mortFracN, p.mortFracP, p.R_NC, p.R_PC, arch)
+    calc_loss!(plk.NH4.data, plk.NO3.data, plk.DOC.data, plk.POC.data, 
+               plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
+               plk.DOFe.data, plk.POFe.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.graz, 
+               p.mortFracC, p.mortFracN, p.mortFracP, p.mortFracFe, p.R_NC, p.R_PC, arch)
     
     ##### inactivate dead individuals
     inactivate!(plank, plank.mort)
@@ -51,9 +53,11 @@ end
         @inbounds plank.z[idx[i]]    = plank.z[i]
         @inbounds plank.Sz[idx[i]]   = plank.Sz[i]
         @inbounds plank.Bm[idx[i]]   = plank.Bm[i]
-        @inbounds plank.Cq[idx[i]]   = plank.Cq[i]
-        @inbounds plank.Nq[idx[i]]   = plank.Nq[i]
-        @inbounds plank.Pq[idx[i]]   = plank.Pq[i]
+        @inbounds plank.CH[idx[i]]   = plank.CH[i]
+        @inbounds plank.qNO3[idx[i]] = plank.qNO3[i]
+        @inbounds plank.qNH4[idx[i]] = plank.qNH4[i]
+        @inbounds plank.qP[idx[i]]   = plank.qP[i]
+        @inbounds plank.qFe[idx[i]]  = plank.qFe[i]
         @inbounds plank.Chl[idx[i]]  = plank.Chl[i]
         @inbounds plank.gen[idx[i]]  = plank.gen[i]
         @inbounds plank.ac[idx[i]]   = plank.ac[i]
@@ -71,14 +75,16 @@ end
 ##### cell division
 @kernel function divide_to_half_kernel!(plank)
     i = @index(Global)
-    @inbounds plank.Sz[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.Bm[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.Cq[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.Nq[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.Pq[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.Chl[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.gen[i] += plank.dvid[i]
-    @inbounds plank.age[i] *= (1.0f0 - plank.dvid[i])
+    @inbounds plank.Sz[i]   *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.Bm[i]   *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.CH[i]   *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.qNO3[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.qNH4[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.qP[i]   *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.qFe[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.Chl[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.gen[i]  += plank.dvid[i]
+    @inbounds plank.age[i]  *= (1.0f0 - plank.dvid[i])
 end
 function divide_to_half!(plank, arch)
     kernel! = divide_to_half_kernel!(device(arch), 256, (size(plank.ac,1)))

@@ -15,7 +15,7 @@ using PlanktonIndividuals.Parameters
 using PlanktonIndividuals.Plankton
 using PlanktonIndividuals.Diagnostics
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode
+using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
 
 import Base: show
 

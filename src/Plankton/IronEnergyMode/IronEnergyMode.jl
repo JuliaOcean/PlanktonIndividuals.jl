@@ -1,4 +1,4 @@
-module Carbon
+module IronEnergy
 
 export plankton_update!
 export construct_plankton, generate_plankton!

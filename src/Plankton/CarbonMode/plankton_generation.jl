@@ -1,7 +1,7 @@
 function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
     rawdata = StructArray(x   = zeros(FT, maxN), y   = zeros(FT, maxN), z   = zeros(FT, maxN),
                           xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN),
-                          iS  = zeros(FT, maxN), Sz  = zeros(FT, maxN),
+                          Sz  = zeros(FT, maxN),
                           Bm  = zeros(FT, maxN), Bd  = zeros(FT, maxN), Chl = zeros(FT, maxN),
                           gen = zeros(FT, maxN), age = zeros(FT, maxN),
                           ac  = zeros(FT, maxN), idx = zeros(Int,maxN),
@@ -38,7 +38,7 @@ function generate_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)
     plank.data.gen[1:N] .= 1.0f0                                                                             # generation
     plank.data.age[1:N] .= 0.0f0                                                                             # age
 
-    randn!(rng_type(arch), plank.data.iS)
+    randn!(rng_type(arch), plank.data.Sz)
     rand!(rng_type(arch), plank.data.x)
     rand!(rng_type(arch), plank.data.y)
     rand!(rng_type(arch), plank.data.z)
@@ -46,8 +46,7 @@ function generate_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)
     plank.data.x   .=(plank.data.x .* g.Nx) .* plank.data.ac                                         # x, unit: grid spacing, starting from 0
     plank.data.y   .=(plank.data.y .* g.Ny) .* plank.data.ac                                         # y, unit: grid spacing, starting from 0
     plank.data.z   .=(plank.data.z .* g.Nz) .* plank.data.ac                                         # z, unit: grid spacing, starting from 0
-    plank.data.iS  .= max.(1.0f0, plank.data.iS .* var .+ mean) .* plank.data.ac                       # init_size
-    plank.data.Sz  .= copy(plank.data.iS)                                                            # size
+    plank.data.Sz  .= max.(1.0f0, plank.data.Sz .* var .+ mean) .* plank.data.ac                     # size
     plank.data.Bm  .= Cquota .* plank.data.Sz .* Nsuper                                              # Bm
     plank.data.Chl .= plank.data.Bm .* Chl2C                                                         # Chl
 

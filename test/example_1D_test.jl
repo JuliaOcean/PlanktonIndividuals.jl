@@ -1,4 +1,4 @@
-using PlanktonIndividuals, Serialization
+using PlanktonIndividuals
 
 grid = RectilinearGrid(size = (1, 1, 16), x = (0,32), y = (0,32), z = (0,-32), 
                               topology = (Bounded, Bounded, Bounded), halo = (2, 2, 2))

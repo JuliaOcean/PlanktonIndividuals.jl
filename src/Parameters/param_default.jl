@@ -48,10 +48,12 @@ function bgc_params_default(FT)
         "kDOC"         => 1/30/86400,         # Remineralization rate for DOC, turn over time: a month (per second)
         "Nit"          => 1/30/86400,         # Nitrification rate for NH4
         "kDON"         => 1/30/86400,         # Remineralization rate for DON, turn over time: a month (per second)
-        "kDOP"         => 1/30/86400,         # Remineralization rate for DON, turn over time: a month (per second)
+        "kDOP"         => 1/30/86400,         # Remineralization rate for DOP, turn over time: a month (per second)
+        "kDOFe"        => 1/30/86400,         # Remineralization rate for DOFe, turn over time: a month (per second)
         "kPOC"         => 1/30/86400,         # Remineralization rate for POC, turn over time: a month (per second)
         "kPON"         => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
-        "kPOP"         => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
+        "kPOP"         => 1/30/86400,         # Remineralization rate for POP, turn over time: a month (per second)
+        "kPOFe"        => 1/30/86400,         # Remineralization rate for POFe, turn over time: a month (per second)
         "κh"           => 0.0e-6,             # Horizontal diffusion
         "κv"           => 0.0e-6,             # Vertical diffusion
         "κhP"          => 0.0e-6,             # Horizontal diffusion for individuals
@@ -131,6 +133,73 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "mortFracC"=> [0.5],     # Fraction goes into dissolved organic pool
         "mortFracN"=> [0.5],     # Fraction goes into dissolved organic pool
         "mortFracP"=> [0.5],     # Fraction goes into dissolved organic pool
+    )
+
+    if N == 1
+        return params
+    else
+        return generate_n_species_params(N, params)
+    end
+end
+
+"""
+    phyt_params_default(N::Int64, mode::AbstractMode)
+Generate default phytoplankton parameter values based on `AbstractMode` and species number `N`.
+"""
+function phyt_params_default(N::Int64, mode::IronEnergyMode)
+    params=Dict(
+        "Nsuper"    => [1],       # Number of phyto cells each super individual represents
+        "Cquota"    => [1.8e-11], # C quota of phyto cells at size = 1.0 (mmolC/cell)
+        "SA"        => [0.18],    # Surface area (μm²) Prochlorococcus
+        "mean"      => [1.2],     # Mean of the normal distribution of initial phyto individuals
+        "var"       => [0.3],     # Variance of the normal distribution of initial phyto individuals
+        "Chl2Cint"  => [0.10],    # Initial Chla:C ratio in phytoplankton (mgChl/mmolC)
+        "α"         => [4.5e-2],  # Irradiance absorption coeff (mmolC m² second/mgChl /μmol photon)
+        "Topt"      => [27.0],    # Optimal temperature for growth (C)
+        "Tmax"      => [30.0],    # Maximal temperature for growth (C)
+        "Ea"        => [5.3e4],   # Free energy
+        "Imax"      => [2500.0],  # Light regulation of iron allocation (μmol photon/m²/second)
+        "PCmax"     => [24.3],    # Maximum primary production rate (kJ/mmolC/second)
+        "k_cf"      => [0.5],     # Carbon fixation rate (mmolC/kJ/second)
+        "e_cf"      => [0.59],    # Energy consumption rate of carbon fixation (kJ/mmolC)
+        "VNH4max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
+        "VNO3max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
+        "VPO4max"   => [1.2e-6],  # Maximum P uptake rate (mmolP/mmolC/second)
+        "KfePS"     => [3.0e-6],  # Haff-saturation coeff of iron quota for photosynthesis (mmolFe/mmolC)
+        "KfeNR"     => [2.0e-6],  # Haff-saturation coeff of iron quota for NO3 reduction (mmolFe/mmolC)
+        "KsatNH4"   => [0.005],   # Half-saturation coeff (mmolN/m³)
+        "KsatNO3"   => [0.010],   # Half-saturation coeff (mmolN/m³)
+        "KsatPO4"   => [0.003],   # Half-saturation coeff (mmolP/m³)
+        "KSAFe"     => [1.16e-19],# Surface-area specific iron uptake rate (m³/μm²/second)
+        "qNO3max"   => [0.25],    # Maximum NO3 quota in cell (mmolN/mmolC)
+        "qNH4max"   => [0.25],    # Maximum NH4 quota in cell (mmolN/mmolC)
+        "qPmax"     => [0.02],    # Maximum P quota in cell (mmolP/mmolC)
+        "qFemax"    => [5.0e-6],  # Maximum Fe quota in cell (mmolFe/mmolC)
+        "CHmax"     => [0.4],     # Maximum C quota in cell (mmolC/mmolC)
+        "k_mtb"     => [3.5e-5],  # Metabolic rate (per second)
+        "k_rs"      => [0.5e-7],  # Respiration rate (per second)
+        "e_rs"      => [0.2],     # Energy production rate of respiration (kJ/mmolC)
+        "k_nr"      => [2.8e-6],  # Nitrate reduction rate (mmolN/mmolC/second)
+        "e_nr"      => [0.56],    # Energy consumption rate of NO3 reduction (kJ/mmolN)
+        "Chl2N"     => [3.0],     # Maximum Chla:N ratio in phytoplankton
+        "R_NC"      => [16/106],  # N:C ratio in cell biomass
+        "R_PC"      => [1/106],   # N:C ratio in cell biomass
+        "grz_P"     => [0.0],     # Grazing probability per second
+        "dvid_P"    => [1e-4],    # Probability of cell division per second.
+        "dvid_type" => [1],       # The type of cell division, 1:sizer, 2:adder.
+        "dvid_reg"  => [2.5],     # Regulations of cell division (cell size)
+        "dvid_reg2" => [12.0],    # Regulations of cell division (clock time)
+        "mort_P"    => [5e-5],    # Probability of cell natural death per second
+        "mort_reg"  => [0.5],     # Regulation of cell natural death
+        "grazFracC" => [0.7],     # Fraction goes into dissolved organic pool
+        "grazFracN" => [0.7],     # Fraction goes into dissolved organic pool
+        "grazFracP" => [0.7],     # Fraction goes into dissolved organic pool
+        "grazFracFe"=> [0.7],     # Fraction goes into dissolved organic pool
+        "mortFracC" => [0.5],     # Fraction goes into dissolved organic pool
+        "mortFracN" => [0.5],     # Fraction goes into dissolved organic pool
+        "mortFracP" => [0.5],     # Fraction goes into dissolved organic pool
+        "mortFracFe"=> [0.5],     # Fraction goes into dissolved organic pool
+        "ther_mort" => [0],       # thermal mortality, 1 for on, 0 for off
     )
 
     if N == 1

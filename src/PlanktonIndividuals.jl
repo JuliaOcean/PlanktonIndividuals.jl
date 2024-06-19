@@ -15,7 +15,7 @@ export
 
     # Model
     PlanktonModel, 
-    CarbonMode, QuotaMode, MacroMolecularMode,
+    CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode,
 
     # BoundaryConditions
     set_bc!,
@@ -75,6 +75,12 @@ struct QuotaMode <: AbstractMode end
 Type for the phytoplankton physiology mode which resolves marco-molecules.
 """
 struct MacroMolecularMode <: AbstractMode end
+
+"""
+    IronEnergyMode <: AbstractMode
+Type for the phytoplankton physiology mode which resolves carbon, nitrogen, phosphorus, and iron quotas. This mode also resolves energy.
+"""
+struct IronEnergyMode <: AbstractMode end
 
 include("Architectures.jl")
 include("Units.jl")

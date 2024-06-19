@@ -1,4 +1,4 @@
-using PlanktonIndividuals, Serialization
+using PlanktonIndividuals
 
 grid = RectilinearGrid(size = (16, 16, 1), x = (0,32), y = (0,32), z = (0,-32))
 

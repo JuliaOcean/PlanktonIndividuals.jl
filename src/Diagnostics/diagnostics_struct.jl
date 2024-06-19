@@ -98,7 +98,7 @@ function diag_avail(tracer, plank, mode::AbstractMode)
 end
 
 function tracer_avail_diags()
-    return (:PAR, :DIC, :DOC, :POC, :NH4, :NO3, :DON, :PON, :PO4, :DOP, :POP)
+    return (:PAR, :DIC, :DOC, :POC, :NH4, :NO3, :DON, :PON, :PO4, :DOP, :POP, :FeT, :DOFe, :POFe)
 end
 
 function plank_avail_diags(mode::AbstractMode)
@@ -109,6 +109,8 @@ function plank_avail_diags(mode::AbstractMode)
         plank_avail = (:num, :graz, :mort, :dvid, :PS, :BS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :exu, :Bm, :Cq, :Nq, :Pq, :Chl)
     elseif isa(mode, MacroMolecularMode)
         plank_avail = (:num, :graz, :mort, :dvid, :PS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :ρChl, :S_PRO, :S_DNA, :S_RNA, :exu, :CH, :NST, :PST, :PRO, :DNA, :RNA, :Chl)
+    elseif isa(mode, IronEnergyMode)
+        plank_avail = (:num, :graz, :mort, :dvid, :PS, :CF, :ECF, :RS, :ERS, :NR, :ENR, :BS, :VNH4, :VNO3, :VPO4, :VFe, :Bm, :En, :CH, :qNO3, :qNH4, :qP, :qFe, :Chl)
     end
     return plank_avail
 end

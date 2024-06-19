@@ -94,6 +94,30 @@ function write_species_dynamics(t::AbstractFloat, phytos, filepath, mode::QuotaM
         close(io);
     end
 end
+function write_species_dynamics(t::AbstractFloat, phytos, filepath, mode::IronEnergyMode)
+    for i in 1:length(phytos)
+        file = joinpath(filepath, "dynamic_species"*lpad(i,3,"0")*".txt")
+        pop = dot(phytos[i].data.ac, phytos[i].data.ac)
+        gen_ave =  dot(phytos[i].data.gen, phytos[i].data.ac) / pop
+        age_ave =  dot(phytos[i].data.age, phytos[i].data.ac) / pop
+        size_ave=  dot(phytos[i].data.Sz,  phytos[i].data.ac) / pop
+        Bm_ave  =  dot(phytos[i].data.Bm,  phytos[i].data.ac) / pop
+        En_ave  =  dot(phytos[i].data.En,  phytos[i].data.ac) / pop
+        CH_ave  =  dot(phytos[i].data.CH,  phytos[i].data.ac) / pop
+        qNO3_ave=  dot(phytos[i].data.qNO3,  phytos[i].data.ac) / pop
+        qNH4_ave=  dot(phytos[i].data.qNH4,  phytos[i].data.ac) / pop
+        qP_ave  =  dot(phytos[i].data.qP,  phytos[i].data.ac) / pop
+        qFe_ave =  dot(phytos[i].data.qFe,  phytos[i].data.ac) / pop
+        Chl_ave =  dot(phytos[i].data.Chl, phytos[i].data.ac) / pop
+        day = t÷86400
+        hour = t%86400/3600
+        io = open(file,"a");
+        println(io,@sprintf(
+            "%3.0f  %2.2f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E  %.8E  %.8E  %.8E  %.8E  %.8E  %.8E  %.8E",
+            day,hour,pop,gen_ave,age_ave,size_ave,Bm_ave,En_ave,CH_ave,qNO3_ave,qNH4_ave,qP_ave,qFe_ave,Chl_ave))
+        close(io);
+    end
+end
 function write_species_dynamics(t::AbstractFloat, phytos, filepath, mode::CarbonMode)
     for i in 1:length(phytos)
         file = joinpath(filepath, "dynamic_species"*lpad(i,3,"0")*".txt")
