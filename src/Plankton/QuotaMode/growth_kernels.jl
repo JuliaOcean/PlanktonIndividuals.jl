@@ -112,10 +112,10 @@ end
 @kernel function update_quotas_2_kernel!(plank, ΔT, p)
     i = @index(Global)
     @inbounds plank.Cq[i] = plank.Cq[i] + (plank.VDOC[i] - plank.resp[i]) * ΔT
-    @inbounds plank.Cq[i] = plank.Cq[i] + max(0.0f0, (0.0f0 - plank.Cq[i]))
     @inbounds plank.Bm[i] = plank.Bm[i] - max(0.0f0, (0.0f0 - plank.Cq[i]))
     @inbounds plank.Nq[i] = plank.Nq[i] + max(0.0f0, (0.0f0 - plank.Cq[i])) * p.R_NC
     @inbounds plank.Pq[i] = plank.Pq[i] + max(0.0f0, (0.0f0 - plank.Cq[i])) * p.R_PC
+    @inbounds plank.Cq[i] = plank.Cq[i] + max(0.0f0, (0.0f0 - plank.Cq[i]))
 end
 function update_quotas_2!(plank, ΔT, p, arch)
     kernel! = update_quotas_2_kernel!(device(arch), 256, (size(plank.ac,1)))
