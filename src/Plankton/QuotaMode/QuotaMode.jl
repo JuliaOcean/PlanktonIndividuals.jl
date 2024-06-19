@@ -14,7 +14,7 @@ using PlanktonIndividuals.Architectures: device, Architecture, rng_type, array_t
 using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Diagnostics
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode
+using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
 
 include("../utils.jl")
 include("../division_death_probability.jl")

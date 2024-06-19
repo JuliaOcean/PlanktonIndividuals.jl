@@ -1,8 +1,9 @@
-using PlanktonIndividuals, Serialization
+using PlanktonIndividuals
 
 grid = RectilinearGrid(size = (1, 1, 1), x = (0,32), y = (0,32), z = (0,-32))
 
 model = PlanktonModel(CPU(), grid;
+                      mode = IronEnergyMode(),
                       N_species = 5,
                       N_individual = [1024,1024,1024,1024,1024],
                       max_individuals = 1024*10)
@@ -22,15 +23,15 @@ end
 TP = tot_mass(model.nutrients.PO4.data, grid) +
      tot_mass(model.nutrients.DOP.data, grid) +
      tot_mass(model.nutrients.POP.data, grid)
-TP = TP + sum(model.individuals.phytos.sp1.data.Pq .+ 
+TP = TP + sum(model.individuals.phytos.sp1.data.qP .+ 
               model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC) + 
-          sum(model.individuals.phytos.sp2.data.Pq .+ 
+          sum(model.individuals.phytos.sp2.data.qP .+ 
               model.individuals.phytos.sp2.data.Bm .* model.individuals.phytos.sp2.p.R_PC) +
-          sum(model.individuals.phytos.sp3.data.Pq .+ 
+          sum(model.individuals.phytos.sp3.data.qP .+ 
               model.individuals.phytos.sp3.data.Bm .* model.individuals.phytos.sp3.p.R_PC) +
-          sum(model.individuals.phytos.sp4.data.Pq .+ 
+          sum(model.individuals.phytos.sp4.data.qP .+ 
               model.individuals.phytos.sp4.data.Bm .* model.individuals.phytos.sp4.p.R_PC) +
-          sum(model.individuals.phytos.sp5.data.Pq .+ 
+          sum(model.individuals.phytos.sp5.data.qP .+ 
               model.individuals.phytos.sp5.data.Bm .* model.individuals.phytos.sp5.p.R_PC)
 
 
@@ -41,15 +42,15 @@ update!(sim)
 TPt = tot_mass(model.nutrients.PO4.data, grid) +
       tot_mass(model.nutrients.DOP.data, grid) +
       tot_mass(model.nutrients.POP.data, grid)
-TPt=TPt + sum(model.individuals.phytos.sp1.data.Pq .+ 
+TPt=TPt + sum(model.individuals.phytos.sp1.data.qP .+ 
               model.individuals.phytos.sp1.data.Bm .* model.individuals.phytos.sp1.p.R_PC) +
-          sum(model.individuals.phytos.sp2.data.Pq .+ 
+          sum(model.individuals.phytos.sp2.data.qP .+ 
               model.individuals.phytos.sp2.data.Bm .* model.individuals.phytos.sp2.p.R_PC) +
-          sum(model.individuals.phytos.sp3.data.Pq .+ 
+          sum(model.individuals.phytos.sp3.data.qP .+ 
               model.individuals.phytos.sp3.data.Bm .* model.individuals.phytos.sp3.p.R_PC) +
-          sum(model.individuals.phytos.sp4.data.Pq .+ 
+          sum(model.individuals.phytos.sp4.data.qP .+ 
               model.individuals.phytos.sp4.data.Bm .* model.individuals.phytos.sp4.p.R_PC) +
-          sum(model.individuals.phytos.sp5.data.Pq .+ 
+          sum(model.individuals.phytos.sp5.data.qP .+ 
               model.individuals.phytos.sp5.data.Bm .* model.individuals.phytos.sp5.p.R_PC)
 
 @testset "PlanktonIndividuals 0D tests:" begin

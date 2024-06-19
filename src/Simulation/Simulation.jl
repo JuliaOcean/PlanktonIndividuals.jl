@@ -17,7 +17,7 @@ using PlanktonIndividuals.Diagnostics
 using PlanktonIndividuals.Model
 using PlanktonIndividuals.Output
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode
+using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
 
 import Base: show
 

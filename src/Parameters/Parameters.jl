@@ -7,7 +7,7 @@ export update_bgc_params, update_phyt_params
 using CUDA
 using PlanktonIndividuals.Grids
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode
+using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
 
 include("param_default.jl")
 include("param_update.jl")

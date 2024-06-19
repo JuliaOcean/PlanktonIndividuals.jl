@@ -43,7 +43,8 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                     model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
                     model.individuals.phytos[sp].data.ac, model.nutrients.NH4.data,
                     model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
-                    model.timestepper.par, model.timestepper.temp, model.timestepper.pop, model.arch)
+                    model.nutrients.FeT.data, model.timestepper.par, model.timestepper.temp, 
+                    model.timestepper.pop, model.arch)
 
             plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts,
                                 model.timestepper.rnd, model.individuals.phytos[sp].p,
@@ -65,11 +66,12 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                         model.individuals.phytos[sp].data.xi, model.individuals.phytos[sp].data.yi,
                         model.individuals.phytos[sp].data.zi, model.arch)
 
-            find_NPT!(model.timestepper.nuts, model.individuals.phytos[sp].data.xi,
-                    model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
-                    model.individuals.phytos[sp].data.ac, model.nutrients.NH4.data,
-                    model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
-                    model.timestepper.par, model.timestepper.temp, model.timestepper.pop, model.arch)
+                        find_NPT!(model.timestepper.nuts, model.individuals.phytos[sp].data.xi,
+                        model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
+                        model.individuals.phytos[sp].data.ac, model.nutrients.NH4.data,
+                        model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
+                        model.nutrients.FeT.data, model.timestepper.par, model.timestepper.temp, 
+                        model.timestepper.pop, model.arch)
 
             plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts,
                                 model.timestepper.rnd, model.individuals.phytos[sp].p,

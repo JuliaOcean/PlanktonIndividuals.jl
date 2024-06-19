@@ -11,7 +11,7 @@ using PlanktonIndividuals.Architectures: device, Architecture, array_type
 using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Fields
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode
+using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
 
 import Base: show
 
