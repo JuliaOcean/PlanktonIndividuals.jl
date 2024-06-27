@@ -71,11 +71,11 @@ function generate_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)
     plank.data.z    .=(plank.data.z .* g.Nz) .* plank.data.ac                          # z, unit: grid spacing, starting from 0
     plank.data.Sz   .= max.(1.0f0, plank.data.Sz .* var .+ mean) .* plank.data.ac      # init_size
     plank.data.Bm   .= Cquota .* plank.data.Sz .* Nsuper                               # Bm
-    plank.data.CH   .= plank.data.CH .* CHmax .* plank.data.Bm                          # CH
+    plank.data.CH   .= plank.data.CH .* CHmax .* plank.data.Bm                         # CH
     plank.data.qNO3 .= plank.data.qNO3 .* (qNO3max .* (plank.data.Bm .+ plank.data.CH))# Nq
     plank.data.qNH4 .= plank.data.qNH4 .* (qNH4max .* (plank.data.Bm .+ plank.data.CH))# Nq
     plank.data.qP   .= plank.data.qP .* (pqmax .* (plank.data.Bm .+ plank.data.CH) .- 
-                                        plank.data.Bm .* R_PC)                        # Pq
+                                        plank.data.Bm .* R_PC)                         # Pq
     plank.data.qFe  .= plank.data.qFe .* (feqmax .* (plank.data.Bm .+ plank.data.CH))  # Fe
     plank.data.Chl  .= plank.data.Bm .* Chl2Cint                                       # Chl
 

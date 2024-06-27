@@ -69,8 +69,10 @@ function update_state_1!(plank, ΔT, arch::Architecture)
 end
 
 ##### calculate carbon fixation rate (mmolC/individual/second)
-@inline function calc_CF(En, temp, p, ac, ΔT)
-    CF = p.k_cf * En * tempFunc_PS(temp, p) * ac
+@inline function calc_CF(En, CH, Bm, temp, p, ac, ΔT)
+    Qc = CH/max(1.0f-30, Bm + CH)
+    regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4)
+    CF = p.k_cf * En * regQC * tempFunc_PS(temp, p) * ac
     CF = min(CF, En/p.e_cf/ΔT) # double check En is not over consumed
     ECF = CF * p.e_cf * ac
     return CF, ECF
@@ -78,7 +80,8 @@ end
 
 @kernel function calc_carbon_fixation_kernel!(plank, nuts, p, ΔT)
     i = @index(Global)
-    @inbounds plank.CF[i], plank.ECF[i] = calc_CF(plank.En[i], nuts.T[i], p, plank.ac[i], ΔT)
+    @inbounds plank.CF[i], plank.ECF[i] = calc_CF(plank.En[i], plank.CH[i], plank.Bm[i],
+                                                  nuts.T[i], p, plank.ac[i], ΔT)
 end
 function calc_carbon_fixation!(plank, nuts, p, ΔT, arch::Architecture)
     kernel! = calc_carbon_fixation_kernel!(device(arch), 256, (size(plank.ac,1)))
