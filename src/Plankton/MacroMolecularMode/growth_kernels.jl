@@ -23,7 +23,7 @@ end
 end
 
 ##### calculate nutrient uptake rate (mmolN/individual/second)
-@inline function calc_NP_uptake(NH4, NO3, PO4, temp, NST, PST, PRO, DNA, RNA, Chl, p, ac)
+@inline function calc_NP_uptake(NH4, NO3, PO4, temp, NST, PST, PRO, DNA, RNA, Chl, pop, p, ac, ΔT)
     N_tot = total_N_biomass(PRO, DNA, RNA, NST, Chl, p)
     P_tot = total_P_biomass(DNA, RNA, PST, p)
     R_NST = NST / max(1.0f-30, N_tot)
@@ -33,21 +33,24 @@ end
     VNH4 = p.VNH4max * regQN * NH4/max(1.0f-30, NH4+p.KsatNH4) * tempFunc(temp, p) * PRO * ac
     VNO3 = p.VNO3max * regQN * NO3/max(1.0f-30, NO3+p.KsatNO3) * tempFunc(temp, p) * PRO * ac
     VPO4 = p.VPO4max * regQP * PO4/max(1.0f-30, PO4+p.KsatPO4) * tempFunc(temp, p) * PRO * ac
-    return VNH4, VNO3, VPO4
+    return min(VNH4, NH4/ΔT/max(1.0f0,pop)), 
+           min(VNO3, NO3/ΔT/max(1.0f0,pop)), 
+           min(VPO4, PO4/ΔT/max(1.0f0,pop))
 end
 
-@kernel function calc_inorganic_uptake_kernel!(plank, nuts, p)
+@kernel function calc_inorganic_uptake_kernel!(plank, nuts, p, ΔT)
     i = @index(Global)
     @inbounds plank.PS[i] = calc_PS(nuts.par[i], nuts.T[i], plank.Chl[i], plank.PRO[i], p) * plank.ac[i]
 
     @inbounds plank.VNH4[i], plank.VNO3[i], plank.VPO4[i] = 
                             calc_NP_uptake(nuts.NH4[i], nuts.NO3[i], nuts.PO4[i], nuts.T[i],
                                         plank.NST[i], plank.PST[i], plank.PRO[i],
-                                        plank.DNA[i], plank.RNA[i], plank.Chl[i], p, plank.ac[i])
+                                        plank.DNA[i], plank.RNA[i], plank.Chl[i], 
+                                        nuts.pop[i], p, plank.ac[i], ΔT)
 end
-function calc_inorganic_uptake!(plank, nuts, p, arch::Architecture)
+function calc_inorganic_uptake!(plank, nuts, p, ΔT, arch::Architecture)
     kernel! = calc_inorganic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p)
+    kernel!(plank, nuts, p, ΔT)
     return nothing
 end
 
@@ -66,24 +69,25 @@ end
 
 ##### calculate DOC uptake rate (mmolC/individual/second)
 ##### DOC uptake needs support of photosynthesis for at least 5% of total C acquisition.
-@inline function calc_DOC_uptake(DOC, temp, CH, PRO, DNA, RNA, Chl, p)
+@inline function calc_DOC_uptake(DOC, temp, CH, PRO, DNA, RNA, Chl, pop, p, ΔT)
     C_tot = total_C_biomass(PRO, DNA, RNA, CH, Chl)
     R_CH = CH / max(1.0f-30, C_tot)
     regQ = shape_func_dec(R_CH, p.CHmax, 1.0f-4)
     VN = p.VDOCmax * regQ * DOC/max(1.0f-30, DOC+p.KsatDOC) * tempFunc(temp, p) * PRO
-    return VN
+    return min(VN, DOC/ΔT/max(1.0f0,pop))
 end
-@kernel function calc_organic_uptake_kernel!(plank, nuts, p)
+@kernel function calc_organic_uptake_kernel!(plank, nuts, p, ΔT)
     i = @index(Global)
     @inbounds plank.VDOC[i] = calc_DOC_uptake(nuts.DOC[i], nuts.T[i],
                                               plank.CH[i], plank.PRO[i], plank.DNA[i],
-                                              plank.RNA[i], plank.Chl[i], p) * plank.ac[i]
+                                              plank.RNA[i], plank.Chl[i], 
+                                              nuts.pop[i], p, ΔT) * plank.ac[i]
 
     @inbounds plank.VDOC[i] = plank.VDOC[i] * isless(0.05f0, plank.PS[i]/(plank.VDOC[i]+plank.PS[i]))
 end
-function calc_organic_uptake!(plank, nuts, p, arch::Architecture)
+function calc_organic_uptake!(plank, nuts, p, ΔT, arch::Architecture)
     kernel! = calc_organic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p)
+    kernel!(plank, nuts, p, ΔT)
     return nothing
 end
 

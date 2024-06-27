@@ -1,10 +1,10 @@
 ##### update physiological attributes of each individual
 function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
-    calc_inorganic_uptake!(plank, nuts, p, arch)
+    calc_inorganic_uptake!(plank, nuts, p, ΔT, arch)
 
     update_quotas_1!(plank, ΔT, arch)
 
-    calc_organic_uptake!(plank, nuts, p, arch)
+    calc_organic_uptake!(plank, nuts, p, ΔT, arch)
 
     calc_ρChl!(plank, nuts.par, p, arch)
 

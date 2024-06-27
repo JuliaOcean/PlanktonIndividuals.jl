@@ -90,52 +90,52 @@ function calc_carbon_fixation!(plank, nuts, p, ΔT, arch::Architecture)
 end
 
 ##### calculate ammonium uptake rate (mmolN/individual/second)
-@inline function calc_NH4_uptake(NH4, temp, CH, qNH4, Bm, p, ac)
+@inline function calc_NH4_uptake(NH4, temp, CH, qNH4, Bm, pop, p, ac, ΔT)
     Qn = qNH4/max(1.0f-30, Bm + CH)
     regQN = shape_func_dec(Qn, p.qNH4max, 1.0f-4)
     VNH4 = p.VNH4max * regQN * NH4/max(1.0f-30, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm * ac
-    return VNH4
+    return min(VNH4, NH4/ΔT/max(1.0f0,pop))
 end
 
 ##### calculate nitrate uptake rate (mmolN/individual/second)
-@inline function calc_NO3_uptake(NO3, temp, CH, qNO3, Bm, p, ac)
+@inline function calc_NO3_uptake(NO3, temp, CH, qNO3, Bm, pop, p, ac, ΔT)
     Qn = qNO3/max(1.0f-30, Bm + CH)
     regQN = shape_func_dec(Qn, p.qNO3max, 1.0f-4)
     VNO3 = p.VNO3max * regQN * NO3/max(1.0f-30, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm * ac
-    return VNO3
+    return min(VNO3, NO3/ΔT/max(1.0f0,pop))
 end
 
 ##### calculate phosphate uptake rate (mmolN/individual/second)
-@inline function calc_P_uptake(PO4, temp, CH, qP, Bm, p, ac)
+@inline function calc_P_uptake(PO4, temp, CH, qP, Bm, pop, p, ac, ΔT)
     Qp = (qP + Bm * p.R_PC)/max(1.0f-30, Bm + CH)
     regQP = shape_func_dec(Qp, p.qPmax, 1.0f-4)
     VPO4 = p.VPO4max * regQP * PO4/max(1.0f-30, PO4+p.KsatPO4) * tempFunc(temp, p) * Bm * ac
-    return VPO4
+    return min(VPO4, PO4/ΔT/max(1.0f0,pop))
 end
 
 ##### calculate iron uptake rate (mmolFe/individual/second)
-@inline function calc_Fe_uptake(FeT, qFe, Bm, CH, Sz, p, ac)
+@inline function calc_Fe_uptake(FeT, qFe, Bm, CH, Sz, pop, p, ac, ΔT)
     Qfe = qFe/max(1.0f-30, Bm +CH)
     regQFe = shape_func_dec(Qfe, p.qFemax, 1.0f-4)
     SA = p.SA * Sz^(2/3)
     VFe = p.KSAFe * SA * FeT * regQFe * ac
-    return VFe
+    return min(VFe, FeT/ΔT/max(1.0f0,pop))
 end
 
-@kernel function calc_nuts_uptake_kernel!(plank, nuts, p)
+@kernel function calc_nuts_uptake_kernel!(plank, nuts, p, ΔT)
     i = @index(Global)
     @inbounds plank.VNH4[i] = calc_NH4_uptake(nuts.NH4[i], nuts.T[i], plank.CH[i], plank.qNH4[i],
-                                              plank.Bm[i], p, plank.ac[i])
+                                              plank.Bm[i], nuts.pop[i], p, plank.ac[i], ΔT)
     @inbounds plank.VNO3[i] = calc_NO3_uptake(nuts.NO3[i], nuts.T[i], plank.CH[i], plank.qNO3[i],
-                                              plank.Bm[i], p, plank.ac[i])
+                                              plank.Bm[i], nuts.pop[i], p, plank.ac[i], ΔT)
     @inbounds plank.VPO4[i] = calc_P_uptake(nuts.PO4[i], nuts.T[i], plank.CH[i], plank.qP[i],
-                                            plank.Bm[i], p, plank.ac[i])
+                                            plank.Bm[i], nuts.pop[i], p, plank.ac[i], ΔT)
     @inbounds plank.VFe[i]  = calc_Fe_uptake(nuts.FeT[i], plank.qFe[i], plank.Bm[i], plank.CH[i], 
-                                             plank.Sz[i], p, plank.ac[i])
+                                             plank.Sz[i], nuts.pop[i], p, plank.ac[i], ΔT)
 end
-function calc_nuts_uptake!(plank, nuts, p, arch::Architecture)
+function calc_nuts_uptake!(plank, nuts, p, ΔT, arch::Architecture)
     kernel! = calc_nuts_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p)
+    kernel!(plank, nuts, p, ΔT)
     return nothing
 end
 
