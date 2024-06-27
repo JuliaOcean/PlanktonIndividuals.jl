@@ -4,7 +4,6 @@ export plankton_update!
 export construct_plankton, generate_plankton!
 
 using KernelAbstractions
-using KernelAbstractions.Extras.LoopInfo: @unroll
 using CUDA
 using StructArrays
 using Random

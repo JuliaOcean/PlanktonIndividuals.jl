@@ -10,7 +10,6 @@ using CUDA
 using StructArrays
 using Random
 using KernelAbstractions
-using KernelAbstractions.Extras.LoopInfo: @unroll
 
 using PlanktonIndividuals.Architectures: device, Architecture, rng_type
 using PlanktonIndividuals.Grids

@@ -3,20 +3,6 @@ struct Sizer <: division_type end
 struct Timer <: division_type end
 struct Sizer_Timer <: division_type end
 
-##### shape function - decrease from 1.0 to 0.0 while x increase from 0.0 to 1.0
-@inline function shape_func_dec(x, xmax, k)
-    fx = max(0.0f0, min(1.0f0, 1.0f0 - x / xmax))
-    reg = fx^4.0f0 / (k + fx^4.0f0)
-    return reg
-end
-
-##### shape function - increase from 0.0 to 1.0 while x increase from 0.0 to 1.0
-@inline function shape_func_inc(x, xmax, k)
-    fx = max(0.0f0, min(1.0f0, 1.0f0 - x / xmax))
-    reg = fx^4.0f0 / (k + fx^4.0f0)
-    return 1.0f0 - reg
-end
-
 ##### calculate probability of cell division
 @inline calc_division(::Sizer, Sz, t, reg, reg2, P) = P * shape_func_inc(Sz, reg, 1.0f-3)
 

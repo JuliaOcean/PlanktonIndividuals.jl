@@ -54,7 +54,7 @@ end
 ##### calculate PAR field based on Chla field and depth
 @kernel function calc_par_kernel!(par, Chl, PARF, g::AbstractGrid, kc, kw)
     i, j = @index(Global, NTuple)
-    @unroll for k in 1:g.Nz
+    for k in 1:g.Nz
         ii = i + g.Hx
         jj = j + g.Hy
         kk = k + g.Hz
@@ -81,4 +81,18 @@ function mask_individuals!(plank, g::AbstractGrid, N, arch)
     kernel! = mask_individuals_kernel!(device(arch), 256, (N,))
     kernel!(plank, g)
     return nothing
+end
+
+##### shape function - decrease from 1.0 to 0.0 while x increase from 0.0 to 1.0
+@inline function shape_func_dec(x, xmax, k)
+    fx = max(0.0f0, min(1.0f0, 1.0f0 - x / xmax))
+    reg = fx^4.0f0 / (k + fx^4.0f0)
+    return reg
+end
+
+##### shape function - increase from 0.0 to 1.0 while x increase from 0.0 to 1.0
+@inline function shape_func_inc(x, xmax, k)
+    fx = max(0.0f0, min(1.0f0, 1.0f0 - x / xmax))
+    reg = fx^4.0f0 / (k + fx^4.0f0)
+    return 1.0f0 - reg
 end
