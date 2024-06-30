@@ -21,8 +21,9 @@ end
 end
 
 ##### calculate light reaction (kJ/individual/second)
-@inline function calc_PS(par, Bm, Chl, qFe, p)
-    qFe_PS = iron_alloc_PS(par, p) * qFe / max(1.0f-30, Bm)
+@inline function calc_PS(par, Bm, CH, Chl, qFe, p)
+    qFe_PS = iron_alloc_PS(par, p) * qFe
+    qFe_PS = qFe_PS / max(1.0f-30, Bm + CH)
     αI = par * p.α * Chl / max(1.0f-30, Bm)
     PS  = p.PCmax * (1.0f0 - exp(-αI)) * qFe_PS / max(1.0f-30, qFe_PS + p.KfePS) * Bm
     return PS
@@ -30,7 +31,7 @@ end
 
 @kernel function calc_PS_kernel!(plank, nuts, p)
     i = @index(Global)
-    @inbounds plank.PS[i] = calc_PS(nuts.par[i], plank.Bm[i], plank.Chl[i], plank.qFe[i], p)
+    @inbounds plank.PS[i] = calc_PS(nuts.par[i], plank.Bm[i], plank.CH[i], plank.Chl[i], plank.qFe[i], p)
 end
 function calc_PS!(plank, nuts, p, arch::Architecture)
     kernel! = calc_PS_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -158,9 +159,10 @@ function update_state_2!(plank, ΔT, arch::Architecture)
 end
 
 ##### nitrate reduction (mmolN/individual/second)
-@inline function calc_NO3_reduction(En, qNO3, qNH4, qFe, par, p, ac, ΔT)
+@inline function calc_NO3_reduction(En, qNO3, qNH4, qFe, Bm, CH, par, p, ac, ΔT)
     reg = shape_func_dec(qNH4, p.qNH4max, 1.0f-4)
-    qFe_NR = (1.0f0 - iron_alloc_PS(par, p)) * qFe
+    qFe_NR = max(1.0f-30, (1.0f0 - iron_alloc_PS(par, p)) * qFe)
+    qFe_NR = qFe_NR / max(1.0f-30, Bm + CH)
     NR = p.k_nr * reg * qNO3 * En * qFe_NR / max(1.0f-30, qFe_NR + p.KfeNR) * ac
     NR = min(NR, qNO3/ΔT, En/p.e_nr/ΔT) # double check qNO3 and energy are not over consumed
     ENR = NR * p.e_nr * ac
@@ -170,7 +172,8 @@ end
 @kernel function calc_NO3_reduc_kernel!(plank, nuts, p, ΔT)
     i = @index(Global)
     @inbounds plank.NR[i], plank.ENR[i] = calc_NO3_reduction(plank.En[i], plank.qNO3[i], plank.qNH4[i],
-                                                             plank.qFe[i], nuts.par[i], p, plank.ac[i], ΔT)
+                                                             plank.qFe[i], plank.Bm[i], plank.CH[i],
+                                                             nuts.par[i], p, plank.ac[i], ΔT)
 end
 function calc_NO3_reduc!(plank, nuts, p, ΔT, arch::Architecture)
     kernel! = calc_NO3_reduc_kernel!(device(arch), 256, (size(plank.ac,1)))
