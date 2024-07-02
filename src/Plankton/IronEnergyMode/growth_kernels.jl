@@ -73,7 +73,7 @@ end
 @inline function calc_CF(En, CH, Bm, temp, p, ac, ΔT)
     Qc = CH/max(1.0f-30, Bm + CH)
     regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4)
-    CF = p.k_cf * En * regQC * tempFunc_PS(temp, p) * ac
+    CF = p.k_cf * regQC * tempFunc_PS(temp, p) * Bm * ac
     CF = min(CF, En/p.e_cf/ΔT) # double check En is not over consumed
     ECF = CF * p.e_cf * ac
     return CF, ECF
@@ -163,7 +163,7 @@ end
     reg = shape_func_dec(qNH4, p.qNH4max, 1.0f-4)
     qFe_NR = max(1.0f-30, (1.0f0 - iron_alloc_PS(par, p)) * qFe)
     qFe_NR = qFe_NR / max(1.0f-30, Bm + CH)
-    NR = p.k_nr * reg * qNO3 * En * qFe_NR / max(1.0f-30, qFe_NR + p.KfeNR) * ac
+    NR = p.k_nr * reg * qNO3 * qFe_NR / max(1.0f-30, qFe_NR + p.KfeNR) * ac
     NR = min(NR, qNO3/ΔT, En/p.e_nr/ΔT) # double check qNO3 and energy are not over consumed
     ENR = NR * p.e_nr * ac
     return NR, ENR
