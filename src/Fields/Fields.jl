@@ -10,7 +10,6 @@ export set_bc!, validate_bcs
 export nut_names
 
 using KernelAbstractions
-using CUDA
 
 using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Architectures: device, Architecture, array_type

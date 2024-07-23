@@ -6,7 +6,6 @@ export plankton_diffusion!
 export get_xf_index, get_yf_index, get_zf_index
 
 using KernelAbstractions
-using CUDA
 using Random
 
 using PlanktonIndividuals.Architectures: device, Architecture, rng_type

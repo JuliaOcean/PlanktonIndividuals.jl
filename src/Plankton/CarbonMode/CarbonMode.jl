@@ -4,7 +4,6 @@ export plankton_update!
 export construct_plankton, generate_plankton!
 
 using KernelAbstractions
-using CUDA
 using StructArrays
 using Random
 using LinearAlgebra: dot

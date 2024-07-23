@@ -39,7 +39,6 @@ export
     seconds, minutes, hours, meters, kilometers,
     KiB, MiB, GiB, TiB
 
-using CUDA
 using Pkg.Artifacts
 
 import Base: show
@@ -106,15 +105,5 @@ using .Model
 using .Output
 using .Simulation
 using .Units
-
-function __init__()
-    if CUDA.has_cuda()
-        @debug "CUDA-enabled GPU detected:"
-        for (gpu, dev) in enumerate(CUDA.devices())
-            @debug "$dev: $(CUDA.name(dev))"
-        end
-        CUDA.allowscalar(false)
-    end
-end
 
 end # module

@@ -6,7 +6,6 @@ export plankton_update!
 export generate_individuals, individuals
 export find_inds!, find_NPT!, acc_counts!, calc_par!
 
-using CUDA
 using StructArrays
 using Random
 using KernelAbstractions

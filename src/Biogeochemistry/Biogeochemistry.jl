@@ -5,7 +5,6 @@ export nutrients_init, default_nut_init
 export nut_update!
 
 using KernelAbstractions
-using CUDA
 
 using PlanktonIndividuals.Architectures: device, array_type, Architecture
 using PlanktonIndividuals.Grids
