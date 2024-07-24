@@ -2,12 +2,10 @@ module Architectures
 
 export CPU, GPU, Architecture
 export array_type, rng_type
-export device
+export device, isfunctional
 
-using CUDA
-using GPUArrays
 using KernelAbstractions
-using CUDA.CUDAKernels
+
 using Random
 
 """
@@ -28,14 +26,11 @@ Run PlanktonIndividuals on one CUDA GPU node.
 """
 struct GPU <: Architecture end
 
-
+##### CPU #####
 device(::CPU) = KernelAbstractions.CPU()
-device(::GPU) = CUDABackend()
-
 array_type(::CPU) = Array
-array_type(::GPU) = CuArray
-
 rng_type(::CPU) = MersenneTwister()
-rng_type(::GPU) = CURAND.default_rng()
+isfunctional(::CPU) = true
+
 
 end

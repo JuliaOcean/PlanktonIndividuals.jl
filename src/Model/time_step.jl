@@ -81,9 +81,10 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     end
 
     ##### calculate PAR
-    calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, model.timestepper.PARF,
-              model.grid, model.bgc_params["kc"], model.bgc_params["kw"])
-
+    for ki in 1:model.grid.Nz
+        calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, model.timestepper.PARF,
+                  model.grid, model.bgc_params["kc"], model.bgc_params["kw"], ki)
+    end
     ##### diagnostics for nutrients
     @inbounds diags.tracer.PAR .+= model.timestepper.par
     @inbounds diags.tracer.T .+= model.timestepper.temp

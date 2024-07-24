@@ -8,7 +8,6 @@ export Periodic, Bounded, short_show
 export replace_grid_storage
 export ΔxC, ΔyC, ΔzC, ΔxF, ΔyF, ΔzF, Ax, Ay, Az, volume 
 
-using CUDA
 using Adapt
 
 using PlanktonIndividuals.Architectures
