@@ -52,20 +52,18 @@ function acc_counts!(ctsChl, ctspop, Chl, ac, x, y, z, arch)
 end
 
 ##### calculate PAR field based on Chla field and depth
-@kernel function calc_par_kernel!(par, Chl, PARF, g::AbstractGrid, kc, kw)
+@kernel function calc_par_kernel!(par, Chl, PARF, g::AbstractGrid, kc, kw, ki)
     i, j = @index(Global, NTuple)
-    for k in 1:g.Nz
-        ii = i + g.Hx
-        jj = j + g.Hy
-        kk = k + g.Hz
-        atten = (Chl[ii,jj,kk]/volume(ii, jj, kk, g) * kc + kw) * ΔzF(ii, jj, kk, g)
-        par[ii,jj,kk] = PARF[i,j] * (1.0f0 - exp(-atten)) / atten
-        PARF[i,j] = PARF[i,j] * exp(-atten)
-    end
+    ii = i + g.Hx
+    jj = j + g.Hy
+    kk = ki + g.Hz
+    atten = (Chl[ii,jj,kk]/volume(ii, jj, kk, g) * kc + kw) * ΔzF(ii, jj, kk, g)
+    par[ii,jj,kk] = PARF[i,j] * (1.0f0 - exp(-atten)) / atten
+    PARF[i,j] = PARF[i,j] * exp(-atten)
 end
-function calc_par!(par, arch::Architecture, Chl, PARF, g::AbstractGrid, kc, kw)
+function calc_par!(par, arch::Architecture, Chl, PARF, g::AbstractGrid, kc, kw, ki)
     kernel! = calc_par_kernel!(device(arch), (16,16), (g.Nx, g.Ny))
-    kernel!(par, Chl, PARF, g, kc, kw)
+    kernel!(par, Chl, PARF, g, kc, kw, ki)
     return nothing
 end
 
