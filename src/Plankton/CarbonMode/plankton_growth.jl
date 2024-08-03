@@ -2,9 +2,9 @@
 function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
     calc_PS!(plank, nuts, p, arch)
 
-    calc_BS!(plank, arch)
+    calc_BS!(plank, p, arch)
 
-    calc_repair!(plank, arch)
+    calc_repair!(plank, p, arch)
 
     calc_thermal_damage!(plank, nuts.T, p, ΔT, arch)
 

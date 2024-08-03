@@ -16,7 +16,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                  :PCmax, :VDOCmax, :VNO3max, :VNH4max, :VPO4max,
                  :KsatDOC, :KsatNH4, :KsatNO3, :KsatPO4, :Cqmax, :Nqmax, :Pqmax,
                  :Chl2N, :R_NC, :R_PC, :k_mtb, :respir, :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2,
-                 :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP, :ther_mort)
+                 :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP)
 
     pkeys = collect(keys(params))
     tmp = zeros(length(param_names))

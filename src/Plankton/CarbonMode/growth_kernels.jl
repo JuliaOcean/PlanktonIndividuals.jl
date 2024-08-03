@@ -17,10 +17,10 @@ end
 ##### allocation of functional biomass to repair
 ##### only functional when damaged biomass is greater than 0.0
 ##### use Bd/Bm as the allocation, more damaged biomass means more allocation to repair
-@inline function gamma_alloc(Bm, Bd)
+@inline function gamma_alloc(Bm, Bd, p)
     #γ = max(0.0, temp - p.Topt) / (p.Tmax - p.Topt) * isless(0.0, Bd)
     γ = Bd / max(1.0f-30, Bm) * isless(0.0f0, Bd)
-    γ = min(1.0f0, γ)
+    γ = min(1.0f0, γ) * isequal(1.0f0, p.thermal)
     return γ
 end
 
@@ -48,24 +48,24 @@ function calc_PS!(plank, nuts, p, arch::Architecture)
 end
 
 ##### calculate repair rate (mmolC/individual/second)
-@kernel function calc_repair_kernel!(plank)
+@kernel function calc_repair_kernel!(plank, p)
     i = @index(Global)
-    @inbounds plank.RP[i] = plank.PS[i] * gamma_alloc(plank.Bm[i], plank.Bd[i])
+    @inbounds plank.RP[i] = plank.PS[i] * gamma_alloc(plank.Bm[i], plank.Bd[i], p)
 end
-function calc_repair!(plank, arch)
+function calc_repair!(plank, p, arch)
     kernel! = calc_repair_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank)
+    kernel!(plank, p)
     return nothing
 end
 
 ##### calculate biosynthesis rate (mmolC/individual/second)
-@kernel function calc_BS_kernel!(plank)
+@kernel function calc_BS_kernel!(plank, p)
     i = @index(Global)
-    @inbounds plank.BS[i] = plank.PS[i] * (1.0f0 - gamma_alloc(plank.Bm[i], plank.Bd[i]))
+    @inbounds plank.BS[i] = plank.PS[i] * (1.0f0 - gamma_alloc(plank.Bm[i], plank.Bd[i], p))
 end
-function calc_BS!(plank, arch)
+function calc_BS!(plank, p, arch)
     kernel! = calc_BS_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank)
+    kernel!(plank, p)
     return nothing
 end
 
@@ -76,7 +76,7 @@ end
     @inbounds plank.TD[i] = (T[i] - p.Topt) * p.f_T2B * (plank.Bm[i] - plank.Bd[i])
                             isless(p.Topt, T[i]) *
                             isless(plank.Bd[i], plank.Bm[i]) *
-                            isless(0.0f0, p.thermal)
+                            isequal(1.0f0, p.thermal)
     @inbounds plank.TD[i] = max(0.0f0, min(plank.TD[i], (plank.Bm[i] - plank.Bd[i]) / ΔT))
 end
 function calc_thermal_damage!(plank, T, p, ΔT, arch)
