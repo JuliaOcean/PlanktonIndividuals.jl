@@ -73,7 +73,7 @@ end
 ##### keep thermal damage between 0.0 and healthy biomass (Bm-Bd)
 @kernel function calc_thermal_damage_kernel!(plank, T, p, ΔT)
     i = @index(Global)
-    @inbounds plank.TD[i] = (T[i] - p.Topt) * p.f_T2B * (plank.Bm[i] - plank.Bd[i])
+    @inbounds plank.TD[i] = (T[i] - p.Topt) * p.f_T2B * (plank.Bm[i] - plank.Bd[i]) *
                             isless(p.Topt, T[i]) *
                             isless(plank.Bd[i], plank.Bm[i]) *
                             isequal(1.0f0, p.thermal)
