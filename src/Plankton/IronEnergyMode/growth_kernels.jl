@@ -1,7 +1,7 @@
 ##### temperature function for photosynthesis
 @inline function tempFunc_PS(temp, p)
     x = temp - p.Topt; xmax = p.Tmax - p.Topt
-    regT = shape_func_dec(x, xmax, 4.0f0e-2)
+    regT = shape_func_dec(x, xmax, 4.0f-2)
     k = exp(-p.Ea/(8.3145f0*(temp+273.15f0))) * regT
     k = max(0.0f0, k)
     OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
