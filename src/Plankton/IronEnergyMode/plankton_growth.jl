@@ -10,6 +10,7 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
     update_state_3!(plank, ΔT, arch)
     calc_ρChl!(plank, nuts.par, p, arch)
     calc_BS!(plank, p, arch)
+    calc_iron_fluxes!(plank, nuts, p, ΔT, arch)
     update_biomass!(plank, p, ΔT, arch)
     update_cellsize!(plank, p, arch)
 
