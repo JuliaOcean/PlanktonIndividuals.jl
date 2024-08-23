@@ -27,7 +27,7 @@ function plankton_update!(plank, nuts, rnd, p, plk, diags_spcs, ΔT, t, arch::Ar
         dvidnum = dot(plank.dvid, plank.ac)
         deactive_ind = findall(x -> x == 0.0f0, plank.ac)
         if dvidnum > length(deactive_ind)
-            throw(ArgumentError("number of individual exceeds the capacity at timestep $t"))
+            throw(ArgumentError("number of individual exceeds the capacity at timestep $(t/86400.0) days"))
         end
         divide!(plank, nuts, deactive_ind, arch)
         plank.idx .= 0
