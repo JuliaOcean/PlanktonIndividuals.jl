@@ -31,8 +31,8 @@ function update!(sim::PlanktonSimulation; time_offset = (vels = false, PARF = fa
         end
     else
         for i in 1:sim.iterations
-            model_t_PARF = time_offset.PARF ? sim.model.t : (i-1)*sim.ΔT
-            model_t_temp = time_offset.temp ? sim.model.t : (i-1)*sim.ΔT
+            model_t_PARF = time_offset.PARF ? (i-1)*sim.ΔT : sim.model.t
+            model_t_temp = time_offset.temp ? (i-1)*sim.ΔT : sim.model.t
 
             t_par = floor(Int,model_t_PARF/sim.input.ΔT_PAR)+1 # starting from 1
             copyto!(sim.model.timestepper.PARF, sim.input.PARF[:,:,t_par])
