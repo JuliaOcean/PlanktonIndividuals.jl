@@ -33,8 +33,10 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
 
             #### calculate accumulated Chla quantity (not concentration) and population
             find_inds!(model.individuals.phytos[sp].data, model.grid, model.arch)
-            acc_counts!(model.timestepper.Chl, model.timestepper.pop,
-                        model.individuals.phytos[sp].data.Chl, model.individuals.phytos[sp].data.ac,
+            acc_chl!(model.timestepper.Chl, model.individuals.phytos[sp].data.Chl,
+                        model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi,
+                        model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, model.arch)
+            acc_counts!(model.timestepper.pop, model.individuals.phytos[sp].data.ac,
                         model.individuals.phytos[sp].data.xi, model.individuals.phytos[sp].data.yi,
                         model.individuals.phytos[sp].data.zi, model.arch)
         end
@@ -45,7 +47,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                     model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
                     model.nutrients.FeT.data, model.timestepper.par, model.timestepper.temp, 
                     model.timestepper.pop, model.arch)
-
+            
             plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts,
                                 model.timestepper.rnd, model.individuals.phytos[sp].p,
                                 model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch, model.mode)
@@ -61,12 +63,16 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
 
             #### calculate accumulated Chla quantity (not concentration) and population
             find_inds!(model.individuals.phytos[sp].data, model.grid, model.arch)
-            acc_counts!(model.timestepper.Chl, model.timestepper.pop,
-                        model.individuals.phytos[sp].data.Chl, model.individuals.phytos[sp].data.ac,
+            acc_chl!(model.timestepper.Chl, model.individuals.phytos[sp].data.Chl,
+                        model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi,
+                        model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, model.arch)
+        end
+        for sp in keys(model.individuals.phytos)
+            acc_counts!(model.timestepper.pop, model.individuals.phytos[sp].data.ac,
                         model.individuals.phytos[sp].data.xi, model.individuals.phytos[sp].data.yi,
                         model.individuals.phytos[sp].data.zi, model.arch)
 
-                        find_NPT!(model.timestepper.nuts, model.individuals.phytos[sp].data.xi,
+            find_NPT!(model.timestepper.nuts, model.individuals.phytos[sp].data.xi,
                         model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
                         model.individuals.phytos[sp].data.ac, model.nutrients.NH4.data,
                         model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
