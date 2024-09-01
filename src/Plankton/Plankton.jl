@@ -4,7 +4,7 @@ export plankton_advection!
 export plankton_diffusion!
 export plankton_update!
 export generate_individuals, individuals
-export find_inds!, find_NPT!, acc_counts!, calc_par!
+export find_inds!, find_NPT!, acc_counts!, acc_chl!, calc_par!
 
 using StructArrays
 using Random

@@ -8,6 +8,7 @@ mutable struct timestepper
     temp::AbstractArray # a (Cu)Array to store temperature field of each timestep
     plk::NamedTuple     # a NamedTuple same as nutrients to store interactions with individuals
     par::AbstractArray  # a (Cu)Array to store PAR field of each timestep
+    par₀::AbstractArray # a (Cu)Array to store PAR field of the previous timestep
     Chl::AbstractArray  # a (Cu)Array to store Chl field of each timestep
     pop::AbstractArray  # a (Cu)Array to store population field of each timestep
     rnd::AbstractArray  # a StructArray of random numbers for plankton diffusion or grazing, mortality and division.
@@ -25,6 +26,7 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN)
     plk = nutrients_init(arch, g, FT)
 
     par = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
+    par₀= zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     Chl = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     pop = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
 
@@ -42,11 +44,11 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN)
 
     nuts = StructArray(NH4 = zeros(FT, maxN), NO3 = zeros(FT, maxN), PO4 = zeros(FT, maxN), 
                        DOC = zeros(FT, maxN), FeT = zeros(FT, maxN), par = zeros(FT, maxN), 
-                       T   = zeros(FT, maxN), pop = zeros(FT, maxN), idc = zeros(FT, maxN),
-                       idc_int = zeros(Int, maxN))
+                       T   = zeros(FT, maxN), pop = zeros(FT, maxN), dpar= zeros(FT, maxN), 
+                       idc = zeros(FT, maxN), idc_int = zeros(Int, maxN))
     nuts_d = replace_storage(array_type(arch), nuts)
 
-    ts = timestepper(Gcs, nut_temp, vel₀, vel½, vel₁, PARF, temp, plk, par, Chl, pop, rnd_d, velos_d, nuts_d)
+    ts = timestepper(Gcs, nut_temp, vel₀, vel½, vel₁, PARF, temp, plk, par, par₀, Chl, pop, rnd_d, velos_d, nuts_d)
 
     return ts
 end

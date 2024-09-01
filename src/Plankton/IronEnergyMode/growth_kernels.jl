@@ -214,12 +214,12 @@ function calc_BS!(plank, p, arch::Architecture)
 end
 
 ##### iron allocation
-@inline function iron_alloc(par, qFe, qFePS, qFeNR, p, ΔT)
-    reg = shape_func_dec(par, p.Imax, 1.0f-2; pow = 6.0f0)
-    f_ST2PS = p.k_Fe_ST2PS * reg * qFe
-    f_PS2ST = p.k_Fe_PS2ST * (1.0f0 - reg) * qFePS #* isless(p.Imax, par)
-    f_ST2NR = p.k_Fe_ST2NR * (1.0f0 - reg) * qFe
-    f_NR2ST = p.k_Fe_NR2ST * reg * qFeNR #* isless(par, p.Imax)
+@inline function iron_alloc(par, dpar, qFe, qFePS, qFeNR, p, ΔT)
+    reg = shape_func_dec(par, p.Imax, 1.0f-2; pow = 4.0f0)
+    f_ST2PS = p.k_Fe_ST2PS * reg * qFe * isless(0.0f0, dpar)
+    f_PS2ST = p.k_Fe_PS2ST * qFePS * (reg * isless(dpar, 0.0f0) + isequal(0.0f0, par))
+    f_ST2NR = p.k_Fe_ST2NR * qFe * isequal(0.0f0, par)
+    f_NR2ST = p.k_Fe_NR2ST * qFeNR * isless(0.0f0, par)
 
     f_ST2PS = min(f_ST2PS, qFe/ΔT)
     f_PS2ST = min(f_PS2ST, qFePS/ΔT)
@@ -232,8 +232,8 @@ end
 @kernel function calc_iron_fluxes_kernel!(plank, nuts, p, ΔT)
     i = @index(Global)
     @inbounds plank.ST2PS[i], plank.PS2ST[i], plank.ST2NR[i], plank.NR2ST[i] = 
-                    iron_alloc(nuts.par[i], plank.qFe[i], plank.qFePS[i], plank.qFeNR[i], 
-                    p, ΔT)
+                    iron_alloc(nuts.par[i], nuts.dpar[i], plank.qFe[i], 
+                    plank.qFePS[i], plank.qFeNR[i], p, ΔT)
 end
 function calc_iron_fluxes!(plank, nuts, p, ΔT, arch::Architecture)
     kernel! = calc_iron_fluxes_kernel!(device(arch), 256, (size(plank.ac,1)))
