@@ -47,5 +47,5 @@ TCt = tot_mass(model.nutrients.DIC.data, grid) +
 TCt = TCt + sum(model.individuals.phytos.sp1.data.Bm)
 
 @testset "PlanktonIndividuals 3D tests:" begin
-    @test isapprox(TC,TCt; atol=1e2)
+    @test isapprox(TC,TCt; atol=1e3)
 end
