@@ -16,18 +16,11 @@ end
     return min(1.0f0, k/OGT_rate)
 end
 
-##### intracellular iron allocation to photosynthesis
-@inline function iron_alloc_PS(par, p)
-    f = shape_func_dec(par, p.Imax, 1.0f-2)
-    return f
-end
-
 ##### calculate light reaction (kJ/individual/second)
-@inline function calc_PS(par, Bm, CH, Chl, qFe, p)
-    qFe_PS = iron_alloc_PS(par, p) * qFe
-    qFe_PS = qFe_PS / max(1.0f-30, Bm + CH)
+@inline function calc_PS(par, Bm, CH, Chl, qFePS, p)
+    Qfe_ps = qFePS / max(1.0f-30, Bm + CH)
     αI = par * p.α * Chl / max(1.0f-30, Bm)
-    PS  = p.PCmax * (1.0f0 - exp(-αI)) * qFe_PS / max(1.0f-30, qFe_PS + p.KfePS) * Bm
+    PS  = p.PCmax * (1.0f0 - exp(-αI)) * Qfe_ps / max(1.0f-30, Qfe_ps + p.KfePS) * Bm
     return PS
 end
 
@@ -161,11 +154,10 @@ function update_state_2!(plank, ΔT, arch::Architecture)
 end
 
 ##### nitrate reduction (mmolN/individual/second)
-@inline function calc_NO3_reduction(En, qNO3, qNH4, qFe, Bm, CH, par, p, ac, ΔT)
+@inline function calc_NO3_reduction(En, qNO3, qNH4, qFeNR, Bm, CH, p, ac, ΔT)
     reg = shape_func_dec(qNH4, p.qNH4max, 1.0f-4)
-    qFe_NR = max(1.0f-30, (1.0f0 - iron_alloc_PS(par, p)) * qFe)
-    qFe_NR = qFe_NR / max(1.0f-30, Bm + CH)
-    NR = p.k_nr * reg * qNO3 * qFe_NR / max(1.0f-30, qFe_NR + p.KfeNR) * ac
+    Qfe_NR = qFeNR / max(1.0f-30, Bm + CH)
+    NR = p.k_nr * reg * qNO3 * Qfe_NR / max(1.0f-30, Qfe_NR + p.KfeNR) * ac
     NR = min(NR, qNO3/ΔT, En/p.e_nr/ΔT) # double check qNO3 and energy are not over consumed
     ENR = NR * p.e_nr * ac
     return NR, ENR
@@ -175,7 +167,7 @@ end
     i = @index(Global)
     @inbounds plank.NR[i], plank.ENR[i] = calc_NO3_reduction(plank.En[i], plank.qNO3[i], plank.qNH4[i],
                                                              plank.qFe[i], plank.Bm[i], plank.CH[i],
-                                                             nuts.par[i], p, plank.ac[i], ΔT)
+                                                             p, plank.ac[i], ΔT)
 end
 function calc_NO3_reduc!(plank, nuts, p, ΔT, arch::Architecture)
     kernel! = calc_NO3_reduc_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -221,6 +213,34 @@ function calc_BS!(plank, p, arch::Architecture)
     return nothing
 end
 
+##### iron allocation
+@inline function iron_alloc(par, dpar, qFe, qFePS, qFeNR, p, ΔT)
+    reg = shape_func_dec(par, p.Imax, 1.0f-2; pow = 4.0f0)
+    f_ST2PS = p.k_Fe_ST2PS * reg * qFe * isless(0.0f0, dpar)
+    f_PS2ST = p.k_Fe_PS2ST * qFePS * (reg * isless(dpar, 0.0f0) + isequal(0.0f0, par))
+    f_ST2NR = p.k_Fe_ST2NR * qFe * isequal(0.0f0, par)
+    f_NR2ST = p.k_Fe_NR2ST * qFeNR * isless(0.0f0, par)
+
+    f_ST2PS = min(f_ST2PS, qFe/ΔT)
+    f_PS2ST = min(f_PS2ST, qFePS/ΔT)
+    f_ST2NR = min(f_ST2NR, qFe/ΔT - f_ST2PS) # photosynthesis has the highest priority
+    f_NR2ST = min(f_NR2ST, qFeNR/ΔT)
+
+    return f_ST2PS, f_PS2ST, f_ST2NR, f_NR2ST
+end
+
+@kernel function calc_iron_fluxes_kernel!(plank, nuts, p, ΔT)
+    i = @index(Global)
+    @inbounds plank.ST2PS[i], plank.PS2ST[i], plank.ST2NR[i], plank.NR2ST[i] = 
+                    iron_alloc(nuts.par[i], nuts.dpar[i], plank.qFe[i], 
+                    plank.qFePS[i], plank.qFeNR[i], p, ΔT)
+end
+function calc_iron_fluxes!(plank, nuts, p, ΔT, arch::Architecture)
+    kernel! = calc_iron_fluxes_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, nuts, p, ΔT)
+    return nothing
+end
+
 ##### update C, N, P quotas, biomass, Chla
 @kernel function update_biomass_kernel!(plank, p, ΔT)
     i = @index(Global)
@@ -230,6 +250,10 @@ end
     @inbounds plank.qP[i]   -= ΔT * plank.BS[i] * p.R_PC
     @inbounds plank.Chl[i]  += ΔT * plank.BS[i] * p.R_NC * plank.ρChl[i]
     @inbounds plank.age[i]  += ΔT / 3600.0f0 * plank.ac[i]
+    @inbounds plank.qFe[i]  += ΔT * (plank.PS2ST[i] - plank.ST2PS[i] +
+                                     plank.NR2ST[i] - plank.ST2NR[i])
+    @inbounds plank.qFePS[i]+= ΔT * (plank.ST2PS[i] - plank.PS2ST[i])
+    @inbounds plank.qFeNR[i]+= ΔT * (plank.ST2NR[i] - plank.NR2ST[i])
 end
 function update_biomass!(plank, p, ΔT, arch::Architecture)
     kernel! = update_biomass_kernel!(device(arch), 256, (size(plank.ac,1)))

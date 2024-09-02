@@ -33,22 +33,29 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
 
             #### calculate accumulated Chla quantity (not concentration) and population
             find_inds!(model.individuals.phytos[sp].data, model.grid, model.arch)
-            acc_counts!(model.timestepper.Chl, model.timestepper.pop,
-                        model.individuals.phytos[sp].data.Chl, model.individuals.phytos[sp].data.ac,
+            acc_chl!(model.timestepper.Chl, model.individuals.phytos[sp].data.Chl,
+                     model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi,
+                     model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, model.arch)
+            acc_counts!(model.timestepper.pop, model.individuals.phytos[sp].data.ac,
                         model.individuals.phytos[sp].data.xi, model.individuals.phytos[sp].data.yi,
                         model.individuals.phytos[sp].data.zi, model.arch)
+            ##### calculate PAR
+            for ki in 1:model.grid.Nz
+                calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, model.timestepper.PARF,
+                          model.grid, model.bgc_params["kc"], model.bgc_params["kw"], ki)
+            end
         end
         for sp in keys(model.individuals.phytos)
             find_NPT!(model.timestepper.nuts, model.individuals.phytos[sp].data.xi,
-                    model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
-                    model.individuals.phytos[sp].data.ac, model.nutrients.NH4.data,
-                    model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
-                    model.nutrients.FeT.data, model.timestepper.par, model.timestepper.temp, 
-                    model.timestepper.pop, model.arch)
-
+                      model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
+                      model.individuals.phytos[sp].data.ac, model.nutrients.NH4.data,
+                      model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
+                      model.nutrients.FeT.data, model.timestepper.par, model.timestepper.par₀, 
+                      model.timestepper.temp, model.timestepper.pop, model.arch)
+            
             plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts,
-                                model.timestepper.rnd, model.individuals.phytos[sp].p,
-                                model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch, model.mode)
+                             model.timestepper.rnd, model.individuals.phytos[sp].p,
+                             model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch, model.mode)
         end
     else # model.bgc_params["shared_graz"] ≠ 1.0 - species-specific grazing
         for sp in keys(model.individuals.phytos)
@@ -61,17 +68,26 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
 
             #### calculate accumulated Chla quantity (not concentration) and population
             find_inds!(model.individuals.phytos[sp].data, model.grid, model.arch)
-            acc_counts!(model.timestepper.Chl, model.timestepper.pop,
-                        model.individuals.phytos[sp].data.Chl, model.individuals.phytos[sp].data.ac,
+            acc_chl!(model.timestepper.Chl, model.individuals.phytos[sp].data.Chl,
+                     model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi,
+                     model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, model.arch)
+            ##### calculate PAR
+            for ki in 1:model.grid.Nz
+                calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, model.timestepper.PARF,
+                          model.grid, model.bgc_params["kc"], model.bgc_params["kw"], ki)
+            end
+        end
+        for sp in keys(model.individuals.phytos)
+            acc_counts!(model.timestepper.pop, model.individuals.phytos[sp].data.ac,
                         model.individuals.phytos[sp].data.xi, model.individuals.phytos[sp].data.yi,
                         model.individuals.phytos[sp].data.zi, model.arch)
 
-                        find_NPT!(model.timestepper.nuts, model.individuals.phytos[sp].data.xi,
-                        model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
-                        model.individuals.phytos[sp].data.ac, model.nutrients.NH4.data,
-                        model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
-                        model.nutrients.FeT.data, model.timestepper.par, model.timestepper.temp, 
-                        model.timestepper.pop, model.arch)
+            find_NPT!(model.timestepper.nuts, model.individuals.phytos[sp].data.xi,
+                      model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
+                      model.individuals.phytos[sp].data.ac, model.nutrients.NH4.data,
+                      model.nutrients.NO3.data, model.nutrients.PO4.data, model.nutrients.DOC.data,
+                      model.nutrients.FeT.data, model.timestepper.par, model.timestepper.par₀, 
+                      model.timestepper.temp, model.timestepper.pop, model.arch)
 
             plankton_update!(model.individuals.phytos[sp].data, model.timestepper.nuts,
                                 model.timestepper.rnd, model.individuals.phytos[sp].p,
@@ -80,11 +96,6 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
         end
     end
 
-    ##### calculate PAR
-    for ki in 1:model.grid.Nz
-        calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, model.timestepper.PARF,
-                  model.grid, model.bgc_params["kc"], model.bgc_params["kw"], ki)
-    end
     ##### diagnostics for nutrients
     @inbounds diags.tracer.PAR .+= model.timestepper.par
     @inbounds diags.tracer.T .+= model.timestepper.temp
@@ -100,6 +111,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     @inbounds model.timestepper.vel₀.u.data .= model.timestepper.vel₁.u.data
     @inbounds model.timestepper.vel₀.v.data .= model.timestepper.vel₁.v.data
     @inbounds model.timestepper.vel₀.w.data .= model.timestepper.vel₁.w.data
+    @inbounds model.timestepper.par₀ .= model.timestepper.par
 
     return nothing
 end

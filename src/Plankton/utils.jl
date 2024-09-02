@@ -22,7 +22,7 @@ function find_inds!(plank, g::AbstractGrid, arch::Architecture)
     return nothing
 end
 
-@kernel function find_NPT_kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, FeT, par, temp, pop)
+@kernel function find_NPT_kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, FeT, par, par₀, temp, pop)
     i = @index(Global)
     @inbounds nuts.NH4[i] = max(0.0f0, NH4[x[i], y[i], z[i]]) * ac[i]
     @inbounds nuts.NO3[i] = max(0.0f0, NO3[x[i], y[i], z[i]]) * ac[i]
@@ -30,24 +30,35 @@ end
     @inbounds nuts.DOC[i] = max(0.0f0, DOC[x[i], y[i], z[i]]) * ac[i]
     @inbounds nuts.FeT[i] = max(0.0f0, FeT[x[i], y[i], z[i]]) * ac[i]
     @inbounds nuts.par[i] = par[x[i], y[i], z[i]] * ac[i]
+    @inbounds nuts.dpar[i]= (par[x[i], y[i], z[i]] - par₀[x[i], y[i], z[i]]) * ac[i]
     @inbounds nuts.T[i]   =temp[x[i], y[i], z[i]] * ac[i]
     @inbounds nuts.pop[i] = pop[x[i], y[i], z[i]] * ac[i]
 end
-function find_NPT!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, FeT, par, temp, pop, arch::Architecture)
+function find_NPT!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, FeT, par, par₀, temp, pop, arch::Architecture)
     kernel! = find_NPT_kernel!(device(arch), 256, (size(ac,1)))
-    kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, FeT, par, temp, pop)
+    kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, FeT, par, par₀, temp, pop)
     return nothing
 end
 
-##### calculate Chla and individual counts based on the status of plankton individuals
-@kernel function acc_counts_kernel!(ctsChl, ctspop, Chl, ac, x, y, z)
+##### calculate Chla based on the status of plankton individuals
+@kernel function acc_chl_kernel!(ctsChl, Chl, ac, x, y, z)
     i = @index(Global)
     @inbounds KernelAbstractions.@atomic ctsChl[x[i], y[i], z[i]] += Chl[i] * ac[i]
+end
+function acc_chl!(ctsChl, Chl, ac, x, y, z, arch)
+    kernel! = acc_chl_kernel!(device(arch), 256, (size(ac,1)))
+    kernel!(ctsChl, Chl, ac, x, y, z)
+    return nothing 
+end
+
+##### calculate individual counts based on the status of plankton individuals
+@kernel function acc_counts_kernel!(ctspop, ac, x, y, z)
+    i = @index(Global)
     @inbounds KernelAbstractions.@atomic ctspop[x[i], y[i], z[i]] += ac[i]
 end
-function acc_counts!(ctsChl, ctspop, Chl, ac, x, y, z, arch)
+function acc_counts!(ctspop, ac, x, y, z, arch)
     kernel! = acc_counts_kernel!(device(arch), 256, (size(ac,1)))
-    kernel!(ctsChl, ctspop, Chl, ac, x, y, z)
+    kernel!(ctspop, ac, x, y, z)
     return nothing 
 end
 
@@ -82,15 +93,15 @@ function mask_individuals!(plank, g::AbstractGrid, N, arch)
 end
 
 ##### shape function - decrease from 1.0 to 0.0 while x increase from 0.0 to 1.0
-@inline function shape_func_dec(x, xmax, k)
+@inline function shape_func_dec(x, xmax, k; pow = 4.0f0)
     fx = max(0.0f0, min(1.0f0, 1.0f0 - x / xmax))
-    reg = fx^4.0f0 / (k + fx^4.0f0)
+    reg = fx^pow / (k + fx^pow)
     return reg
 end
 
 ##### shape function - increase from 0.0 to 1.0 while x increase from 0.0 to 1.0
-@inline function shape_func_inc(x, xmax, k)
+@inline function shape_func_inc(x, xmax, k; pow = 4.0f0)
     fx = max(0.0f0, min(1.0f0, 1.0f0 - x / xmax))
-    reg = fx^4.0f0 / (k + fx^4.0f0)
+    reg = fx^pow / (k + fx^pow)
     return 1.0f0 - reg
 end

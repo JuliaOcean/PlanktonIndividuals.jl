@@ -3,12 +3,14 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           xi   = zeros(Int,maxN), yi   = zeros(Int,maxN), zi   = zeros(Int,maxN),
                           Sz   = zeros(FT, maxN), Bm   = zeros(FT, maxN), En   = zeros(FT, maxN),
                           CH   = zeros(FT, maxN), qNH4 = zeros(FT, maxN), qNO3 = zeros(FT, maxN),
-                          qFe  = zeros(FT, maxN), qP   = zeros(FT, maxN), Chl  = zeros(FT, maxN),
-                          gen  = zeros(FT, maxN), age  = zeros(FT, maxN), ac   = zeros(FT, maxN), 
-                          idx  = zeros(Int,maxN),
+                          qFe  = zeros(FT, maxN), qFePS= zeros(FT, maxN), qFeNR= zeros(FT, maxN), 
+                          qP   = zeros(FT, maxN), Chl  = zeros(FT, maxN), gen  = zeros(FT, maxN),
+                          age  = zeros(FT, maxN), ac   = zeros(FT, maxN), idx  = zeros(Int,maxN),
                           PS   = zeros(FT, maxN), CF   = zeros(FT, maxN), ECF  = zeros(FT, maxN),
                           VNH4 = zeros(FT, maxN), VNO3 = zeros(FT, maxN), VPO4 = zeros(FT, maxN),
                           VFe  = zeros(FT, maxN), ρChl = zeros(FT, maxN), 
+                          PS2ST= zeros(FT, maxN), ST2PS= zeros(FT, maxN),
+                          NR2ST= zeros(FT, maxN), ST2NR= zeros(FT, maxN),
                           RS   = zeros(FT, maxN), ERS  = zeros(FT, maxN),
                           BS   = zeros(FT, maxN), NR   = zeros(FT, maxN), ENR  = zeros(FT, maxN),
                           graz = zeros(FT, maxN), mort = zeros(FT, maxN), dvid = zeros(FT, maxN)
@@ -18,6 +20,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
     param_names=(:Nsuper, :Cquota, :SA, :mean, :var, :Chl2Cint, 
                  :α, :Topt, :Tmax, :Ea, :Imax,
                  :PCmax, :k_cf, :e_cf, :VNO3max, :VNH4max, :VPO4max, 
+                 :k_Fe_ST2PS, :k_Fe_PS2ST, :k_Fe_ST2NR, :k_Fe_NR2ST,
                  :KfePS, :KfeNR, :KsatNH4, :KsatNO3, :KsatPO4, :KSAFe,
                  :CHmax, :qNH4max, :qNO3max, :qPmax, :qFemax,
                  :Chl2N, :R_NC, :R_PC, :k_mtb, :k_rs, :e_rs, :k_nr, :e_nr,
@@ -76,6 +79,9 @@ function generate_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)
     plank.data.qP   .= plank.data.qP .* (pqmax .* (plank.data.Bm .+ plank.data.CH) .- 
                                         plank.data.Bm .* R_PC)                         # Pq
     plank.data.qFe  .= plank.data.qFe .* (feqmax .* (plank.data.Bm .+ plank.data.CH))  # Fe
+    plank.data.qFePS.= plank.data.qFe .* 0.4                                           # Fe
+    plank.data.qFeNR.= plank.data.qFe .* 0.3                                           # Fe
+    plank.data.qFe  .= plank.data.qFe .* 0.3                                           # Fe
     plank.data.Chl  .= plank.data.Bm .* Chl2Cint                                       # Chl
 
     mask_individuals!(plank.data, g, N, arch)
