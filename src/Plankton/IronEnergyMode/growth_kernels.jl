@@ -272,7 +272,7 @@ end
     f_NR2ST = min(f_NR2ST, qFeNR/ΔT)
     # nitrogen fixation
     f_ST2NF = min(f_ST2NF, qFe/ΔT - f_ST2PS)
-    f_NF2ST = min(f_NF2ST, qFeNR/ΔT) 
+    f_NF2ST = min(f_NF2ST, qFeNF/ΔT) 
 
     return f_ST2PS, f_PS2ST, f_ST2NR, f_NR2ST, f_ST2NF, f_NF2ST
 end
