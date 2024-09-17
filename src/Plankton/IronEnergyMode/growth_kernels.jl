@@ -166,7 +166,7 @@ end
 @kernel function calc_NO3_reduc_kernel!(plank, p, ΔT)
     i = @index(Global)
     @inbounds plank.NR[i], plank.ENR[i] = calc_NO3_reduction(plank.En[i], plank.qNO3[i], plank.qNH4[i],
-                                                             plank.qFe[i], plank.Bm[i], plank.CH[i],
+                                                             plank.qFeNR[i], plank.Bm[i], plank.CH[i],
                                                              p, plank.ac[i], ΔT)
 end
 function calc_NO3_reduc!(plank, p, ΔT, arch::Architecture)
@@ -188,7 +188,7 @@ end
 @kernel function calc_Nfix_kernel!(plank, p, ΔT)
     i = @index(Global)
     @inbounds plank.NF[i], plank.ENF[i] = calc_Nfixation(plank.En[i], plank.qNH4[i],
-                                                         plank.qFe[i], plank.Bm[i], plank.CH[i],
+                                                         plank.qFeNF[i], plank.Bm[i], plank.CH[i],
                                                          p, plank.ac[i], ΔT)
 end
 function calc_Nfix!(plank, p, ΔT, arch::Architecture)
