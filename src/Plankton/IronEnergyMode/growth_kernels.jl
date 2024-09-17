@@ -90,7 +90,7 @@ end
     Qn = qNH4/max(1.0f-30, Bm + CH)
     regQN = shape_func_dec(Qn, p.qNH4max, 1.0f-4)
     VNH4 = p.VNH4max * regQN * NH4/max(1.0f-30, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm * ac
-    return min(VNH4, NH4/ΔT/max(1.0f0,pop))
+    return min(VNH4, NH4/ΔT/max(1.0f0,pop)) * p.is_nr
 end
 
 ##### calculate nitrate uptake rate (mmolN/individual/second)
@@ -98,7 +98,7 @@ end
     Qn = qNO3/max(1.0f-30, Bm + CH)
     regQN = shape_func_dec(Qn, p.qNO3max, 1.0f-4)
     VNO3 = p.VNO3max * regQN * NO3/max(1.0f-30, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm * ac
-    return min(VNO3, NO3/ΔT/max(1.0f0,pop))
+    return min(VNO3, NO3/ΔT/max(1.0f0,pop)) * p.is_nr
 end
 
 ##### calculate phosphate uptake rate (mmolN/individual/second)
@@ -160,18 +160,40 @@ end
     NR = p.k_nr * reg * qNO3 * Qfe_NR / max(1.0f-30, Qfe_NR + p.KfeNR) * ac
     NR = min(NR, qNO3/ΔT, En/p.e_nr/ΔT) # double check qNO3 and energy are not over consumed
     ENR = NR * p.e_nr * ac
-    return NR, ENR
+    return NR * p.is_nr, ENR * p.is_nr
 end
 
-@kernel function calc_NO3_reduc_kernel!(plank, nuts, p, ΔT)
+@kernel function calc_NO3_reduc_kernel!(plank, p, ΔT)
     i = @index(Global)
     @inbounds plank.NR[i], plank.ENR[i] = calc_NO3_reduction(plank.En[i], plank.qNO3[i], plank.qNH4[i],
                                                              plank.qFe[i], plank.Bm[i], plank.CH[i],
                                                              p, plank.ac[i], ΔT)
 end
-function calc_NO3_reduc!(plank, nuts, p, ΔT, arch::Architecture)
+function calc_NO3_reduc!(plank, p, ΔT, arch::Architecture)
     kernel! = calc_NO3_reduc_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p, ΔT)
+    kernel!(plank, p, ΔT)
+    return nothing
+end
+
+##### nitrogen fixation (mmolN/individual/second)
+@inline function calc_Nfixation(En, qNH4, qFeNF, Bm, CH, p, ac, ΔT)
+    reg = shape_func_dec(qNH4, p.qNH4max, 1.0f-4)
+    Qfe_NF = qFeNF / max(1.0f-30, Bm + CH)
+    NF = p.k_nf * reg * Qfe_NF / max(1.0f-30, Qfe_NF + p.KfeNF) * Bm * ac
+    NF = min(NF, En/p.e_nf/ΔT) # double check qNO3 and energy are not over consumed
+    ENF = NF * p.e_nf * ac
+    return NF * (p.is_croc + p.is_tric), ENF * (p.is_croc + p.is_tric)
+end
+
+@kernel function calc_Nfix_kernel!(plank, p, ΔT)
+    i = @index(Global)
+    @inbounds plank.NF[i], plank.ENF[i] = calc_Nfixation(plank.En[i], plank.qNH4[i],
+                                                         plank.qFe[i], plank.Bm[i], plank.CH[i],
+                                                         p, plank.ac[i], ΔT)
+end
+function calc_Nfix!(plank, p, ΔT, arch::Architecture)
+    kernel! = calc_Nfix_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, p, ΔT)
     return nothing
 end
 
@@ -179,8 +201,10 @@ end
 @kernel function update_state_3_kernel!(plank, ΔT)
     i = @index(Global)
     @inbounds plank.En[i]   -= plank.ENR[i] * ΔT
+    @inbounds plank.En[i]   -= plank.ENF[i] * ΔT
     @inbounds plank.qNO3[i] -= plank.NR[i] * ΔT
     @inbounds plank.qNH4[i] += plank.NR[i] * ΔT
+    @inbounds plank.qNH4[i] += plank.NF[i] * ΔT
 end
 function update_state_3!(plank, ΔT, arch::Architecture)
     kernel! = update_state_3_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -214,26 +238,51 @@ function calc_BS!(plank, p, arch::Architecture)
 end
 
 ##### iron allocation
-@inline function iron_alloc(par, dpar, qFe, qFePS, qFeNR, p, ΔT)
+@inline function iron_alloc(par, dpar, qFe, qFePS, qFeNR, qFeNF, p, ΔT)
+    # photosynthesis - no-diaz + Crocosphaera
     reg = shape_func_dec(par, p.Imax, 1.0f-2; pow = 4.0f0)
-    f_ST2PS = p.k_Fe_ST2PS * reg * qFe * isless(0.0f0, dpar)
-    f_PS2ST = p.k_Fe_PS2ST * qFePS * (reg * isless(dpar, 0.0f0) + isequal(0.0f0, par))
-    f_ST2NR = p.k_Fe_ST2NR * qFe * isequal(0.0f0, par)
-    f_NR2ST = p.k_Fe_NR2ST * qFeNR * isless(0.0f0, par)
+    f_ST2PS_nd = p.k_Fe_ST2PS * reg * qFe * isless(0.0f0, dpar)
+    f_PS2ST_nd = p.k_Fe_PS2ST * qFePS * (reg * isless(dpar, 0.0f0) + isequal(0.0f0, par))
+    # photosynthesis - trichodesmium
+    f_ST2PS_tr = p.k_Fe_ST2PS * qFe * reg * isless(0.0f0, par)
+    f_PS2ST_tr = p.k_Fe_PS2ST * qFePS * ((1.0f0 - reg) * isless(0.0f0, par) + isequal(0.0f0, par))
+    # photosynthesis
+    f_ST2PS = f_ST2PS_nd * (p.is_nr + p.is_croc) + f_ST2PS_tr * p.is_tric
+    f_PS2ST = f_PS2ST_nd * (p.is_nr + p.is_croc) + f_PS2ST_tr * p.is_tric
 
+    # nitrate reduction
+    f_ST2NR = p.k_Fe_ST2NR * qFe * isequal(0.0f0, par) * p.is_nr 
+    f_NR2ST = p.k_Fe_NR2ST * qFeNR * isless(0.0f0, par) * p.is_nr 
+
+    # nitrogen fixation - Crocosphaera watsonii
+    f_ST2NF_cr = p.k_Fe_ST2NF * qFe * isequal(0.0f0, par)
+    f_NF2ST_cr = p.k_Fe_NF2ST * qFeNF * isless(0.0f0, par)
+    # nitrogen fixation - Trichodesmium
+    f_ST2NF_tr = p.k_Fe_ST2NF * qFe * (1.0f0 - reg)
+    f_NF2ST_tr = p.k_Fe_NF2ST * qFeNF * reg
+    # nitrogen fixation
+    f_ST2NF = f_ST2NF_cr * p.is_croc + f_ST2NF_tr * p.is_tric
+    f_NF2ST = f_NF2ST_cr * p.is_croc + f_NF2ST_tr * p.is_tric
+
+    # photosynthesis
     f_ST2PS = min(f_ST2PS, qFe/ΔT)
     f_PS2ST = min(f_PS2ST, qFePS/ΔT)
-    f_ST2NR = min(f_ST2NR, qFe/ΔT - f_ST2PS) # photosynthesis has the highest priority
+    # photosynthesis has the highest priority
+    f_ST2NR = min(f_ST2NR, qFe/ΔT - f_ST2PS)
     f_NR2ST = min(f_NR2ST, qFeNR/ΔT)
+    # nitrogen fixation
+    f_ST2NF = min(f_ST2NF, qFe/ΔT - f_ST2PS)
+    f_NF2ST = min(f_NF2ST, qFeNR/ΔT) 
 
-    return f_ST2PS, f_PS2ST, f_ST2NR, f_NR2ST
+    return f_ST2PS, f_PS2ST, f_ST2NR, f_NR2ST, f_ST2NF, f_NF2ST
 end
 
 @kernel function calc_iron_fluxes_kernel!(plank, nuts, p, ΔT)
     i = @index(Global)
-    @inbounds plank.ST2PS[i], plank.PS2ST[i], plank.ST2NR[i], plank.NR2ST[i] = 
+    @inbounds plank.ST2PS[i], plank.PS2ST[i], plank.ST2NR[i], 
+              plank.NR2ST[i], plank.ST2NF[i], plank.NF2ST[i] = 
                     iron_alloc(nuts.par[i], nuts.dpar[i], plank.qFe[i], 
-                    plank.qFePS[i], plank.qFeNR[i], p, ΔT)
+                    plank.qFePS[i], plank.qFeNR[i], plank.qFeNF[i], p, ΔT)
 end
 function calc_iron_fluxes!(plank, nuts, p, ΔT, arch::Architecture)
     kernel! = calc_iron_fluxes_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -251,9 +300,11 @@ end
     @inbounds plank.Chl[i]  += ΔT * plank.BS[i] * p.R_NC * plank.ρChl[i]
     @inbounds plank.age[i]  += ΔT / 3600.0f0 * plank.ac[i]
     @inbounds plank.qFe[i]  += ΔT * (plank.PS2ST[i] - plank.ST2PS[i] +
-                                     plank.NR2ST[i] - plank.ST2NR[i])
+                                     plank.NR2ST[i] - plank.ST2NR[i] +
+                                     plank.NF2ST[i] - plank.ST2NF[i])
     @inbounds plank.qFePS[i]+= ΔT * (plank.ST2PS[i] - plank.PS2ST[i])
     @inbounds plank.qFeNR[i]+= ΔT * (plank.ST2NR[i] - plank.NR2ST[i])
+    @inbounds plank.qFeNF[i]+= ΔT * (plank.ST2NF[i] - plank.NF2ST[i])
 end
 function update_biomass!(plank, p, ΔT, arch::Architecture)
     kernel! = update_biomass_kernel!(device(arch), 256, (size(plank.ac,1)))
