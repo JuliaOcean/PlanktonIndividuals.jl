@@ -159,6 +159,7 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "Tmax"      => [30.0],    # Maximal temperature for growth (C)
         "Ea"        => [5.3e4],   # Free energy
         "Imax"      => [3000.0],  # Light regulation of iron allocation (μmol photon/m²/second)
+        "Enmax"     => [2.0e-9],  # Maximum intracellular energy (kJ/cell)
         "is_nr"     => [1.0],     # 1 for non-diazotroph, 0 for diazotroph
         "is_croc"   => [0.0],     # 1 for Crocosphaera-like N fixation pattern
         "is_tric"   => [0.0],     # 1 for Trichodesmium-like N fixation pattern
@@ -167,7 +168,7 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "VNO3max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
         "VPO4max"   => [1.2e-6],  # Maximum P uptake rate (mmolP/mmolC/second)
         "k_cf"      => [1.0e-5],  # Carbon fixation rate (per second)
-        "k_rs"      => [1.5e-6],  # Respiration rate (per second)
+        "k_rs"      => [1.5e-5],  # Maximum respiration rate (per second)
         "k_nr"      => [2.8e-6],  # Nitrate reduction rate (per second)
         "k_nf"      => [2.8e-6],  # N fixation rate (mmolN/mmolC/second)
         "k_mtb"     => [3.5e-5],  # Metabolic rate (per second)

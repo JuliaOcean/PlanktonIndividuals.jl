@@ -35,8 +35,9 @@ function calc_PS!(plank, nuts, p, arch::Architecture)
 end
 
 ##### calculate respiration (mmolC/individual/second)
-@inline function calc_respir(CH, T, p, ac, ΔT)
-    RS = max(0.0f0, CH) * p.k_rs * tempFunc(T, p) * ac
+@inline function calc_respir(CH, En, T, p, ac, ΔT)
+    reg = shape_func_dec_alt(En, p.Enmax, 1.0f-2)
+    RS = max(0.0f0, CH) * reg * p.k_rs * tempFunc(T, p) * ac
     RS = min(RS, CH/ΔT) # double check CH is not over consumed
     ERS = RS * p.e_rs * ac
     return RS, ERS
@@ -44,7 +45,8 @@ end
 
 @kernel function calc_respiration_kernel!(plank, nuts, p, ΔT)
     i = @index(Global)
-    @inbounds plank.RS[i], plank.ERS[i] = calc_respir(plank.CH[i], nuts.T[i], p, plank.ac[i], ΔT)
+    @inbounds plank.RS[i], plank.ERS[i] = calc_respir(plank.CH[i], plank.En[i], 
+                                                      nuts.T[i], p, plank.ac[i], ΔT)
 end
 function calc_repiration!(plank, nuts, p, ΔT, arch::Architecture)
     kernel! = calc_respiration_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -68,8 +70,8 @@ end
 @inline function calc_CF(En, CH, Bm, temp, p, ac, ΔT)
     Qc = CH/max(1.0f-30, Bm + CH)
     regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4)
-    CF = p.k_cf * regQC * tempFunc_PS(temp, p) * Bm * ac
-    CF = min(CF, En/p.e_cf/ΔT) # double check En is not over consumed
+    regEn = shape_func_inc_alt(En, p.Enmax, 1.0f-4)
+    CF = p.k_cf * regQC * regEn * tempFunc_PS(temp, p) * Bm * ac
     ECF = CF * p.e_cf * ac
     return CF, ECF
 end
@@ -157,8 +159,9 @@ end
 @inline function calc_NO3_reduction(En, qNO3, qNH4, qFeNR, Bm, CH, p, ac, ΔT)
     reg = shape_func_dec(qNH4, p.qNH4max, 1.0f-4)
     Qfe_NR = qFeNR / max(1.0f-30, Bm + CH)
-    NR = p.k_nr * reg * qNO3 * Qfe_NR / max(1.0f-30, Qfe_NR + p.KfeNR) * ac
-    NR = min(NR, qNO3/ΔT, En/p.e_nr/ΔT) # double check qNO3 and energy are not over consumed
+    regEn = shape_func_inc_alt(En, p.Enmax, 1.0f-4)
+    NR = p.k_nr * reg * regEn * qNO3 * Qfe_NR / max(1.0f-30, Qfe_NR + p.KfeNR) * ac
+    NR = min(NR, qNO3/ΔT) # double check qNO3 are not over consumed
     ENR = NR * p.e_nr * ac
     return NR * p.is_nr, ENR * p.is_nr
 end
@@ -179,8 +182,8 @@ end
 @inline function calc_Nfixation(En, qNH4, qFeNF, Bm, CH, p, ac, ΔT)
     reg = shape_func_dec(qNH4, p.qNH4max, 1.0f-4)
     Qfe_NF = qFeNF / max(1.0f-30, Bm + CH)
-    NF = p.k_nf * reg * Qfe_NF / max(1.0f-30, Qfe_NF + p.KfeNF) * Bm * ac
-    NF = min(NF, En/p.e_nf/ΔT) # double check qNO3 and energy are not over consumed
+    regEn = shape_func_inc_alt(En, p.Enmax, 1.0f-4)
+    NF = p.k_nf * reg * regEn * Qfe_NF / max(1.0f-30, Qfe_NF + p.KfeNF) * Bm * ac
     ENF = NF * p.e_nf * ac
     return NF * (p.is_croc + p.is_tric), ENF * (p.is_croc + p.is_tric)
 end

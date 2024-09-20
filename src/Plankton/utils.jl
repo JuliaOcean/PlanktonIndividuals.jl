@@ -93,6 +93,7 @@ function mask_individuals!(plank, g::AbstractGrid, N, arch)
 end
 
 ##### shape function - decrease from 1.0 to 0.0 while x increase from 0.0 to 1.0
+##### sharp decrease near x/xmax = 1.0
 @inline function shape_func_dec(x, xmax, k; pow = 4.0f0)
     fx = max(0.0f0, min(1.0f0, 1.0f0 - x / xmax))
     reg = fx^pow / (k + fx^pow)
@@ -100,8 +101,25 @@ end
 end
 
 ##### shape function - increase from 0.0 to 1.0 while x increase from 0.0 to 1.0
+##### sharp increase near x/xmax = 1.0
 @inline function shape_func_inc(x, xmax, k; pow = 4.0f0)
     fx = max(0.0f0, min(1.0f0, 1.0f0 - x / xmax))
     reg = fx^pow / (k + fx^pow)
     return 1.0f0 - reg
+end
+
+##### shape function - decrease from 1.0 to 0.0 while x increase from 0.0 to 1.0
+##### sharp decrease near x/xmax = 0.0
+@inline function shape_func_dec_alt(x, xmax, k; pow = 4.0f0)
+    fx = max(0.0f0, min(1.0f0, x / xmax))
+    reg = fx^pow / (k + fx^pow)
+    return 1.0f0 - reg
+end
+
+##### shape function - increase from 0.0 to 1.0 while x increase from 0.0 to 1.0
+##### sharp increase near x/xmax = 0.0
+@inline function shape_func_inc_alt(x, xmax, k; pow = 4.0f0)
+    fx = max(0.0f0, min(1.0f0, x / xmax))
+    reg = fx^pow / (k + fx^pow)
+    return reg
 end
