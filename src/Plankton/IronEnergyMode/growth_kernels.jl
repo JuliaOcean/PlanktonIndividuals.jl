@@ -72,6 +72,7 @@ end
     regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4)
     regEn = shape_func_inc_alt(En, p.Enmax, 1.0f-4)
     CF = p.k_cf * regQC * regEn * tempFunc_PS(temp, p) * Bm * ac
+    CF = min(CF, En/p.e_cf/ΔT)
     ECF = CF * p.e_cf * ac
     return CF, ECF
 end
@@ -184,6 +185,7 @@ end
     Qfe_NF = qFeNF / max(1.0f-30, Bm + CH)
     regEn = shape_func_inc_alt(En, p.Enmax, 1.0f-4)
     NF = p.k_nf * reg * regEn * Qfe_NF / max(1.0f-30, Qfe_NF + p.KfeNF) * Bm * ac
+    NF = min(NF, En/p.e_nf/ΔT)
     ENF = NF * p.e_nf * ac
     return NF * (p.is_croc + p.is_tric), ENF * (p.is_croc + p.is_tric)
 end
