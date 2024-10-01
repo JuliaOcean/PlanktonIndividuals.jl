@@ -36,7 +36,7 @@ end
 
 ##### calculate respiration (mmolC/individual/second)
 @inline function calc_respir(CH, En, T, p, ac, ΔT)
-    reg = shape_func_dec_alt(En, p.Enmax, 1.0f-2)
+    reg = shape_func_dec_alt(En, p.Enmax * p.Nsuper, 1.0f-2)
     RS = max(0.0f0, CH) * reg * p.k_rs * tempFunc(T, p) * ac
     RS = min(RS, CH/ΔT) # double check CH is not over consumed
     ERS = RS * p.e_rs * ac
@@ -70,7 +70,7 @@ end
 @inline function calc_CF(En, CH, Bm, temp, p, ac, ΔT)
     Qc = CH/max(1.0f-30, Bm + CH)
     regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4)
-    regEn = shape_func_inc_alt(En, p.Enmax, 1.0f-4)
+    regEn = shape_func_inc_alt(En, p.Enmax * p.Nsuper, 1.0f-4)
     CF = p.k_cf * regQC * regEn * tempFunc_PS(temp, p) * Bm * ac
     CF = min(CF, En/p.e_cf/ΔT)
     ECF = CF * p.e_cf * ac
