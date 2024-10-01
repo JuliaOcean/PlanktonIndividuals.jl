@@ -158,9 +158,10 @@ end
 
 ##### nitrate reduction (mmolN/individual/second)
 @inline function calc_NO3_reduction(En, qNO3, qNH4, qFeNR, Bm, CH, p, ac, ΔT)
-    reg = shape_func_dec(qNH4, p.qNH4max, 1.0f-4)
+    Qn = qNH4/max(1.0f-30, Bm + CH)
+    reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4)
     Qfe_NR = qFeNR / max(1.0f-30, Bm + CH)
-    regEn = shape_func_inc_alt(En, p.Enmax, 1.0f-4)
+    regEn = shape_func_inc_alt(En, p.Enmax * p.Nsuper, 1.0f-4)
     NR = p.k_nr * reg * regEn * qNO3 * Qfe_NR / max(1.0f-30, Qfe_NR + p.KfeNR) * ac
     NR = min(NR, qNO3/ΔT) # double check qNO3 are not over consumed
     ENR = NR * p.e_nr * ac
@@ -181,9 +182,10 @@ end
 
 ##### nitrogen fixation (mmolN/individual/second)
 @inline function calc_Nfixation(En, qNH4, qFeNF, Bm, CH, p, ac, ΔT)
-    reg = shape_func_dec(qNH4, p.qNH4max, 1.0f-4)
+    Qn = qNH4/max(1.0f-30, Bm + CH)
+    reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4)
     Qfe_NF = qFeNF / max(1.0f-30, Bm + CH)
-    regEn = shape_func_inc_alt(En, p.Enmax, 1.0f-4)
+    regEn = shape_func_inc_alt(En, p.Enmax * p.Nsuper, 1.0f-4)
     NF = p.k_nf * reg * regEn * Qfe_NF / max(1.0f-30, Qfe_NF + p.KfeNF) * Bm * ac
     NF = min(NF, En/p.e_nf/ΔT)
     ENF = NF * p.e_nf * ac
