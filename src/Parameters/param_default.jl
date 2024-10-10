@@ -158,7 +158,6 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "Topt"      => [27.0],    # Optimal temperature for growth (C)
         "Tmax"      => [30.0],    # Maximal temperature for growth (C)
         "Ea"        => [5.3e4],   # Free energy
-        "Imax"      => [3000.0],  # Light regulation of iron allocation (μmol photon/m²/second)
         "Enmax"     => [2.0e-9],  # Maximum intracellular energy (kJ/cell)
         "is_nr"     => [1.0],     # 1 for non-diazotroph, 0 for diazotroph
         "is_croc"   => [0.0],     # 1 for Crocosphaera-like N fixation pattern
