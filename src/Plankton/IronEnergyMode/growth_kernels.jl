@@ -26,7 +26,7 @@ end
 
 @kernel function calc_PS_kernel!(plank, nuts, p)
     i = @index(Global)
-    @inbounds plank.PS[i] = calc_PS(nuts.par[i], plank.Bm[i], plank.CH[i], plank.Chl[i], plank.qFe[i], p)
+    @inbounds plank.PS[i] = calc_PS(nuts.par[i], plank.Bm[i], plank.CH[i], plank.Chl[i], plank.qFePS[i], p)
 end
 function calc_PS!(plank, nuts, p, arch::Architecture)
     kernel! = calc_PS_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -113,8 +113,8 @@ end
 end
 
 ##### calculate iron uptake rate (mmolFe/individual/second)
-@inline function calc_Fe_uptake(FeT, qFe, Bm, CH, Sz, pop, p, ac, ΔT)
-    Qfe = qFe/max(1.0f-30, Bm +CH)
+@inline function calc_Fe_uptake(FeT, qFe, qFePS, qFeNR, qFeNF, Bm, CH, Sz, pop, p, ac, ΔT)
+    Qfe = (qFe + qFePS + qFeNF + qFeNR)/max(1.0f-30, Bm +CH)
     regQFe = shape_func_dec(Qfe, p.qFemax, 1.0f-4)
     SA = p.SA * Sz^(2/3)
     VFe = p.KSAFe * SA * FeT * regQFe * ac
@@ -129,7 +129,8 @@ end
                                               plank.Bm[i], nuts.pop[i], p, plank.ac[i], ΔT)
     @inbounds plank.VPO4[i] = calc_P_uptake(nuts.PO4[i], nuts.T[i], plank.CH[i], plank.qP[i],
                                             plank.Bm[i], nuts.pop[i], p, plank.ac[i], ΔT)
-    @inbounds plank.VFe[i]  = calc_Fe_uptake(nuts.FeT[i], plank.qFe[i], plank.Bm[i], plank.CH[i], 
+    @inbounds plank.VFe[i]  = calc_Fe_uptake(nuts.FeT[i], plank.qFe[i], plank.qFePS[i], plank.qFeNR[i],
+                                             plank.qFeNF[i], plank.Bm[i], plank.CH[i], 
                                              plank.Sz[i], nuts.pop[i], p, plank.ac[i], ΔT)
 end
 function calc_nuts_uptake!(plank, nuts, p, ΔT, arch::Architecture)
@@ -246,16 +247,9 @@ end
 
 ##### iron allocation
 @inline function iron_alloc(par, dpar, qFe, qFePS, qFeNR, qFeNF, p, ΔT)
-    # photosynthesis - no-diaz + Crocosphaera
-    reg = shape_func_dec(par, p.Imax, 1.0f-2; pow = 4.0f0)
-    f_ST2PS_nd = p.k_Fe_ST2PS * reg * qFe * isless(0.0f0, dpar)
-    f_PS2ST_nd = p.k_Fe_PS2ST * qFePS * (reg * isless(dpar, 0.0f0) + isequal(0.0f0, par))
-    # photosynthesis - trichodesmium
-    f_ST2PS_tr = p.k_Fe_ST2PS * qFe * reg * isless(0.0f0, par)
-    f_PS2ST_tr = p.k_Fe_PS2ST * qFePS * ((1.0f0 - reg) * isless(0.0f0, par) + isequal(0.0f0, par))
     # photosynthesis
-    f_ST2PS = f_ST2PS_nd * (p.is_nr + p.is_croc) + f_ST2PS_tr * p.is_tric
-    f_PS2ST = f_PS2ST_nd * (p.is_nr + p.is_croc) + f_PS2ST_tr * p.is_tric
+    f_ST2PS = p.k_Fe_ST2PS * qFe * isless(0.0f0, dpar)
+    f_PS2ST = p.k_Fe_PS2ST * qFePS * (isless(dpar, 0.0f0) + isequal(0.0f0, par))
 
     # nitrate reduction
     f_ST2NR = p.k_Fe_ST2NR * qFe * isequal(0.0f0, par) * p.is_nr 
@@ -265,8 +259,8 @@ end
     f_ST2NF_cr = p.k_Fe_ST2NF * qFe * isequal(0.0f0, par)
     f_NF2ST_cr = p.k_Fe_NF2ST * qFeNF * isless(0.0f0, par)
     # nitrogen fixation - Trichodesmium
-    f_ST2NF_tr = p.k_Fe_ST2NF * qFe * (1.0f0 - reg)
-    f_NF2ST_tr = p.k_Fe_NF2ST * qFeNF * reg
+    f_ST2NF_tr = p.k_Fe_ST2NF * qFe * isless(0.0f0, dpar)
+    f_NF2ST_tr = p.k_Fe_NF2ST * qFeNF * (isless(dpar, 0.0f0) + isequal(0.0f0, par))
     # nitrogen fixation
     f_ST2NF = f_ST2NF_cr * p.is_croc + f_ST2NF_tr * p.is_tric
     f_NF2ST = f_NF2ST_cr * p.is_croc + f_NF2ST_tr * p.is_tric
