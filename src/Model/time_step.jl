@@ -39,11 +39,11 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
             acc_counts!(model.timestepper.pop, model.individuals.phytos[sp].data.ac,
                         model.individuals.phytos[sp].data.xi, model.individuals.phytos[sp].data.yi,
                         model.individuals.phytos[sp].data.zi, model.arch)
-            ##### calculate PAR
-            for ki in 1:model.grid.Nz
-                calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, model.timestepper.PARF,
-                          model.grid, model.bgc_params["kc"], model.bgc_params["kw"], ki)
-            end
+        end
+        ##### calculate PAR
+        for ki in 1:model.grid.Nz
+            calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, model.timestepper.PARF,
+                      model.grid, model.bgc_params["kc"], model.bgc_params["kw"], ki)
         end
         for sp in keys(model.individuals.phytos)
             find_NPT!(model.timestepper.nuts, model.individuals.phytos[sp].data.xi,
@@ -71,11 +71,11 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
             acc_chl!(model.timestepper.Chl, model.individuals.phytos[sp].data.Chl,
                      model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi,
                      model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, model.arch)
-            ##### calculate PAR
-            for ki in 1:model.grid.Nz
-                calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, model.timestepper.PARF,
-                          model.grid, model.bgc_params["kc"], model.bgc_params["kw"], ki)
-            end
+        end
+        ##### calculate PAR
+        for ki in 1:model.grid.Nz
+            calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, model.timestepper.PARF,
+                      model.grid, model.bgc_params["kc"], model.bgc_params["kw"], ki)
         end
         for sp in keys(model.individuals.phytos)
             acc_counts!(model.timestepper.pop, model.individuals.phytos[sp].data.ac,
