@@ -96,6 +96,7 @@ function divide!(plank, nuts, deactive_ind, arch::Architecture)
     nuts.idc_int .= unsafe_trunc.(Int, nuts.idc)
     get_tind!(plank.idx, plank.dvid, nuts.idc_int, deactive_ind, arch)
     copy_daughter_individuals!(plank, plank.dvid, plank.idx, arch)
-    divide_to_half!(plank, arch)    
+    divide_to_half!(plank, arch)
+    plank.idx .= 0
     return nothing
 end
