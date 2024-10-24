@@ -20,7 +20,6 @@ end
 ##### only functional when damaged biomass is greater than 0.0
 ##### use Bd/Bm as the allocation, more damaged biomass means more allocation to repair
 @inline function gamma_alloc(Bm, Bd, p)
-    #γ = max(0.0, temp - p.Topt) / (p.Tmax - p.Topt) * isless(0.0, Bd)
     γ = Bd / max(1.0f-30, Bm) * isless(0.0f0, Bd)
     γ = min(1.0f0, γ) * isequal(1.0f0, p.thermal)
     return γ
@@ -29,12 +28,9 @@ end
 ##### calculate photosynthesis rate (mmolC/individual/second)
 @inline function calc_photosynthesis(par, temp, Chl, Bm, Bd, p)
     αI  = par * p.α * p.Φ
-    if p.thermal == 1.0f0
-        PCm = p.PCmax * tempFunc(temp, p)
-    else
-        PCm = p.PCmax * tempFunc_PS(temp, p)
-    end
-    PS  = PCm * (1.0f0 - exp(-αI / max(1.0f-30, PCm) * Chl / max(1.0f-30, Bm))) * max(0.0f0, Bm - Bd)
+    PCm = p.PCmax * (tempFunc(temp, p) * p.thermal + tempFunc_PS(temp, p) * (1.0f0 - p.thermal))
+    light_limit = 1.0f0 - exp(-αI / max(1.0f-30, PCm) * Chl / max(1.0f-30, Bm))
+    PS  = PCm * max(0.0f0, Bm - Bd) * (light_limit * (1.0f0 - p.is_bact) + p.is_bact)
     return PS
 end
 
