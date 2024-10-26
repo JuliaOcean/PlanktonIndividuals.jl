@@ -1,16 +1,16 @@
 ##### temperature function for photosynthesis
-@inline function tempFunc_PS(temp, p)
-    x = temp - p.Topt; xmax = p.Tmax - p.Topt
+@inline function tempFunc_PS(T, p)
+    x = T - p.Topt; xmax = p.Tmax - p.Topt
     regT = shape_func_dec(x, xmax, 4.0f-2)
-    k = exp(-p.Ea/(8.3145f0*(temp+273.15f0))) * regT
+    k = exp(-p.Ea/(8.3145f0*(T+273.15f0))) * regT
     k = max(0.0f0, k)
     OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
     return min(1.0f0, k/OGT_rate)
 end
 
 ##### temperature function for nutrient uptakes
-@inline function tempFunc(temp, p)
-    k = exp(-p.Ea/(8.3145f0*(temp+273.15f0)))
+@inline function tempFunc(T, p)
+    k = exp(-p.Ea/(8.3145f0*(T+273.15f0)))
     k = max(0.0f0, k)
     OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
     return min(1.0f0, k/OGT_rate)
@@ -26,7 +26,8 @@ end
 
 @kernel function calc_PS_kernel!(plank, nuts, p)
     i = @index(Global)
-    @inbounds plank.PS[i] = calc_PS(nuts.par[i], plank.Bm[i], plank.CH[i], plank.Chl[i], plank.qFePS[i], p)
+    @inbounds plank.PS[i] = calc_PS(nuts.par[i], plank.Bm[i], plank.CH[i], 
+                                    plank.Chl[i], plank.qFePS[i], p)
 end
 function calc_PS!(plank, nuts, p, arch::Architecture)
     kernel! = calc_PS_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -89,26 +90,26 @@ function calc_carbon_fixation!(plank, nuts, p, ΔT, arch::Architecture)
 end
 
 ##### calculate ammonium uptake rate (mmolN/individual/second)
-@inline function calc_NH4_uptake(NH4, temp, CH, qNH4, Bm, pop, p, ac, ΔT)
+@inline function calc_NH4_uptake(NH4, T, CH, qNH4, Bm, pop, p, ac, ΔT)
     Qn = qNH4/max(1.0f-30, Bm + CH)
-    regQN = shape_func_dec(Qn, p.qNH4max, 1.0f-4)
-    VNH4 = p.VNH4max * regQN * NH4/max(1.0f-30, NH4+p.KsatNH4) * tempFunc(temp, p) * Bm * ac
+    regQN = shape_func_dec(Qn, p.qNH4max, 1.0f-4, pow = 2.0f0)
+    VNH4 = p.VNH4max * regQN * NH4/max(1.0f-30, NH4+p.KsatNH4) * tempFunc(T, p) * Bm * ac
     return min(VNH4, NH4/ΔT/max(1.0f0,pop)) * p.is_nr
 end
 
 ##### calculate nitrate uptake rate (mmolN/individual/second)
-@inline function calc_NO3_uptake(NO3, temp, CH, qNO3, Bm, pop, p, ac, ΔT)
+@inline function calc_NO3_uptake(NO3, T, CH, qNO3, Bm, pop, p, ac, ΔT)
     Qn = qNO3/max(1.0f-30, Bm + CH)
-    regQN = shape_func_dec(Qn, p.qNO3max, 1.0f-4)
-    VNO3 = p.VNO3max * regQN * NO3/max(1.0f-30, NO3+p.KsatNO3) * tempFunc(temp, p) * Bm * ac
+    regQN = shape_func_dec(Qn, p.qNO3max, 1.0f-4, pow = 2.0f0)
+    VNO3 = p.VNO3max * regQN * NO3/max(1.0f-30, NO3+p.KsatNO3) * tempFunc(T, p) * Bm * ac
     return min(VNO3, NO3/ΔT/max(1.0f0,pop)) * p.is_nr
 end
 
 ##### calculate phosphate uptake rate (mmolN/individual/second)
-@inline function calc_P_uptake(PO4, temp, CH, qP, Bm, pop, p, ac, ΔT)
+@inline function calc_P_uptake(PO4, T, CH, qP, Bm, pop, p, ac, ΔT)
     Qp = (qP + Bm * p.R_PC)/max(1.0f-30, Bm + CH)
-    regQP = shape_func_dec(Qp, p.qPmax, 1.0f-4)
-    VPO4 = p.VPO4max * regQP * PO4/max(1.0f-30, PO4+p.KsatPO4) * tempFunc(temp, p) * Bm * ac
+    regQP = shape_func_dec(Qp, p.qPmax, 1.0f-4, pow = 2.0f0)
+    VPO4 = p.VPO4max * regQP * PO4/max(1.0f-30, PO4+p.KsatPO4) * tempFunc(T, p) * Bm * ac
     return min(VPO4, PO4/ΔT/max(1.0f0,pop))
 end
 
@@ -139,12 +140,10 @@ function calc_nuts_uptake!(plank, nuts, p, ΔT, arch::Architecture)
     return nothing
 end
 
-##### update energy reserve and CNPFe quotas - second time
-##### double check energy reserve is non-negative
-##### use all the energy if it's not enough
+##### update energy reserve and C, N, P, Fe quotas - second time
 @kernel function update_state_2_kernel!(plank, ΔT)
     i = @index(Global)
-    @inbounds plank.En[i]   += -plank.ECF[i] * ΔT
+    @inbounds plank.En[i]   -= plank.ECF[i]  * ΔT
     @inbounds plank.CH[i]   += plank.CF[i]   * ΔT
     @inbounds plank.qP[i]   += plank.VPO4[i] * ΔT
     @inbounds plank.qNO3[i] += plank.VNO3[i] * ΔT
@@ -205,21 +204,20 @@ function calc_Nfix!(plank, p, ΔT, arch::Architecture)
     return nothing
 end
 
-##### update energy reserve and N quotas - third time
+##### update energy reserve and CH, and N quotas - third time
 @kernel function update_state_3_kernel!(plank, ΔT)
     i = @index(Global)
     @inbounds plank.En[i]   -= plank.ENR[i] * ΔT
     @inbounds plank.En[i]   -= plank.ENF[i] * ΔT
-    @inbounds plank.qNO3[i] -= plank.NR[i] * ΔT
-    @inbounds plank.qNH4[i] += plank.NR[i] * ΔT
-    @inbounds plank.qNH4[i] += plank.NF[i] * ΔT
+    @inbounds plank.qNO3[i] -= plank.NR[i]  * ΔT
+    @inbounds plank.qNH4[i] += plank.NR[i]  * ΔT
+    @inbounds plank.qNH4[i] += plank.NF[i]  * ΔT
 end
 function update_state_3!(plank, ΔT, arch::Architecture)
     kernel! = update_state_3_kernel!(device(arch), 256, (size(plank.ac,1)))
     kernel!(plank, ΔT)
     return nothing
 end
-
 
 ##### calculate ρChl
 @kernel function calc_ρChl_kernel!(plank, par, p)
