@@ -36,17 +36,15 @@ function calc_PS!(plank, nuts, p, arch::Architecture)
 end
 
 ##### calculate respiration (mmolC/individual/second)
-@inline function calc_respir(CH, En, T, p, ac, ΔT)
-    reg = shape_func_dec_alt(En, p.Enmax * p.Nsuper, 1.0f-2)
-    RS = max(0.0f0, CH) * reg * p.k_rs * tempFunc(T, p) * ac
+@inline function calc_respir(CH, Bm, T, p, ac, ΔT)
+    RS = Bm * p.k_rs * tempFunc(T, p) * ac
     RS = min(RS, CH/ΔT) # double check CH is not over consumed
     ERS = RS * p.e_rs * ac
     return RS, ERS
 end
-
 @kernel function calc_respiration_kernel!(plank, nuts, p, ΔT)
     i = @index(Global)
-    @inbounds plank.RS[i], plank.ERS[i] = calc_respir(plank.CH[i], plank.En[i], 
+    @inbounds plank.RS[i], plank.ERS[i] = calc_respir(plank.CH[i], plank.Bm[i], 
                                                       nuts.T[i], p, plank.ac[i], ΔT)
 end
 function calc_repiration!(plank, nuts, p, ΔT, arch::Architecture)
@@ -68,24 +66,22 @@ function update_state_1!(plank, ΔT, arch::Architecture)
 end
 
 ##### calculate carbon fixation rate (mmolC/individual/second)
-@inline function calc_CF(En, CH, Bm, temp, p, ac, ΔT)
+@inline function calc_CF(En, CH, Bm, T, p, ac)
     Qc = CH/max(1.0f-30, Bm + CH)
-    regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4)
-    regEn = shape_func_inc_alt(En, p.Enmax * p.Nsuper, 1.0f-4)
-    CF = p.k_cf * regQC * regEn * tempFunc_PS(temp, p) * Bm * ac
-    CF = min(CF, En/p.e_cf/ΔT)
+    regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4, pow = 2.0f0)
+    regEn = shape_func_inc_alt(En, p.Enmax * p.Nsuper, 1.0f-2, pow = 2.0f0)
+    CF = p.k_cf * regQC * regEn * tempFunc_PS(T, p) * Bm * ac
     ECF = CF * p.e_cf * ac
     return CF, ECF
 end
-
-@kernel function calc_carbon_fixation_kernel!(plank, nuts, p, ΔT)
+@kernel function calc_carbon_fixation_kernel!(plank, nuts, p)
     i = @index(Global)
     @inbounds plank.CF[i], plank.ECF[i] = calc_CF(plank.En[i], plank.CH[i], plank.Bm[i],
-                                                  nuts.T[i], p, plank.ac[i], ΔT)
+                                                  nuts.T[i], p, plank.ac[i])
 end
-function calc_carbon_fixation!(plank, nuts, p, ΔT, arch::Architecture)
+function calc_carbon_fixation!(plank, nuts, p, arch::Architecture)
     kernel! = calc_carbon_fixation_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p, ΔT)
+    kernel!(plank, nuts, p)
     return nothing
 end
 
@@ -115,8 +111,8 @@ end
 
 ##### calculate iron uptake rate (mmolFe/individual/second)
 @inline function calc_Fe_uptake(FeT, qFe, qFePS, qFeNR, qFeNF, Bm, CH, Sz, pop, p, ac, ΔT)
-    Qfe = (qFe + qFePS + qFeNF + qFeNR)/max(1.0f-30, Bm +CH)
-    regQFe = shape_func_dec(Qfe, p.qFemax, 1.0f-4)
+    Qfe = (qFe + qFePS + qFeNF + qFeNR)/max(1.0f-30, Bm + CH)
+    regQFe = shape_func_dec(Qfe, p.qFemax, 1.0f-4, pow = 2.0f0)
     SA = p.SA * Sz^(2/3)
     VFe = p.KSAFe * SA * FeT * regQFe * ac
     return min(VFe, FeT/ΔT/max(1.0f0,pop))
@@ -157,50 +153,49 @@ function update_state_2!(plank, ΔT, arch::Architecture)
 end
 
 ##### nitrate reduction (mmolN/individual/second)
-@inline function calc_NO3_reduction(En, qNO3, qNH4, qFeNR, Bm, CH, p, ac, ΔT)
+@inline function calc_NR(En, qNO3, qNH4, qFeNR, Bm, CH, T, p, ac, ΔT)
     Qn = qNH4/max(1.0f-30, Bm + CH)
-    reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4)
+    reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4, pow = 2.0f0)
     Qfe_NR = qFeNR / max(1.0f-30, Bm + CH)
-    regEn = shape_func_inc_alt(En, p.Enmax * p.Nsuper, 1.0f-4)
-    NR = p.k_nr * reg * regEn * qNO3 * Qfe_NR / max(1.0f-30, Qfe_NR + p.KfeNR) * ac
+    regEn = shape_func_inc_alt(En, p.Enmax * p.Nsuper, 1.0f-3, pow = 2.0f0)
+    Ksat = Qfe_NR / max(1.0f-30, Qfe_NR + p.KfeNR)
+    NR = p.k_nr * reg * regEn * qNO3 * Ksat * tempFunc(T, p) * ac
     NR = min(NR, qNO3/ΔT) # double check qNO3 are not over consumed
     ENR = NR * p.e_nr * ac
     return NR * p.is_nr, ENR * p.is_nr
 end
-
-@kernel function calc_NO3_reduc_kernel!(plank, p, ΔT)
+@kernel function calc_NO3_reduction_kernel!(plank, nuts, p, ΔT)
     i = @index(Global)
-    @inbounds plank.NR[i], plank.ENR[i] = calc_NO3_reduction(plank.En[i], plank.qNO3[i], plank.qNH4[i],
-                                                             plank.qFeNR[i], plank.Bm[i], plank.CH[i],
-                                                             p, plank.ac[i], ΔT)
+    @inbounds plank.NR[i], plank.ENR[i] = calc_NR(plank.En[i], plank.qNO3[i], plank.qNH4[i],
+                                                  plank.qFeNR[i], plank.Bm[i], plank.CH[i],
+                                                  nuts.T[i], p, plank.ac[i], ΔT)
 end
-function calc_NO3_reduc!(plank, p, ΔT, arch::Architecture)
-    kernel! = calc_NO3_reduc_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, p, ΔT)
+function calc_NO3_reduction!(plank, nuts, p, ΔT, arch::Architecture)
+    kernel! = calc_NO3_reduction_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, nuts, p, ΔT)
     return nothing
 end
 
 ##### nitrogen fixation (mmolN/individual/second)
-@inline function calc_Nfixation(En, qNH4, qFeNF, Bm, CH, p, ac, ΔT)
+@inline function calc_NF(En, qNH4, qFeNF, Bm, CH, T, p, ac)
     Qn = qNH4/max(1.0f-30, Bm + CH)
-    reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4)
+    reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4, pow = 2.0f0)
     Qfe_NF = qFeNF / max(1.0f-30, Bm + CH)
-    regEn = shape_func_inc_alt(En, p.Enmax * p.Nsuper, 1.0f-4)
-    NF = p.k_nf * reg * regEn * Qfe_NF / max(1.0f-30, Qfe_NF + p.KfeNF) * Bm * ac
-    NF = min(NF, En/p.e_nf/ΔT)
+    regEn = shape_func_inc_alt(En, p.Enmax * p.Nsuper, 1.0f-3, pow = 2.0f0)
+    Ksat = Qfe_NF / max(1.0f-30, Qfe_NF + p.KfeNF)
+    NF = p.k_nf * reg * regEn * Ksat * tempFunc(T, p) * Bm * ac
     ENF = NF * p.e_nf * ac
     return NF * (p.is_croc + p.is_tric), ENF * (p.is_croc + p.is_tric)
 end
-
-@kernel function calc_Nfix_kernel!(plank, p, ΔT)
+@kernel function calc_nitrogen_fixation_kernel!(plank, nuts, p)
     i = @index(Global)
-    @inbounds plank.NF[i], plank.ENF[i] = calc_Nfixation(plank.En[i], plank.qNH4[i],
-                                                         plank.qFeNF[i], plank.Bm[i], plank.CH[i],
-                                                         p, plank.ac[i], ΔT)
+    @inbounds plank.NF[i], plank.ENF[i] = calc_NF(plank.En[i], plank.qNH4[i],
+                                                  plank.qFeNF[i], plank.Bm[i], plank.CH[i],
+                                                  nuts.T[i], p, plank.ac[i])
 end
-function calc_Nfix!(plank, p, ΔT, arch::Architecture)
-    kernel! = calc_Nfix_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, p, ΔT)
+function calc_nitrogen_fixation!(plank, nuts, p, arch::Architecture)
+    kernel! = calc_nitrogen_fixation_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, nuts, p)
     return nothing
 end
 
