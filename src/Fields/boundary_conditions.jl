@@ -57,14 +57,14 @@ function validate_bc(bc, bc_size, nΔT)
         if size(bc) == bc_size
             return nothing
         else
-            throw(ArgumentError("BC west: grid mismatch, size(bc) must equal to $(bc_size) for a constant flux boundary condition."))
+            throw(ArgumentError("BC: grid mismatch, size(bc) must equal to $(bc_size) for a constant flux boundary condition."))
         end
     end
     if typeof(bc) <: AbstractArray{eltype(bc),3}
         if size(bc) == (bc_size..., nΔT)
             return nothing
         else
-            throw(ArgumentError("BC west: grid mismatch, size(bc) must equal to $((bc_size..., nΔT)) for a time-dependent flux boundary condition."))
+            throw(ArgumentError("BC: grid mismatch, size(bc) must equal to $((bc_size..., nΔT)) for a time-dependent flux boundary condition."))
         end
     end
 end
