@@ -64,6 +64,7 @@ end
         @inbounds plank.dvid[idx[i]] = plank.dvid[i]
         @inbounds plank.graz[idx[i]] = plank.graz[i]
         @inbounds plank.mort[idx[i]] = plank.mort[i]
+        @inbounds plank.tdark[idx[i]]= plank.tdark[i]
     end
 end
 function copy_daughter_individuals!(plank, con, idx::AbstractArray{Int,1}, arch)

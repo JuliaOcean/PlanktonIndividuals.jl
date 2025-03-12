@@ -6,7 +6,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           qFe  = zeros(FT, maxN), qFePS= zeros(FT, maxN), qFeNR= zeros(FT, maxN), 
                           qFeNF= zeros(FT, maxN), qP   = zeros(FT, maxN), Chl  = zeros(FT, maxN), 
                           gen  = zeros(FT, maxN), age  = zeros(FT, maxN), ac   = zeros(FT, maxN), 
-                          idx  = zeros(Int,maxN),
+                          idx  = zeros(Int,maxN), tdark= zeros(FT, maxN),
                           PS   = zeros(FT, maxN), CF   = zeros(FT, maxN), ECF  = zeros(FT, maxN),
                           VNH4 = zeros(FT, maxN), VNO3 = zeros(FT, maxN), VPO4 = zeros(FT, maxN),
                           NF   = zeros(FT, maxN), ENF  = zeros(FT, maxN),

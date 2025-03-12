@@ -17,17 +17,15 @@ end
 end
 
 ##### calculate light reaction (kJ/individual/second)
-@inline function calc_PS(par, Bm, CH, Chl, qFePS, p)
-    Qfe_ps = qFePS / max(1.0f-30, Bm + CH)
+@inline function calc_PS(par, Bm, Chl, p)
     αI = par * p.α * Chl / max(1.0f-30, Bm)
-    PS  = p.PCmax * (1.0f0 - exp(-αI)) * Qfe_ps / max(1.0f-30, Qfe_ps + p.KfePS) * Bm
+    PS  = p.PCmax * (1.0f0 - exp(-αI)) * Bm
     return PS
 end
 
 @kernel function calc_PS_kernel!(plank, nuts, p)
     i = @index(Global)
-    @inbounds plank.PS[i] = calc_PS(nuts.par[i], plank.Bm[i], plank.CH[i], 
-                                    plank.Chl[i], plank.qFePS[i], p)
+    @inbounds plank.PS[i] = calc_PS(nuts.par[i], plank.Bm[i], plank.Chl[i], p)
 end
 function calc_PS!(plank, nuts, p, arch::Architecture)
     kernel! = calc_PS_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -66,18 +64,20 @@ function update_state_1!(plank, ΔT, arch::Architecture)
 end
 
 ##### calculate carbon fixation rate (mmolC/individual/second)
-@inline function calc_CF(En, CH, Bm, T, p, ac)
+@inline function calc_CF(En, CH, Bm, qFePS, T, p, ac)
     Qc = CH/max(1.0f-30, Bm + CH)
+    Qfe_ps = qFePS / max(1.0f-30, Bm + CH)
+    Ksat = Qfe_ps / max(1.0f-30, Qfe_ps + p.KfePS)
     regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4, pow = 2.0f0)
     regEn = shape_func_inc_alt(En, p.Enmax * p.Nsuper, 1.0f-2, pow = 2.0f0)
-    CF = p.k_cf * regQC * regEn * tempFunc_PS(T, p) * Bm * ac
+    CF = p.k_cf * regQC * regEn * Ksat * tempFunc_PS(T, p) * Bm * ac
     ECF = CF * p.e_cf * ac
     return CF, ECF
 end
 @kernel function calc_carbon_fixation_kernel!(plank, nuts, p)
     i = @index(Global)
     @inbounds plank.CF[i], plank.ECF[i] = calc_CF(plank.En[i], plank.CH[i], plank.Bm[i],
-                                                  nuts.T[i], p, plank.ac[i])
+                                                  plank.qFePS[i], nuts.T[i], p, plank.ac[i])
 end
 function calc_carbon_fixation!(plank, nuts, p, arch::Architecture)
     kernel! = calc_carbon_fixation_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -114,7 +114,7 @@ end
     Qfe = (qFe + qFePS + qFeNF + qFeNR)/max(1.0f-30, Bm + CH)
     regQFe = shape_func_dec(Qfe, p.qFemax, 1.0f-4, pow = 2.0f0)
     SA = p.SA * Sz^(2/3)
-    VFe = p.KSAFe * SA * FeT * regQFe * ac
+    VFe = p.KSAFe * SA * FeT * regQFe * p.Nsuper * ac
     return min(VFe, FeT/ΔT/max(1.0f0,pop))
 end
 
@@ -239,18 +239,20 @@ function calc_BS!(plank, p, arch::Architecture)
 end
 
 ##### iron allocation
-@inline function iron_alloc(par, dpar, qFe, qFePS, qFeNR, qFeNF, p, ΔT)
+@inline function iron_alloc(par, dpar, qFe, qFePS, qFeNR, qFeNF, tdark, p, ΔT)
     # photosynthesis
     f_ST2PS = p.k_Fe_ST2PS * qFe * isless(0.0f0, dpar)
     f_PS2ST = p.k_Fe_PS2ST * qFePS * (isless(dpar, 0.0f0) + isequal(0.0f0, par))
 
     # nitrate reduction
-    f_ST2NR = p.k_Fe_ST2NR * qFe * isequal(0.0f0, par) * p.is_nr 
-    f_NR2ST = p.k_Fe_NR2ST * qFeNR * isless(0.0f0, par) * p.is_nr 
+    f_ST2NR = p.k_Fe_ST2NR * qFe * isequal(0.0f0, par) * isless(tdark, 14400.0f0) * p.is_nr 
+    f_NR2ST = p.k_Fe_NR2ST * qFeNR * (isequal(0.0f0, par) * 
+                isless(14400.0f0, tdark) + isless(0.0f0, par)) * p.is_nr 
 
     # nitrogen fixation - Crocosphaera watsonii
-    f_ST2NF_cr = p.k_Fe_ST2NF * qFe * isequal(0.0f0, par)
-    f_NF2ST_cr = p.k_Fe_NF2ST * qFeNF * isless(0.0f0, par)
+    f_ST2NF_cr = p.k_Fe_ST2NF * qFe * isequal(0.0f0, par) * isless(tdark, 14400.0f0)
+    f_NF2ST_cr = p.k_Fe_NF2ST * qFeNF * (isequal(0.0f0, par) * 
+                    isless(14400.0f0, tdark) + isless(0.0f0, par))
     # nitrogen fixation - Trichodesmium
     f_ST2NF_tr = p.k_Fe_ST2NF * qFe * isless(0.0f0, dpar)
     f_NF2ST_tr = p.k_Fe_NF2ST * qFeNF * (isless(dpar, 0.0f0) + isequal(0.0f0, par))
@@ -276,7 +278,7 @@ end
     @inbounds plank.ST2PS[i], plank.PS2ST[i], plank.ST2NR[i], 
               plank.NR2ST[i], plank.ST2NF[i], plank.NF2ST[i] = 
                     iron_alloc(nuts.par[i], nuts.dpar[i], plank.qFe[i], 
-                    plank.qFePS[i], plank.qFeNR[i], plank.qFeNF[i], p, ΔT)
+                    plank.qFePS[i], plank.qFeNR[i], plank.qFeNF[i], plank.tdark[i], p, ΔT)
 end
 function calc_iron_fluxes!(plank, nuts, p, ΔT, arch::Architecture)
     kernel! = calc_iron_fluxes_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -315,5 +317,17 @@ end
 function update_cellsize!(plank, p, arch::Architecture)
     kernel! = update_cellsize_kernel!(device(arch), 256, (size(plank.ac,1)))
     kernel!(plank, p)
+    return nothing
+end
+
+##### circadian clock after sunset
+@kernel function update_tdark_kernel!(plank, nuts, ΔT)
+    i = @index(Global)
+    @inbounds plank.tdark[i] = plank.tdark[i] * (1.0f0 - isless(0.0f0, nuts.par[i])) + 
+                                ΔT * isequal(0.0f0, nuts.par[i])
+end
+function update_tdark!(plank, nuts, ΔT, arch::Architecture)
+    kernel! = update_tdark_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, nuts, ΔT)
     return nothing
 end
