@@ -300,6 +300,7 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "grazFracC" => [0.7],     # Fraction goes into dissolved organic pool
         "mortFracC" => [0.5],     # Fraction goes into dissolved organic pool
         "thermal"   => [1.0],     # thermal damage, 1 for on, 0 for off
+        "is_bact"   => [0.0],     # is this specis bacteria or not, 1 for bacteria, 0 for phytoplankton
     )
 
     if N == 1

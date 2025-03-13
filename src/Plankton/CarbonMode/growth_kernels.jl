@@ -28,12 +28,9 @@ end
 ##### calculate photosynthesis rate (mmolC/individual/second)
 @inline function calc_photosynthesis(par, T, Chl, Bm, Bd, p)
     αI  = par * p.α * p.Φ
-    if p.thermal == 1.0f0
-        PCm = p.PCmax * tempFunc(T, p)
-    else
-        PCm = p.PCmax * tempFunc_PS(T, p)
-    end
-    PS  = PCm * (1.0f0 - exp(-αI / max(1.0f-30, PCm) * Chl / max(1.0f-30, Bm))) * max(0.0f0, Bm - Bd)
+    PCm = p.PCmax * (tempFunc(temp, p) * p.thermal + tempFunc_PS(temp, p) * (1.0f0 - p.thermal))
+    light_limit = 1.0f0 - exp(-αI / max(1.0f-30, PCm) * Chl / max(1.0f-30, Bm))
+    PS  = PCm * max(0.0f0, Bm - Bd) * (light_limit * (1.0f0 - p.is_bact) + p.is_bact)
     return PS
 end
 
