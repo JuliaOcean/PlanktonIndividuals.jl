@@ -2,8 +2,7 @@
 ##### apply flux boundary conditions to tracer tendency `Gc`
 ##### 
 
-# a positive west flux is associated with an *increase* in `Gc` near the west boundary.
-# same for south and bottom.
+# positive west/south/bottom bc values are associated with an *increase* in `Gc` near the boundary.
 @kernel function apply_west_bcs_kernel!(Gc, grid, west_bc, iter, ΔT)
     j, k = @index(Global, NTuple)
     jj = j + grid.Hy
@@ -25,8 +24,7 @@ end
     @inbounds Gc[ii, jj, grid.Nz+grid.Hz] += getbc(bottom_bc, i, j, iter) * ΔT * Az(ii, jj, grid.Nz+grid.Hz, grid) / volume(ii, jj, grid.Nz+grid.Hz, grid)
 end
 
-# a positive east flux is associated with an *decrease* in `Gc` near the east boundary.
-# same for north and top.
+# positive east/north/top bc values are associated with a *decrease* in `Gc` near the boundary.
 @kernel function apply_east_bcs_kernel!(Gc, grid, east_bc, iter, ΔT)
     j, k = @index(Global, NTuple)
     jj = j + grid.Hy

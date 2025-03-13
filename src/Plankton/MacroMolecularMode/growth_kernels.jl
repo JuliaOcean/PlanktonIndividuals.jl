@@ -1,40 +1,40 @@
 ##### temperature function for photosynthesis
-@inline function tempFunc_PS(temp, p)
-    x = temp - p.Topt; xmax = p.Tmax - p.Topt
+@inline function tempFunc_PS(T, p)
+    x = T - p.Topt; xmax = p.Tmax - p.Topt
     regT = shape_func_dec(x, xmax, 4.0f-2)
-    k = exp(-p.Ea/(8.3145f0*(temp+273.15f0))) * regT
+    k = exp(-p.Ea/(8.3145f0*(T+273.15f0))) * regT
     k = max(0.0f0, k)
     OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
     return min(1.0f0, k/OGT_rate)
 end
 
 ##### temperature function for nutrient uptakes
-@inline function tempFunc(temp, p)
-    k = exp(-p.Ea/(8.3145f0*(temp+273.15f0)))
+@inline function tempFunc(T, p)
+    k = exp(-p.Ea/(8.3145f0*(T+273.15f0)))
     k = max(0.0f0, k)
     OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
     return min(1.0f0, k/OGT_rate)
 end
 
 ##### calculate photosynthesis rate (mmolC/individual/second)
-@inline function calc_PS(par, temp, Chl, PRO, p)
+@inline function calc_PS(par, T, Chl, PRO, p)
     αI  = par * p.α * p.Φ
-    PCm = p.PCmax * tempFunc_PS(temp, p)
+    PCm = p.PCmax * tempFunc_PS(T, p)
     PS  = PCm * (1.0f0 - exp(-αI / max(1.0f-30, PCm) * Chl / max(1.0f-30, PRO))) * PRO
     return PS
 end
 
 ##### calculate nutrient uptake rate (mmolN/individual/second)
-@inline function calc_NP_uptake(NH4, NO3, PO4, temp, NST, PST, PRO, DNA, RNA, Chl, pop, p, ac, ΔT)
+@inline function calc_NP_uptake(NH4, NO3, PO4, T, NST, PST, PRO, DNA, RNA, Chl, pop, p, ac, ΔT)
     N_tot = total_N_biomass(PRO, DNA, RNA, NST, Chl, p)
     P_tot = total_P_biomass(DNA, RNA, PST, p)
     R_NST = NST / max(1.0f-30, N_tot)
     R_PST = PST / max(1.0f-30, P_tot)
     regQN = shape_func_dec(R_NST, p.NSTmax, 1.0f-4)
     regQP = shape_func_dec(R_PST, p.PSTmax, 1.0f-4)
-    VNH4 = p.VNH4max * regQN * NH4/max(1.0f-30, NH4+p.KsatNH4) * tempFunc(temp, p) * PRO * ac
-    VNO3 = p.VNO3max * regQN * NO3/max(1.0f-30, NO3+p.KsatNO3) * tempFunc(temp, p) * PRO * ac
-    VPO4 = p.VPO4max * regQP * PO4/max(1.0f-30, PO4+p.KsatPO4) * tempFunc(temp, p) * PRO * ac
+    VNH4 = p.VNH4max * regQN * NH4/max(1.0f-30, NH4+p.KsatNH4) * tempFunc(T, p) * PRO * ac
+    VNO3 = p.VNO3max * regQN * NO3/max(1.0f-30, NO3+p.KsatNO3) * tempFunc(T, p) * PRO * ac
+    VPO4 = p.VPO4max * regQP * PO4/max(1.0f-30, PO4+p.KsatPO4) * tempFunc(T, p) * PRO * ac
     return min(VNH4, NH4/ΔT/max(1.0f0,pop)), 
            min(VNO3, NO3/ΔT/max(1.0f0,pop)), 
            min(VPO4, PO4/ΔT/max(1.0f0,pop))
@@ -71,11 +71,11 @@ end
 
 ##### calculate DOC uptake rate (mmolC/individual/second)
 ##### DOC uptake needs support of photosynthesis for at least 5% of total C acquisition.
-@inline function calc_DOC_uptake(DOC, temp, CH, PRO, DNA, RNA, Chl, pop, p, ΔT)
+@inline function calc_DOC_uptake(DOC, T, CH, PRO, DNA, RNA, Chl, pop, p, ΔT)
     C_tot = total_C_biomass(PRO, DNA, RNA, CH, Chl)
     R_CH = CH / max(1.0f-30, C_tot)
     regQ = shape_func_dec(R_CH, p.CHmax, 1.0f-4)
-    VN = p.VDOCmax * regQ * DOC/max(1.0f-30, DOC+p.KsatDOC) * tempFunc(temp, p) * PRO
+    VN = p.VDOCmax * regQ * DOC/max(1.0f-30, DOC+p.KsatDOC) * tempFunc(T, p) * PRO
     return min(VN, DOC/ΔT/max(1.0f0,pop))
 end
 @kernel function calc_organic_uptake_kernel!(plank, nuts, p, ΔT)
