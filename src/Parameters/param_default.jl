@@ -148,7 +148,7 @@ Generate default phytoplankton parameter values based on `AbstractMode` and spec
 """
 function phyt_params_default(N::Int64, mode::IronEnergyMode)
     params=Dict(
-        "Nsuper"    => [1],       # Number of phyto cells each super individual represents
+        "Nsuper"    => [1],       # Number of phyto cells each super individual represents (cells)
         "Cquota"    => [1.8e-11], # C quota of phyto cells at size = 1.0 (mmolC/cell)
         "SA"        => [0.18],    # Surface area (μm²) Prochlorococcus
         "mean"      => [1.2],     # Mean of the normal distribution of initial phyto individuals
@@ -187,7 +187,7 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "KsatNH4"   => [0.005],   # Half-saturation coeff (mmolN/m³)
         "KsatNO3"   => [0.010],   # Half-saturation coeff (mmolN/m³)
         "KsatPO4"   => [0.003],   # Half-saturation coeff (mmolP/m³)
-        "KSAFe"     => [1.16e-17],# Surface-area specific iron uptake rate (m³/μm²/second)
+        "KSAFe"     => [2.77e-19],# Surface-area specific iron uptake rate (m³/μm²/cell/second)
         "qNO3max"   => [0.25],    # Maximum NO3 quota in cell (mmolN/mmolC)
         "qNH4max"   => [0.25],    # Maximum NH4 quota in cell (mmolN/mmolC)
         "qPmax"     => [0.02],    # Maximum P quota in cell (mmolP/mmolC)

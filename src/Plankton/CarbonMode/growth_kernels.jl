@@ -1,16 +1,16 @@
 ##### temperature function for photosynthesis
-@inline function tempFunc_PS(temp, p)
-    x = temp - p.Topt; xmax = p.Tmax - p.Topt
+@inline function tempFunc_PS(T, p)
+    x = T - p.Topt; xmax = p.Tmax - p.Topt
     regT = shape_func_dec(x, xmax, 1.0f-1)
-    k = exp(-p.Ea/(8.3145f0*(temp+273.15f0))) * regT
+    k = exp(-p.Ea/(8.3145f0*(T+273.15f0))) * regT
     k = max(0.0f0, k)
     OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
     return min(1.0f0, k/OGT_rate)
 end
 
 ##### temperature function for metabolic rates
-@inline function tempFunc(temp, p)
-    k = exp(-p.Ea/(8.3145f0*(temp+273.15f0)))
+@inline function tempFunc(T, p)
+    k = exp(-p.Ea/(8.3145f0*(T+273.15f0)))
     k = max(0.0f0, k)
     OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
     return min(1.0f0, k/OGT_rate)
@@ -26,7 +26,7 @@ end
 end
 
 ##### calculate photosynthesis rate (mmolC/individual/second)
-@inline function calc_photosynthesis(par, temp, Chl, Bm, Bd, p)
+@inline function calc_photosynthesis(par, T, Chl, Bm, Bd, p)
     αI  = par * p.α * p.Φ
     PCm = p.PCmax * (tempFunc(temp, p) * p.thermal + tempFunc_PS(temp, p) * (1.0f0 - p.thermal))
     light_limit = 1.0f0 - exp(-αI / max(1.0f-30, PCm) * Chl / max(1.0f-30, Bm))
