@@ -275,6 +275,10 @@ function phyt_params_default(N::Int64, mode::QuotaMode)
     end
 end
 
+"""
+    phyt_params_default(N::Int64, mode::AbstractMode)
+Generate default phytoplankton parameter values based on `AbstractMode` and species number `N`.
+"""
 function phyt_params_default(N::Int64, mode::CarbonMode)
     params=Dict(
         "Nsuper"    => [1],       # Number of phyto cells each super individual represents
@@ -301,6 +305,25 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "mortFracC" => [0.5],     # Fraction goes into dissolved organic pool
         "thermal"   => [1.0],     # thermal damage, 1 for on, 0 for off
         "is_bact"   => [0.0],     # is this specis bacteria or not, 1 for bacteria, 0 for phytoplankton
+    )
+
+    if N == 1
+        return params
+    else
+        return generate_n_species_params(N, params)
+    end
+end
+
+"""
+    abiotic_params_default(N::Int64)
+Generate default abiotic particle parameter values based on species number `N`.
+"""
+function abiotic_params_default(N::Int64)
+    params=Dict(
+        "Nsuper"    => [1],       # Number of abiotic particles each super individual represents
+        "Cquota"    => [1.8e-11], # C quota of abiotic particles
+        "mean"      => [1.2],     # Mean of the normal distribution of initial abiotic individuals
+        "var"       => [0.3],     # Variance of the normal distribution of initial abiotic individuals
     )
 
     if N == 1

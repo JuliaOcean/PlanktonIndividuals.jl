@@ -43,10 +43,10 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
         end
     end
     p = NamedTuple{param_names}(FT.(tmp))
-    return plankton(data, p)
+    return particle(data, p)
 end
 
-function generate_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)
+function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)
     mean = plank.p.mean
     var = plank.p.var
     Cquota = plank.p.Cquota

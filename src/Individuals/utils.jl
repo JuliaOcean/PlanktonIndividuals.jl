@@ -1,5 +1,5 @@
 ##### structs for individuals
-mutable struct plankton
+mutable struct particle
     data::AbstractArray
     p::NamedTuple
 end

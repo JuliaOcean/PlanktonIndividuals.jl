@@ -21,6 +21,7 @@ end
                   bgc_params = nothing, 
                   phyt_params = nothing,
                   nut_initial = default_nut_init(),
+                  abiotic = false,
                   t = 0.0,
                   )
 
@@ -46,6 +47,8 @@ Keyword Arguments (Optional)
                     use `Dict` to update parameters, the format and names of parameters can be found by running `phyt_params_default(N_species, mode)`.
 - `nut_initial` : The source of initial conditions of nutrient fields, should be either a `NamedTuple` 
                     or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
+- `abiotic` : false or a NamedTuple. Whether to include abiotic particles in the model. If yes,
+                    it should be a NamedTuple, like this `abiotic = (params = nothing, N = [2^10, 2^10], Nsp = 2)`.
 - `t` : Model time, start from 0 by default, in second.
 """
 function PlanktonModel(arch::Architecture, grid::AbstractGrid;
@@ -57,6 +60,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        bgc_params = nothing, 
                        phyt_params = nothing,
                        nut_initial = default_nut_init(),
+                       abiotic = nothing,
                        t::AbstractFloat = 0.0f0,
                        )
 
@@ -84,7 +88,21 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
         throw(ArgumentError("Phytoplankton parameters must be either Nothing or Dict!")) 
     end
 
-    inds = generate_individuals(phyt_params_final, arch, N_species, N_individual, max_individuals, FT, grid_d, mode)
+    if isa(abiotic, NamedTuple)
+        if isa(abiotic.params, Nothing)
+            abiotic_params = abiotic_params_default(abiotic.Nsp)
+            abiotic_params_final = update_abiotic_params(abiotic_params, FT; N = abiotic.Nsp)
+        elseif isa(abiotic.params, Dict)
+            abiotic_params_final = update_abiotic_params(abiotic_params, FT; N = abiotic.Nsp)
+        else
+            throw(ArgumentError("Abiotic particle parameters must be either Nothing or Dict!")) 
+        end
+        abiotic_final = (params = abiotic_params_final, Nsp = abiotic.Nsp, N = abiotic.N)
+    else
+        abiotic_final = nothing
+    end
+
+    inds = generate_individuals(phyt_params_final, arch, N_species, N_individual, max_individuals, FT, grid_d, mode; abiotic = abiotic_final)
 
     nutrients = generate_nutrients(arch, grid_d, nut_initial, FT)
 
@@ -97,14 +115,32 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
     return model
 end
 
+function calc_active_individuals(particle)
+    Nsp = length(particle)
+    N = zeros(Int, Nsp)
+    for i in 1:Nsp
+        N[i] = Int(dot(particle[i].data.ac, particle[i].data.ac))
+    end
+    return N
+end
+
 function show(io::IO, model::PlanktonModel)
     Nsp = length(model.individuals.phytos)
-    N = Int(dot(model.individuals.phytos.sp1.data.ac,model.individuals.phytos.sp1.data.ac))
+    N = calc_active_individuals(model.individuals.phytos)
     cap = length(model.individuals.phytos.sp1.data.ac)
+    if model.individuals.abiotics == NamedTuple(;)
+        s = "├── No abiotic particles available"
+    else
+        abiotic_Nsp = length(model.individuals.abiotics)
+        abiotic_N = calc_active_individuals(model.individuals.abiotics)
+        s = "├── a biotic particles: $(abiotic_Nsp) species with $(abiotic_N) individuals for each species\n"
+    end
+
     print(io, "PlanktonModel:\n",
               "├── floating point data type: $(model.FT)\n",
               "├── grid: $(short_show(model.grid))\n",
               "├── $(model.mode) is selected for phytoplankton physiology\n",
-              "├── individuals: $(Nsp) phytoplankton species with $(N) individuals for each species\n",
+              "├── phytoplankton: $(Nsp) species with $(N) individuals for each species\n",
+              s,
               "└── maximum number of individuals: $(cap) per species")
 end

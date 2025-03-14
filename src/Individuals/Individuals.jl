@@ -19,7 +19,7 @@ using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMo
 #####
 ##### generate individuals of multiple species
 #####
-function generate_individuals(params::Dict, arch::Architecture, Nsp::Int, N::Vector{Int}, maxN::Int, FT::DataType, g::AbstractGrid, mode::AbstractMode; abiotic = false)
+function generate_individuals(params::Dict, arch::Architecture, Nsp::Int, N::Vector{Int}, maxN::Int, FT::DataType, g::AbstractGrid, mode::AbstractMode; abiotic = nothing)
     plank_names = Symbol[]
     plank_data=[]
 
@@ -30,16 +30,31 @@ function generate_individuals(params::Dict, arch::Architecture, Nsp::Int, N::Vec
     for i in 1:Nsp
         name = Symbol("sp"*string(i))
         plank = construct_plankton(arch, i, params, maxN, FT, mode::AbstractMode)
-        generate_plankton!(plank, N[i], g, arch, mode)
+        initialize_plankton!(plank, N[i], g, arch, mode)
         push!(plank_names, name)
         push!(plank_data, plank)
     end
     planks = NamedTuple{Tuple(plank_names)}(plank_data)
 
-    if abiotic == false
+    ## add abiotic particles
+    if isa(abiotic, Nothing)
         return individuals(planks, NamedTuple(;))
     else
-        abiotics = NamedTuple(;)
+        abiotic_names = Symbol[]
+        abiotic_data = []
+
+        if length(abiotic.N) ≠ abiotic.Nsp
+            throw(ArgumentError("Abiotic particles: The length of `N` must be $(Nsp), the same as `Nsp`, each species has its own initial condition"))
+        end
+
+        for j in 1:abiotic.Nsp
+            name = Symbol("sp"*string(j))
+            particle =  construct_abiotic_particle(arch, j, abiotic.params, maxN, FT)
+            initialize_abiotic_particle!(particle, abiotic.N, g, arch)
+            push!(abiotic_names, name)
+            push!(abiotic_data, particle)
+        end
+        abiotics = NamedTuple{Tuple(abiotic_names)}(abiotic_data)
         return individuals(planks, abiotics)
     end
 end
@@ -57,7 +72,7 @@ import .Quota
 import .Carbon
 import .MacroMolecular
 import .IronEnergy
-import .Abiotic
+using .Abiotic
 
 #####
 ##### some workarounds for function names
@@ -74,17 +89,17 @@ construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::Dat
 construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType, mode::IronEnergyMode) = 
     IronEnergy.construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
 
-generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::MacroMolecularMode) =
-    MacroMolecular.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
+initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::MacroMolecularMode) =
+    MacroMolecular.initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
-generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::QuotaMode) =
-    Quota.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
+initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::QuotaMode) =
+    Quota.initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
-generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::CarbonMode) =
-    Carbon.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
+initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::CarbonMode) =
+    Carbon.initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
-generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::IronEnergyMode) =
-    IronEnergy.generate_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
+initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::IronEnergyMode) =
+    IronEnergy.initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
 plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
     MacroMolecular.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)

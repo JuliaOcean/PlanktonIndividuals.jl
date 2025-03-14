@@ -1,5 +1,8 @@
 module Abiotic
 
+#export abiotic_particle_update!
+export construct_abiotic_particle, initialize_abiotic_particle!
+
 using KernelAbstractions
 using StructArrays
 using Random
@@ -12,5 +15,6 @@ using PlanktonIndividuals.Diagnostics
 using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
 
 include("../utils.jl")
+include("particle_generation.jl")
 
 end

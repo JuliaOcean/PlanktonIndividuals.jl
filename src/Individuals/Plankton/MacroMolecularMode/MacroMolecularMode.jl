@@ -1,7 +1,7 @@
 module MacroMolecular
 
 export plankton_update!
-export construct_plankton, generate_plankton!
+export construct_plankton, initialize_plankton!
 
 using KernelAbstractions
 using StructArrays
