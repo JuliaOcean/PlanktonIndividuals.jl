@@ -1,7 +1,7 @@
-module Plankton
+module Individuals
 
-export plankton_advection!
-export plankton_diffusion!
+export particle_advection!
+export particle_diffusion!
 export plankton_update!
 export generate_individuals, individuals
 export find_inds!, find_NPT!, acc_counts!, acc_chl!, calc_par!
@@ -14,12 +14,12 @@ using PlanktonIndividuals.Architectures: device, Architecture, rng_type
 using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Diagnostics
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
+using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode, AbioticMode
 
 #####
 ##### generate individuals of multiple species
 #####
-function generate_individuals(params::Dict, arch::Architecture, Nsp::Int, N::Vector{Int}, maxN::Int, FT::DataType, g::AbstractGrid, mode::AbstractMode)
+function generate_individuals(params::Dict, arch::Architecture, Nsp::Int, N::Vector{Int}, maxN::Int, FT::DataType, g::AbstractGrid, mode::AbstractMode; abiotic = false)
     plank_names = Symbol[]
     plank_data=[]
 
@@ -35,14 +35,21 @@ function generate_individuals(params::Dict, arch::Architecture, Nsp::Int, N::Vec
         push!(plank_data, plank)
     end
     planks = NamedTuple{Tuple(plank_names)}(plank_data)
-    return individuals(planks)
+
+    if abiotic == false
+        return individuals(planks, NamedTuple(;))
+    else
+        abiotics = NamedTuple(;)
+        return individuals(planks, abiotics)
+    end
 end
 
 include("Advection/Advection.jl")
-include("QuotaMode/QuotaMode.jl")
-include("CarbonMode/CarbonMode.jl")
-include("MacroMolecularMode/MacroMolecularMode.jl")
-include("IronEnergyMode/IronEnergyMode.jl")
+include("Plankton/QuotaMode/QuotaMode.jl")
+include("Plankton/CarbonMode/CarbonMode.jl")
+include("Plankton/MacroMolecularMode/MacroMolecularMode.jl")
+include("Plankton/IronEnergyMode/IronEnergyMode.jl")
+include("Abiotic/Abiotic.jl")
 include("utils.jl")
 
 using .Advection

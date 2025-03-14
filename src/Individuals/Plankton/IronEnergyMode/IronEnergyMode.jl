@@ -1,4 +1,4 @@
-module Quota
+module IronEnergy
 
 export plankton_update!
 export construct_plankton, generate_plankton!
@@ -14,7 +14,7 @@ using PlanktonIndividuals.Diagnostics
 
 using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
 
-include("../utils.jl")
+include("../../utils.jl")
 include("../division_death_probability.jl")
 include("plankton_generation.jl")
 include("growth_kernels.jl")

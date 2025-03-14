@@ -1,7 +1,7 @@
 module Advection
 
-export plankton_advection!
-export plankton_diffusion!
+export particle_advection!
+export particle_diffusion!
 
 export get_xf_index, get_yf_index, get_zf_index
 
@@ -12,8 +12,8 @@ using PlanktonIndividuals.Architectures: device, Architecture, rng_type
 using PlanktonIndividuals.Grids
 
 include("interpolation.jl")
-include("plankton_advection_kernels.jl")
-include("plankton_advection.jl")
-include("plankton_diffusion.jl")
+include("particle_advection_kernels.jl")
+include("particle_advection.jl")
+include("particle_diffusion.jl")
 
 end

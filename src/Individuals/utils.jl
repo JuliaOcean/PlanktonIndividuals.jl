@@ -6,6 +6,7 @@ end
 
 struct individuals
     phytos::NamedTuple
+    abiotics::NamedTuple
     # zoos::NamedTuple
 end
 

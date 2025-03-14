@@ -88,7 +88,7 @@ include("Parameters/Parameters.jl")
 include("Fields/Fields.jl")
 include("Biogeochemistry/Biogeochemistry.jl")
 include("Diagnostics/Diagnostics.jl")
-include("Plankton/Plankton.jl")
+include("Individuals/Individuals.jl")
 include("Model/Model.jl")
 include("Output/Output.jl")
 include("Simulation/Simulation.jl")
@@ -100,7 +100,7 @@ using .Parameters
 using .Fields
 using .Biogeochemistry
 using .Diagnostics
-using .Plankton
+using .Individuals
 using .Model
 using .Output
 using .Simulation

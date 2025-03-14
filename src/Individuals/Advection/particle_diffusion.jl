@@ -12,7 +12,7 @@ function calc_diffusion!(plank, rnd, κx, κy, κz, ΔT, arch::Architecture)
     return nothing
 end
 
-function plankton_diffusion!(plank, rnd, κx, κy, κz, ΔT, g::AbstractGrid, arch::Architecture)
+function particle_diffusion!(plank, rnd, κx, κy, κz, ΔT, g::AbstractGrid, arch::Architecture)
     ##### generate random numbers for grazing, mortality and division (0,1)
     randn!(rng_type(arch), rnd.x)
     randn!(rng_type(arch), rnd.y)
@@ -30,4 +30,4 @@ function plankton_diffusion!(plank, rnd, κx, κy, κz, ΔT, g::AbstractGrid, ar
     particle_boundaries!(plank, plank.ac, g, arch)
 end
 
-plankton_diffusion!(plank, rnd, κ, ΔT, g, arch) = plankton_diffusion!(plank, rnd, κ, κ, κ, ΔT, g, arch)
+particle_diffusion!(plank, rnd, κ, ΔT, g, arch) = particle_diffusion!(plank, rnd, κ, κ, κ, ΔT, g, arch)
