@@ -25,10 +25,10 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     if model.bgc_params["shared_graz"] == 1.0f0 # shared grazing
         for sp in keys(model.individuals.phytos)
             ##### RK4
-            plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
+            particle_advection!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
                                 model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT, model.arch)
             ##### Diffusion
-            plankton_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd,
+            particle_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd,
                                 model.bgc_params["κhP"], ΔT, model.grid, model.arch)
 
             #### calculate accumulated Chla quantity (not concentration) and population
@@ -60,10 +60,10 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     else # model.bgc_params["shared_graz"] ≠ 1.0 - species-specific grazing
         for sp in keys(model.individuals.phytos)
             ##### RK4
-            plankton_advection!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
+            particle_advection!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
                                 model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT, model.arch)
             ##### Diffusion
-            plankton_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd,
+            particle_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd,
                                 model.bgc_params["κhP"], ΔT, model.grid, model.arch)
 
             #### calculate accumulated Chla quantity (not concentration) and population
