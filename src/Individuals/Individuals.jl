@@ -14,7 +14,7 @@ using PlanktonIndividuals.Architectures: device, Architecture, rng_type
 using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Diagnostics
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode, AbioticMode
+using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
 
 #####
 ##### generate individuals of multiple species
@@ -57,6 +57,7 @@ import .Quota
 import .Carbon
 import .MacroMolecular
 import .IronEnergy
+import .Abiotic
 
 #####
 ##### some workarounds for function names
