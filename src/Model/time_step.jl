@@ -30,6 +30,13 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
         ##### Diffusion
         particle_diffusion!(model.individuals.abiotics[sp].data, model.timestepper.rnd,
                             model.bgc_params["κhP"], ΔT, model.grid, model.arch)
+        
+        ##### Update
+        find_inds!(model.individuals.abiotics[sp].data, model.grid, model.arch)
+        particle_update!(model.individuals.abiotics[sp].data, model.nutrients.CHO.data,
+                         model.timestepper.plk.CHO.data, model.individuals.abiotics[sp].p,
+                         diags.abiotics[sp], ΔT, model.acch)
+        
     end # abiotic particles
 
     ##### phytoplankton advection, diffusion, and physiological update
