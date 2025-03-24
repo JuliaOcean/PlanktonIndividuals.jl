@@ -34,7 +34,7 @@ Arguments
             the files of nutrient initial conditions.
 - `FT`: Floating point data type. Default: `Float32`.
 """
-function generate_tracerss(arch::Architecture, g::AbstractGrid, 
+function generate_tracers(arch::Architecture, g::AbstractGrid, 
                             source::Union{Dict,NamedTuple}, FT::DataType)
     total_size = (g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2)
     tracers = tracers_init(arch, g, FT)
