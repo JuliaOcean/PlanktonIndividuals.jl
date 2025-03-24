@@ -35,6 +35,8 @@ function nut_forcing!(F, nut_temp, nut, params, ΔT)
 
     @inbounds F.POFe.data .= F.POFe.data .- nut_temp.POFe.data .* params["kPOFe"] .* ΔT
 
+    @inbounds F.CHO.data .= F.CHO.data .- nut_temp.CHO.data .* params["kCHO"] .* ΔT
+
     return nothing
 end
 

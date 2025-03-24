@@ -42,6 +42,6 @@ function zero_fields!(a)
     end
 end
 
-const nut_names=(:DIC,:NH4,:NO3,:PO4,:FeT,:DOC,:DON,:DOP,:DOFe,:POC,:PON,:POP,:POFe)
+const nut_names=(:DIC,:NH4,:NO3,:PO4,:FeT,:DOC,:DON,:DOP,:DOFe,:POC,:PON,:POP,:POFe, :CHO)
 
 end

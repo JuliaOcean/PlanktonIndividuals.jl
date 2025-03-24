@@ -54,6 +54,7 @@ function bgc_params_default(FT)
         "kPON"         => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
         "kPOP"         => 1/30/86400,         # Remineralization rate for POP, turn over time: a month (per second)
         "kPOFe"        => 1/30/86400,         # Remineralization rate for POFe, turn over time: a month (per second)
+        "kCHO"         => 0.0,                # Decay rate of chemical compounds (per second)
         "κh"           => 0.0e-6,             # Horizontal diffusion
         "κv"           => 0.0e-6,             # Vertical diffusion
         "κhP"          => 0.0e-6,             # Horizontal diffusion for individuals
