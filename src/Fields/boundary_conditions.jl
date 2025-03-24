@@ -70,7 +70,7 @@ function validate_bc(bc, bc_size, nΔT)
 end
 
 function validate_bcs(nut, grid, nΔT)
-    for name in nut_names
+    for name in tracer_names
         bc_west    = nut[name].bc.west
         bc_east    = nut[name].bc.east
         bc_south   = nut[name].bc.south
