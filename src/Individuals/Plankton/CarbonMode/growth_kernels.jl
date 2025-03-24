@@ -34,14 +34,14 @@ end
     return PS
 end
 
-@kernel function calc_PS_kernel!(plank, nuts, p)
+@kernel function calc_PS_kernel!(plank, trs, p)
     i = @index(Global)
-    @inbounds plank.PS[i] = calc_photosynthesis(nuts.par[i], nuts.T[i], plank.Chl[i], plank.Bm[i], plank.Bd[i], p) * plank.ac[i]
+    @inbounds plank.PS[i] = calc_photosynthesis(trs.par[i], trs.T[i], plank.Chl[i], plank.Bm[i], plank.Bd[i], p) * plank.ac[i]
 end
 
-function calc_PS!(plank, nuts, p, arch::Architecture)
+function calc_PS!(plank, trs, p, arch::Architecture)
     kernel! = calc_PS_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p)
+    kernel!(plank, trs, p)
     return nothing
 end
 

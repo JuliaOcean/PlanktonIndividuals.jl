@@ -102,34 +102,34 @@ function multi_dim_z!(nut_temp, Gcs, nut, w, g::AbstractGrid, ΔT, arch::Archite
     return nothing
 end
 
-function calc_nut_tendency!(a, b, c, ΔT)
+function calc_tracer_tendency!(a, b, c)
     for name in nut_names
         @inbounds a[name].data .= b[name].data .- c[name].data
     end
 end
 
-function nut_advection!(nut, nut_temp, Gcs, vel, g::AbstractGrid, ΔT, arch::Architecture)
-    for name in nut_names
-        @inbounds nut_temp[name].data .= nut[name].data
+function tracer_advection!(tracer, tracer_temp, Gcs, vel, g::AbstractGrid, ΔT, arch::Architecture)
+    for name in tracer_names
+        @inbounds tracer_temp[name].data .= tracer[name].data
     end
     ##### x direction
-    calc_Gcsˣ!(Gcs, nut_temp, vel.u.data, g, ΔT, arch)
+    calc_Gcsˣ!(Gcs, tracer_temp, vel.u.data, g, ΔT, arch)
     fill_halo_Gcs!(Gcs, g)
-    multi_dim_x!(nut_temp, Gcs, nut, vel.u.data, g, ΔT, arch)
-    fill_halo_nut!(nut_temp, g)
+    multi_dim_x!(tracer_temp, Gcs, tracer, vel.u.data, g, ΔT, arch)
+    fill_halo_tracer!(tracer_temp, g)
 
     ##### y direction
-    calc_Gcsʸ!(Gcs, nut_temp, vel.v.data, g, ΔT, arch)
+    calc_Gcsʸ!(Gcs, tracer_temp, vel.v.data, g, ΔT, arch)
     fill_halo_Gcs!(Gcs, g)
-    multi_dim_y!(nut_temp, Gcs, nut, vel.v.data, g, ΔT, arch)
-    fill_halo_nut!(nut_temp, g)
+    multi_dim_y!(tracer_temp, Gcs, tracer, vel.v.data, g, ΔT, arch)
+    fill_halo_tracer!(tracer_temp, g)
 
     ##### z direction
-    calc_Gcsᶻ!(Gcs, nut_temp, vel.w.data, g, ΔT, arch)
+    calc_Gcsᶻ!(Gcs, tracer_temp, vel.w.data, g, ΔT, arch)
     fill_halo_Gcs!(Gcs, g)
-    multi_dim_z!(nut_temp, Gcs, nut, vel.w.data, g, ΔT, arch)
-    fill_halo_nut!(nut_temp, g)
+    multi_dim_z!(tracer_temp, Gcs, tracer, vel.w.data, g, ΔT, arch)
+    fill_halo_tracer!(tracer_temp, g)
 
-    calc_nut_tendency!(Gcs, nut_temp, nut, ΔT)
+    calc_tracer_tendency!(Gcs, tracer_temp, tracer)
 
 end

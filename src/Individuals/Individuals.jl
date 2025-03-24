@@ -101,16 +101,16 @@ initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode:
 initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::IronEnergyMode) =
     IronEnergy.initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
-plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
-    MacroMolecular.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
+    MacroMolecular.plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
 
-plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode) =
-    Quota.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode) =
+    Quota.plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
 
-plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::CarbonMode) =
-    Carbon.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::CarbonMode) =
+    Carbon.plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
 
-plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::IronEnergyMode) =
-    IronEnergy.plankton_update!(plank, nuts, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::IronEnergyMode) =
+    IronEnergy.plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
 
 end

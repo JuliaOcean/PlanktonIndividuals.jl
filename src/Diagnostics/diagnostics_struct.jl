@@ -98,7 +98,7 @@ function diag_avail(tracer, plank, mode::AbstractMode)
 end
 
 function tracer_avail_diags()
-    return (:PAR, :DIC, :DOC, :POC, :NH4, :NO3, :DON, :PON, :PO4, :DOP, :POP, :FeT, :DOFe, :POFe)
+    return (:PAR, :DIC, :DOC, :POC, :NH4, :NO3, :DON, :PON, :PO4, :DOP, :POP, :FeT, :DOFe, :POFe, :CHO)
 end
 
 function plank_avail_diags(mode::AbstractMode)

@@ -4,21 +4,21 @@ grid = RectilinearGrid(size = (16, 16, 16), x = (0,32), y = (0,32), z = (0,-32))
 
 model = PlanktonModel(CPU(), grid; mode = CarbonMode()) 
 
-function tot_mass(nut, g)
+function tot_mass(tracer, g)
     mass = zeros(g.Nx, g.Ny, g.Nz)
     for i in 1:g.Nx
         for j in 1:g.Ny
             for k in 1:g.Nz
-                mass[i,j,k] = nut[i+g.Hx, j+g.Hy, k+g.Hz] * PlanktonIndividuals.Grids.volume(i+g.Hx, j+g.Hy, k+g.Hz, g)
+                mass[i,j,k] = tracer[i+g.Hx, j+g.Hy, k+g.Hz] * PlanktonIndividuals.Grids.volume(i+g.Hx, j+g.Hy, k+g.Hz, g)
             end
         end
     end
     return sum(mass)
 end
 
-TC = tot_mass(model.nutrients.DIC.data, grid) +
-     tot_mass(model.nutrients.DOC.data, grid) +
-     tot_mass(model.nutrients.POC.data, grid)
+TC = tot_mass(model.tracers.DIC.data, grid) +
+     tot_mass(model.tracers.DOC.data, grid) +
+     tot_mass(model.tracers.POC.data, grid)
 TC = TC + sum(model.individuals.phytos.sp1.data.Bm)
 
 uvel = zeros(16,16,16,11)
@@ -32,18 +32,18 @@ for i in 1:11
 end
 
 # add boundary conditions for DOC
-model.nutrients.DON.bc.west  = 1.0e-3 # west boundary condition of 0.1 mmol/m^2/second
-model.nutrients.DON.bc.east  = randn(16,16) .* 1e-3 # east boundary condition of -0.1 mmol/m^2/second
-model.nutrients.DON.bc.south = randn(16,16,10) .* 1e-3 # south boundary condition of 0.1 mmol/m^2/second
-model.nutrients.DON.bc.north = randn(16,16,10) .* 1e-3 # north boundary condition of -0.1 mmol/m^2/second
+model.tracers.DON.bc.west  = 1.0e-3 # west boundary condition of 0.1 mmol/m^2/second
+model.tracers.DON.bc.east  = randn(16,16) .* 1e-3 # east boundary condition of -0.1 mmol/m^2/second
+model.tracers.DON.bc.south = randn(16,16,10) .* 1e-3 # south boundary condition of 0.1 mmol/m^2/second
+model.tracers.DON.bc.north = randn(16,16,10) .* 1e-3 # north boundary condition of -0.1 mmol/m^2/second
 
 sim = PlanktonSimulation(model, ΔT = 60.0, iterations = 10, vels=(u=uvel, v=vvel, w=wvel)) 
 
 update!(sim)
 
-TCt = tot_mass(model.nutrients.DIC.data, grid) +
-      tot_mass(model.nutrients.DOC.data, grid) +
-      tot_mass(model.nutrients.POC.data, grid)
+TCt = tot_mass(model.tracers.DIC.data, grid) +
+      tot_mass(model.tracers.DOC.data, grid) +
+      tot_mass(model.tracers.POC.data, grid)
 TCt = TCt + sum(model.individuals.phytos.sp1.data.Bm)
 
 @testset "PlanktonIndividuals 3D tests:" begin

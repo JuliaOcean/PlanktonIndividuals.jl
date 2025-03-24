@@ -23,21 +23,21 @@ function find_inds!(plank, g::AbstractGrid, arch::Architecture)
     return nothing
 end
 
-@kernel function find_NPT_kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, FeT, par, par₀, temp, pop)
+@kernel function find_NPT_kernel!(trs, x, y, z, ac, NH4, NO3, PO4, DOC, FeT, par, par₀, temp, pop)
     i = @index(Global)
-    @inbounds nuts.NH4[i] = max(0.0f0, NH4[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.NO3[i] = max(0.0f0, NO3[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.PO4[i] = max(0.0f0, PO4[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.DOC[i] = max(0.0f0, DOC[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.FeT[i] = max(0.0f0, FeT[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.par[i] = par[x[i], y[i], z[i]] * ac[i]
-    @inbounds nuts.dpar[i]= (par[x[i], y[i], z[i]] - par₀[x[i], y[i], z[i]]) * ac[i]
-    @inbounds nuts.T[i]   =temp[x[i], y[i], z[i]] * ac[i]
-    @inbounds nuts.pop[i] = pop[x[i], y[i], z[i]] * ac[i]
+    @inbounds trs.NH4[i] = max(0.0f0, NH4[x[i], y[i], z[i]]) * ac[i]
+    @inbounds trs.NO3[i] = max(0.0f0, NO3[x[i], y[i], z[i]]) * ac[i]
+    @inbounds trs.PO4[i] = max(0.0f0, PO4[x[i], y[i], z[i]]) * ac[i]
+    @inbounds trs.DOC[i] = max(0.0f0, DOC[x[i], y[i], z[i]]) * ac[i]
+    @inbounds trs.FeT[i] = max(0.0f0, FeT[x[i], y[i], z[i]]) * ac[i]
+    @inbounds trs.par[i] = par[x[i], y[i], z[i]] * ac[i]
+    @inbounds trs.dpar[i]= (par[x[i], y[i], z[i]] - par₀[x[i], y[i], z[i]]) * ac[i]
+    @inbounds trs.T[i]   =temp[x[i], y[i], z[i]] * ac[i]
+    @inbounds trs.pop[i] = pop[x[i], y[i], z[i]] * ac[i]
 end
-function find_NPT!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, FeT, par, par₀, temp, pop, arch::Architecture)
+function find_NPT!(trs, x, y, z, ac, NH4, NO3, PO4, DOC, FeT, par, par₀, temp, pop, arch::Architecture)
     kernel! = find_NPT_kernel!(device(arch), 256, (size(ac,1)))
-    kernel!(nuts, x, y, z, ac, NH4, NO3, PO4, DOC, FeT, par, par₀, temp, pop)
+    kernel!(trs, x, y, z, ac, NH4, NO3, PO4, DOC, FeT, par, par₀, temp, pop)
     return nothing
 end
 

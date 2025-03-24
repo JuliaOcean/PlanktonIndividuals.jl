@@ -1,5 +1,5 @@
-function plankton_update!(plank, nuts, rnd, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
-    plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch)
+function plankton_update!(plank, trs, rnd, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+    plankton_growth!(plank, trs, rnd, p, ΔT, t, arch)
 
     calc_consume!(plk.DIC.data, plk.DOC.data, plk.NH4.data, plk.NO3.data, plk.PO4.data,
                   plank, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, arch)
@@ -30,7 +30,7 @@ function plankton_update!(plank, nuts, rnd, p, plk, diags_spcs, ΔT, t, arch::Ar
         if dvidnum > length(deactive_ind)
             throw(ArgumentError("number of individual exceeds the capacity at timestep $(t/86400.0) days"))
         end
-        divide!(plank, nuts, deactive_ind, arch)
+        divide!(plank, trs, deactive_ind, arch)
     end
 
     ##### diagnostic for individual distribution

@@ -45,18 +45,18 @@ end
     return min(VN, DOC/ΔT/max(1.0f0,pop))
 end
 
-@kernel function calc_inorganic_uptake_kernel!(plank, nuts, p, ΔT)
+@kernel function calc_inorganic_uptake_kernel!(plank, trs, p, ΔT)
     i = @index(Global)
-    @inbounds plank.PS[i] = calc_PS(nuts.par[i], nuts.T[i], plank.Chl[i], plank.Bm[i], p) * plank.ac[i]
+    @inbounds plank.PS[i] = calc_PS(trs.par[i], trs.T[i], plank.Chl[i], plank.Bm[i], p) * plank.ac[i]
 
     @inbounds plank.VNH4[i], plank.VNO3[i], plank.VPO4[i] =
-                        calc_NP_uptake(nuts.NH4[i], nuts.NO3[i], nuts.PO4[i], nuts.T[i],
+                        calc_NP_uptake(trs.NH4[i], trs.NO3[i], trs.PO4[i], trs.T[i],
                                         plank.Cq[i], plank.Nq[i], plank.Pq[i],
-                                        plank.Bm[i], nuts.pop[i], p, plank.ac[i], ΔT)
+                                        plank.Bm[i], trs.pop[i], p, plank.ac[i], ΔT)
 end
-function calc_inorganic_uptake!(plank, nuts, p, ΔT, arch::Architecture)
+function calc_inorganic_uptake!(plank, trs, p, ΔT, arch::Architecture)
     kernel! = calc_inorganic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p, ΔT)
+    kernel!(plank, trs, p, ΔT)
     return nothing
 end
 
@@ -75,16 +75,16 @@ end
 
 ##### calculate DOC uptake rate (mmolC/individual/second)
 ##### DOC uptake needs support of photosynthesis for at least 1% of total C acquisition.
-@kernel function calc_organic_uptake_kernel!(plank, nuts, p, ΔT)
+@kernel function calc_organic_uptake_kernel!(plank, trs, p, ΔT)
     i = @index(Global)
-    @inbounds plank.VDOC[i] = calc_DOC_uptake(nuts.DOC[i], nuts.T[i], plank.Cq[i], 
-                                              plank.Bm[i], nuts.pop[i], p, ΔT) * plank.ac[i]
+    @inbounds plank.VDOC[i] = calc_DOC_uptake(trs.DOC[i], trs.T[i], plank.Cq[i], 
+                                              plank.Bm[i], trs.pop[i], p, ΔT) * plank.ac[i]
 
     @inbounds plank.VDOC[i] = plank.VDOC[i] * isless(1.0f-2, plank.PS[i]/(plank.VDOC[i]+plank.PS[i]))
 end
-function calc_organic_uptake!(plank, nuts, p, ΔT, arch::Architecture)
+function calc_organic_uptake!(plank, trs, p, ΔT, arch::Architecture)
     kernel! = calc_organic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p, ΔT)
+    kernel!(plank, trs, p, ΔT)
     return nothing
 end
 

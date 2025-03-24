@@ -2,12 +2,12 @@ module Fields
 
 export Field
 export interior, zero_fields!
-export fill_halo_nut!, fill_halo_Gcs!, fill_halo_vel!
+export fill_halo_tracer!, fill_halo_Gcs!, fill_halo_vel!
 export fill_halo_u!, fill_halo_v!, fill_halo_w!
 export apply_bcs!, getbc
 export default_bcs
 export set_bc!, validate_bcs
-export nut_names
+export tracer_names
 
 using KernelAbstractions
 
@@ -42,6 +42,6 @@ function zero_fields!(a)
     end
 end
 
-const nut_names=(:DIC,:NH4,:NO3,:PO4,:FeT,:DOC,:DON,:DOP,:DOFe,:POC,:PON,:POP,:POFe, :CHO)
+const tracer_names=(:DIC,:NH4,:NO3,:PO4,:FeT,:DOC,:DON,:DOP,:DOFe,:POC,:PON,:POP,:POFe,:CHO)
 
 end

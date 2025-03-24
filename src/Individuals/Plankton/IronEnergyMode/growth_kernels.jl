@@ -23,13 +23,13 @@ end
     return PS
 end
 
-@kernel function calc_PS_kernel!(plank, nuts, p)
+@kernel function calc_PS_kernel!(plank, trs, p)
     i = @index(Global)
-    @inbounds plank.PS[i] = calc_PS(nuts.par[i], plank.Bm[i], plank.Chl[i], p)
+    @inbounds plank.PS[i] = calc_PS(trs.par[i], plank.Bm[i], plank.Chl[i], p)
 end
-function calc_PS!(plank, nuts, p, arch::Architecture)
+function calc_PS!(plank, trs, p, arch::Architecture)
     kernel! = calc_PS_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p)
+    kernel!(plank, trs, p)
     return nothing
 end
 
@@ -40,14 +40,14 @@ end
     ERS = RS * p.e_rs * ac
     return RS, ERS
 end
-@kernel function calc_respiration_kernel!(plank, nuts, p, ΔT)
+@kernel function calc_respiration_kernel!(plank, trs, p, ΔT)
     i = @index(Global)
     @inbounds plank.RS[i], plank.ERS[i] = calc_respir(plank.CH[i], plank.Bm[i], 
-                                                      nuts.T[i], p, plank.ac[i], ΔT)
+                                                      trs.T[i], p, plank.ac[i], ΔT)
 end
-function calc_repiration!(plank, nuts, p, ΔT, arch::Architecture)
+function calc_repiration!(plank, trs, p, ΔT, arch::Architecture)
     kernel! = calc_respiration_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p, ΔT)
+    kernel!(plank, trs, p, ΔT)
     return nothing
 end
 
@@ -74,14 +74,14 @@ end
     ECF = CF * p.e_cf * ac
     return CF, ECF
 end
-@kernel function calc_carbon_fixation_kernel!(plank, nuts, p)
+@kernel function calc_carbon_fixation_kernel!(plank, trs, p)
     i = @index(Global)
     @inbounds plank.CF[i], plank.ECF[i] = calc_CF(plank.En[i], plank.CH[i], plank.Bm[i],
-                                                  plank.qFePS[i], nuts.T[i], p, plank.ac[i])
+                                                  plank.qFePS[i], trs.T[i], p, plank.ac[i])
 end
-function calc_carbon_fixation!(plank, nuts, p, arch::Architecture)
+function calc_carbon_fixation!(plank, trs, p, arch::Architecture)
     kernel! = calc_carbon_fixation_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p)
+    kernel!(plank, trs, p)
     return nothing
 end
 
@@ -118,21 +118,21 @@ end
     return min(VFe, FeT/ΔT/max(1.0f0,pop))
 end
 
-@kernel function calc_nuts_uptake_kernel!(plank, nuts, p, ΔT)
+@kernel function calc_trs_uptake_kernel!(plank, trs, p, ΔT)
     i = @index(Global)
-    @inbounds plank.VNH4[i] = calc_NH4_uptake(nuts.NH4[i], nuts.T[i], plank.CH[i], plank.qNH4[i],
-                                              plank.Bm[i], nuts.pop[i], p, plank.ac[i], ΔT)
-    @inbounds plank.VNO3[i] = calc_NO3_uptake(nuts.NO3[i], nuts.T[i], plank.CH[i], plank.qNO3[i],
-                                              plank.Bm[i], nuts.pop[i], p, plank.ac[i], ΔT)
-    @inbounds plank.VPO4[i] = calc_P_uptake(nuts.PO4[i], nuts.T[i], plank.CH[i], plank.qP[i],
-                                            plank.Bm[i], nuts.pop[i], p, plank.ac[i], ΔT)
-    @inbounds plank.VFe[i]  = calc_Fe_uptake(nuts.FeT[i], plank.qFe[i], plank.qFePS[i], plank.qFeNR[i],
+    @inbounds plank.VNH4[i] = calc_NH4_uptake(trs.NH4[i], trs.T[i], plank.CH[i], plank.qNH4[i],
+                                              plank.Bm[i], trs.pop[i], p, plank.ac[i], ΔT)
+    @inbounds plank.VNO3[i] = calc_NO3_uptake(trs.NO3[i], trs.T[i], plank.CH[i], plank.qNO3[i],
+                                              plank.Bm[i], trs.pop[i], p, plank.ac[i], ΔT)
+    @inbounds plank.VPO4[i] = calc_P_uptake(trs.PO4[i], trs.T[i], plank.CH[i], plank.qP[i],
+                                            plank.Bm[i], trs.pop[i], p, plank.ac[i], ΔT)
+    @inbounds plank.VFe[i]  = calc_Fe_uptake(trs.FeT[i], plank.qFe[i], plank.qFePS[i], plank.qFeNR[i],
                                              plank.qFeNF[i], plank.Bm[i], plank.CH[i], 
-                                             plank.Sz[i], nuts.pop[i], p, plank.ac[i], ΔT)
+                                             plank.Sz[i], trs.pop[i], p, plank.ac[i], ΔT)
 end
-function calc_nuts_uptake!(plank, nuts, p, ΔT, arch::Architecture)
-    kernel! = calc_nuts_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p, ΔT)
+function calc_trs_uptake!(plank, trs, p, ΔT, arch::Architecture)
+    kernel! = calc_trs_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, trs, p, ΔT)
     return nothing
 end
 
@@ -164,15 +164,15 @@ end
     ENR = NR * p.e_nr * ac
     return NR * p.is_nr, ENR * p.is_nr
 end
-@kernel function calc_NO3_reduction_kernel!(plank, nuts, p, ΔT)
+@kernel function calc_NO3_reduction_kernel!(plank, trs, p, ΔT)
     i = @index(Global)
     @inbounds plank.NR[i], plank.ENR[i] = calc_NR(plank.En[i], plank.qNO3[i], plank.qNH4[i],
                                                   plank.qFeNR[i], plank.Bm[i], plank.CH[i],
-                                                  nuts.T[i], p, plank.ac[i], ΔT)
+                                                  trs.T[i], p, plank.ac[i], ΔT)
 end
-function calc_NO3_reduction!(plank, nuts, p, ΔT, arch::Architecture)
+function calc_NO3_reduction!(plank, trs, p, ΔT, arch::Architecture)
     kernel! = calc_NO3_reduction_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p, ΔT)
+    kernel!(plank, trs, p, ΔT)
     return nothing
 end
 
@@ -187,15 +187,15 @@ end
     ENF = NF * p.e_nf * ac
     return NF * (p.is_croc + p.is_tric), ENF * (p.is_croc + p.is_tric)
 end
-@kernel function calc_nitrogen_fixation_kernel!(plank, nuts, p)
+@kernel function calc_nitrogen_fixation_kernel!(plank, trs, p)
     i = @index(Global)
     @inbounds plank.NF[i], plank.ENF[i] = calc_NF(plank.En[i], plank.qNH4[i],
                                                   plank.qFeNF[i], plank.Bm[i], plank.CH[i],
-                                                  nuts.T[i], p, plank.ac[i])
+                                                  trs.T[i], p, plank.ac[i])
 end
-function calc_nitrogen_fixation!(plank, nuts, p, arch::Architecture)
+function calc_nitrogen_fixation!(plank, trs, p, arch::Architecture)
     kernel! = calc_nitrogen_fixation_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p)
+    kernel!(plank, trs, p)
     return nothing
 end
 
@@ -273,16 +273,16 @@ end
     return f_ST2PS, f_PS2ST, f_ST2NR, f_NR2ST, f_ST2NF, f_NF2ST
 end
 
-@kernel function calc_iron_fluxes_kernel!(plank, nuts, p, ΔT)
+@kernel function calc_iron_fluxes_kernel!(plank, trs, p, ΔT)
     i = @index(Global)
     @inbounds plank.ST2PS[i], plank.PS2ST[i], plank.ST2NR[i], 
               plank.NR2ST[i], plank.ST2NF[i], plank.NF2ST[i] = 
-                    iron_alloc(nuts.par[i], nuts.dpar[i], plank.qFe[i], 
+                    iron_alloc(trs.par[i], trs.dpar[i], plank.qFe[i], 
                     plank.qFePS[i], plank.qFeNR[i], plank.qFeNF[i], plank.tdark[i], p, ΔT)
 end
-function calc_iron_fluxes!(plank, nuts, p, ΔT, arch::Architecture)
+function calc_iron_fluxes!(plank, trs, p, ΔT, arch::Architecture)
     kernel! = calc_iron_fluxes_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, p, ΔT)
+    kernel!(plank, trs, p, ΔT)
     return nothing
 end
 
@@ -321,13 +321,13 @@ function update_cellsize!(plank, p, arch::Architecture)
 end
 
 ##### circadian clock after sunset
-@kernel function update_tdark_kernel!(plank, nuts, ΔT)
+@kernel function update_tdark_kernel!(plank, trs, ΔT)
     i = @index(Global)
-    @inbounds plank.tdark[i] = plank.tdark[i] * (1.0f0 - isless(0.0f0, nuts.par[i])) + 
-                                ΔT * isequal(0.0f0, nuts.par[i])
+    @inbounds plank.tdark[i] = plank.tdark[i] * (1.0f0 - isless(0.0f0, trs.par[i])) + 
+                                ΔT * isequal(0.0f0, trs.par[i])
 end
-function update_tdark!(plank, nuts, ΔT, arch::Architecture)
+function update_tdark!(plank, trs, ΔT, arch::Architecture)
     kernel! = update_tdark_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, ΔT)
+    kernel!(plank, trs, ΔT)
     return nothing
 end

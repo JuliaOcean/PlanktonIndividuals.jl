@@ -29,14 +29,14 @@ Keyword Arguments
 - `bc_value`: the value that will be used to set the boundary condition.
 """
 function set_bc!(model; tracer::Symbol, pos::Symbol, bc_value::Union{Number, AbstractArray})
-    @assert tracer in nut_names
+    @assert tracer in tracer_names
 
     FT = model.FT
     bc_value_d = FT.(bc_value)
     if isa(bc_value_d, AbstractArray)
         bc_value_d = bc_value_d |> array_type(model.arch)
     end
-    setproperty!(model.nutrients[tracer].bc, pos, bc_value_d)
+    setproperty!(model.tracers[tracer].bc, pos, bc_value_d)
     return nothing
 end
 

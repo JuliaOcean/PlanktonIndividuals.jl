@@ -29,7 +29,7 @@ export
     bgc_params_default, phyt_params_default,
 
     # Biogeochemistry
-    generate_nutrients, default_nut_init,
+    generate_tracers, default_tracer_init,
 
     # Output
     PlanktonDiagnostics, PlanktonOutputWriter, interior,

@@ -4,7 +4,7 @@ mutable struct PlanktonModel
     t::AbstractFloat            # time in second
     iteration::Int              # model interation
     individuals::individuals    # individuals
-    nutrients::NamedTuple       # nutrient fields
+    tracers::NamedTuple         # tracer fields
     grid::AbstractGrid          # grid information
     bgc_params::Dict            # biogeochemical parameter set
     timestepper::timestepper    # operating Tuples and arrays for timestep
@@ -20,7 +20,7 @@ end
                   max_individuals = 1024*8,
                   bgc_params = nothing, 
                   phyt_params = nothing,
-                  nut_initial = default_nut_init(),
+                  tracer_initial = default_tracer_init(),
                   abiotic = false,
                   t = 0.0,
                   )
@@ -45,7 +45,7 @@ Keyword Arguments (Optional)
                     use `Dict` to update parameters, the format and names of parameters can be found by running `bgc_params_default()`.
 - `phyt_params` : Parameter set for physiological processes of individuals modeled in the model, use default if `nothing`,
                     use `Dict` to update parameters, the format and names of parameters can be found by running `phyt_params_default(N_species, mode)`.
-- `nut_initial` : The source of initial conditions of nutrient fields, should be either a `NamedTuple` 
+- `tracer_initial` : The source of initial conditions of tracer fields, should be either a `NamedTuple` 
                     or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
 - `abiotic` : false or a NamedTuple. Whether to include abiotic particles in the model. If yes,
                     it should be a NamedTuple, like this `abiotic = (params = nothing, N = [2^10, 2^10], Nsp = 2)`.
@@ -59,7 +59,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        max_individuals::Int = 8*1024,
                        bgc_params = nothing, 
                        phyt_params = nothing,
-                       nut_initial = default_nut_init(),
+                       tracer_initial = default_tracer_init(),
                        abiotic = nothing,
                        t::AbstractFloat = 0.0f0,
                        )
@@ -104,13 +104,13 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
 
     inds = generate_individuals(phyt_params_final, arch, N_species, N_individual, max_individuals, FT, grid_d, mode; abiotic = abiotic_final)
 
-    nutrients = generate_nutrients(arch, grid_d, nut_initial, FT)
+    tracers = generate_tracers(arch, grid_d, tracer_initial, FT)
 
     ts = timestepper(arch, FT, grid_d, max_individuals)
 
     iteration  = 0
 
-    model = PlanktonModel(arch, FT, t, iteration, inds, nutrients, grid_d, bgc_params_final, ts, mode)
+    model = PlanktonModel(arch, FT, t, iteration, inds, tracers, grid_d, bgc_params_final, ts, mode)
 
     return model
 end

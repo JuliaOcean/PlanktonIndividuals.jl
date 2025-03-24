@@ -1,18 +1,18 @@
 ##### update physiological attributes of each individual
-function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
-    calc_inorganic_uptake!(plank, nuts, p, ΔT, arch)
+function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
+    calc_inorganic_uptake!(plank, trs, p, ΔT, arch)
 
     update_quotas_1!(plank, ΔT, arch)
 
-    calc_organic_uptake!(plank, nuts, p, ΔT, arch)
+    calc_organic_uptake!(plank, trs, p, ΔT, arch)
 
-    calc_ρChl!(plank, nuts.par, p, arch)
+    calc_ρChl!(plank, trs.par, p, arch)
 
-    calc_respir!(plank, nuts.T, p, arch)
+    calc_respir!(plank, trs.T, p, arch)
 
     update_quotas_2!(plank, ΔT, p, arch)
 
-    calc_BS!(plank, nuts.T, p, arch)
+    calc_BS!(plank, trs.T, p, arch)
 
     update_biomass!(plank, p, ΔT, arch)
 
@@ -23,7 +23,7 @@ function plankton_growth!(plank, nuts, rnd, p, ΔT, t, arch::Architecture)
     ##### probabilities of grazing, mortality, and cell division
     ##### check the probabilities every 10 time steps or 1 hour whichever is shorter
     if t%(ΔT*(min(10.0f0,3600.0f0÷ΔT))) == 0.0f0 
-        calc_graz_quadratic!(plank, nuts, p.grz_P, arch)
+        calc_graz_quadratic!(plank, trs, p.grz_P, arch)
         calc_MM_mort!(plank, p, arch)
         ##### Bernouli-like distribution
         calc_MM_dvid!(plank, p, arch)
