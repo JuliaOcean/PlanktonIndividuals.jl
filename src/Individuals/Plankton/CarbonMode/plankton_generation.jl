@@ -25,7 +25,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
         end
     end
     p = NamedTuple{param_names}(FT.(tmp))
-    return particle(data, p)
+    return phytoplankton(data, p)
 end
 
 function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)

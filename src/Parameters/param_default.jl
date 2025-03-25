@@ -325,6 +325,8 @@ function abiotic_params_default(N::Int64)
         "Cquota"    => [1.8e-11], # C quota of abiotic particles
         "mean"      => [1.2],     # Mean of the normal distribution of initial abiotic individuals
         "var"       => [0.3],     # Variance of the normal distribution of initial abiotic individuals
+        "k_ads"     => [0.0],     # adsorption rate of chemical compounds to abiotic particles
+        "k_decay"   => [0.0],     # decay rate of chemical compounds adsorbed to abiotic particles
     )
 
     if N == 1

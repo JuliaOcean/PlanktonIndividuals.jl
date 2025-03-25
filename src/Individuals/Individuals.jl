@@ -3,8 +3,10 @@ module Individuals
 export particle_advection!
 export particle_diffusion!
 export plankton_update!
+export abiotic_particle_update!
 export generate_individuals, individuals
 export find_inds!, find_NPT!, acc_counts!, acc_chl!, calc_par!
+export phytos, abiotics
 
 using StructArrays
 using Random
@@ -15,6 +17,7 @@ using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Diagnostics
 
 using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
+using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle
 
 #####
 ##### generate individuals of multiple species
@@ -50,7 +53,7 @@ function generate_individuals(params::Dict, arch::Architecture, Nsp::Int, N::Vec
         for j in 1:abiotic.Nsp
             name = Symbol("sp"*string(j))
             particle =  construct_abiotic_particle(arch, j, abiotic.params, maxN, FT)
-            initialize_abiotic_particle!(particle, abiotic.N, g, arch)
+            initialize_abiotic_particle!(particle, abiotic.N[j], g, arch)
             push!(abiotic_names, name)
             push!(abiotic_data, particle)
         end
@@ -68,11 +71,12 @@ include("Abiotic/Abiotic.jl")
 include("utils.jl")
 
 using .Advection
+using .Abiotic
 import .Quota
 import .Carbon
 import .MacroMolecular
 import .IronEnergy
-using .Abiotic
+
 
 #####
 ##### some workarounds for function names
@@ -101,16 +105,16 @@ initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode:
 initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::IronEnergyMode) =
     IronEnergy.initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
-plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
-    MacroMolecular.plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
+    MacroMolecular.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
 
-plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode) =
-    Quota.plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode) =
+    Quota.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
 
-plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::CarbonMode) =
-    Carbon.plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::CarbonMode) =
+    Carbon.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
 
-plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::IronEnergyMode) =
-    IronEnergy.plankton_update!(plank, trs, proc, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::IronEnergyMode) =
+    IronEnergy.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
 
 end

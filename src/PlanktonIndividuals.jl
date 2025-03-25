@@ -16,6 +16,7 @@ export
     # Model
     PlanktonModel, 
     CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode,
+    phytoplankton, abiotic_particle, individuals,
 
     # BoundaryConditions
     set_bc!,
@@ -50,6 +51,23 @@ surface_mixing_vels = joinpath(artifact_path(surface_mixing_vels_hash)*"/velocit
 global_vels_hash = artifact_hash("OCCA_FlowFields", artifact_toml)
 global_vels = joinpath(artifact_path(global_vels_hash)*"/OCCA_FlowFields.jld2")
 
+##### struct for phytoplankton
+mutable struct phytoplankton
+    data::AbstractArray
+    p::NamedTuple
+end
+
+##### struct for abiotic particles
+mutable struct abiotic_particle
+    data::AbstractArray
+    p::NamedTuple
+end
+
+struct individuals
+    phytos::NamedTuple
+    abiotics::NamedTuple
+    # zoos::NamedTuple
+end
 
 """
     AbstractMode

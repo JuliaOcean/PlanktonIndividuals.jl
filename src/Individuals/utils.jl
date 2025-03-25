@@ -1,25 +1,13 @@
-##### structs for individuals
-mutable struct particle
-    data::AbstractArray
-    p::NamedTuple
-end
-
-struct individuals
-    phytos::NamedTuple
-    abiotics::NamedTuple
-    # zoos::NamedTuple
-end
-
 ##### find indices (halo points included)
-@kernel function find_inds_kernel!(plank, g::AbstractGrid)
+@kernel function find_inds_kernel!(particle, g::AbstractGrid)
     i = @index(Global)
-    @inbounds plank.xi[i] = unsafe_trunc(Int, get_xf_index(plank.x[i]) * plank.ac[i]) + g.Hx 
-    @inbounds plank.yi[i] = unsafe_trunc(Int, get_yf_index(plank.y[i]) * plank.ac[i]) + g.Hy
-    @inbounds plank.zi[i] = unsafe_trunc(Int, get_zf_index(plank.z[i]) * plank.ac[i]) + g.Hz
+    @inbounds particle.xi[i] = unsafe_trunc(Int, get_xf_index(particle.x[i]) * particle.ac[i]) + g.Hx 
+    @inbounds particle.yi[i] = unsafe_trunc(Int, get_yf_index(particle.y[i]) * particle.ac[i]) + g.Hy
+    @inbounds particle.zi[i] = unsafe_trunc(Int, get_zf_index(particle.z[i]) * particle.ac[i]) + g.Hz
 end
-function find_inds!(plank, g::AbstractGrid, arch::Architecture)
-    kernel! = find_inds_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, g)
+function find_inds!(particle, g::AbstractGrid, arch::Architecture)
+    kernel! = find_inds_kernel!(device(arch), 256, (size(particle.ac,1)))
+    kernel!(particle, g)
     return nothing
 end
 
@@ -80,16 +68,16 @@ function calc_par!(par, arch::Architecture, Chl, PARF, g::AbstractGrid, kc, kw, 
 end
 
 ##### mask individuals due to land shape
-@kernel function mask_individuals_kernel!(plank, g::AbstractGrid)
+@kernel function mask_individuals_kernel!(particle, g::AbstractGrid)
     i = @index(Global)
-    @inbounds xi = unsafe_trunc(Int, (plank.x[i]+1) * plank.ac[i]) + g.Hx 
-    @inbounds yi = unsafe_trunc(Int, (plank.y[i]+1) * plank.ac[i]) + g.Hy
-    @inbounds zi = unsafe_trunc(Int, (plank.z[i]+1) * plank.ac[i]) + g.Hz
-    @inbounds plank.ac[i] = g.landmask[xi, yi, zi] * plank.ac[i]
+    @inbounds xi = unsafe_trunc(Int, (particle.x[i]+1) * particle.ac[i]) + g.Hx 
+    @inbounds yi = unsafe_trunc(Int, (particle.y[i]+1) * particle.ac[i]) + g.Hy
+    @inbounds zi = unsafe_trunc(Int, (particle.z[i]+1) * particle.ac[i]) + g.Hz
+    @inbounds particle.ac[i] = g.landmask[xi, yi, zi] * particle.ac[i]
 end
-function mask_individuals!(plank, g::AbstractGrid, N, arch)
+function mask_individuals!(particle, g::AbstractGrid, N, arch)
     kernel! = mask_individuals_kernel!(device(arch), 256, (N,))
-    kernel!(plank, g)
+    kernel!(particle, g)
     return nothing
 end
 

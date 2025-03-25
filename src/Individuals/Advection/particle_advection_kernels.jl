@@ -10,15 +10,15 @@ end
     return x
 end
 
-@kernel function particle_boundaries_kernel!(plank, ac, g::AbstractGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
+@kernel function particle_boundaries_kernel!(particle, ac, g::AbstractGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
     i = @index(Global)
-    @inbounds plank.x[i] = particle_boundary_condition(plank.x[i], 0, g.Nx, TX()) * ac[i]
-    @inbounds plank.y[i] = particle_boundary_condition(plank.y[i], 0, g.Ny, TY()) * ac[i]
-    @inbounds plank.z[i] = particle_boundary_condition(plank.z[i], 0, g.Nz, TZ()) * ac[i]
+    @inbounds particle.x[i] = particle_boundary_condition(particle.x[i], 0, g.Nx, TX()) * ac[i]
+    @inbounds particle.y[i] = particle_boundary_condition(particle.y[i], 0, g.Ny, TY()) * ac[i]
+    @inbounds particle.z[i] = particle_boundary_condition(particle.z[i], 0, g.Nz, TZ()) * ac[i]
 end
-function particle_boundaries!(plank, ac, g::AbstractGrid, arch::Architecture)
+function particle_boundaries!(particle, ac, g::AbstractGrid, arch::Architecture)
     kernel! = particle_boundaries_kernel!(device(arch), 256, (size(ac,1)))
-    kernel!(plank, ac, g)
+    kernel!(particle, ac, g)
     return nothing
 end
 
@@ -37,15 +37,15 @@ function vel_interpolate!(uₜ, vₜ, wₜ, x, y, z, ac, u, v, w, g::AbstractGri
 end
 
 ##### calculate intermediate coordinates
-@kernel function calc_coord_kernel!(velos, plank, u, v, w, ac, ΔT, weight::AbstractFloat)
+@kernel function calc_coord_kernel!(velos, particle, u, v, w, ac, ΔT, weight::AbstractFloat)
     i = @index(Global)
-    @inbounds velos.x[i] = plank.x[i] + weight * u[i] * ΔT * ac[i]
-    @inbounds velos.y[i] = plank.y[i] + weight * v[i] * ΔT * ac[i]
-    @inbounds velos.z[i] = plank.z[i] - weight * w[i] * ΔT * ac[i] # index increases when w is negtive
+    @inbounds velos.x[i] = particle.x[i] + weight * u[i] * ΔT * ac[i]
+    @inbounds velos.y[i] = particle.y[i] + weight * v[i] * ΔT * ac[i]
+    @inbounds velos.z[i] = particle.z[i] - weight * w[i] * ΔT * ac[i] # index increases when w is negtive
 end
-function calc_coord!(velos, plank, u, v, w, ac, ΔT, weight::AbstractFloat, arch::Architecture)
+function calc_coord!(velos, particle, u, v, w, ac, ΔT, weight::AbstractFloat, arch::Architecture)
     kernel! = calc_coord_kernel!(device(arch), 256, (size(ac,1)))
-    kernel!(velos, plank, u, v, w, ac, ΔT, weight)
+    kernel!(velos, particle, u, v, w, ac, ΔT, weight)
     return nothing
 end
 

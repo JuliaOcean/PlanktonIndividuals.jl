@@ -1,10 +1,12 @@
-function plankton_update!(plank, trs, rnd, p, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+function plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+    plank = phyto.data
+    p = phyto.p
     plankton_growth!(plank, trs, rnd, p, ΔT, t, arch)
 
     calc_consume!(plk.DIC.data, plk.DOC.data, plk.NH4.data, plk.NO3.data, plk.PO4.data,
                   plank, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, arch)
     ##### diagnostics of processes for each species
-    diags_spcs!(diags_spcs, plank, plank.ac, plank.xi, plank.yi, plank.zi, mode, arch)
+    diags_spcs!(diags_spcs, phyto, plank.ac, plank.xi, plank.yi, plank.zi, mode, arch)
 
     ##### check the probabilities every 10 time steps or 1 hour whichever is shorter
     if t%(ΔT*(min(10.0f0,3600.0f0÷ΔT))) == 0.0f0 

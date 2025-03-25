@@ -27,7 +27,7 @@ function update!(sim::PlanktonSimulation; time_offset = (vels = false, PARF = fa
 
             TimeStep!(sim.model, sim.ΔT, sim.diags)
 
-            write_output!(sim.output_writer, sim.model, sim.diags, sim.ΔT)
+            write_output!(sim.output_writer, sim.model, sim.diags)
         end
     else
         for i in 1:sim.iterations
@@ -42,7 +42,7 @@ function update!(sim::PlanktonSimulation; time_offset = (vels = false, PARF = fa
 
             TimeStep!(sim.model, sim.ΔT, sim.diags)
 
-            write_output!(sim.output_writer, sim.model, sim.diags, sim.ΔT)
+            write_output!(sim.output_writer, sim.model, sim.diags)
         end
     end
 end

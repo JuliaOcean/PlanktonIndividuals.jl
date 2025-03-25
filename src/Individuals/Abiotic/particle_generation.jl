@@ -7,7 +7,7 @@ function construct_abiotic_particle(arch::Architecture, sp::Int, params::Dict, m
                         ) 
   data = replace_storage(array_type(arch), rawdata)
 
-  param_names=(:Nsuper, :Cquota, :mean, :var, :k_ad, :k_decay)
+  param_names=(:Nsuper, :Cquota, :mean, :var, :k_ads, :k_decay)
 
   pkeys = collect(keys(params))
   tmp = zeros(length(param_names))
@@ -19,7 +19,7 @@ function construct_abiotic_particle(arch::Architecture, sp::Int, params::Dict, m
       end
   end
   p = NamedTuple{param_names}(FT.(tmp))
-  return particle(data, p)
+  return abiotic_particle(data, p)
 end
 
 function initialize_abiotic_particle!(particle, N::Int, g::AbstractGrid, arch::Architecture)
@@ -33,7 +33,7 @@ function initialize_abiotic_particle!(particle, N::Int, g::AbstractGrid, arch::A
   rand!(rng_type(arch), particle.data.x)
   rand!(rng_type(arch), particle.data.y)
   rand!(rng_type(arch), particle.data.z)
-  randn!(rng_type(arch), particle.data.CH)
+  randn!(rng_type(arch), particle.data.CHO)
 
   particle.data.x  .=(particle.data.x .* g.Nx) .* particle.data.ac                                         # x, unit: grid spacing, starting from 0
   particle.data.y  .=(particle.data.y .* g.Ny) .* particle.data.ac                                         # y, unit: grid spacing, starting from 0

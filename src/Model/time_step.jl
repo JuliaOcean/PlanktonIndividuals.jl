@@ -33,9 +33,9 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
         
         ##### Update
         find_inds!(model.individuals.abiotics[sp].data, model.grid, model.arch)
-        particle_update!(model.individuals.abiotics[sp].data, model.tracers.CHO.data,
-                         model.timestepper.plk.CHO.data, model.individuals.abiotics[sp].p,
-                         diags.abiotics[sp], ΔT, model.acch)
+        abiotic_particle_update!(model.individuals.abiotics[sp], model.tracers.CHO.data,
+                                 model.timestepper.plk.CHO.data, diags.abiotic_particle[sp], 
+                                 ΔT, model.arch)
         
     end # abiotic particles
 
@@ -72,9 +72,9 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                       model.tracers.FeT.data, model.timestepper.par, model.timestepper.par₀, 
                       model.timestepper.temp, model.timestepper.pop, model.arch)
             
-            plankton_update!(model.individuals.phytos[sp].data, model.timestepper.trs,
-                             model.timestepper.rnd, model.individuals.phytos[sp].p,
-                             model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch, model.mode)
+            plankton_update!(model.individuals.phytos[sp], model.timestepper.trs,
+                             model.timestepper.rnd, model.timestepper.plk, 
+                             diags.phytoplankton[sp], ΔT, model.t, model.arch, model.mode)
         end
     else # model.bgc_params["shared_graz"] ≠ 1.0 - species-specific grazing
         for sp in keys(model.individuals.phytos)
@@ -108,9 +108,9 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                       model.tracers.FeT.data, model.timestepper.par, model.timestepper.par₀, 
                       model.timestepper.temp, model.timestepper.pop, model.arch)
 
-            plankton_update!(model.individuals.phytos[sp].data, model.timestepper.trs,
-                                model.timestepper.rnd, model.individuals.phytos[sp].p,
-                                model.timestepper.plk, diags.plankton[sp], ΔT, model.t, model.arch, model.mode)
+            plankton_update!(model.individuals.phytos[sp], model.timestepper.trs,
+                                model.timestepper.rnd, model.timestepper.plk, 
+                                diags.phytoplankton[sp], ΔT, model.t, model.arch, model.mode)
             @inbounds model.timestepper.pop .= 0.0f0
         end
     end # phytoplankton

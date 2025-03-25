@@ -13,6 +13,7 @@ using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Diagnostics
 
 using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
+using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle
 
 include("../../utils.jl")
 include("../division_death_probability.jl")
