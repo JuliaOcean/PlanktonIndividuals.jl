@@ -71,6 +71,7 @@ function PlanktonOutputWriter(;dir = "./results",
 
     diags_file = ""
     phytoplankton_file = ""
+    abiotic_particle_file = ""
 
     if save_diags
         diags_file = joinpath(dir, diags_prefix*".jld2")
