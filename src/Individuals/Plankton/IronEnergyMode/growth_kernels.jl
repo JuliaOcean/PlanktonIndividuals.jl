@@ -17,15 +17,18 @@ end
 end
 
 ##### calculate light reaction (kJ/individual/second)
-@inline function calc_PS(par, Bm, Chl, p)
+@inline function calc_PS(par, Bm, CH, qFePS, Chl, p)
     αI = par * p.α * Chl / max(1.0f-30, Bm)
-    PS  = p.PCmax * (1.0f0 - exp(-αI)) * Bm
+    Qfe_ps = qFePS / max(1.0f-30, Bm + CH)
+    Ksat = Qfe_ps / max(1.0f-30, Qfe_ps + p.KfePS)
+    PS  = p.PCmax * (1.0f0 - exp(-αI)) * Bm * Ksat
     return PS
 end
 
 @kernel function calc_PS_kernel!(plank, trs, p)
     i = @index(Global)
-    @inbounds plank.PS[i] = calc_PS(trs.par[i], plank.Bm[i], plank.Chl[i], p)
+    @inbounds plank.PS[i] = calc_PS(trs.par[i], plank.Bm[i], plank.CH[i],
+                                    plank.qFePS[i], plank.Chl[i], p)
 end
 function calc_PS!(plank, trs, p, arch::Architecture)
     kernel! = calc_PS_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -34,16 +37,17 @@ function calc_PS!(plank, trs, p, arch::Architecture)
 end
 
 ##### calculate respiration (mmolC/individual/second)
-@inline function calc_respir(CH, Bm, T, p, ac, ΔT)
+@inline function calc_respir(CH, Bm, ADP, T, p, ac, ΔT)
     RS = Bm * p.k_rs * tempFunc(T, p) * ac
-    RS = min(RS, CH/ΔT) # double check CH is not over consumed
+    RS = min(RS, CH/ΔT, ADP/ΔT/p.e_rs) # double check CH is not over consumed
     ERS = RS * p.e_rs * ac
     return RS, ERS
 end
 @kernel function calc_respiration_kernel!(plank, trs, p, ΔT)
     i = @index(Global)
     @inbounds plank.RS[i], plank.ERS[i] = calc_respir(plank.CH[i], plank.Bm[i], 
-                                                      trs.T[i], p, plank.ac[i], ΔT)
+                                                      plank.ADP[i], trs.T[i], p, 
+                                                      plank.ac[i], ΔT)
 end
 function calc_repiration!(plank, trs, p, ΔT, arch::Architecture)
     kernel! = calc_respiration_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -51,11 +55,15 @@ function calc_repiration!(plank, trs, p, ΔT, arch::Architecture)
     return nothing
 end
 
-##### update energy reserve - first time
+##### update ATP and ADP with respiration
 @kernel function update_state_1_kernel!(plank, ΔT)
     i = @index(Global)
-    @inbounds plank.En[i] += (plank.PS[i] + plank.ERS[i]) * ΔT
-    @inbounds plank.CH[i] += -plank.RS[i] * ΔT
+    @inbounds plank.ATP[i] += plank.ERS[i] * ΔT
+    @inbounds plank.ADP[i] += -plank.ERS[i] * ΔT
+    @inbounds plank.CH[i]  += -plank.RS[i] * ΔT
+    @inbounds plank.ATP[i] += min(plank.ADP[i], plank.PS[i] * ΔT)
+    @inbounds plank.ADP[i] += -min(plank.ADP[i], plank.PS[i] * ΔT)
+    @inbounds plank.exEn[i]+= plank.PS[i] * ΔT - min(plank.ADP[i], plank.PS[i] * ΔT)
 end
 function update_state_1!(plank, ΔT, arch::Architecture)
     kernel! = update_state_1_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -64,20 +72,18 @@ function update_state_1!(plank, ΔT, arch::Architecture)
 end
 
 ##### calculate carbon fixation rate (mmolC/individual/second)
-@inline function calc_CF(En, CH, Bm, qFePS, T, p, ac)
+@inline function calc_CF(ATP, CH, Bm, T, p, ac)
     Qc = CH/max(1.0f-30, Bm + CH)
-    Qfe_ps = qFePS / max(1.0f-30, Bm + CH)
-    Ksat = Qfe_ps / max(1.0f-30, Qfe_ps + p.KfePS)
     regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4, pow = 2.0f0)
-    regEn = shape_func_inc_alt(En, p.Enmax * p.Nsuper, 1.0f-2, pow = 2.0f0)
-    CF = p.k_cf * regQC * regEn * Ksat * tempFunc_PS(T, p) * Bm * ac
+    regATP = shape_func_inc_alt(ATP, p.AXPmax * p.Nsuper, 1.0f-3, pow = 2.0f0)
+    CF = p.k_cf * regQC * regATP * tempFunc_PS(T, p) * Bm * ac
     ECF = CF * p.e_cf * ac
     return CF, ECF
 end
 @kernel function calc_carbon_fixation_kernel!(plank, trs, p)
     i = @index(Global)
-    @inbounds plank.CF[i], plank.ECF[i] = calc_CF(plank.En[i], plank.CH[i], plank.Bm[i],
-                                                  plank.qFePS[i], trs.T[i], p, plank.ac[i])
+    @inbounds plank.CF[i], plank.ECF[i] = calc_CF(plank.ATP[i], plank.CH[i], plank.Bm[i],
+                                                  trs.T[i], p, plank.ac[i])
 end
 function calc_carbon_fixation!(plank, trs, p, arch::Architecture)
     kernel! = calc_carbon_fixation_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -139,7 +145,8 @@ end
 ##### update energy reserve and C, N, P, Fe quotas - second time
 @kernel function update_state_2_kernel!(plank, ΔT)
     i = @index(Global)
-    @inbounds plank.En[i]   -= plank.ECF[i]  * ΔT
+    @inbounds plank.ATP[i]  += -plank.ECF[i]  * ΔT
+    @inbounds plank.ADP[i]  += plank.ECF[i]  * ΔT
     @inbounds plank.CH[i]   += plank.CF[i]   * ΔT
     @inbounds plank.qP[i]   += plank.VPO4[i] * ΔT
     @inbounds plank.qNO3[i] += plank.VNO3[i] * ΔT
@@ -153,20 +160,20 @@ function update_state_2!(plank, ΔT, arch::Architecture)
 end
 
 ##### nitrate reduction (mmolN/individual/second)
-@inline function calc_NR(En, qNO3, qNH4, qFeNR, Bm, CH, T, p, ac, ΔT)
+@inline function calc_NR(ATP, qNO3, qNH4, qFeNR, Bm, CH, T, p, ac, ΔT)
     Qn = qNH4/max(1.0f-30, Bm + CH)
     reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4, pow = 2.0f0)
     Qfe_NR = qFeNR / max(1.0f-30, Bm + CH)
-    regEn = shape_func_inc_alt(En, p.Enmax * p.Nsuper, 1.0f-3, pow = 2.0f0)
+    regATP = shape_func_inc_alt(ATP, p.AXPmax * p.Nsuper, 1.0f-3, pow = 2.0f0)
     Ksat = Qfe_NR / max(1.0f-30, Qfe_NR + p.KfeNR)
-    NR = p.k_nr * reg * regEn * qNO3 * Ksat * tempFunc(T, p) * ac
+    NR = p.k_nr * reg * regATP * qNO3 * Ksat * tempFunc(T, p) * ac
     NR = min(NR, qNO3/ΔT) # double check qNO3 are not over consumed
     ENR = NR * p.e_nr * ac
     return NR * p.is_nr, ENR * p.is_nr
 end
 @kernel function calc_NO3_reduction_kernel!(plank, trs, p, ΔT)
     i = @index(Global)
-    @inbounds plank.NR[i], plank.ENR[i] = calc_NR(plank.En[i], plank.qNO3[i], plank.qNH4[i],
+    @inbounds plank.NR[i], plank.ENR[i] = calc_NR(plank.ATP[i], plank.qNO3[i], plank.qNH4[i],
                                                   plank.qFeNR[i], plank.Bm[i], plank.CH[i],
                                                   trs.T[i], p, plank.ac[i], ΔT)
 end
@@ -177,19 +184,19 @@ function calc_NO3_reduction!(plank, trs, p, ΔT, arch::Architecture)
 end
 
 ##### nitrogen fixation (mmolN/individual/second)
-@inline function calc_NF(En, qNH4, qFeNF, Bm, CH, T, p, ac)
+@inline function calc_NF(ATP, qNH4, qFeNF, Bm, CH, T, p, ac)
     Qn = qNH4/max(1.0f-30, Bm + CH)
     reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4, pow = 2.0f0)
     Qfe_NF = qFeNF / max(1.0f-30, Bm + CH)
-    regEn = shape_func_inc_alt(En, p.Enmax * p.Nsuper, 1.0f-3, pow = 2.0f0)
+    regATP = shape_func_inc_alt(ATP, p.AXPmax * p.Nsuper, 1.0f-3, pow = 2.0f0)
     Ksat = Qfe_NF / max(1.0f-30, Qfe_NF + p.KfeNF)
-    NF = p.k_nf * reg * regEn * Ksat * tempFunc(T, p) * Bm * ac
+    NF = p.k_nf * reg * regATP * Ksat * tempFunc(T, p) * Bm * ac
     ENF = NF * p.e_nf * ac
     return NF * (p.is_croc + p.is_tric), ENF * (p.is_croc + p.is_tric)
 end
 @kernel function calc_nitrogen_fixation_kernel!(plank, trs, p)
     i = @index(Global)
-    @inbounds plank.NF[i], plank.ENF[i] = calc_NF(plank.En[i], plank.qNH4[i],
+    @inbounds plank.NF[i], plank.ENF[i] = calc_NF(plank.ATP[i], plank.qNH4[i],
                                                   plank.qFeNF[i], plank.Bm[i], plank.CH[i],
                                                   trs.T[i], p, plank.ac[i])
 end
@@ -202,9 +209,11 @@ end
 ##### update energy reserve and CH, and N quotas - third time
 @kernel function update_state_3_kernel!(plank, ΔT)
     i = @index(Global)
-    @inbounds plank.En[i]   -= plank.ENR[i] * ΔT
-    @inbounds plank.En[i]   -= plank.ENF[i] * ΔT
-    @inbounds plank.qNO3[i] -= plank.NR[i]  * ΔT
+    @inbounds plank.ATP[i]  += -plank.ENR[i] * ΔT
+    @inbounds plank.ATP[i]  += -plank.ENF[i] * ΔT
+    @inbounds plank.ADP[i]  += plank.ENR[i] * ΔT
+    @inbounds plank.ADP[i]  += plank.ENF[i] * ΔT
+    @inbounds plank.qNO3[i] += -plank.NR[i]  * ΔT
     @inbounds plank.qNH4[i] += plank.NR[i]  * ΔT
     @inbounds plank.qNH4[i] += plank.NF[i]  * ΔT
 end
@@ -213,6 +222,37 @@ function update_state_3!(plank, ΔT, arch::Architecture)
     kernel!(plank, ΔT)
     return nothing
 end
+
+##### P allocation
+@inline function calc_ADP_synthesis(qP, ADP, ATP, p, ΔT)
+    regAXP = shape_func_dec(ADP+ATP, p.AXPmax * p.Nsuper, 1.0f-3; pow = 2.0f0)
+    fADP = p.k_ADP * qP * regAXP
+    fADP = min(fADP, qP/ΔT/2.0f0)
+    return fADP
+end
+@kernel function calc_fADP_kernel!(plank, p, ΔT)
+    i = @index(Global)
+    @inbounds plank.fADP[i] = calc_ADP_synthesis(plank.qP[i], plank.ADP[i], 
+                                                 plank.ATP[i], p, ΔT)
+end
+function calc_fADP!(plank, p, ΔT, arch::Architecture)
+    kernel! = calc_fADP_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, p, ΔT)
+    return nothing
+end
+
+##### update P quota - fourth time
+@kernel function update_state_4_kernel!(plank, ΔT)
+    i = @index(Global)
+    @inbounds plank.ADP[i]  += 2.0f0 * plank.fADP[i] * ΔT
+    @inbounds plank.qP[i]   += -2.0f0 * plank.fADP[i]  * ΔT
+end
+function update_state_4!(plank, ΔT, arch::Architecture)
+    kernel! = update_state_4_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, ΔT)
+    return nothing
+end
+
 
 ##### calculate ρChl
 @kernel function calc_ρChl_kernel!(plank, par, p)
