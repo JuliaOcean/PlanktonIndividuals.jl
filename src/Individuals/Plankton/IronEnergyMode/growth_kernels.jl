@@ -38,8 +38,10 @@ end
 
 ##### calculate respiration (mmolC/individual/second)
 @inline function calc_respir(CH, Bm, ADP, T, p, ac, ΔT)
-    RS = Bm * p.k_rs * tempFunc(T, p) * ac
-    RS = min(RS, CH/ΔT, ADP/ΔT/p.e_rs) # double check CH is not over consumed
+    qC = CH / max(1.0f-30, Bm + CH)
+    regCH = shape_func_inc_alt(qC, p.CHmax, 1.0f-2; pow = 2.0f0)
+    RS = Bm * p.k_rs * regCH * tempFunc(T, p) * ac
+    RS = min(RS, CH/ΔT, ADP*p.τ/ΔT/p.e_rs) # double check CH is not over consumed
     ERS = RS * p.e_rs * ac
     return RS, ERS
 end
@@ -56,18 +58,18 @@ function calc_repiration!(plank, trs, p, ΔT, arch::Architecture)
 end
 
 ##### update ATP and ADP with respiration
-@kernel function update_state_1_kernel!(plank, ΔT)
+@kernel function update_state_1_kernel!(plank, p, ΔT)
     i = @index(Global)
-    @inbounds plank.ATP[i] += plank.ERS[i] * ΔT
-    @inbounds plank.ADP[i] += -plank.ERS[i] * ΔT
+    @inbounds plank.ATP[i] += plank.ERS[i] / p.τ * ΔT
+    @inbounds plank.ADP[i] += -plank.ERS[i] / p.τ * ΔT
     @inbounds plank.CH[i]  += -plank.RS[i] * ΔT
-    @inbounds plank.ATP[i] += min(plank.ADP[i], plank.PS[i] * ΔT)
-    @inbounds plank.ADP[i] += -min(plank.ADP[i], plank.PS[i] * ΔT)
-    @inbounds plank.exEn[i]+= plank.PS[i] * ΔT - min(plank.ADP[i], plank.PS[i] * ΔT)
+    @inbounds plank.ATP[i] += min(plank.ADP[i], plank.PS[i] / p.τ * ΔT)
+    @inbounds plank.ADP[i] += -min(plank.ADP[i], plank.PS[i] / p.τ * ΔT)
+    @inbounds plank.exEn[i]+= plank.PS[i] * ΔT - min(plank.ADP[i] * p.τ, plank.PS[i] * ΔT)
 end
-function update_state_1!(plank, ΔT, arch::Architecture)
+function update_state_1!(plank, p, ΔT, arch::Architecture)
     kernel! = update_state_1_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, ΔT)
+    kernel!(plank, p, ΔT)
     return nothing
 end
 
@@ -143,19 +145,19 @@ function calc_trs_uptake!(plank, trs, p, ΔT, arch::Architecture)
 end
 
 ##### update energy reserve and C, N, P, Fe quotas - second time
-@kernel function update_state_2_kernel!(plank, ΔT)
+@kernel function update_state_2_kernel!(plank, p, ΔT)
     i = @index(Global)
-    @inbounds plank.ATP[i]  += -plank.ECF[i]  * ΔT
-    @inbounds plank.ADP[i]  += plank.ECF[i]  * ΔT
+    @inbounds plank.ATP[i]  += -plank.ECF[i] / p.τ  * ΔT
+    @inbounds plank.ADP[i]  += plank.ECF[i] / p.τ  * ΔT
     @inbounds plank.CH[i]   += plank.CF[i]   * ΔT
     @inbounds plank.qP[i]   += plank.VPO4[i] * ΔT
     @inbounds plank.qNO3[i] += plank.VNO3[i] * ΔT
     @inbounds plank.qNH4[i] += plank.VNH4[i] * ΔT
     @inbounds plank.qFe[i]  += plank.VFe[i]  * ΔT
 end
-function update_state_2!(plank, ΔT, arch::Architecture)
+function update_state_2!(plank, p, ΔT, arch::Architecture)
     kernel! = update_state_2_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, ΔT)
+    kernel!(plank, p, ΔT)
     return nothing
 end
 
@@ -207,19 +209,19 @@ function calc_nitrogen_fixation!(plank, trs, p, arch::Architecture)
 end
 
 ##### update energy reserve and CH, and N quotas - third time
-@kernel function update_state_3_kernel!(plank, ΔT)
+@kernel function update_state_3_kernel!(plank, p, ΔT)
     i = @index(Global)
-    @inbounds plank.ATP[i]  += -plank.ENR[i] * ΔT
-    @inbounds plank.ATP[i]  += -plank.ENF[i] * ΔT
-    @inbounds plank.ADP[i]  += plank.ENR[i] * ΔT
-    @inbounds plank.ADP[i]  += plank.ENF[i] * ΔT
+    @inbounds plank.ATP[i]  += -plank.ENR[i] / p.τ * ΔT
+    @inbounds plank.ATP[i]  += -plank.ENF[i] / p.τ * ΔT
+    @inbounds plank.ADP[i]  += plank.ENR[i] / p.τ * ΔT
+    @inbounds plank.ADP[i]  += plank.ENF[i] / p.τ * ΔT
     @inbounds plank.qNO3[i] += -plank.NR[i]  * ΔT
     @inbounds plank.qNH4[i] += plank.NR[i]  * ΔT
     @inbounds plank.qNH4[i] += plank.NF[i]  * ΔT
 end
-function update_state_3!(plank, ΔT, arch::Architecture)
+function update_state_3!(plank, p, ΔT, arch::Architecture)
     kernel! = update_state_3_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, ΔT)
+    kernel!(plank, p, ΔT)
     return nothing
 end
 

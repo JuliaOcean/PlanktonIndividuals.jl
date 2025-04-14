@@ -25,7 +25,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                  :α, :Topt, :Tmax, :Ea, :AXPmax, :is_nr, :is_croc, :is_tric,
                  :PCmax, :VNO3max, :VNH4max, :VPO4max, 
                  :k_cf, :k_rs, :k_nr, :k_nf, :k_mtb,
-                 :e_cf, :e_rs, :e_nr, :e_nf, :k_ADP,
+                 :e_cf, :e_rs, :e_nr, :e_nf, :k_ADP, :τ,
                  :k_Fe_ST2PS, :k_Fe_PS2ST, :k_Fe_ST2NR, :k_Fe_NR2ST, :k_Fe_ST2NF, :k_Fe_NF2ST,
                  :KfePS, :KfeNR, :KfeNF, :KsatNH4, :KsatNO3, :KsatPO4, :KSAFe,
                  :CHmax, :qNH4max, :qNO3max, :qPmax, :qFemax,
