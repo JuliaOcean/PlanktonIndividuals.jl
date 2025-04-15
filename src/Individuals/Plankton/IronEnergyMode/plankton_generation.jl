@@ -1,17 +1,17 @@
 function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
     rawdata = StructArray(x    = zeros(FT, maxN), y    = zeros(FT, maxN), z    = zeros(FT, maxN),
                           xi   = zeros(Int,maxN), yi   = zeros(Int,maxN), zi   = zeros(Int,maxN),
-                          Sz   = zeros(FT, maxN), Bm   = zeros(FT, maxN), ATP  = zeros(FT, maxN),
-                          ADP  = zeros(FT, maxN), CH   = zeros(FT, maxN), qNH4 = zeros(FT, maxN), 
+                          Sz   = zeros(FT, maxN), Bm   = zeros(FT, maxN), CH   = zeros(FT, maxN), 
+                          qNH4 = zeros(FT, maxN), exEn = zeros(FT, maxN),
                           qNO3 = zeros(FT, maxN), qP   = zeros(FT, maxN), Chl  = zeros(FT, maxN),
                           qFe  = zeros(FT, maxN), qFePS= zeros(FT, maxN), qFeNR= zeros(FT, maxN), 
-                          qFeNF= zeros(FT, maxN), exEn = zeros(FT, maxN),
+                          qFeNF= zeros(FT, maxN), 
                           gen  = zeros(FT, maxN), age  = zeros(FT, maxN), ac   = zeros(FT, maxN), 
                           idx  = zeros(Int,maxN), tdark= zeros(FT, maxN),
                           PS   = zeros(FT, maxN), CF   = zeros(FT, maxN), ECF  = zeros(FT, maxN),
                           VNH4 = zeros(FT, maxN), VNO3 = zeros(FT, maxN), VPO4 = zeros(FT, maxN),
                           NF   = zeros(FT, maxN), ENF  = zeros(FT, maxN),
-                          VFe  = zeros(FT, maxN), ρChl = zeros(FT, maxN), fADP = zeros(FT, maxN),
+                          VFe  = zeros(FT, maxN), ρChl = zeros(FT, maxN),
                           PS2ST= zeros(FT, maxN), ST2PS= zeros(FT, maxN),
                           NR2ST= zeros(FT, maxN), ST2NR= zeros(FT, maxN),
                           NF2ST= zeros(FT, maxN), ST2NF= zeros(FT, maxN),
@@ -22,10 +22,10 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
     data = replace_storage(array_type(arch), rawdata)
 
     param_names=(:Nsuper, :Cquota, :SA, :mean, :var, :Chl2Cint, 
-                 :α, :Topt, :Tmax, :Ea, :AXPmax, :is_nr, :is_croc, :is_tric,
+                 :α, :Topt, :Tmax, :Ea, :is_nr, :is_croc, :is_tric,
                  :PCmax, :VNO3max, :VNH4max, :VPO4max, 
                  :k_cf, :k_rs, :k_nr, :k_nf, :k_mtb,
-                 :e_cf, :e_rs, :e_nr, :e_nf, :k_ADP, :τ,
+                 :e_cf, :e_rs, :e_nr, :e_nf,
                  :k_Fe_ST2PS, :k_Fe_PS2ST, :k_Fe_ST2NR, :k_Fe_NR2ST, :k_Fe_ST2NF, :k_Fe_NF2ST,
                  :KfePS, :KfeNR, :KfeNF, :KsatNH4, :KsatNO3, :KsatPO4, :KSAFe,
                  :CHmax, :qNH4max, :qNO3max, :qPmax, :qFemax,
@@ -59,7 +59,6 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     feqmax = plank.p.qFemax
     R_PC = plank.p.R_PC
     Chl2Cint = plank.p.Chl2Cint
-    AXPmax = plank.p.AXPmax
 
     plank.data.ac[1:N]  .= 1.0f0                                                      # activity
     plank.data.gen[1:N] .= 1.0f0                                                      # generation
@@ -74,8 +73,6 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     rand!(rng_type(arch), plank.data.qNH4)
     rand!(rng_type(arch), plank.data.qP)
     rand!(rng_type(arch), plank.data.qFe)
-    rand!(rng_type(arch), plank.data.ADP)
-    rand!(rng_type(arch), plank.data.ATP)
 
     plank.data.x    .=(plank.data.x .* g.Nx) .* plank.data.ac                          # x, unit: grid spacing, starting from 0
     plank.data.y    .=(plank.data.y .* g.Ny) .* plank.data.ac                          # y, unit: grid spacing, starting from 0
@@ -93,8 +90,6 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     plank.data.qFeNF.= plank.data.qFe .* 0.3f0 .* (plank.p.is_croc + plank.p.is_tric)  # Fe - nitrogen fixation
     plank.data.qFe  .-= plank.data.qFePS .+ plank.data.qFeNR .+ plank.data.qFeNF       # Fe - storage
     plank.data.Chl  .= plank.data.Bm .* Chl2Cint                                       # Chl
-    plank.data.ADP  .= plank.data.ADP .* AXPmax .* 0.5f0 .* Nsuper                     # ADP
-    plank.data.ATP  .= plank.data.ATP .* AXPmax .* 0.5f0 .* Nsuper                     # ATP
 
     mask_individuals!(plank.data, g, N, arch)
 end

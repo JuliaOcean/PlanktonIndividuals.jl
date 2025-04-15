@@ -159,7 +159,6 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "Topt"      => [27.0],    # Optimal temperature for growth (C)
         "Tmax"      => [30.0],    # Maximal temperature for growth (C)
         "Ea"        => [5.3e4],   # Free energy
-        "AXPmax"    => [2.0e-17], # Maximum intracellular ATP + ADP concentration (mmol/cell)
         "is_nr"     => [1.0],     # 1 for non-diazotroph, 0 for diazotroph
         "is_croc"   => [0.0],     # 1 for Crocosphaera-like N fixation pattern
         "is_tric"   => [0.0],     # 1 for Trichodesmium-like N fixation pattern
@@ -172,8 +171,6 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "k_nr"      => [2.8e-6],  # Nitrate reduction rate (per second)
         "k_nf"      => [2.8e-6],  # N fixation rate (mmolN/mmolC/second)
         "k_mtb"     => [3.5e-5],  # Metabolic rate (per second)
-        "k_ADP"     => [1.0e-5],  # ADP synthesis rate (per second)
-        "τ"         => [1.0e5],   # turnover rate of ATP to ADP (or vice versa)(times/second)
         "e_cf"      => [9.0],     # Energy consumption rate of carbon fixation (mmolATP/mmolC)
         "e_rs"      => [5.0],     # Energy production rate of respiration (mmolATP/mmolC)
         "e_nf"      => [8.0],     # Energy consumption rate of N fixation (mmolATP/mmolN)

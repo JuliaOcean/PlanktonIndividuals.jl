@@ -58,8 +58,7 @@ end
         @inbounds plank.qNH4[idx[i]] = plank.qNH4[i]
         @inbounds plank.qP[idx[i]]   = plank.qP[i]
         @inbounds plank.qFe[idx[i]]  = plank.qFe[i]
-        @inbounds plank.ADP[idx[i]]  = plank.ADP[i]
-        @inbounds plank.ATP[idx[i]]  = plank.ATP[i]
+        @inbounds plank.exEn[idx[i]] = plank.exEn[i]
         @inbounds plank.Chl[idx[i]]  = plank.Chl[i]
         @inbounds plank.gen[idx[i]]  = plank.gen[i]
         @inbounds plank.ac[idx[i]]   = plank.ac[i]
@@ -85,8 +84,7 @@ end
     @inbounds plank.qNH4[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.qP[i]   *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.qFe[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.ADP[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.ATP[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.exEn[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.Chl[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.gen[i]  += plank.dvid[i]
     @inbounds plank.age[i]  *= (1.0f0 - plank.dvid[i])
