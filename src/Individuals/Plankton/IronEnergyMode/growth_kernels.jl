@@ -44,7 +44,7 @@ end
 @inline function calc_Fe_uptake(FeT, T, qFe, qFePS, qFeNR, qFeNF, Bm, CH, Sz, pop, p, ac, ΔT)
     Qfe = (qFe + qFePS + qFeNF + qFeNR)/max(1.0f-30, Bm + CH)
     regQFe = shape_func_dec(Qfe, p.qFemax, 1.0f-4, pow = 2.0f0)
-    SA = p.SA * Sz^(2/3)
+    SA = p.SA * Sz^(2.0f0/3.0f0)
     VFe = p.KSAFe * SA * FeT * regQFe * p.Nsuper * tempFunc(T, p) * ac
     return min(VFe, FeT/ΔT/max(1.0f0,pop))
 end
@@ -187,7 +187,7 @@ function calc_nitrogen_fixation!(plank, trs, p, arch::Architecture)
 end
 
 ##### energy allocation
-@inline function energy_alloc(PS, ERS, ECF, ENF, ENR)
+@inline function energy_alloc(PS, ERS, ECF, ENF, ENR, p)
     ERSt = ERS; ECFt = ECF; ENFt = ENF; ENRt = ENR;
     exEn = 0.0f0
     if PS ≥ ECF + ENF + ENR
@@ -200,8 +200,8 @@ end
             ECFt = PS + ERS - ENF - ENR
         elseif PS + ERS < ENF + ENR
             ECFt = 0.0f0
-            ENFt = PS + ERS
-            ENRt = PS + ERS
+            ENFt = (PS + ERS) * (p.is_croc + p.is_tric)
+            ENRt = (PS + ERS) * p.is_nr
         end
     end
     return ERSt, ECFt, ENFt, ENRt, exEn
@@ -210,7 +210,7 @@ end
     i = @index(Global)
     plank.ERS[i], plank.ECF[i], plank.ENF[i], plank.ENR[i], plank.exEn[i] = 
         energy_alloc(plank.PS[i], plank.ERS[i], plank.ECF[i], 
-                     plank.ENF[i], plank.ENR[i])
+                     plank.ENF[i], plank.ENR[i], p)
     @inbounds plank.RS[i] = plank.ERS[i] / p.e_rs
     @inbounds plank.CF[i] = plank.ECF[i] / p.e_cf
     @inbounds plank.NF[i] = plank.ENF[i] / p.e_nf
