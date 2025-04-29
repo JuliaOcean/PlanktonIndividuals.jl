@@ -149,7 +149,7 @@ function plank_avail_diags(mode::AbstractMode)
     elseif isa(mode, MacroMolecularMode)
         plank_avail = (:num, :graz, :mort, :dvid, :PS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :ρChl, :S_PRO, :S_DNA, :S_RNA, :exu, :CH, :NST, :PST, :PRO, :DNA, :RNA, :Chl)
     elseif isa(mode, IronEnergyMode)
-        plank_avail = (:num, :graz, :mort, :dvid, :PS, :CF, :ECF, :RS, :ERS, :NR, :ENR, :NF, :ENF, :BS, :VNH4, :VNO3, :VPO4, :VFe, :PS2ST, :ST2PS, :NR2ST, :ST2NR, :NF2ST, :ST2NF, :Bm, :En, :CH, :qNO3, :qNH4, :qP, :qFe, :qFePS, :qFeNR, :qFeNF, :Chl, :tdark)
+        plank_avail = (:num, :graz, :mort, :dvid, :PS, :CF, :ECF, :RS, :ERS, :NR, :ENR, :NF, :ENF, :BS, :VNH4, :VNO3, :VPO4, :VFe, :PS2ST, :ST2PS, :NR2ST, :ST2NR, :NF2ST, :ST2NF, :Bm, :exEn, :CH, :qNO3, :qNH4, :qP, :qFe, :qFePS, :qFeNR, :qFeNF, :Chl, :tdark)
     end
     return plank_avail
 end

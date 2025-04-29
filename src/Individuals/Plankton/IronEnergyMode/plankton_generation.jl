@@ -1,16 +1,17 @@
 function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
     rawdata = StructArray(x    = zeros(FT, maxN), y    = zeros(FT, maxN), z    = zeros(FT, maxN),
                           xi   = zeros(Int,maxN), yi   = zeros(Int,maxN), zi   = zeros(Int,maxN),
-                          Sz   = zeros(FT, maxN), Bm   = zeros(FT, maxN), En   = zeros(FT, maxN),
-                          CH   = zeros(FT, maxN), qNH4 = zeros(FT, maxN), qNO3 = zeros(FT, maxN),
+                          Sz   = zeros(FT, maxN), Bm   = zeros(FT, maxN), CH   = zeros(FT, maxN), 
+                          qNH4 = zeros(FT, maxN), exEn = zeros(FT, maxN),
+                          qNO3 = zeros(FT, maxN), qP   = zeros(FT, maxN), Chl  = zeros(FT, maxN),
                           qFe  = zeros(FT, maxN), qFePS= zeros(FT, maxN), qFeNR= zeros(FT, maxN), 
-                          qFeNF= zeros(FT, maxN), qP   = zeros(FT, maxN), Chl  = zeros(FT, maxN), 
+                          qFeNF= zeros(FT, maxN), 
                           gen  = zeros(FT, maxN), age  = zeros(FT, maxN), ac   = zeros(FT, maxN), 
                           idx  = zeros(Int,maxN), tdark= zeros(FT, maxN),
                           PS   = zeros(FT, maxN), CF   = zeros(FT, maxN), ECF  = zeros(FT, maxN),
                           VNH4 = zeros(FT, maxN), VNO3 = zeros(FT, maxN), VPO4 = zeros(FT, maxN),
                           NF   = zeros(FT, maxN), ENF  = zeros(FT, maxN),
-                          VFe  = zeros(FT, maxN), ρChl = zeros(FT, maxN), 
+                          VFe  = zeros(FT, maxN), ρChl = zeros(FT, maxN),
                           PS2ST= zeros(FT, maxN), ST2PS= zeros(FT, maxN),
                           NR2ST= zeros(FT, maxN), ST2NR= zeros(FT, maxN),
                           NF2ST= zeros(FT, maxN), ST2NF= zeros(FT, maxN),
@@ -21,7 +22,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
     data = replace_storage(array_type(arch), rawdata)
 
     param_names=(:Nsuper, :Cquota, :SA, :mean, :var, :Chl2Cint, 
-                 :α, :Topt, :Tmax, :Ea, :Enmax, :is_nr, :is_croc, :is_tric,
+                 :α, :Topt, :Tmax, :Ea, :is_nr, :is_croc, :is_tric,
                  :PCmax, :VNO3max, :VNH4max, :VPO4max, 
                  :k_cf, :k_rs, :k_nr, :k_nf, :k_mtb,
                  :e_cf, :e_rs, :e_nr, :e_nf,
@@ -84,9 +85,9 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     plank.data.qP   .= plank.data.qP .* (pqmax .* (plank.data.Bm .+ plank.data.CH) .- 
                                         plank.data.Bm .* R_PC)                         # Pq
     plank.data.qFe  .= plank.data.qFe .* (feqmax .* (plank.data.Bm .+ plank.data.CH))  # Fe
-    plank.data.qFePS.= plank.data.qFe .* 0.4                                           # Fe - photosynthesis
-    plank.data.qFeNR.= plank.data.qFe .* 0.3 .* plank.p.is_nr                          # Fe - nitrate reduction
-    plank.data.qFeNF.= plank.data.qFe .* 0.3 .* (plank.p.is_croc + plank.p.is_tric)    # Fe - nitrogen fixation
+    plank.data.qFePS.= plank.data.qFe .* 0.4f0                                         # Fe - photosynthesis
+    plank.data.qFeNR.= plank.data.qFe .* 0.3f0 .* plank.p.is_nr                        # Fe - nitrate reduction
+    plank.data.qFeNF.= plank.data.qFe .* 0.3f0 .* (plank.p.is_croc + plank.p.is_tric)  # Fe - nitrogen fixation
     plank.data.qFe  .-= plank.data.qFePS .+ plank.data.qFeNR .+ plank.data.qFeNF       # Fe - storage
     plank.data.Chl  .= plank.data.Bm .* Chl2Cint                                       # Chl
 
