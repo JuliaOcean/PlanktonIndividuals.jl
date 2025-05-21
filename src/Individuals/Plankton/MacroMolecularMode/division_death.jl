@@ -44,7 +44,7 @@ end
 ##### copy ready to divide individuals to inactive rows
 @kernel function copy_daughter_individuals_kernel!(plank, con, idx)
     i = @index(Global, Linear)
-    if (con[i] == 1.0f0) & (idx[i] ≠ 0)
+    if (con[i] == 1.0f0) && (idx[i] ≠ 0)
         @inbounds plank.x[idx[i]]    = plank.x[i]
         @inbounds plank.y[idx[i]]    = plank.y[i]
         @inbounds plank.z[idx[i]]    = plank.z[i]
