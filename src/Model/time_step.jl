@@ -36,7 +36,6 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
         abiotic_particle_update!(model.individuals.abiotics[sp], model.tracers.CHO.data,
                                  model.timestepper.plk.CHO.data, diags.abiotic_particle[sp], 
                                  ΔT, model.arch)
-        
     end # abiotic particles
 
     ##### phytoplankton advection, diffusion, and physiological update

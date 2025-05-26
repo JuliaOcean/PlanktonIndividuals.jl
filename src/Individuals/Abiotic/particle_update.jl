@@ -1,4 +1,4 @@
-##### compounds like anti-biotics will be adsorbed to abiotic particles
+##### compounds like exo-enzymes/signaling compounds will be adsorbed to abiotic particles
 @kernel function calc_adsorption_kernel!(abiotics, cho, p)
   i = @index(Global)
   @inbounds abiotics.CHOe[i] = max(0.0f0, cho[abiotics.xi[i],abiotics.yi[i],abiotics.zi[i]]) * abiotics.ac[i]
