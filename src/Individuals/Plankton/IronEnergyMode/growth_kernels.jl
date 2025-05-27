@@ -193,15 +193,18 @@ end
     if PS ≥ ECF + ENF + ENR
         ERSt = 0.0f0
         exEn = PS - ECF - ENF - ENR
-    else # PS < ECF + ENF + ENR
+    else #### PS < ECF + ENF + ENR
         if PS + ERS ≥ ECF + ENF + ENR
             ERSt = ECF + ENF + ENR - PS
-        elseif ENF + ENR < PS + ERS < ECF + ENF + ENR
-            ECFt = PS + ERS - ENF - ENR
-        elseif PS + ERS < ENF + ENR
-            ECFt = 0.0f0
-            ENFt = (PS + ERS) * (p.is_croc + p.is_tric)
-            ENRt = (PS + ERS) * p.is_nr
+        else #### PS + ERS < ECF + ENF + ENR
+            if PS ≥ ECF
+                ENFt = (PS + ERS - ECF) * (p.is_croc + p.is_tric)
+                ENRt = (PS + ERS - ECF) * p.is_nr
+            else #### PS < ECF
+                ECFt = PS
+                ENFt = ERS * (p.is_croc + p.is_tric)
+                ENRt = ERS * p.is_nr
+            end
         end
     end
     return ERSt, ECFt, ENFt, ENRt, exEn
