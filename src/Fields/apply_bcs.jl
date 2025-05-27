@@ -84,14 +84,14 @@ end
 
 
 ##### apply flux boundary conditions in all three directions, six faces.
-function apply_bcs!(Gcs, nuts, grid, iter, ΔT, arch)
-    for name in nut_names
-          apply_west_bcs!(Gcs[name].data, grid, nuts[name].bc.west,   iter, ΔT, arch)
-          apply_east_bcs!(Gcs[name].data, grid, nuts[name].bc.east,   iter, ΔT, arch)
-         apply_south_bcs!(Gcs[name].data, grid, nuts[name].bc.south,  iter, ΔT, arch)
-         apply_north_bcs!(Gcs[name].data, grid, nuts[name].bc.north,  iter, ΔT, arch)
-        apply_bottom_bcs!(Gcs[name].data, grid, nuts[name].bc.bottom, iter, ΔT, arch)
-           apply_top_bcs!(Gcs[name].data, grid, nuts[name].bc.top,    iter, ΔT, arch)
+function apply_bcs!(Gcs, tracers, grid, iter, ΔT, arch)
+    for name in tracer_names
+          apply_west_bcs!(Gcs[name].data, grid, tracers[name].bc.west,   iter, ΔT, arch)
+          apply_east_bcs!(Gcs[name].data, grid, tracers[name].bc.east,   iter, ΔT, arch)
+         apply_south_bcs!(Gcs[name].data, grid, tracers[name].bc.south,  iter, ΔT, arch)
+         apply_north_bcs!(Gcs[name].data, grid, tracers[name].bc.north,  iter, ΔT, arch)
+        apply_bottom_bcs!(Gcs[name].data, grid, tracers[name].bc.bottom, iter, ΔT, arch)
+           apply_top_bcs!(Gcs[name].data, grid, tracers[name].bc.top,    iter, ΔT, arch)
     end
 
     return nothing

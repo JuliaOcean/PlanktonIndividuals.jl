@@ -1,5 +1,5 @@
 ##### write model outputs
-function write_output!(writer::Union{PlanktonOutputWriter, Nothing}, model::PlanktonModel, diags::PlanktonDiagnostics, ΔT)
+function write_output!(writer::Union{PlanktonOutputWriter, Nothing}, model::PlanktonModel, diags::PlanktonDiagnostics)
     if isa(writer, Nothing)
         return nothing
     else
@@ -18,13 +18,23 @@ function write_output!(writer::Union{PlanktonOutputWriter, Nothing}, model::Plan
             end
         end
 
-        if writer.save_plankton
-            if model.iteration % writer.plankton_iteration_interval == 0.0f0
-                if filesize(writer.plankton_file) ≥ writer.max_filesize
-                    start_next_plankton_file(writer)
+        if writer.save_phytoplankton
+            if model.iteration % writer.phytoplankton_iteration_interval == 0.0f0
+                if filesize(writer.phytoplankton_file) ≥ writer.max_filesize
+                    start_next_phytoplankton_file(writer)
                 end
-                write_individuals_to_jld2(model.individuals.phytos, writer.plankton_file, model.t,
-                                          model.iteration, writer.plankton_include)
+                write_individuals_to_jld2(model.individuals.phytos, writer.phytoplankton_file, model.t,
+                                          model.iteration, writer.phytoplankton_include)
+            end
+        end
+
+        if writer.save_abiotic_particle
+            if model.iteration % writer.abiotic_particle_iteration_interval == 0.0f0
+                if filesize(writer.abiotic_particle_file) ≥ writer.max_filesize
+                    start_next_abiotic_particle_file(writer)
+                end
+                write_individuals_to_jld2(model.individuals.abiotics, writer.abiotic_particle_file, model.t,
+                                          model.iteration, writer.abiotic_particle_include)
             end
         end
     end
@@ -41,15 +51,26 @@ function start_next_diags_file(writer::PlanktonOutputWriter)
     writer.diags_file = replace(writer.diags_file, r"part\d+.jld2$" => "part" * string(writer.part_diags) * ".jld2")
 end
 
-function start_next_plankton_file(writer::PlanktonOutputWriter)
-    if writer.part_plankton == 1
-        part1_path = replace(writer.plankton_file, r".jld2$" => "_part1.jld2")
-        mv(writer.plankton_file, part1_path, force=true)
-        writer.plankton_file = part1_path
+function start_next_phytoplankton_file(writer::PlanktonOutputWriter)
+    if writer.part_phytoplankton == 1
+        part1_path = replace(writer.phytoplankton_file, r".jld2$" => "_part1.jld2")
+        mv(writer.phytoplankton_file, part1_path, force=true)
+        writer.phytoplankton_file = part1_path
     end
 
-    writer.part_plankton += 1
-    writer.plankton_file = replace(writer.plankton_file, r"part\d+.jld2$" => "part" * string(writer.part_plankton) * ".jld2")
+    writer.part_phytoplankton += 1
+    writer.phytoplankton_file = replace(writer.phytoplankton_file, r"part\d+.jld2$" => "part" * string(writer.part_phytoplankton) * ".jld2")
+end
+
+function start_next_abiotic_particle_file(writer::PlanktonOutputWriter)
+    if writer.part_abiotic_particle == 1
+        part1_path = replace(writer.abiotic_particle_file, r".jld2$" => "_part1.jld2")
+        mv(writer.abiotic_particle_file, part1_path, force=true)
+        writer.abiotic_particle_file = part1_path
+    end
+
+    writer.part_abiotic_particle += 1
+    writer.abiotic_particle_file = replace(writer.abiotic_particle_file, r"part\d+.jld2$" => "part" * string(writer.part_abiotic_particle) * ".jld2")
 end
 
 ##### write a brief summary of each species at each time step into a txt file
@@ -135,11 +156,11 @@ function write_species_dynamics(t::AbstractFloat, phytos, filepath, mode::Carbon
     end
 end
 
-function write_individuals_to_jld2(phytos::NamedTuple, filepath, t, iter, atts)
+function write_individuals_to_jld2(particles::NamedTuple, filepath, t, iter, atts)
     jldopen(filepath, "a+") do file
         file["timeseries/t/$iter"] = t
-        for sp in keys(phytos)
-            spi = NamedTuple{atts}([getproperty(phytos[sp].data, att) for att in atts])
+        for sp in keys(particles)
+            spi = NamedTuple{atts}([getproperty(particles[sp].data, att) for att in atts])
             for att in atts
                 file["timeseries/$sp/$att/$iter"] = Array(spi[att])
             end
@@ -153,9 +174,14 @@ function write_diags_to_jld2(diags, filepath, t, iter, ncounts, grid)
         for key in keys(diags.tracer)
             file["timeseries/$key/$iter"] = Array(interior(diags.tracer[key], grid)) ./ ncounts
         end
-        for sp in keys(diags.plankton)
-            for proc in keys(diags.plankton[sp])
-                file["timeseries/$sp/$proc/$iter"] = Array(interior(diags.plankton[sp][proc],grid)) ./ ncounts 
+        for sp in keys(diags.phytoplankton)
+            for proc in keys(diags.phytoplankton[sp])
+                file["timeseries/phyto/$sp/$proc/$iter"] = Array(interior(diags.phytoplankton[sp][proc],grid)) ./ ncounts 
+            end
+        end
+        for sp in keys(diags.abiotic_particle)
+            for proc in keys(diags.abiotic_particle[sp])
+                file["timeseries/abiotic/$sp/$proc/$iter"] = Array(interior(diags.abiotic_particle[sp][proc],grid)) ./ ncounts 
             end
         end
     end
@@ -163,7 +189,12 @@ function write_diags_to_jld2(diags, filepath, t, iter, ncounts, grid)
     for tr in diags.tracer
         tr .= 0.0f0
     end
-    for sp in diags.plankton
+    for sp in diags.phytoplankton
+        for proc in sp
+            proc .= 0.0f0
+        end
+    end
+    for sp in diags.abiotic_particle
         for proc in sp
             proc .= 0.0f0
         end

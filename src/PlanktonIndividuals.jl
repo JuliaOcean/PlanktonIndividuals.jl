@@ -16,6 +16,7 @@ export
     # Model
     PlanktonModel, 
     CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode,
+    phytoplankton, abiotic_particle, individuals,
 
     # BoundaryConditions
     set_bc!,
@@ -29,7 +30,7 @@ export
     bgc_params_default, phyt_params_default,
 
     # Biogeochemistry
-    generate_nutrients, default_nut_init,
+    generate_tracers, default_tracer_init,
 
     # Output
     PlanktonDiagnostics, PlanktonOutputWriter, interior,
@@ -50,6 +51,23 @@ surface_mixing_vels = joinpath(artifact_path(surface_mixing_vels_hash)*"/velocit
 global_vels_hash = artifact_hash("OCCA_FlowFields", artifact_toml)
 global_vels = joinpath(artifact_path(global_vels_hash)*"/OCCA_FlowFields.jld2")
 
+##### struct for phytoplankton
+mutable struct phytoplankton
+    data::AbstractArray
+    p::NamedTuple
+end
+
+##### struct for abiotic particles
+mutable struct abiotic_particle
+    data::AbstractArray
+    p::NamedTuple
+end
+
+struct individuals
+    phytos::NamedTuple
+    abiotics::NamedTuple
+    # zoos::NamedTuple
+end
 
 """
     AbstractMode
@@ -88,7 +106,7 @@ include("Parameters/Parameters.jl")
 include("Fields/Fields.jl")
 include("Biogeochemistry/Biogeochemistry.jl")
 include("Diagnostics/Diagnostics.jl")
-include("Plankton/Plankton.jl")
+include("Individuals/Individuals.jl")
 include("Model/Model.jl")
 include("Output/Output.jl")
 include("Simulation/Simulation.jl")
@@ -100,7 +118,7 @@ using .Parameters
 using .Fields
 using .Biogeochemistry
 using .Diagnostics
-using .Plankton
+using .Individuals
 using .Model
 using .Output
 using .Simulation

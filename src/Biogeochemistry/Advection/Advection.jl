@@ -1,8 +1,8 @@
 module Advection
 
 export adv_flux_x, adv_flux_y, adv_flux_z
-export nut_advection!
-export nut_diffusion!
+export tracer_advection!
+export tracer_diffusion!
 
 using KernelAbstractions
 

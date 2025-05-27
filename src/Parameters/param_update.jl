@@ -13,7 +13,7 @@ function update_bgc_params(tmp::Dict, FT::DataType)
     pkeys = collect(keys(parameters))
     for key in tmp_keys
         if length(findall(x->x==key, pkeys))==0
-            throw(ArgumentError("PARAM: parameter not found $key"))
+            throw(ArgumentError("PARAM: bgc parameter not found $key"))
         else
             parameters[key] = FT(tmp[key])
         end
@@ -37,7 +37,30 @@ function update_phyt_params(tmp::Dict, FT::DataType; N::Int = 1, mode::AbstractM
     pkeys = collect(keys(parameters))
     for key in tmp_keys
         if length(findall(x->x==key, pkeys))==0
-            throw(ArgumentError("PARAM: parameter not found $key"))
+            throw(ArgumentError("PARAM: phyt parameter not found $key"))
+        else
+            parameters[key] = FT.(tmp[key])
+        end
+    end
+    return parameters
+end
+
+"""
+    update_abiotic_params(tmp::Dict, FT::DataType; N::Int64)
+Update parameter values based on a `Dict` provided by user
+Keyword Arguments
+=================
+- `tmp` is a `Dict` containing the parameters needed to be upadated
+- `FT`: Floating point data type. Default: `Float32`.
+- `N` is a `Int64` indicating the number of species
+"""
+function update_abiotic_params(tmp::Dict, FT::DataType; N::Int = 1)
+    parameters = abiotic_params_default(N)
+    tmp_keys = collect(keys(tmp))
+    pkeys = collect(keys(parameters))
+    for key in tmp_keys
+        if length(findall(x->x==key, pkeys))==0
+            throw(ArgumentError("PARAM: abiotic parameter not found $key"))
         else
             parameters[key] = FT.(tmp[key])
         end

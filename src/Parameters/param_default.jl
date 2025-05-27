@@ -54,6 +54,7 @@ function bgc_params_default(FT)
         "kPON"         => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
         "kPOP"         => 1/30/86400,         # Remineralization rate for POP, turn over time: a month (per second)
         "kPOFe"        => 1/30/86400,         # Remineralization rate for POFe, turn over time: a month (per second)
+        "kCHO"         => 0.0,                # Decay rate of chemical compounds (per second)
         "κh"           => 0.0e-6,             # Horizontal diffusion
         "κv"           => 0.0e-6,             # Vertical diffusion
         "κhP"          => 0.0e-6,             # Horizontal diffusion for individuals
@@ -158,23 +159,22 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "Topt"      => [27.0],    # Optimal temperature for growth (C)
         "Tmax"      => [30.0],    # Maximal temperature for growth (C)
         "Ea"        => [5.3e4],   # Free energy
-        "Enmax"     => [2.0e-9],  # Maximum intracellular energy (kJ/cell)
         "is_nr"     => [1.0],     # 1 for non-diazotroph, 0 for diazotroph
         "is_croc"   => [0.0],     # 1 for Crocosphaera-like N fixation pattern
         "is_tric"   => [0.0],     # 1 for Trichodesmium-like N fixation pattern
-        "PCmax"     => [2.43e-5], # Maximum primary production rate (kJ/mmolC/second)
+        "PCmax"     => [7.8e-8],  # Maximum light harvesting rate (mmolATP/mmolC/second)
         "VNH4max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
         "VNO3max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
         "VPO4max"   => [1.2e-6],  # Maximum P uptake rate (mmolP/mmolC/second)
         "k_cf"      => [1.0e-5],  # Carbon fixation rate (per second)
-        "k_rs"      => [1.5e-5],  # Maximum respiration rate (per second)
+        "k_rs"      => [1.5e-6],  # Maximum respiration rate (per second)
         "k_nr"      => [2.8e-6],  # Nitrate reduction rate (per second)
         "k_nf"      => [2.8e-6],  # N fixation rate (mmolN/mmolC/second)
         "k_mtb"     => [3.5e-5],  # Metabolic rate (per second)
-        "e_cf"      => [0.59],    # Energy consumption rate of carbon fixation (kJ/mmolC)
-        "e_rs"      => [0.2],     # Energy production rate of respiration (kJ/mmolC)
-        "e_nf"      => [0.56],    # Energy consumption rate of N fixation (kJ/mmolN)
-        "e_nr"      => [0.56],    # Energy consumption rate of NO3 reduction (kJ/mmolN)
+        "e_cf"      => [9.0],     # Energy consumption rate of carbon fixation (mmolATP/mmolC)
+        "e_rs"      => [5.0],     # Energy production rate of respiration (mmolATP/mmolC)
+        "e_nf"      => [8.0],     # Energy consumption rate of N fixation (mmolATP/mmolN)
+        "e_nr"      => [10.0],    # ??Energy consumption rate of NO3 reduction (mmolATP/mmolN)
         "k_Fe_ST2PS"=> [2.4e-5],  # Allocation rate of Fe from storage to PS (per second)
         "k_Fe_PS2ST"=> [1.2e-6],  # Allocation rate of Fe from PS to storage (per second)
         "k_Fe_ST2NR"=> [1.2e-5],  # Allocation rate of Fe from storage to NR (per second)
@@ -196,6 +196,7 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "Chl2N"     => [3.0],     # Maximum Chla:N ratio in phytoplankton
         "R_NC"      => [16/106],  # N:C ratio in cell biomass
         "R_PC"      => [1/106],   # N:C ratio in cell biomass
+        "NF_clock"  => [21600.0], # the circadian clock for N fixation
         "grz_P"     => [0.0],     # Grazing probability per second
         "dvid_P"    => [1e-4],    # Probability of cell division per second.
         "dvid_type" => [1],       # The type of cell division, 1:sizer, 2:adder.
@@ -275,6 +276,10 @@ function phyt_params_default(N::Int64, mode::QuotaMode)
     end
 end
 
+"""
+    phyt_params_default(N::Int64, mode::AbstractMode)
+Generate default phytoplankton parameter values based on `AbstractMode` and species number `N`.
+"""
 function phyt_params_default(N::Int64, mode::CarbonMode)
     params=Dict(
         "Nsuper"    => [1],       # Number of phyto cells each super individual represents
@@ -301,6 +306,27 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "mortFracC" => [0.5],     # Fraction goes into dissolved organic pool
         "thermal"   => [1.0],     # thermal damage, 1 for on, 0 for off
         "is_bact"   => [0.0],     # is this specis bacteria or not, 1 for bacteria, 0 for phytoplankton
+    )
+
+    if N == 1
+        return params
+    else
+        return generate_n_species_params(N, params)
+    end
+end
+
+"""
+    abiotic_params_default(N::Int64)
+Generate default abiotic particle parameter values based on species number `N`.
+"""
+function abiotic_params_default(N::Int64)
+    params=Dict(
+        "Nsuper"    => [1],       # Number of abiotic particles each super individual represents
+        "Cquota"    => [1.8e-11], # C quota of abiotic particles
+        "mean"      => [1.2],     # Mean of the normal distribution of initial abiotic individuals
+        "var"       => [0.3],     # Variance of the normal distribution of initial abiotic individuals
+        "k_ads"     => [0.0],     # adsorption rate of chemical compounds to abiotic particles
+        "k_decay"   => [0.0],     # decay rate of chemical compounds adsorbed to abiotic particles
     )
 
     if N == 1

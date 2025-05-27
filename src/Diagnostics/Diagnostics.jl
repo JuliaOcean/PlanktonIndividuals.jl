@@ -11,6 +11,7 @@ using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Fields
 
 using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
+using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle
 
 import Base: show
 

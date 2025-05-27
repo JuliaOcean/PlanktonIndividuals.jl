@@ -1,19 +1,19 @@
 mutable struct timestepper
-    Gcs::NamedTuple     # a NamedTuple same as nutrients to store tendencies
-    nut_temp::NamedTuple# a NamedTuple same as nutrients to store nutrients fields in multi-dims advection scheme
+    Gcs::NamedTuple     # a NamedTuple same as tracers to store tendencies
+    tracer_temp::NamedTuple# a NamedTuple same as tracers to store tracers fields in multi-dims advection scheme
     vel₀::NamedTuple    # a NamedTuple with u, v, w velocities
     vel½::NamedTuple    # a NamedTuple with u, v, w velocities
     vel₁::NamedTuple    # a NamedTuple with u, v, w velocities
     PARF::AbstractArray # a (Cu)Array to store surface PAR field of each timestep 
     temp::AbstractArray # a (Cu)Array to store temperature field of each timestep
-    plk::NamedTuple     # a NamedTuple same as nutrients to store interactions with individuals
+    plk::NamedTuple     # a NamedTuple same as tracers to store interactions with individuals
     par::AbstractArray  # a (Cu)Array to store PAR field of each timestep
     par₀::AbstractArray # a (Cu)Array to store PAR field of the previous timestep
     Chl::AbstractArray  # a (Cu)Array to store Chl field of each timestep
     pop::AbstractArray  # a (Cu)Array to store population field of each timestep
     rnd::AbstractArray  # a StructArray of random numbers for plankton diffusion or grazing, mortality and division.
     velos::AbstractArray# a StructArray of intermediate values for RK4 particle advection
-    nuts::AbstractArray # a StructArray of nutrients of each individual
+    trs::AbstractArray # a StructArray of tracers of each individual
 end
 
 function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN)
@@ -21,9 +21,9 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN)
     vel½ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
     vel₁ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
 
-    Gcs = nutrients_init(arch, g, FT)
-    nut_temp = nutrients_init(arch, g, FT)
-    plk = nutrients_init(arch, g, FT)
+    Gcs = tracers_init(arch, g, FT)
+    tracer_temp = tracers_init(arch, g, FT)
+    plk = tracers_init(arch, g, FT)
 
     par = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     par₀= zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
@@ -42,13 +42,13 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN)
                         )
     velos_d = replace_storage(array_type(arch), velos)
 
-    nuts = StructArray(NH4 = zeros(FT, maxN), NO3 = zeros(FT, maxN), PO4 = zeros(FT, maxN), 
-                       DOC = zeros(FT, maxN), FeT = zeros(FT, maxN), par = zeros(FT, maxN), 
-                       T   = zeros(FT, maxN), pop = zeros(FT, maxN), dpar= zeros(FT, maxN), 
-                       idc = zeros(FT, maxN), idc_int = zeros(Int, maxN))
-    nuts_d = replace_storage(array_type(arch), nuts)
+    trs = StructArray(NH4 = zeros(FT, maxN), NO3 = zeros(FT, maxN), PO4 = zeros(FT, maxN), 
+                      DOC = zeros(FT, maxN), FeT = zeros(FT, maxN), par = zeros(FT, maxN), 
+                      T   = zeros(FT, maxN), pop = zeros(FT, maxN), dpar= zeros(FT, maxN), 
+                      idc = zeros(FT, maxN), idc_int = zeros(Int, maxN))
+    trs_d = replace_storage(array_type(arch), trs)
 
-    ts = timestepper(Gcs, nut_temp, vel₀, vel½, vel₁, PARF, temp, plk, par, par₀, Chl, pop, rnd_d, velos_d, nuts_d)
+    ts = timestepper(Gcs, tracer_temp, vel₀, vel½, vel₁, PARF, temp, plk, par, par₀, Chl, pop, rnd_d, velos_d, trs_d)
 
     return ts
 end

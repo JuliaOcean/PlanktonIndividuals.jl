@@ -10,3 +10,4 @@ samples/grid
 *.ipynb
 *.sh
 .ipynb_checkpoints/
+.vscode/
