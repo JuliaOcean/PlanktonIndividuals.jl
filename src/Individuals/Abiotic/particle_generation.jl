@@ -2,7 +2,7 @@ function construct_abiotic_particle(arch::Architecture, sp::Int, params::Dict, m
   rawdata = StructArray(x   = zeros(FT, maxN), y   = zeros(FT, maxN), z   = zeros(FT, maxN),
                         xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN),
                         CHO = zeros(FT, maxN), CHOe= zeros(FT, maxN), 
-                        ADS = zeros(FT, maxN), DEC = zeros(FT, maxN), dist= zerso(FT, maxN),
+                        ADS = zeros(FT, maxN), DEC = zeros(FT, maxN), dist= zeros(FT, maxN),
                         ac  = zeros(FT, maxN), merg= zeros(Int,maxN), idx = zeros(Int,maxN)
                         ) 
   data = replace_storage(array_type(arch), rawdata)

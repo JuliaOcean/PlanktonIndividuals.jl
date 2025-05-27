@@ -267,14 +267,14 @@ end
     f_PS2ST = p.k_Fe_PS2ST * qFePS * (isless(dpar, 0.0f0) + isequal(0.0f0, par))
 
     # nitrate reduction
-    f_ST2NR = p.k_Fe_ST2NR * qFe * isequal(0.0f0, par) * isless(tdark, 14400.0f0) * p.is_nr 
+    f_ST2NR = p.k_Fe_ST2NR * qFe * isequal(0.0f0, par) * isless(tdark, p.NF_clock) * p.is_nr 
     f_NR2ST = p.k_Fe_NR2ST * qFeNR * (isequal(0.0f0, par) * 
-                isless(14400.0f0, tdark) + isless(0.0f0, par)) * p.is_nr 
+                isless(p.NF_clock, tdark) + isless(0.0f0, par)) * p.is_nr 
 
     # nitrogen fixation - Crocosphaera watsonii
-    f_ST2NF_cr = p.k_Fe_ST2NF * qFe * isequal(0.0f0, par) * isless(tdark, 14400.0f0)
+    f_ST2NF_cr = p.k_Fe_ST2NF * qFe * isequal(0.0f0, par) * isless(tdark, p.NF_clock)
     f_NF2ST_cr = p.k_Fe_NF2ST * qFeNF * (isequal(0.0f0, par) * 
-                    isless(14400.0f0, tdark) + isless(0.0f0, par))
+                    isless(p.NF_clock, tdark) + isless(0.0f0, par))
     # nitrogen fixation - Trichodesmium
     f_ST2NF_tr = p.k_Fe_ST2NF * qFe * isless(0.0f0, dpar)
     f_NF2ST_tr = p.k_Fe_NF2ST * qFeNF * (isless(dpar, 0.0f0) + isequal(0.0f0, par))

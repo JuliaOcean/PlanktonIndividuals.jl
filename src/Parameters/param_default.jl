@@ -196,6 +196,7 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "Chl2N"     => [3.0],     # Maximum Chla:N ratio in phytoplankton
         "R_NC"      => [16/106],  # N:C ratio in cell biomass
         "R_PC"      => [1/106],   # N:C ratio in cell biomass
+        "NF_clock"  => [21600.0], # the circadian clock for N fixation
         "grz_P"     => [0.0],     # Grazing probability per second
         "dvid_P"    => [1e-4],    # Probability of cell division per second.
         "dvid_type" => [1],       # The type of cell division, 1:sizer, 2:adder.

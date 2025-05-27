@@ -29,7 +29,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                  :k_Fe_ST2PS, :k_Fe_PS2ST, :k_Fe_ST2NR, :k_Fe_NR2ST, :k_Fe_ST2NF, :k_Fe_NF2ST,
                  :KfePS, :KfeNR, :KfeNF, :KsatNH4, :KsatNO3, :KsatPO4, :KSAFe,
                  :CHmax, :qNH4max, :qNO3max, :qPmax, :qFemax,
-                 :Chl2N, :R_NC, :R_PC, 
+                 :Chl2N, :R_NC, :R_PC, :NF_clock,
                  :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, :mort_P, :mort_reg, 
                  :grazFracC, :grazFracN, :grazFracP, :grazFracFe,
                  :mortFracC, :mortFracN, :mortFracP, :mortFracFe)
