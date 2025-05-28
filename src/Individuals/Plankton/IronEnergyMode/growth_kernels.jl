@@ -198,12 +198,13 @@ end
             ERSt = ECF + ENF + ENR - PS
         else #### PS + ERS < ECF + ENF + ENR
             if PS ≥ ECF
-                ENFt = (PS + ERS - ECF) * (p.is_croc + p.is_tric)
-                ENRt = (PS + ERS - ECF) * p.is_nr
+                ENFt = min(ENF, (PS + ERS - ECF) * (p.is_croc + p.is_tric))
+                ENRt = min(ENR, (PS + ERS - ECF) * p.is_nr)
             else #### PS < ECF
                 ECFt = PS
-                ENFt = ERS * (p.is_croc + p.is_tric)
-                ENRt = ERS * p.is_nr
+                ENFt = min(ENF, ERS * (p.is_croc + p.is_tric))
+                ENRt = min(ENR, ERS * p.is_nr)
+                ERSt = ENFt + ENRt
             end
         end
     end
