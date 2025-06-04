@@ -53,10 +53,10 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     Cquota = plank.p.Cquota
     Nsuper = plank.p.Nsuper
     CHmax = plank.p.CHmax
-    qNO3max = plank.p.qNO3max
-    qNH4max = plank.p.qNH4max
-    pqmax = plank.p.qPmax
-    feqmax = plank.p.qFemax
+    qNO3max = plank.p.qNO3max * 0.1f0
+    qNH4max = plank.p.qNH4max * 0.1f0
+    pqmax = plank.p.qPmax * 0.1f0
+    feqmax = plank.p.qFemax * 0.1f0
     R_PC = plank.p.R_PC
     Chl2Cint = plank.p.Chl2Cint
 
