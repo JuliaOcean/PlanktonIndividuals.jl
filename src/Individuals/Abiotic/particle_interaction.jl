@@ -13,6 +13,7 @@
   return dist
 end
 
+#=
 ##### compare particle distance and Rd, decide whether
 ##### this vesicle will be merged into phytoplankton cell
 @kernel function calc_merge_kernel!(merge_matrix, abiotic, phyto, grid, p)
@@ -56,3 +57,4 @@ function abiotic_particle_merge!(abiotic, phyto, arch::Architecture)
   
   
 end
+=#
