@@ -103,7 +103,7 @@ end
 ##### calculate potential maximum respiration (mmolC/individual/second) 
 ##### and energy production (mmolATP/individual/second)
 @inline function calc_respir(CH, Bm, T, p, ac, ΔT)
-    RS = Bm * p.k_rs * tempFunc(T, p) * ac
+    RS = CH * p.k_rs * tempFunc(T, p) * ac
     RS = min(RS, CH/ΔT) # double check CH is not over consumed
     ERS = RS * p.e_rs * ac
     return RS, ERS
@@ -193,15 +193,14 @@ end
     if PS ≥ ECF + ENF + ENR
         ERSt = 0.0f0
         exEn = PS - ECF - ENF - ENR
-    else # PS < ECF + ENF + ENR
+    else #### PS < ECF + ENF + ENR
         if PS + ERS ≥ ECF + ENF + ENR
             ERSt = ECF + ENF + ENR - PS
-        elseif ENF + ENR < PS + ERS < ECF + ENF + ENR
-            ECFt = PS + ERS - ENF - ENR
-        elseif PS + ERS < ENF + ENR
-            ECFt = 0.0f0
-            ENFt = (PS + ERS) * (p.is_croc + p.is_tric)
-            ENRt = (PS + ERS) * p.is_nr
+        else #### PS + ERS < ECF + ENF + ENR
+            ECFt = min(PS, ECF)
+            ENFt = min(ENF, (PS + ERS - ECFt) * (p.is_croc + p.is_tric))
+            ENRt = min(ENR, (PS + ERS - ECFt) * p.is_nr)
+            ERSt = ENFt + ENRt
         end
     end
     return ERSt, ECFt, ENFt, ENRt, exEn

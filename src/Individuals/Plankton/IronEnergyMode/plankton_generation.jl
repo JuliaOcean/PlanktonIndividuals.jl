@@ -52,11 +52,11 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     var = plank.p.var
     Cquota = plank.p.Cquota
     Nsuper = plank.p.Nsuper
-    CHmax = plank.p.CHmax
-    qNO3max = plank.p.qNO3max
-    qNH4max = plank.p.qNH4max
-    pqmax = plank.p.qPmax
-    feqmax = plank.p.qFemax
+    CHmax = plank.p.CHmax * 0.1f0
+    qNO3max = plank.p.qNO3max * 0.1f0
+    qNH4max = plank.p.qNH4max * 0.1f0
+    pqmax = plank.p.qPmax * 0.1f0
+    feqmax = plank.p.qFemax * 0.1f0
     R_PC = plank.p.R_PC
     Chl2Cint = plank.p.Chl2Cint
 
@@ -82,8 +82,7 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     plank.data.CH   .= plank.data.CH .* CHmax .* plank.data.Bm                         # CH
     plank.data.qNO3 .= plank.data.qNO3 .* (qNO3max .* (plank.data.Bm .+ plank.data.CH))# Nq
     plank.data.qNH4 .= plank.data.qNH4 .* (qNH4max .* (plank.data.Bm .+ plank.data.CH))# Nq
-    plank.data.qP   .= plank.data.qP .* (pqmax .* (plank.data.Bm .+ plank.data.CH) .- 
-                                        plank.data.Bm .* R_PC)                         # Pq
+    plank.data.qP   .= plank.data.qP .* (pqmax .* (plank.data.Bm .+ plank.data.CH))    # Pq
     plank.data.qFe  .= plank.data.qFe .* (feqmax .* (plank.data.Bm .+ plank.data.CH))  # Fe
     plank.data.qFePS.= plank.data.qFe .* 0.4f0                                         # Fe - photosynthesis
     plank.data.qFeNR.= plank.data.qFe .* 0.3f0 .* plank.p.is_nr                        # Fe - nitrate reduction
