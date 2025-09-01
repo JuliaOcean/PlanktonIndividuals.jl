@@ -22,7 +22,7 @@ function mortality!(plank, arch::Architecture, plk, p)
     ##### calculate mortality loss
     calc_loss!(plk.NH4.data, plk.NO3.data, plk.DOC.data, plk.POC.data, 
                plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
-               plk.DOFe.data, plk.POFe.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.graz, 
+               plk.DOFe.data, plk.POFe.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.mort, 
                p.mortFracC, p.mortFracN, p.mortFracP, p.mortFracFe, p.R_NC, p.R_PC, arch)
     
     ##### inactivate dead individuals

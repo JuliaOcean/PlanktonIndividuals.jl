@@ -200,7 +200,6 @@ end
             ECFt = min(PS, ECF)
             ENFt = min(ENF, (PS + ERS - ECFt) * (p.is_croc + p.is_tric))
             ENRt = min(ENR, (PS + ERS - ECFt) * p.is_nr)
-            ERSt = ENFt + ENRt
         end
     end
     return ERSt, ECFt, ENFt, ENRt, exEn
