@@ -8,7 +8,7 @@ using StructArrays
 using Random
 using LinearAlgebra: dot
 
-using PlanktonIndividuals.Architectures: device, Architecture, rng_type, array_type
+using PlanktonIndividuals.Architectures: device, Architecture, rng_type, array_type, unsafe_free!
 using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Diagnostics
 

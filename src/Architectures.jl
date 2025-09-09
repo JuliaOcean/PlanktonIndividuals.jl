@@ -3,6 +3,7 @@ module Architectures
 export CPU, GPU, Architecture
 export array_type, rng_type
 export device, isfunctional
+export unsafe_free!
 
 using KernelAbstractions
 
@@ -31,6 +32,6 @@ device(::CPU) = KernelAbstractions.CPU()
 array_type(::CPU) = Array
 rng_type(::CPU) = MersenneTwister()
 isfunctional(::CPU) = true
-
+unsafe_free!(m::Array) = nothing
 
 end
