@@ -52,8 +52,6 @@ end
         @inbounds plank.gen[idx[i]]  = plank.gen[i]
         @inbounds plank.ac[idx[i]]   = plank.ac[i]
         @inbounds plank.dvid[idx[i]] = plank.dvid[i]
-        @inbounds plank.graz[idx[i]] = plank.graz[i]
-        @inbounds plank.mort[idx[i]] = plank.mort[i]
     end
 end
 function copy_daughter_individuals!(plank, con, idx::AbstractArray{Int,1}, arch)

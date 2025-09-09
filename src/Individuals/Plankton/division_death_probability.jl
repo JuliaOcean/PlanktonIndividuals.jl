@@ -99,10 +99,10 @@ function get_probability!(plank, rnd, ΔT, arch)
     rand!(rng_type(arch), rnd.y)
     rand!(rng_type(arch), rnd.z)
 
-    ##### compare the random number with the given probability (per time step or per hour whichever is shorter)
+    ##### compare the random number with the given probability
     ##### return 1 if random number is smaller
-    @inbounds plank.graz .= isless.(rnd.x, plank.graz .* ΔT .* min(10.0f0,3600.0f0÷ΔT)) .* plank.ac
-    @inbounds plank.mort .= isless.(rnd.y, plank.mort .* ΔT .* min(10.0f0,3600.0f0÷ΔT)) .* plank.ac
-    @inbounds plank.dvid .= isless.(rnd.z, plank.dvid .* ΔT .* min(10.0f0,3600.0f0÷ΔT)) .* plank.ac
+    @inbounds plank.graz .= isless.(rnd.x, plank.graz .* ΔT) .* plank.ac
+    @inbounds plank.mort .= isless.(rnd.y, plank.mort .* ΔT) .* plank.ac
+    @inbounds plank.dvid .= isless.(rnd.z, plank.dvid .* ΔT) .* plank.ac
     return nothing
 end
