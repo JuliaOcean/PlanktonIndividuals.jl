@@ -33,6 +33,7 @@ function plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Archit
             throw(ArgumentError("number of individual exceeds the capacity at timestep $(t/86400.0) days"))
         end
         divide!(plank, trs, deactive_ind, arch)
+        unsafe_free!(deactive_ind)
     end
 
     ##### diagnostic for individual distribution
