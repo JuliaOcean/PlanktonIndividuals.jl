@@ -1,6 +1,4 @@
-using PlanktonIndividuals.Fields
 using PlanktonIndividuals.Biogeochemistry
-
 
 function test_fields()
     grid = RectilinearGrid(size = (4,6,2), x = (0,12), y = (0,12), z = (0,-8))
@@ -124,14 +122,8 @@ function test_boundary_conditions()
 
 end
 
-@testset "Fields" begin
-    @testset "Fields" begin
-        test_fields()
-    end
-    @testset "Fill halos" begin
-        test_fill_halos()
-    end
-    @testset "Boundary conditions" begin
-        test_boundary_conditions()
-    end
+@testset "Biogeochemistry" begin
+    test_fields()
+    test_fill_halos()
+    test_boundary_conditions() 
 end

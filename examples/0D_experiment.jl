@@ -52,7 +52,7 @@ And we setup diagnostics.
 
 # ╔═╡ c199e085-dec2-45e0-88a1-ac409604ad00
 diags = PlanktonDiagnostics(model; tracer=(:PAR, :NH4, :NO3, :DOC),
-                                   plankton = (:num, :graz, :mort, :dvid, :PS, :BS, :Chl),
+                                   phytoplankton = (:num, :graz, :mort, :dvid, :PS, :BS, :Chl),
                                    iteration_interval = 1)
 
 # ╔═╡ 16295dcc-febe-4350-83e5-e563f51077d1
@@ -147,11 +147,11 @@ end
 begin
 	(num,dvid,mort,PS,Chl) = (zeros(288),zeros(288),zeros(288),zeros(288),zeros(288))
 	fil = sim.output_writer.diags_file
-	get_time_series!(fil,"sp1/num",num)
-	get_time_series!(fil,"sp1/dvid",dvid)
-	get_time_series!(fil,"sp1/mort",mort)
-	get_time_series!(fil,"sp1/PS",PS)
-	get_time_series!(fil,"sp1/Chl",Chl)
+	get_time_series!(fil,"phyto/sp1/num",num)
+	get_time_series!(fil,"phyto/sp1/dvid",dvid)
+	get_time_series!(fil,"phyto/sp1/mort",mort)
+	get_time_series!(fil,"phyto/sp1/PS",PS)
+	get_time_series!(fil,"phyto/sp1/Chl",Chl)
 end
 
 # ╔═╡ d642e1ee-7e66-46d6-9f92-8b29279e7ad9

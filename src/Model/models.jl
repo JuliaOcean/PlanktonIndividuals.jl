@@ -118,11 +118,12 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                 throw(ArgumentError("Abiotic: $(p[s]) is not generated"))
             end
         end
+        palat = abiotic_final.palat
     end
 
     tracers = generate_tracers(arch, grid_d, tracer_initial, FT)
 
-    ts = timestepper(arch, FT, grid_d, max_individuals, abiotic_final.palat)
+    ts = timestepper(arch, FT, grid_d, max_individuals, palat)
 
     iteration  = 0
 
