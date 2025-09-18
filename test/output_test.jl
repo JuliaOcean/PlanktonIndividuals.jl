@@ -7,7 +7,7 @@ function test_output()
                                        abiotic = (params = nothing, N = [2^10], Nsa = 1, palat = [(:sp1, :sa1)])) 
     diags = PlanktonDiagnostics(model; tracer=(:PAR,),
                                        phytoplankton = (:num, :graz, :mort, :dvid, :PS),
-                                       abiotic_particle = (:num, :CHO),
+                                       abiotic_particle = (:num,),
                                        iteration_interval = 1)
 
     sim = PlanktonSimulation(model, ΔT = 60.0, iterations = 4, diags = diags) 
