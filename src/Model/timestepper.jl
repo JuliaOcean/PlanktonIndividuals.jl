@@ -12,11 +12,14 @@ mutable struct timestepper
     Chl::AbstractArray  # a (Cu)Array to store Chl field of each timestep
     pop::AbstractArray  # a (Cu)Array to store population field of each timestep
     rnd::AbstractArray  # a StructArray of random numbers for plankton diffusion or grazing, mortality and division.
+    rnd_3d::AbstractArray#a (Cu)Array of random numbers for tracer-particle interatcion
     velos::AbstractArray# a StructArray of intermediate values for RK4 particle advection
-    trs::AbstractArray # a StructArray of tracers of each individual
+    trs::AbstractArray  # a StructArray of tracers of each individual
+    intac::AbstractArray# a (Cu)array of 0 and 1 to store particle-particle interatcion
+    palat::Vector       # a vector of tuples to store the interaction between species
 end
 
-function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN)
+function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, palat)
     vel₀ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
     vel½ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
     vel₁ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
@@ -29,12 +32,15 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN)
     par₀= zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     Chl = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     pop = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
+    
 
     temp = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     PARF = zeros(FT, g.Nx, g.Ny) |> array_type(arch)
 
     rnd = StructArray(x = zeros(FT, maxN), y = zeros(FT, maxN), z = zeros(FT, maxN))
     rnd_d = replace_storage(array_type(arch), rnd)
+
+    rnd_3d = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
 
     velos = StructArray(x  = zeros(FT, maxN), y  = zeros(FT, maxN), z  = zeros(FT, maxN),
                         u1 = zeros(FT, maxN), v1 = zeros(FT, maxN), w1 = zeros(FT, maxN),
@@ -48,7 +54,9 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN)
                       idc = zeros(FT, maxN), idc_int = zeros(Int, maxN))
     trs_d = replace_storage(array_type(arch), trs)
 
-    ts = timestepper(Gcs, tracer_temp, vel₀, vel½, vel₁, PARF, temp, plk, par, par₀, Chl, pop, rnd_d, velos_d, trs_d)
+    intac = zeros(FT, maxN, maxN) |> array_type(arch)
+
+    ts = timestepper(Gcs, tracer_temp, vel₀, vel½, vel₁, PARF, temp, plk, par, par₀, Chl, pop, rnd_d, rnd_3d, velos_d, trs_d, intac, palat)
 
     return ts
 end

@@ -79,6 +79,7 @@ function PlanktonSimulation(model::PlanktonModel; ΔT::AbstractFloat, iterations
     input = PlanktonInput(FT.(temp), FT.(PARF), vels_ft, FT(ΔT_vel), FT(ΔT_PAR), FT(ΔT_temp))
 
     validate_bcs(model.tracers, model.grid, iterations)
+    validate_bcs(model.individuals.abiotics, model.grid, iterations)
 
     if isnothing(diags)
         diags = PlanktonDiagnostics(model)
@@ -116,8 +117,8 @@ end
 
 function short_show(diags::PlanktonDiagnostics)
     return string("\n", "│   ├── diagnostics of tracers: $(keys(diags.tracer))\n", 
-                        "│   ├── diagnostics of phytoplankton: $(keys(diags.phytoplankton.sp1))\n",
-                        "│   ├── diagnostics of abiotic particles: $(keys(diags.abiotic_particle.sp1))\n",
+                        "│   ├── diagnostics of phytoplankton: $(keys(diags.phytos.sp1))\n",
+                        "│   ├── diagnostics of abiotic particles: $(keys(diags.abiotics.sa1))\n",
                         "│   └── save averaged diagnostics every $(diags.iteration_interval) timesteps")
 end
 function short_show(writer::PlanktonOutputWriter)

@@ -29,18 +29,6 @@ function mortality!(plank, arch::Architecture, plk, p)
     return nothing
 end
 
-@kernel function get_tind_kernel!(idx, con, con_ind, de_ind)
-    i = @index(Global, Linear)
-    if con[i] == 1.0f0
-        idx[i] = de_ind[con_ind[i]]
-    end
-end
-function get_tind!(idx, con, con_ind, de_ind, arch)
-    kernel! = get_tind_kernel!(device(arch), 256, (size(idx,1)))
-    kernel!(idx, con, con_ind, de_ind)
-    return nothing
-end
-
 ##### copy ready to divide individuals to inactive rows
 @kernel function copy_daughter_individuals_kernel!(plank, con, idx)
     i = @index(Global, Linear)

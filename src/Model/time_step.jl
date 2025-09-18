@@ -23,19 +23,19 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     @inbounds model.timestepper.pop .= 0.0f0
 
     ##### abiotic particle advection, diffusion, and update
-    for sp in keys(model.individuals.abiotics)
+    for sa in keys(model.individuals.abiotics)
+        particles_from_bcs!(model.individuals.abiotics[sa].data, model.timestepper.tracer_temp.FeT.data, 
+                            model.individuals.abiotics[sa].bc, model.timestepper.rnd_3d, model.individuals.abiotics[sa].p, 
+                            ΔT, model.iteration, model.grid, model.arch)
         ##### RK4
-        particle_advection!(model.individuals.abiotics[sp].data, model.timestepper.velos, model.grid, 
+        particle_advection!(model.individuals.abiotics[sa].data, model.timestepper.velos, model.grid, 
                             model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT, model.arch)
         ##### Diffusion
-        particle_diffusion!(model.individuals.abiotics[sp].data, model.timestepper.rnd,
+        particle_diffusion!(model.individuals.abiotics[sa].data, model.timestepper.rnd,
                             model.bgc_params["κhP"], ΔT, model.grid, model.arch)
         
         ##### Update
-        find_inds!(model.individuals.abiotics[sp].data, model.grid, model.arch)
-        abiotic_particle_update!(model.individuals.abiotics[sp], model.tracers.CHO.data,
-                                 model.timestepper.plk.CHO.data, diags.abiotic_particle[sp], 
-                                 ΔT, model.arch)
+        find_inds!(model.individuals.abiotics[sa].data, model.grid, model.arch)
     end # abiotic particles
 
     ##### phytoplankton advection, diffusion, and physiological update
@@ -73,7 +73,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
             
             plankton_update!(model.individuals.phytos[sp], model.timestepper.trs,
                              model.timestepper.rnd, model.timestepper.plk, 
-                             diags.phytoplankton[sp], ΔT, model.t, model.arch, model.mode)
+                             diags.phytos[sp], ΔT, model.t, model.arch, model.mode)
         end
     else # model.bgc_params["shared_graz"] ≠ 1.0 - species-specific grazing
         for sp in keys(model.individuals.phytos)
@@ -109,22 +109,53 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
 
             plankton_update!(model.individuals.phytos[sp], model.timestepper.trs,
                                 model.timestepper.rnd, model.timestepper.plk, 
-                                diags.phytoplankton[sp], ΔT, model.t, model.arch, model.mode)
+                                diags.phytos[sp], ΔT, model.t, model.arch, model.mode)
             @inbounds model.timestepper.pop .= 0.0f0
         end
     end # phytoplankton
 
+    ##### particle-particle interaction
+    for pair in model.timestepper.palat
+        plank = model.individuals.phytos[pair[1]].data
+        abiotic = model.individuals.abiotics[pair[2]].data
+        abio_p = model.individuals.abiotics[pair[2]].p
+        particle_interaction!(abiotic, plank, model.timestepper.intac, abio_p,
+                              model.grid, model.arch)
+        particle_release!(plank, abiotic, model.timestepper.trs, model.timestepper.rnd,
+                          abio_p, ΔT, model.arch)
+    end
+
+    ##### diagnostics of particle-particle interaction
+    for sp in keys(model.individuals.phytos)
+        diags_proc!(diags.phytos[sp].ptc, 
+                    model.individuals.phytos[sp].data.ptc, 
+                    model.individuals.phytos[sp].data.ac, 
+                    model.individuals.phytos[sp].data.xi, 
+                    model.individuals.phytos[sp].data.yi, 
+                    model.individuals.phytos[sp].data.zi, model.arch)
+    end
+
+    for sa in keys(model.individuals.abiotics)
+        diags_proc!(diags.abiotics[sa].num, 
+                    model.individuals.abiotics[sa].data.ac, 
+                    model.individuals.abiotics[sa].data.ac, 
+                    model.individuals.abiotics[sa].data.xi, 
+                    model.individuals.abiotics[sa].data.yi, 
+                    model.individuals.abiotics[sa].data.zi, model.arch)
+    end
+    
+    ##### tracers update
+    tracer_update!(model.tracers, model.timestepper.Gcs, model.timestepper.tracer_temp, model.arch,
+                   model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT, 
+                   model.iteration)
+
     ##### diagnostics for tracers
     @inbounds diags.tracer.PAR .+= model.timestepper.par
-    @inbounds diags.tracer.T .+= model.timestepper.temp
     for key in keys(diags.tracer)
         if key in keys(model.tracers)
             @inbounds diags.tracer[key] .+= model.tracers[key].data
         end
-    end
-
-    tracer_update!(model.tracers, model.timestepper.Gcs, model.timestepper.tracer_temp, model.arch,
-                model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT, model.iteration)
+    end # tracers
 
     @inbounds model.timestepper.vel₀.u.data .= model.timestepper.vel₁.u.data
     @inbounds model.timestepper.vel₀.v.data .= model.timestepper.vel₁.v.data

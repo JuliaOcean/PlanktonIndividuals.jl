@@ -54,7 +54,6 @@ function bgc_params_default(FT)
         "kPON"         => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
         "kPOP"         => 1/30/86400,         # Remineralization rate for POP, turn over time: a month (per second)
         "kPOFe"        => 1/30/86400,         # Remineralization rate for POFe, turn over time: a month (per second)
-        "kCHO"         => 0.0,                # Decay rate of chemical compounds (per second)
         "κh"           => 0.0e-6,             # Horizontal diffusion
         "κv"           => 0.0e-6,             # Vertical diffusion
         "κhP"          => 0.0e-6,             # Horizontal diffusion for individuals
@@ -322,11 +321,10 @@ Generate default abiotic particle parameter values based on species number `N`.
 function abiotic_params_default(N::Int64)
     params=Dict(
         "Nsuper"    => [1],       # Number of abiotic particles each super individual represents
-        "Cquota"    => [1.8e-11], # C quota of abiotic particles
-        "mean"      => [1.2],     # Mean of the normal distribution of initial abiotic individuals
-        "var"       => [0.3],     # Variance of the normal distribution of initial abiotic individuals
-        "k_ads"     => [0.0],     # adsorption rate of chemical compounds to abiotic particles
-        "k_decay"   => [0.0],     # decay rate of chemical compounds adsorbed to abiotic particles
+        "Rd"        => [1.0e-4],  # Distance between abiotic particle and phytoplankton cell
+        "release_P" => [1.0e-6],  # Probability of particle release per second
+        "sz_min"    => [1.0e-3],  # Minimal size of a abiotic particle
+        "Ktr"       => [0.0e-5],  # Rate of particle forming from tracer
     )
 
     if N == 1
