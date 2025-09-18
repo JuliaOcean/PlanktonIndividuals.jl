@@ -46,8 +46,6 @@ function tracer_forcing!(F, tracer_temp, tracer, params, ΔT)
                                   max.((tracer_temp.DFe.data .- params["ligand"]), 0.0f0) .* tracer_temp.DFe.data .* params["DFeFrac"] .* params["lambda_Fe"] .* ΔT
 
 
-    @inbounds F.CHO.data .= F.CHO.data .- tracer_temp.CHO.data .* params["kCHO"] .* ΔT
-
     return nothing
 end
 

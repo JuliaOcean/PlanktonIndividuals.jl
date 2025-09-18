@@ -2,16 +2,6 @@
 ##### generate boundary conditions for each nutrient field
 #####
 
-# struct to combine the left and right boundary conditions in one direction
-mutable struct BoundaryConditions
-    west::Union{Nothing, Number, AbstractArray}
-    east::Union{Nothing, Number, AbstractArray}
-    north::Union{Nothing, Number, AbstractArray}
-    south::Union{Nothing, Number, AbstractArray}
-    top::Union{Nothing, Number, AbstractArray}
-    bottom::Union{Nothing, Number, AbstractArray}
-end
-
 # generate the default boundary conditions for one field
 function default_bcs()
     bcs = BoundaryConditions(nothing, nothing, nothing, nothing, nothing, nothing)
@@ -52,7 +42,7 @@ end
 end
 
 # validate boundary conditions, check if the grid information is compatible with nutrient field
-function validate_bc(bc, bc_size, nΔT)
+function validate_bc(bc::Union{Nothing, Number, AbstractArray}, bc_size, nΔT)
     if typeof(bc) <: AbstractArray{eltype(bc),2} 
         if size(bc) == bc_size
             return nothing
@@ -70,7 +60,7 @@ function validate_bc(bc, bc_size, nΔT)
 end
 
 function validate_bcs(nut, grid, nΔT)
-    for name in tracer_names
+    for name in keys(nut)
         bc_west    = nut[name].bc.west
         bc_east    = nut[name].bc.east
         bc_south   = nut[name].bc.south

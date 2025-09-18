@@ -51,24 +51,6 @@ surface_mixing_vels = joinpath(artifact_path(surface_mixing_vels_hash)*"/velocit
 global_vels_hash = artifact_hash("OCCA_FlowFields", artifact_toml)
 global_vels = joinpath(artifact_path(global_vels_hash)*"/OCCA_FlowFields.jld2")
 
-##### struct for phytoplankton
-mutable struct phytoplankton
-    data::AbstractArray
-    p::NamedTuple
-end
-
-##### struct for abiotic particles
-mutable struct abiotic_particle
-    data::AbstractArray
-    p::NamedTuple
-end
-
-struct individuals
-    phytos::NamedTuple
-    abiotics::NamedTuple
-    # zoos::NamedTuple
-end
-
 """
     AbstractMode
 Abstract type for phytoplankton physiology modes supported by PlanktonIndividuals.
@@ -99,11 +81,37 @@ Type for the phytoplankton physiology mode which resolves carbon, nitrogen, phos
 """
 struct IronEnergyMode <: AbstractMode end
 
+mutable struct BoundaryConditions
+    west::Union{Nothing, Number, AbstractArray}
+    east::Union{Nothing, Number, AbstractArray}
+    north::Union{Nothing, Number, AbstractArray}
+    south::Union{Nothing, Number, AbstractArray}
+    top::Union{Nothing, Number, AbstractArray}
+    bottom::Union{Nothing, Number, AbstractArray}
+end
+
+##### struct for phytoplankton
+mutable struct phytoplankton
+    data::AbstractArray
+    p::NamedTuple
+end
+
+##### struct for abiotic particles
+mutable struct abiotic_particle
+    data::AbstractArray
+    p::NamedTuple
+    bc::BoundaryConditions
+end
+
+struct individuals
+    phytos::NamedTuple
+    abiotics::NamedTuple
+end
+
 include("Architectures.jl")
 include("Units.jl")
 include("Grids/Grids.jl")
 include("Parameters/Parameters.jl")
-include("Fields/Fields.jl")
 include("Biogeochemistry/Biogeochemistry.jl")
 include("Diagnostics/Diagnostics.jl")
 include("Individuals/Individuals.jl")
@@ -115,7 +123,6 @@ include("Simulation/Simulation.jl")
 using .Architectures
 using .Grids
 using .Parameters
-using .Fields
 using .Biogeochemistry
 using .Diagnostics
 using .Individuals
