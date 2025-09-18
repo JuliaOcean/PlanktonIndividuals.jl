@@ -7,7 +7,7 @@ end
 
 """
     PlanktonDiagnostics(model; tracer=(:PAR, :NH4, :NO3, :DOC),
-                               phytoplankton = (:num, :graz, :mort, :dvid),
+                               phytoplankton = (:num, :graz, :mort, :dvid, :ptc),
                                abiotic_particle = (:num),
                                time_interval = 1)
 
@@ -21,7 +21,7 @@ Keyword Arguments (Optional)
 - `iteration_interval` : The number of timesteps that diagnostics is averaged, 1 iteration by default.
 """
 function PlanktonDiagnostics(model; tracer=(),
-                                    phytoplankton = (:num, :graz, :mort, :dvid),
+                                    phytoplankton = (:num, :graz, :mort, :dvid, :ptc),
                                     abiotic_particle = (:num,),
                                     iteration_interval::Int = 1)
     
@@ -63,11 +63,11 @@ function PlanktonDiagnostics(model; tracer=(),
         diag_proc = NamedTuple{phytoplankton}(procs_sp)
 
         procs_sp_d = []
-        for l in 1:4
+        for l in 1:5
             proc = zeros(FT, total_size) |> array_type(model.arch)
             push!(procs_sp_d, proc)
         end
-        diag_proc_default = NamedTuple{(:num, :graz, :mort, :dvid)}(procs_sp_d)
+        diag_proc_default = NamedTuple{(:num, :graz, :mort, :dvid, :ptc)}(procs_sp_d)
 
         diag_proc = merge(diag_proc, diag_proc_default) # add num, graz, mort, and dvid as default diagnostics
 
@@ -136,7 +136,7 @@ function diag_avail(tracer, plank, abiotic, mode::AbstractMode)
 end
 
 function tracer_avail_diags()
-    return (:PAR, :DIC, :DOC, :POC, :NH4, :NO3, :DON, :PON, :PO4, :DOP, :POP, :DFe, :PFe_inorg, :PFe_bio, :CHO, :Dust)
+    return (:PAR, :DIC, :DOC, :POC, :NH4, :NO3, :DON, :PON, :PO4, :DOP, :POP, :DFe, :PFe_inorg, :PFe_bio, :Dust)
 end
 
 function plank_avail_diags(mode::AbstractMode)
