@@ -1,3 +1,26 @@
+struct Field{FT}
+    data::AbstractArray{FT,3}
+    bc::BoundaryConditions
+end
+"""
+    Field(arch::Architecture, grid::AbstractGrid, FT::DataType; bcs = default_bcs())
+Construct a `Field` on `grid` with data and boundary conditions on architecture `arch`
+with DataType `FT`.
+"""
+function Field(arch::Architecture, grid::AbstractGrid, FT::DataType; bcs = default_bcs())
+    total_size = (grid.Nx+grid.Hx*2, grid.Ny+grid.Hy*2, grid.Nz+grid.Hz*2)
+    data = zeros(FT, total_size) |> array_type(arch)
+    return Field{FT}(data,bcs)
+end
+
+@inline interior(c, grid) = c[grid.Hx+1:grid.Hx+grid.Nx, grid.Hy+1:grid.Hy+grid.Ny, grid.Hz+1:grid.Hz+grid.Nz]
+
+function zero_fields!(a)
+    for tr in keys(a)
+        @inbounds a[tr].data .= 0.0f0
+    end
+end
+
 function tracers_init(arch, g, FT = Float32)
     fields = (Field(arch, g, FT), Field(arch, g, FT),
               Field(arch, g, FT), Field(arch, g, FT),
@@ -5,7 +28,7 @@ function tracers_init(arch, g, FT = Float32)
               Field(arch, g, FT), Field(arch, g, FT),
               Field(arch, g, FT), Field(arch, g, FT),
               Field(arch, g, FT), Field(arch, g, FT),
-              Field(arch, g, FT), Field(arch, g, FT))
+              Field(arch, g, FT))
 
     tracers = NamedTuple{tracer_names}(fields)
     return tracers
@@ -16,8 +39,8 @@ end
 Generate defalut bgc tracer initial conditions.
 """
 function default_tracer_init()
-    init = (DIC=20.0, NH4=0.5, NO3=0.8, PO4=0.10, FeT=1.0e-6, DOC=10.0, DON=0.1, DOP=0.05, DOFe=0.0, POC=0.0, PON=0.0, POP=0.0, POFe=0.0, CHO = 0.1)
-    rand_noise = (DIC=0.1, NH4=0.1, NO3=0.1, PO4=0.1, FeT=0.1, DOC=0.1, DON=0.1, DOP=0.1, DOFe=0.1, POC=0.1, PON=0.1, POP=0.1, POFe=0.1, CHO = 0.1)
+    init = (DIC=20.0, NH4=0.5, NO3=0.8, PO4=0.10, FeT=1.0e-6, DOC=10.0, DON=0.1, DOP=0.05, DOFe=0.0, POC=0.0, PON=0.0, POP=0.0, POFe=0.0)
+    rand_noise = (DIC=0.1, NH4=0.1, NO3=0.1, PO4=0.1, FeT=0.1, DOC=0.1, DON=0.1, DOP=0.1, DOFe=0.1, POC=0.1, PON=0.1, POP=0.1, POFe=0.1)
     return (initial_condition = init, rand_noise = rand_noise)
 end
 

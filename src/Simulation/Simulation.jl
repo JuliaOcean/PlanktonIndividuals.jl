@@ -8,7 +8,6 @@ using LinearAlgebra: dot
 
 using PlanktonIndividuals.Architectures
 using PlanktonIndividuals.Grids
-using PlanktonIndividuals.Fields
 using PlanktonIndividuals.Biogeochemistry
 using PlanktonIndividuals.Parameters
 using PlanktonIndividuals.Individuals

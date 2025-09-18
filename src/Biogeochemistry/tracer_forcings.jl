@@ -35,8 +35,6 @@ function tracer_forcing!(F, tracer_temp, tracer, params, ΔT)
 
     @inbounds F.POFe.data .= F.POFe.data .- tracer_temp.POFe.data .* params["kPOFe"] .* ΔT
 
-    @inbounds F.CHO.data .= F.CHO.data .- tracer_temp.CHO.data .* params["kCHO"] .* ΔT
-
     return nothing
 end
 
