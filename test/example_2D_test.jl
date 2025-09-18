@@ -2,7 +2,7 @@ using PlanktonIndividuals
 
 grid = RectilinearGrid(size = (16, 16, 1), x = (0,32), y = (0,32), z = (0,-32))
 
-model = PlanktonModel(CPU(), grid; abiotic = (params = nothing, N = [2^10, 2^10], Nsp = 2)) 
+model = PlanktonModel(CPU(), grid; abiotic = (params = nothing, N = [2^10, 2^10], Nsa = 2, palat = [(:sp1, :sa1)])) 
 
 function tot_mass(tracer, g)
     mass = zeros(g.Nx, g.Ny, g.Nz)

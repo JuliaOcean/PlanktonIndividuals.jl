@@ -4,7 +4,7 @@ using JLD2
 function test_output()
     grid = RectilinearGrid(size = (16, 16, 16), x = (0,32), y = (0,32), z = (0,-32))
     model = PlanktonModel(CPU(), grid; mode = QuotaMode(),
-                                       abiotic = (params = nothing, N = [2^10], Nsa = 1)) 
+                                       abiotic = (params = nothing, N = [2^10], Nsa = 1, palat = [(:sp1, :sa1)])) 
     diags = PlanktonDiagnostics(model; tracer=(:PAR,),
                                        phytoplankton = (:num, :graz, :mort, :dvid, :PS),
                                        abiotic_particle = (:num, :CHO),
