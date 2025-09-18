@@ -126,13 +126,15 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     end
 
     ##### diagnostics of particle-particle interaction
-    for sp in keys(model.individuals.phytos)
-        diags_proc!(diags.phytos[sp].ptc, 
-                    model.individuals.phytos[sp].data.ptc, 
-                    model.individuals.phytos[sp].data.ac, 
-                    model.individuals.phytos[sp].data.xi, 
-                    model.individuals.phytos[sp].data.yi, 
-                    model.individuals.phytos[sp].data.zi, model.arch)
+    if isempty(model.individuals.abiotics) == false   
+        for sp in keys(model.individuals.phytos)
+            diags_proc!(diags.phytos[sp].ptc, 
+                        model.individuals.phytos[sp].data.ptc, 
+                        model.individuals.phytos[sp].data.ac, 
+                        model.individuals.phytos[sp].data.xi, 
+                        model.individuals.phytos[sp].data.yi, 
+                        model.individuals.phytos[sp].data.zi, model.arch)
+        end
     end
 
     for sa in keys(model.individuals.abiotics)

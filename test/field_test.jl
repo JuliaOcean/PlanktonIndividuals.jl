@@ -24,80 +24,80 @@ function test_fill_halos()
     Nx,Ny,Nz = grid.Nx, grid.Ny, grid.Nz
     Hx,Hy,Hz = grid.Hx, grid.Hy, grid.Hz
 
-    PlanktonIndividuals.Fields.fill_halo_east!(tracers.DIC.data, Hx, Nx, Periodic())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_east!(tracers.DIC.data, Hx, Nx, Periodic())
     @test tracers.DIC.data[Nx+Hx+1:Nx+2*Hx, :, :] == tracers.DIC.data[1+Hx:2*Hx, :, :]
 
-    PlanktonIndividuals.Fields.fill_halo_west!(tracers.DIC.data, Hx, Nx, Periodic())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_west!(tracers.DIC.data, Hx, Nx, Periodic())
     @test tracers.DIC.data[1:Hx, :, :] == tracers.DIC.data[Nx+1:Nx+Hx, :, :]
 
-    PlanktonIndividuals.Fields.fill_halo_north!(tracers.DIC.data, Hy, Ny, Periodic())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_north!(tracers.DIC.data, Hy, Ny, Periodic())
     @test tracers.DIC.data[:, Ny+Hy+1:Ny+2*Hy, :] == tracers.DIC.data[:, 1+Hy:2*Hy, :]
 
-    PlanktonIndividuals.Fields.fill_halo_south!(tracers.DIC.data, Hy, Ny, Periodic())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_south!(tracers.DIC.data, Hy, Ny, Periodic())
     @test tracers.DIC.data[:, 1:Hy, :] == tracers.DIC.data[:, Ny+1:Ny+Hy, :]
 
-    PlanktonIndividuals.Fields.fill_halo_bottom!(tracers.DIC.data, Hz, Nz, Periodic())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_bottom!(tracers.DIC.data, Hz, Nz, Periodic())
     @test tracers.DIC.data[:, :, Nz+Hz+1:Nz+2*Hz] == tracers.DIC.data[:, :, 1+Hz:2*Hz]
 
-    PlanktonIndividuals.Fields.fill_halo_top!(tracers.DIC.data, Hz, Nz, Periodic())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_top!(tracers.DIC.data, Hz, Nz, Periodic())
     @test tracers.DIC.data[:, :, 1:Hz] == tracers.DIC.data[:, :, Nz+1:Nz+Hz]
 
-    PlanktonIndividuals.Fields.fill_halo_east!(tracers.DIC.data, Hx, Nx, Bounded())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_east!(tracers.DIC.data, Hx, Nx, Bounded())
     for i in 1:Hx
         @test tracers.DIC.data[Nx+Hx+i, :, :] == tracers.DIC.data[Nx+Hx, :, :]
     end
 
-    PlanktonIndividuals.Fields.fill_halo_west!(tracers.DIC.data, Hx, Nx, Bounded())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_west!(tracers.DIC.data, Hx, Nx, Bounded())
     for i in 1:Hx
         @test tracers.DIC.data[i, :, :] == tracers.DIC.data[Hx+1, :, :]
     end
 
-    PlanktonIndividuals.Fields.fill_halo_north!(tracers.DIC.data, Hy, Ny, Bounded())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_north!(tracers.DIC.data, Hy, Ny, Bounded())
     for i in 1:Hy
         @test tracers.DIC.data[:, Ny+Hy+i, :] == tracers.DIC.data[:, Ny+Hy, :]
     end
 
-    PlanktonIndividuals.Fields.fill_halo_south!(tracers.DIC.data, Hy, Ny, Bounded())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_south!(tracers.DIC.data, Hy, Ny, Bounded())
     for i in 1:Hy
         @test tracers.DIC.data[:, i, :] == tracers.DIC.data[:, Hy+1, :]
     end
 
-    PlanktonIndividuals.Fields.fill_halo_bottom!(tracers.DIC.data, Hz, Nz, Bounded())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_bottom!(tracers.DIC.data, Hz, Nz, Bounded())
     for i in 1:Hz
         @test tracers.DIC.data[:, :, Nz+Hz+i] == tracers.DIC.data[:, :, Nz+Hz]
     end
 
-    PlanktonIndividuals.Fields.fill_halo_top!(tracers.DIC.data, Hz, Nz, Bounded())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_top!(tracers.DIC.data, Hz, Nz, Bounded())
     for i in 1:Hz
         @test tracers.DIC.data[:, :, i] == tracers.DIC.data[:, :, Hz+1]
     end
 
-    PlanktonIndividuals.Fields.fill_halo_east_vel!(tracers.DIC.data, Hx, Nx, Bounded())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_east_vel!(tracers.DIC.data, Hx, Nx, Bounded())
     for i in 1:Hx-1
         @test tracers.DIC.data[Nx+Hx+1+i, :, :] == tracers.DIC.data[Nx+Hx+1, :, :]
     end
 
-    PlanktonIndividuals.Fields.fill_halo_north_vel!(tracers.DIC.data, Hy, Ny, Bounded())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_north_vel!(tracers.DIC.data, Hy, Ny, Bounded())
     for i in 1:Hy-1
         @test tracers.DIC.data[:, Ny+Hx+1+i, :] == tracers.DIC.data[:, Ny+Hy+1, :]
     end
 
-    PlanktonIndividuals.Fields.fill_halo_bottom_vel!(tracers.DIC.data, Hz, Nz, Bounded())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_bottom_vel!(tracers.DIC.data, Hz, Nz, Bounded())
     for i in 1:Hz-1
         @test tracers.DIC.data[:, :, Nz+Hx+1+i] == tracers.DIC.data[:, :, Nz+Hz+1]
     end
 
-    PlanktonIndividuals.Fields.fill_halo_east_Gc!(tracers.DIC.data, Hx, Nx, Bounded())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_east_Gc!(tracers.DIC.data, Hx, Nx, Bounded())
     for i in 1:Hx
         @test tracers.DIC.data[Nx+Hx+i, :, :] == zeros(10,6)
     end
 
-    PlanktonIndividuals.Fields.fill_halo_north_Gc!(tracers.DIC.data, Hy, Ny, Bounded())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_north_Gc!(tracers.DIC.data, Hy, Ny, Bounded())
     for i in 1:Hy
         @test tracers.DIC.data[:, Ny+Hx+i, :] == zeros(8,6)
     end
 
-    PlanktonIndividuals.Fields.fill_halo_bottom_Gc!(tracers.DIC.data, Hz, Nz, Bounded())
+    PlanktonIndividuals.Biogeochemistry.fill_halo_bottom_Gc!(tracers.DIC.data, Hz, Nz, Bounded())
     for i in 1:Hz
         @test tracers.DIC.data[:, :, Nz+Hx+i] == zeros(8,10)
     end
