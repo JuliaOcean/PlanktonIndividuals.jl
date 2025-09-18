@@ -6,7 +6,7 @@ export tracer_update!
 export Field
 export interior, zero_fields!
 export fill_halo_vel!
-export default_bcs, getbc
+export default_bcs, getbc, apply_bcs!
 export set_bc!, validate_bcs
 export tracer_names
 
