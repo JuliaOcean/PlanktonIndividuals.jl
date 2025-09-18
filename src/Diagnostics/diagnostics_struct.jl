@@ -1,8 +1,8 @@
 mutable struct PlanktonDiagnostics
-    phytoplankton::NamedTuple       # for each species of phytoplankton
-    abiotic_particle::NamedTuple    # for each species of abiotic particle
-    tracer::NamedTuple              # for tracers
-    iteration_interval::Int         # time interval that the diagnostics is time averaged
+    phytos::NamedTuple       # for each species of phytoplankton
+    abiotics::NamedTuple     # for each species of abiotic particle
+    tracer::NamedTuple       # for tracers
+    iteration_interval::Int  # time interval that the diagnostics is time averaged
 end
 
 """
@@ -46,8 +46,7 @@ function PlanktonDiagnostics(model; tracer=(),
         push!(trs, tr)
     end
     tr_d1 = zeros(FT, total_size) |> array_type(model.arch)
-    tr_d2 = zeros(FT, total_size) |> array_type(model.arch)
-    tr_default = (PAR = tr_d1, T = tr_d2)
+    tr_default = (PAR = tr_d1,)
 
     diag_tr = NamedTuple{tracer}(trs)
     diag_tr = merge(diag_tr, tr_default) # add PAR as default diagnostic
@@ -77,9 +76,9 @@ function PlanktonDiagnostics(model; tracer=(),
     diag_phyto = NamedTuple{plank_name}(phyto_procs)
 
     abiotic_name = keys(model.individuals.abiotics)
-    Nsp_abiotic = length(abiotic_name)
+    Nsa_abiotic = length(abiotic_name)
 
-    for k in 1:Nsp_abiotic
+    for k in 1:Nsa_abiotic
         procs_sp = []
         for l in 1:nproc_abiotic
             proc = zeros(FT, total_size) |> array_type(model.arch)
@@ -108,8 +107,8 @@ end
 function show(io::IO, diags::PlanktonDiagnostics)
     print(io, "PlanktonDiagnostics:\n",
               "├── diagnostics of tracers: $(keys(diags.tracer))\n",
-              "├── diagnostics of phytoplankton: $(keys(diags.phytoplankton.sp1))\n",
-              "├── diagnostics of abiotic particles: $(keys(diags.abiotic_particle.sp1))\n",
+              "├── diagnostics of phytoplankton: $(keys(diags.phytos.sp1))\n",
+              "├── diagnostics of abiotic particles: $(keys(diags.abiotics.sa1))\n",
               "└── save averaged diagnostics every $(diags.iteration_interval) timesteps")
 end
 
@@ -118,19 +117,19 @@ function diag_avail(tracer, plank, abiotic, mode::AbstractMode)
     plank_avail  = plank_avail_diags(mode)
     abiotic_avail = abiotic_avail_diags()
     for i in 1:length(tracer)
-        if length(findall(x->x==tracer[i], tracer_avail)) == 0
+        if tracer[i] ∉ tracer_avail
             throw(ArgumentError("$(tracer[i]) is not one of the diagnostics"))
         end
     end
 
     for i in 1:length(plank)
-        if length(findall(x->x==plank[i], plank_avail)) == 0
+        if plank[i] ∉ plank_avail
             throw(ArgumentError("$(plank[i]) is not one of the diagnostics"))
         end
     end
 
     for i in 1:length(abiotic)
-        if length(findall(x->x==abiotic[i], abiotic_avail)) == 0
+        if abiotic[i] ∉ abiotic_avail
             throw(ArgumentError("$(abiotic[i]) is not one of the diagnostics"))
         end
     end
@@ -143,17 +142,17 @@ end
 function plank_avail_diags(mode::AbstractMode)
     plank_avail = (:num, :graz, :mort, :dvid, :PS, :Bm, :Chl)
     if isa(mode, CarbonMode)
-        plank_avail = (:num, :graz, :mort, :dvid, :PS, :BS, :RP, :TD, :RS, :Bm, :Bd, :Chl)
+        plank_avail = (:num, :graz, :mort, :dvid, :PS, :BS, :RP, :TD, :RS, :Bm, :Bd, :Chl,:ptc)
     elseif isa(mode, QuotaMode)
-        plank_avail = (:num, :graz, :mort, :dvid, :PS, :BS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :exu, :Bm, :Cq, :Nq, :Pq, :Chl)
+        plank_avail = (:num, :graz, :mort, :dvid, :PS, :BS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :exu, :Bm, :Cq, :Nq, :Pq, :Chl, :ptc)
     elseif isa(mode, MacroMolecularMode)
-        plank_avail = (:num, :graz, :mort, :dvid, :PS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :ρChl, :S_PRO, :S_DNA, :S_RNA, :exu, :CH, :NST, :PST, :PRO, :DNA, :RNA, :Chl)
+        plank_avail = (:num, :graz, :mort, :dvid, :PS, :VDOC, :VNH4, :VNO3, :VPO4, :resp, :ρChl, :S_PRO, :S_DNA, :S_RNA, :exu, :CH, :NST, :PST, :PRO, :DNA, :RNA, :Chl, :ptc)
     elseif isa(mode, IronEnergyMode)
-        plank_avail = (:num, :graz, :mort, :dvid, :PS, :CF, :ECF, :RS, :ERS, :NR, :ENR, :NF, :ENF, :BS, :VNH4, :VNO3, :VPO4, :VFe, :PS2ST, :ST2PS, :NR2ST, :ST2NR, :NF2ST, :ST2NF, :Bm, :exEn, :CH, :qNO3, :qNH4, :qP, :qFe, :qFePS, :qFeNR, :qFeNF, :Chl, :tdark)
+        plank_avail = (:num, :graz, :mort, :dvid, :PS, :CF, :ECF, :RS, :ERS, :NR, :ENR, :NF, :ENF, :BS, :VNH4, :VNO3, :VPO4, :VFe, :PS2ST, :ST2PS, :NR2ST, :ST2NR, :NF2ST, :ST2NF, :Bm, :exEn, :CH, :qNO3, :qNH4, :qP, :qFe, :qFePS, :qFeNR, :qFeNF, :Chl, :tdark, :ptc)
     end
     return plank_avail
 end
 
 function abiotic_avail_diags()
-    return (:num, :CHO, :CHOe, :ADS, :DEC)
+    return (:num,)
 end

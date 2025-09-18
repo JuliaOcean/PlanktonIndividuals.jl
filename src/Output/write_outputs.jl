@@ -174,14 +174,14 @@ function write_diags_to_jld2(diags, filepath, t, iter, ncounts, grid)
         for key in keys(diags.tracer)
             file["timeseries/$key/$iter"] = Array(interior(diags.tracer[key], grid)) ./ ncounts
         end
-        for sp in keys(diags.phytoplankton)
-            for proc in keys(diags.phytoplankton[sp])
-                file["timeseries/phyto/$sp/$proc/$iter"] = Array(interior(diags.phytoplankton[sp][proc],grid)) ./ ncounts 
+        for sp in keys(diags.phytos)
+            for proc in keys(diags.phytos[sp])
+                file["timeseries/phyto/$sp/$proc/$iter"] = Array(interior(diags.phytos[sp][proc],grid)) ./ ncounts 
             end
         end
-        for sp in keys(diags.abiotic_particle)
-            for proc in keys(diags.abiotic_particle[sp])
-                file["timeseries/abiotic/$sp/$proc/$iter"] = Array(interior(diags.abiotic_particle[sp][proc],grid)) ./ ncounts 
+        for sa in keys(diags.abiotics)
+            for proc in keys(diags.abiotics[sa])
+                file["timeseries/abiotic/$sa/$proc/$iter"] = Array(interior(diags.abiotics[sa][proc],grid)) ./ ncounts 
             end
         end
     end
@@ -189,12 +189,12 @@ function write_diags_to_jld2(diags, filepath, t, iter, ncounts, grid)
     for tr in diags.tracer
         tr .= 0.0f0
     end
-    for sp in diags.phytoplankton
+    for sp in diags.phytos
         for proc in sp
             proc .= 0.0f0
         end
     end
-    for sp in diags.abiotic_particle
+    for sp in diags.abiotics
         for proc in sp
             proc .= 0.0f0
         end

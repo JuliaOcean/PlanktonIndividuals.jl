@@ -6,7 +6,8 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           gen = zeros(FT, maxN), age = zeros(FT, maxN),
                           ac  = zeros(FT, maxN), idx = zeros(Int,maxN),
                           PS  = zeros(FT, maxN), BS  = zeros(FT, maxN), RS  = zeros(FT, maxN),
-                          TD  = zeros(FT, maxN), RP  = zeros(FT, maxN),
+                          TD  = zeros(FT, maxN), RP  = zeros(FT, maxN), ptc = zeros(FT, maxN),
+                          Rptc=zeros(FT, maxN),
                           graz= zeros(FT, maxN), mort= zeros(FT, maxN), dvid= zeros(FT, maxN)
                           ) 
     data = replace_storage(array_type(arch), rawdata)
@@ -15,10 +16,10 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                  :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, :mort_P, :mort_reg, :grazFracC, :mortFracC,
                  :thermal, :is_bact)
 
-    pkeys = collect(keys(params))
+    pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))
     for i in 1:length(param_names)
-        if length(findall(x->x==string(param_names[i]),pkeys))==0
+        if param_names[i] ∉ pkeys
             throw(ArgumentError("PARAM: parameter not found $(param_names[i])"))
         else
             tmp[i] = params[string(param_names[i])][sp]

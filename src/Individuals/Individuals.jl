@@ -6,7 +6,9 @@ export plankton_update!
 export abiotic_particle_update!
 export generate_individuals, individuals
 export find_inds!, find_NPT!, acc_counts!, acc_chl!, calc_par!
-export phytos, abiotics
+
+export particle_interaction!, particle_release!
+export particles_from_bcs!
 
 using StructArrays
 using Random
@@ -18,6 +20,21 @@ using PlanktonIndividuals.Diagnostics
 
 using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
 using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle
+
+include("Advection/Advection.jl")
+include("Plankton/QuotaMode/QuotaMode.jl")
+include("Plankton/CarbonMode/CarbonMode.jl")
+include("Plankton/MacroMolecularMode/MacroMolecularMode.jl")
+include("Plankton/IronEnergyMode/IronEnergyMode.jl")
+include("Abiotic/Abiotic.jl")
+include("utils.jl")
+
+using .Advection
+using .Abiotic
+import .Quota
+import .Carbon
+import .MacroMolecular
+import .IronEnergy
 
 #####
 ##### generate individuals of multiple species
@@ -46,12 +63,12 @@ function generate_individuals(params::Dict, arch::Architecture, Nsp::Int, N::Vec
         abiotic_names = Symbol[]
         abiotic_data = []
 
-        if length(abiotic.N) ≠ abiotic.Nsp
-            throw(ArgumentError("Abiotic particles: The length of `N` must be $(Nsp), the same as `Nsp`, each species has its own initial condition"))
+        if length(abiotic.N) ≠ abiotic.Nsa
+            throw(ArgumentError("Abiotic particles: The length of `N` must be $(Nsa), the same as `Nsa`, each species has its own initial condition"))
         end
 
-        for j in 1:abiotic.Nsp
-            name = Symbol("sp"*string(j))
+        for j in 1:abiotic.Nsa
+            name = Symbol("sa"*string(j))
             particle =  construct_abiotic_particle(arch, j, abiotic.params, maxN, FT)
             initialize_abiotic_particle!(particle, abiotic.N[j], g, arch)
             push!(abiotic_names, name)
@@ -61,22 +78,6 @@ function generate_individuals(params::Dict, arch::Architecture, Nsp::Int, N::Vec
         return individuals(planks, abiotics)
     end
 end
-
-include("Advection/Advection.jl")
-include("Plankton/QuotaMode/QuotaMode.jl")
-include("Plankton/CarbonMode/CarbonMode.jl")
-include("Plankton/MacroMolecularMode/MacroMolecularMode.jl")
-include("Plankton/IronEnergyMode/IronEnergyMode.jl")
-include("Abiotic/Abiotic.jl")
-include("utils.jl")
-
-using .Advection
-using .Abiotic
-import .Quota
-import .Carbon
-import .MacroMolecular
-import .IronEnergy
-
 
 #####
 ##### some workarounds for function names

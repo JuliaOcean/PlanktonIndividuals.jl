@@ -67,6 +67,24 @@ function calc_par!(par, arch::Architecture, Chl, PARF, g::AbstractGrid, kc, kw, 
     return nothing
 end
 
+##### assign the index of empty slots in plank/abiotic array
+##### to store new particles
+##### de_ind: indices of empty slots in plank/abiotic
+##### idx: the empty slot assigned to the plank cell/abiotic particle
+##### con: 1 or 0, indicate whether the cell will divide or particle will release
+##### con_ind: rank of cells to divide or particles to release
+@kernel function get_tind_kernel!(idx, con, con_ind, de_ind)
+    i = @index(Global, Linear)
+    if con[i] == 1.0f0
+        idx[i] = de_ind[con_ind[i]]
+    end
+end
+function get_tind!(idx, con, con_ind, de_ind, arch)
+    kernel! = get_tind_kernel!(device(arch), 256, (size(idx,1)))
+    kernel!(idx, con, con_ind, de_ind)
+    return nothing
+end
+
 ##### mask individuals due to land shape
 @kernel function mask_individuals_kernel!(particle, g::AbstractGrid)
     i = @index(Global)

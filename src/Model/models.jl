@@ -48,7 +48,7 @@ Keyword Arguments (Optional)
 - `tracer_initial` : The source of initial conditions of tracer fields, should be either a `NamedTuple` 
                     or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
 - `abiotic` : false or a NamedTuple. Whether to include abiotic particles in the model. If yes,
-                    it should be a NamedTuple, like this `abiotic = (params = nothing, N = [2^10, 2^10], Nsp = 2)`.
+                    it should be a NamedTuple like this `abiotic = (params = nothing, N = [2^10, 2^10], Nsa = 2, palat = [(:sp1, :sa1)])`.
 - `t` : Model time, start from 0 by default, in second.
 """
 function PlanktonModel(arch::Architecture, grid::AbstractGrid;
@@ -90,23 +90,39 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
 
     if isa(abiotic, NamedTuple)
         if isa(abiotic.params, Nothing)
-            abiotic_params = abiotic_params_default(abiotic.Nsp)
-            abiotic_params_final = update_abiotic_params(abiotic_params, FT; N = abiotic.Nsp)
+            abiotic_params = abiotic_params_default(abiotic.Nsa)
+            abiotic_params_final = update_abiotic_params(abiotic_params, FT; N = abiotic.Nsa)
         elseif isa(abiotic.params, Dict)
-            abiotic_params_final = update_abiotic_params(abiotic_params, FT; N = abiotic.Nsp)
+            abiotic_params_final = update_abiotic_params(abiotic_params, FT; N = abiotic.Nsa)
         else
             throw(ArgumentError("Abiotic particle parameters must be either Nothing or Dict!")) 
         end
-        abiotic_final = (params = abiotic_params_final, Nsp = abiotic.Nsp, N = abiotic.N)
+        abiotic_final = (params = abiotic_params_final, Nsa = abiotic.Nsa, N = abiotic.N, palat = abiotic.palat)
     else
         abiotic_final = nothing
     end
 
     inds = generate_individuals(phyt_params_final, arch, N_species, N_individual, max_individuals, FT, grid_d, mode; abiotic = abiotic_final)
 
+    ##### check palatability between plank and abiotic
+    if isa(abiotic_final, Nothing)
+        palat = []
+    else
+        SPs = keys(inds.phytos)
+        SAs = keys(inds.abiotics)
+        for p in abiotic_final.palat
+            if p[1] ∉ SPs
+                throw(ArgumentError("Abiotic: $(p[1]) is not generated"))
+            end
+            if p[2] ∉ SAs
+                throw(ArgumentError("Abiotic: $(p[s]) is not generated"))
+            end
+        end
+    end
+
     tracers = generate_tracers(arch, grid_d, tracer_initial, FT)
 
-    ts = timestepper(arch, FT, grid_d, max_individuals)
+    ts = timestepper(arch, FT, grid_d, max_individuals, abiotic_final.palat)
 
     iteration  = 0
 
