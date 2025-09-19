@@ -26,7 +26,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     for sa in keys(model.individuals.abiotics)
         particles_from_bcs!(model.individuals.abiotics[sa].data, model.timestepper.tracer_temp.FeT.data, 
                             model.individuals.abiotics[sa].bc, model.timestepper.rnd_3d, model.individuals.abiotics[sa].p, 
-                            ΔT, model.iteration, model.grid, model.arch)
+                            ΔT, model.iteration, model.grid, model.t, model.arch)
         ##### RK4
         particle_advection!(model.individuals.abiotics[sa].data, model.timestepper.velos, model.grid, 
                             model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT, model.arch)
@@ -124,7 +124,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
         particle_interaction!(abiotic, plank, model.timestepper.intac, abio_p,
                               model.grid, model.arch)
         particle_release!(plank, abiotic, model.timestepper.trs, model.timestepper.rnd,
-                          abio_p, ΔT, model.arch)
+                          abio_p, ΔT, model.t, model.arch)
     end
 
     ##### diagnostics of particle-particle interaction

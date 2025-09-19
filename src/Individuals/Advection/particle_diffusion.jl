@@ -1,16 +1,14 @@
 ##### calculate diffusivities of each individual
-@kernel function calc_diffusion_kernel!(particle, rnd, κx, κy, κz, ΔT, g::AbstractGrid)
+@kernel function calc_diffusion_kernel!(rnd, xi, yi, zi, κx, κy, κz, ΔT, g::AbstractGrid)
     i = @index(Global)
-    @inbounds particle.x[i] = particle.x[i] + rnd.x[i] * √(1*κx*ΔT) * particle.ac[i] / 
-                                              ΔxC(particle.xi, particle.yi, particle.zi, g)
-    @inbounds particle.y[i] = particle.y[i] + rnd.y[i] * √(1*κy*ΔT) * particle.ac[i] / 
-                                              ΔyC(particle.xi, particle.yi, particle.zi, g)
-    @inbounds particle.z[i] = particle.z[i] + rnd.z[i] * √(1*κz*ΔT) * particle.ac[i] / 
-                                              ΔzC(particle.xi, particle.yi, particle.zi, g)
+    @inbounds rnd.x[i] = rnd.x[i] * √(κx*ΔT) / ΔxC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
+    @inbounds rnd.y[i] = rnd.y[i] * √(κy*ΔT) / ΔxC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
+    @inbounds rnd.z[i] = rnd.z[i] * √(κz*ΔT) / ΔxC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
+    
 end
-function calc_diffusion!(particle, rnd, κx, κy, κz, ΔT, g::AbstractGrid, arch::Architecture)
-    kernel! = calc_diffusion_kernel!(device(arch), 256, (size(particle.ac,1)))
-    kernel!(particle, rnd, κx, κy, κz, ΔT, g)
+function calc_diffusion!(rnd, xi, yi, zi, κx, κy, κz, ΔT, g::AbstractGrid, arch::Architecture)
+    kernel! = calc_diffusion_kernel!(device(arch), 256, (size(rnd.x,1)))
+    kernel!(rnd, xi, yi, zi, κx, κy, κz, ΔT, g)
 
     return nothing
 end
@@ -22,7 +20,10 @@ function particle_diffusion!(particle, rnd, κx, κy, κz, ΔT, g::AbstractGrid,
     randn!(rng_type(arch), rnd.z)
 
     ##### calculate diffusion
-    calc_diffusion!(particle, rnd, κx, κy, κz, ΔT, g, arch)
+    calc_diffusion!(rnd, particle.xi, particle.yi, particle.zi, κx, κy, κz, ΔT, g, arch)
+    particle.x .= particle.x + rnd.x
+    particle.y .= particle.y + rnd.y
+    particle.z .= particle.z + rnd.z
 
     ##### keep individuals in the domain
     particle_boundaries!(particle, particle.ac, g, arch)

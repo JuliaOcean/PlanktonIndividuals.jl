@@ -99,7 +99,7 @@ function release_abiotic_particle!(plank, abiotic, con, idx, arch::Architecture)
     return nothing
 end
 
-function particle_release!(plank, abiotic, trs, rnd, abio_p, ΔT, arch::Architecture)
+function particle_release!(plank, abiotic, trs, rnd, abio_p, ΔT, t, arch::Architecture)
     get_release_probability!(plank, rnd, abio_p, ΔT, arch)
     releasenum = dot(plank.Rptc, plank.ac)
     deactive_ind = findall(x -> x == 0.0f0, abiotic.ac)
@@ -227,7 +227,7 @@ function copy_abiotic_particle_from_field!(abiotic, inds, de_inds, arch::Archite
     return nothing
 end
 
-function particles_from_bcs!(abiotic, tr_temp, abio_bcs::BoundaryConditions, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid, arch::Architecture)
+function particles_from_bcs!(abiotic, tr_temp, abio_bcs::BoundaryConditions, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid, t, arch::Architecture)
     rand!(rng_type(arch), rnd_3d)
     tr_temp .= 0.0f0
     calc_particle_bcs!(tr_temp, abio_bcs, rnd_3d, abio_p, ΔT, iter, g, arch)
