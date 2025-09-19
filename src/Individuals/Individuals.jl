@@ -67,6 +67,10 @@ function generate_individuals(params::Dict, arch::Architecture, Nsp::Int, N::Vec
             throw(ArgumentError("Abiotic particles: The length of `N` must be $(Nsa), the same as `Nsa`, each species has its own initial condition"))
         end
 
+        if maximum(abiotic.N) > maxN
+            throw(ArgumentError("Abiotic particles: The number of particles should not exceed $(maxN), max_individuals"))
+        end
+
         for j in 1:abiotic.Nsa
             name = Symbol("sa"*string(j))
             particle =  construct_abiotic_particle(arch, j, abiotic.params, maxN, FT)
