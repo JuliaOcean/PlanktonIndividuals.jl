@@ -93,7 +93,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
             abiotic_params = abiotic_params_default(abiotic.Nsa)
             abiotic_params_final = update_abiotic_params(abiotic_params, FT; N = abiotic.Nsa)
         elseif isa(abiotic.params, Dict)
-            abiotic_params_final = update_abiotic_params(abiotic_params, FT; N = abiotic.Nsa)
+            abiotic_params_final = update_abiotic_params(abiotic.params, FT; N = abiotic.Nsa)
         else
             throw(ArgumentError("Abiotic particle parameters must be either Nothing or Dict!")) 
         end
