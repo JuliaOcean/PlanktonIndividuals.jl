@@ -21,9 +21,9 @@ function particle_diffusion!(particle, rnd, κx, κy, κz, ΔT, g::AbstractGrid,
 
     ##### calculate diffusion
     calc_diffusion!(rnd, particle.xi, particle.yi, particle.zi, κx, κy, κz, ΔT, g, arch)
-    particle.x .= particle.x + rnd.x
-    particle.y .= particle.y + rnd.y
-    particle.z .= particle.z + rnd.z
+    particle.x .= particle.x + rnd.x .* particle.ac
+    particle.y .= particle.y + rnd.y .* particle.ac
+    particle.z .= particle.z + rnd.z .* particle.ac
 
     ##### keep individuals in the domain
     particle_boundaries!(particle, particle.ac, g, arch)
