@@ -115,7 +115,7 @@ function RectilinearGrid(;size, x, y, z,
         zC[i] = zC[i+1] + dzF[1]
     end
 
-    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, FT, TX, TY)
+    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX, TY)
 
     return RectilinearGrid{FT, TX, TY, TZ, typeof(xF), typeof(landmask)}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, dzC, dzF, Nx, Ny, Nz, Hx, Hy, Hz, landmask)

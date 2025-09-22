@@ -62,9 +62,7 @@ end
 
 ##### particle interaction wrapper
 function particle_interaction!(abiotic, plank, intac, abio_p, rnd, grid, arch::Architecture)
-    ##### generate random number (0,1)
-    rand!(rng_type(arch), rnd.x)
-
+    rand!(rng_type(arch), rnd.x) # generate random number (0,1)
     calc_merge_matrix!(intac, abiotic, plank, rnd, grid, abio_p, arch)
     inds = findall(isequal(true), intac)
     assign_merge!(abiotic, inds, arch)
@@ -77,28 +75,41 @@ end
 
 ##### particle release from phytoplankton cells
 function get_release_probability!(plank, rnd, abio_p, ΔT, arch::Architecture)
-    ##### generate random number (0,1)
-    rand!(rng_type(arch), rnd.x)
-
+    rand!(rng_type(arch), rnd.x) # generate random number (0,1)
     ##### compare the random number with the given probability
     ##### return 1 if random number is smaller
     @inbounds plank.Rptc .= isless.(rnd.x, abio_p.release_P .* ΔT .* plank.ptc) .* plank.ac
     return nothing
 end
 
-@kernel function release_abiotic_particle_kernel!(plank, abiotic, con, idx)
+@kernel function release_abiotic_particle_kernel!(plank, abiotic, con, idx, rnd)
     i = @index(Global)
     if (con[i] == 1.0f0) && (idx[i] ≠ 0)
         @inbounds abiotic.ac[idx[i]] = 1.0f0
-        @inbounds abiotic.x[idx[i]]  = plank.x[i]
-        @inbounds abiotic.y[idx[i]]  = plank.y[i]
-        @inbounds abiotic.z[idx[i]]  = plank.z[i]
+        @inbounds abiotic.x[idx[i]]  = plank.x[i] + rnd.x[i]
+        @inbounds abiotic.y[idx[i]]  = plank.y[i] + rnd.y[i]
+        @inbounds abiotic.z[idx[i]]  = plank.z[i] + rnd.z[i]
         @inbounds plank.ptc[i]      -= 1.0f0
     end
 end
-function release_abiotic_particle!(plank, abiotic, con, idx, arch::Architecture)
+function release_abiotic_particle!(plank, abiotic, con, idx, rnd, arch::Architecture)
     kernel! = release_abiotic_particle_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, abiotic, con, idx)
+    kernel!(plank, abiotic, con, idx, rnd)
+    return nothing
+end
+
+@kernel function calc_release_position_kernel!(rnd, xi, yi, zi, abio_p, g::AbstractGrid)
+    i = @index(Global)
+    @inbounds rnd.x[i] = rnd.x[i] * abio_p.Rd / ΔxC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
+    @inbounds rnd.y[i] = rnd.y[i] * abio_p.Rd / ΔyC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
+    @inbounds rnd.z[i] = rnd.z[i] * abio_p.Rd / ΔzC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
+end
+function calc_release_position!(rnd, xi, yi, zi, abio_p, g::AbstractGrid, arch::Architecture)
+    randn!(rng_type(arch), rnd.x) # generate random number Normal(0,1)
+    randn!(rng_type(arch), rnd.y) # generate random number Normal(0,1)
+    randn!(rng_type(arch), rnd.z) # generate random number Normal(0,1)
+    kernel! = calc_release_position_kernel!(device(arch), 256, (size(rnd.x,1)))
+    kernel!(rnd, xi, yi, zi, abio_p, g)
     return nothing
 end
 
@@ -112,7 +123,7 @@ function particle_release!(plank, abiotic, trs, rnd, abio_p, ΔT, t, arch::Archi
     accumulate!(+, trs.idc, plank.Rptc)
     trs.idc_int .= unsafe_trunc.(Int, trs.idc)
     get_tind!(plank.idx, plank.Rptc, trs.idc_int, deactive_ind, arch)
-    release_abiotic_particle!(plank, abiotic, plank.Rptc, plank.idx, arch)
+    release_abiotic_particle!(plank, abiotic, plank.Rptc, plank.idx, rnd, arch)
     plank.idx .= 0
     unsafe_free!(deactive_ind)
     return nothing

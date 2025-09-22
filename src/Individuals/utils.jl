@@ -91,12 +91,17 @@ end
     @inbounds xi = unsafe_trunc(Int, (particle.x[i]+1) * particle.ac[i]) + g.Hx 
     @inbounds yi = unsafe_trunc(Int, (particle.y[i]+1) * particle.ac[i]) + g.Hy
     @inbounds zi = unsafe_trunc(Int, (particle.z[i]+1) * particle.ac[i]) + g.Hz
-    @inbounds particle.ac[i] = g.landmask[xi, yi, zi] * particle.ac[i]
+    @inbounds particle.ac[i] = Bool(g.landmask[xi, yi, zi] * particle.ac[i])
 end
 function mask_individuals!(particle, g::AbstractGrid, N, arch)
     kernel! = mask_individuals_kernel!(device(arch), 256, (N,))
     kernel!(particle, g)
     return nothing
+end
+
+##### inactivate grazed or dead individuals
+function inactivate!(plank, loss)
+    @inbounds plank.ac .*= isless.(loss, 1.0f0)
 end
 
 ##### shape function - decrease from 1.0 to 0.0 while x increase from 0.0 to 1.0

@@ -89,16 +89,21 @@ Adapt.adapt_structure(to, grid::LatLonGrid{FT, TX, TY, TZ}) where {FT, TX, TY, T
 #####
 ##### validate the land mask
 #####
-function landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, FT, TX, TY)
+function landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX, TY)
     if isnothing(landmask)
-        landmask = ones(FT, Nx, Ny, Nz)
+        landmask = ones(Bool, Nx, Ny, Nz)
     else
+        if typeof(landmask) <: Array{Bool, 3}
+            nothing
+        else
+            throw(ArgumentError("landmask: type mismatch, typeof(landmask) must be Array{Bool, 3}."))
+        end
         if Base.size(landmask) ≠ (Nx, Ny, Nz)
             throw(ArgumentError("landmask: grid mismatch, size(landmask) must equal to (grid.Nx, grid.Ny, grid.Nz)."))
         end
     end
 
-    lh = zeros(FT, Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
+    lh = zeros(Bool, Nx+2*Hx, Ny+2*Hy, Nz+2*Hz)
     lh[Hx+1:Hx+Nx, Hy+1:Hy+Ny, Hz+1:Hz+Nz] .= landmask
 
     if TX == Periodic
