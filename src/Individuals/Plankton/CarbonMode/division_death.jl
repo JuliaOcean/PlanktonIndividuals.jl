@@ -1,5 +1,5 @@
 function inactivate!(plank, loss)
-    @inbounds plank.ac .*= (1.0f0 .- loss)
+    @inbounds plank.ac .*= Bool.(1.0f0 .- loss)
 end
 
 ##### grazing and grazing loss

@@ -15,7 +15,7 @@ end
 
 ##### compare particle distance and Rd, decide whether
 ##### this vesicle will be merged into phytoplankton cell
-@kernel function calc_merge_matrix_kernel!(intac, abiotic, plank, grid, abio_p)
+@kernel function calc_merge_matrix_kernel!(intac, abiotic, plank, rnd, grid, abio_p)
     i, j = @index(Global, NTuple)
     intac[i,j] = isless(calc_distance(plank.xi[i], plank.yi[i],
                                       plank.zi[i], plank.x[i],
@@ -23,11 +23,11 @@ end
                                       abiotic.xi[j], abiotic.yi[j],
                                       abiotic.zi[j], abiotic.x[j],
                                       abiotic.y[j], abiotic.z[j],
-                                      grid), abio_p.Rd) * abiotic.ac[j] 
+                                      grid), abio_p.Rd * rnd.x[i]) * abiotic.ac[j] 
 end
-function calc_merge_matrix!(intac, abiotic, plank, grid, abio_p, arch::Architecture)
+function calc_merge_matrix!(intac, abiotic, plank, rnd, grid, abio_p, arch::Architecture)
     kernel! = calc_merge_matrix_kernel!(device(arch), (16,16), (size(intac)))
-    kernel!(intac, abiotic, plank, grid, abio_p)
+    kernel!(intac, abiotic, plank, rnd, grid, abio_p)
     return nothing
 end
 
@@ -61,13 +61,16 @@ function merge_particle!(abiotic, plank, arch::Architecture)
 end
 
 ##### particle interaction wrapper
-function particle_interaction!(abiotic, plank, intac, abio_p, grid, arch::Architecture)
-    calc_merge_matrix!(intac, abiotic, plank, grid, abio_p, arch)
-    inds = findall(isequal(1.0f0), intac)
+function particle_interaction!(abiotic, plank, intac, abio_p, rnd, grid, arch::Architecture)
+    ##### generate random number (0,1)
+    rand!(rng_type(arch), rnd.x)
+
+    calc_merge_matrix!(intac, abiotic, plank, rnd, grid, abio_p, arch)
+    inds = findall(isequal(true), intac)
     assign_merge!(abiotic, inds, arch)
     merge_particle!(abiotic, plank, arch)
     unsafe_free!(inds)
-    abiotic.ac .= isless.(abiotic.merg, 1)
+    abiotic.ac .*= isless.(abiotic.merg, 1)
     abiotic.merg .= 0
     return nothing
 end
@@ -102,7 +105,7 @@ end
 function particle_release!(plank, abiotic, trs, rnd, abio_p, ΔT, t, arch::Architecture)
     get_release_probability!(plank, rnd, abio_p, ΔT, arch)
     releasenum = dot(plank.Rptc, plank.ac)
-    deactive_ind = findall(x -> x == 0.0f0, abiotic.ac)
+    deactive_ind = findall(isequal(false), abiotic.ac)
     if releasenum > length(deactive_ind)
         throw(ArgumentError("number of abiotic particles exceeds the capacity at timestep $(t/86400.0) days"))
     end
@@ -216,7 +219,7 @@ calc_particle_bc_bottom!(tr_temp, ::Nothing, rnd_3d, abio_p, ΔT, iter, g::Abstr
 
 @kernel function copy_abiotic_particle_from_field_kernel!(abiotic, inds, de_inds)
     i = @index(Global)
-    @inbounds abiotic.ac[de_inds[i]] = 1.0f0
+    @inbounds abiotic.ac[de_inds[i]] = true
     @inbounds abiotic.x[de_inds[i]]  = inds[i][1] # add a random number (0,1) if necessary
     @inbounds abiotic.y[de_inds[i]]  = inds[i][2]
     @inbounds abiotic.z[de_inds[i]]  = inds[i][3]

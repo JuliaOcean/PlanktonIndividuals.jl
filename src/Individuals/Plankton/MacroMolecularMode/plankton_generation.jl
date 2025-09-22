@@ -4,7 +4,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           CH   = zeros(FT, maxN), NST  = zeros(FT, maxN), PST  = zeros(FT, maxN),
                           PRO  = zeros(FT, maxN), DNA  = zeros(FT, maxN), RNA  = zeros(FT, maxN), 
                           Chl  = zeros(FT, maxN), gen  = zeros(FT, maxN), age  = zeros(FT, maxN), 
-                          ac   = zeros(FT, maxN), idx  = zeros(Int,maxN),
+                          idx  = zeros(Int,maxN), ac   = zeros(Bool, maxN), 
                           PS   = zeros(FT, maxN), VDOC = zeros(FT, maxN), VNH4 = zeros(FT, maxN),
                           VNO3 = zeros(FT, maxN), VPO4 = zeros(FT, maxN), ρChl = zeros(FT, maxN),
                           resp = zeros(FT, maxN), S_PRO= zeros(FT, maxN), S_DNA= zeros(FT, maxN),
@@ -45,7 +45,7 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     CH2DNA  = plank.p.CH2DNA
     Chl2DNA = plank.p.Chl2DNA
 
-    plank.data.ac[1:N]  .= 1.0f0                    # activity
+    plank.data.ac[1:N]  .= true                     # activity
     plank.data.gen[1:N] .= 1.0f0                    # generation
     plank.data.age[1:N] .= 0.0f0                    # age
 
