@@ -93,7 +93,7 @@ function test_load_lat_lon_grid()
             RAW=Γ.RAW[1], RAS=Γ.RAS[1], RAC=Γ.RAC[1],
             hFacC=ones(360,160,50), hFacW=ones(360,160,50), hFacS=ones(360,160,50))
 
-    mask = ones(360,160,50)
+    mask = ones(Bool, 360,160,50)
 
     grid = LoadLatLonGrid(;grid_info = grid_info, size = (360,160,50), lat = (-80,80), lon= (-180,180), landmask = mask)
 
