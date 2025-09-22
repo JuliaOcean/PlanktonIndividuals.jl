@@ -1,7 +1,7 @@
 function construct_abiotic_particle(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
     rawdata = StructArray(x   = zeros(FT, maxN), y   = zeros(FT, maxN), z   = zeros(FT, maxN),
                           xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN),
-                          ac  = zeros(FT, maxN), merg= zeros(Int,maxN), idx = zeros(Int,maxN)
+                          ac  = zeros(Bool, maxN), merg= zeros(Int,maxN), idx = zeros(Int,maxN)
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
@@ -21,7 +21,7 @@ function construct_abiotic_particle(arch::Architecture, sp::Int, params::Dict, m
 end
 
 function initialize_abiotic_particle!(particle, N::Int, g::AbstractGrid, arch::Architecture)
-    particle.data.ac[1:N] .= 1.0f0                                                                             # activity
+    particle.data.ac[1:N] .= true                                                                            # activity
 
     rand!(rng_type(arch), particle.data.x)
     rand!(rng_type(arch), particle.data.y)

@@ -4,10 +4,10 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           Sz  = zeros(FT, maxN),
                           Bm  = zeros(FT, maxN), Bd  = zeros(FT, maxN), Chl = zeros(FT, maxN),
                           gen = zeros(FT, maxN), age = zeros(FT, maxN),
-                          ac  = zeros(FT, maxN), idx = zeros(Int,maxN),
+                          idx = zeros(Int,maxN), ac  = zeros(Bool, maxN),
                           PS  = zeros(FT, maxN), BS  = zeros(FT, maxN), RS  = zeros(FT, maxN),
                           TD  = zeros(FT, maxN), RP  = zeros(FT, maxN), ptc = zeros(FT, maxN),
-                          Rptc=zeros(FT, maxN),
+                          Rptc= zeros(FT, maxN),
                           graz= zeros(FT, maxN), mort= zeros(FT, maxN), dvid= zeros(FT, maxN)
                           ) 
     data = replace_storage(array_type(arch), rawdata)
@@ -36,7 +36,7 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     Nsuper = plank.p.Nsuper
     Chl2C = plank.p.Chl2C
 
-    plank.data.ac[1:N]  .= 1.0f0                                                                             # activity
+    plank.data.ac[1:N]  .= true                                                                              # activity
     plank.data.gen[1:N] .= 1.0f0                                                                             # generation
     plank.data.age[1:N] .= 0.0f0                                                                             # age
 

@@ -54,7 +54,7 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, pa
                       idc = zeros(FT, maxN), idc_int = zeros(Int, maxN))
     trs_d = replace_storage(array_type(arch), trs)
 
-    intac = zeros(FT, maxN, maxN) |> array_type(arch)
+    intac = zeros(Bool, maxN, maxN) |> array_type(arch)
 
     ts = timestepper(Gcs, tracer_temp, vel₀, vel½, vel₁, PARF, temp, flux_sink, plk, par, par₀, Chl, pop, rnd_d, rnd_3d, velos_d, trs_d, intac, palat)
 

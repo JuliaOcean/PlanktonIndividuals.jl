@@ -6,7 +6,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           qNO3 = zeros(FT, maxN), qP   = zeros(FT, maxN), Chl  = zeros(FT, maxN),
                           qFe  = zeros(FT, maxN), qFePS= zeros(FT, maxN), qFeNR= zeros(FT, maxN), 
                           qFeNF= zeros(FT, maxN), 
-                          gen  = zeros(FT, maxN), age  = zeros(FT, maxN), ac   = zeros(FT, maxN), 
+                          gen  = zeros(FT, maxN), age  = zeros(FT, maxN), ac   = zeros(Bool, maxN), 
                           idx  = zeros(Int,maxN), tdark= zeros(FT, maxN),
                           PS   = zeros(FT, maxN), CF   = zeros(FT, maxN), ECF  = zeros(FT, maxN),
                           VNH4 = zeros(FT, maxN), VNO3 = zeros(FT, maxN), VPO4 = zeros(FT, maxN),
@@ -61,7 +61,7 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     R_PC = plank.p.R_PC
     Chl2Cint = plank.p.Chl2Cint
 
-    plank.data.ac[1:N]  .= 1.0f0                                                      # activity
+    plank.data.ac[1:N]  .= true                                                       # activity
     plank.data.gen[1:N] .= 1.0f0                                                      # generation
     plank.data.age[1:N] .= 0.0f0                                                      # age
 

@@ -122,7 +122,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
         abiotic = model.individuals.abiotics[pair[2]].data
         abio_p = model.individuals.abiotics[pair[2]].p
         particle_interaction!(abiotic, plank, model.timestepper.intac, abio_p,
-                              model.grid, model.arch)
+                              model.timestepper.rnd, model.grid, model.arch)
         particle_release!(plank, abiotic, model.timestepper.trs, model.timestepper.rnd,
                           abio_p, ΔT, model.t, model.arch)
     end
