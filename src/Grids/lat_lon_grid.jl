@@ -302,7 +302,7 @@ function LoadLatLonGrid(;grid_info, size, lat, lon,
         end
     end
 
-    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, FT, TX, TY)
+    landmask = landmask_validation(landmask, Nx, Ny, Nz, Hx, Hy, Hz, TX, TY)
 
     return LatLonGrid{FT, TX, TY, TZ, typeof(xF), typeof(dxC), typeof(Vol)}(
         xC, yC, zC, xF, yF, zF, Δx, Δy, dxC, dyC, dzC, dxF, dyF, dzF, Ax, Ay, Az, Vol, Nx, Ny, Nz, Hx, Hy, Hz, landmask)
