@@ -36,48 +36,31 @@ Keyword Arguments (Optional)
 ============================
 - `FT`: Floating point data type. Default: `Float32`.
 - `mode` : Phytoplankton physiology mode, choose among CarbonMode(), QuotaMode(), or MacroMolecularMode().
-- `N_species` : Number of species.
-- `N_individual` : Number of individuals per species, should be a vector with `N_species` elements.
 - `max_individuals` : Maximum number of individuals for each species the model can hold,
                     usually take the maximum of all the species and apply a factor to account for the growth
                     of individuals during one simulation.
 - `bgc_params` : Parameter set for biogeochemical processes modeled in the model, use default if `nothing`, 
                     use `Dict` to update parameters, the format and names of parameters can be found by running `bgc_params_default()`.
-- `phyt_params` : Parameter set for physiological processes of individuals modeled in the model, use default if `nothing`,
-                    use `Dict` to update parameters, the format and names of parameters can be found by running `phyt_params_default(N_species, mode)`.
 - `tracer_initial` : The source of initial conditions of tracer fields, should be either a `NamedTuple` 
                     or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
-- `abiotic` : false or a NamedTuple. Whether to include abiotic particles in the model. If yes,
+- `phyto` : nothing or a `phyto_setup`. Whether to use default setup of phytoplankton in the model. If yes,
+                    it should be a NamedTuple like this `phyto = (params = nothing, N = [2^10, 2^10], Nsp = 2)`.
+- `abiotic` : nothing or a `abiotic_setup`. Whether to include abiotic particles in the model. If yes,
                     it should be a NamedTuple like this `abiotic = (params = nothing, N = [2^10, 2^10], Nsa = 2, palat = [(:sp1, :sa1)])`.
 - `t` : Model time, start from 0 by default, in second.
 """
 function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        FT = Float32,
                        mode = QuotaMode(),
-                       N_species::Int = 1,
-                       N_individual::Vector{Int} = [1024],
                        max_individuals::Int = 8*1024,
                        bgc_params = nothing, 
-                       phyt_params = nothing,
                        tracer_initial = default_tracer_init(),
+                       phyto = nothing,
                        abiotic = nothing,
                        t::AbstractFloat = 0.0f0,
                        )
 
-    @assert maximum(N_individual) ≤ max_individuals
-
     @assert isfunctional(arch) == true
-
-    grid_d = replace_grid_storage(arch, grid)
-
-    if isa(phyt_params, Nothing)
-        phyt_params = phyt_params_default(N_species, mode)
-        phyt_params_final = update_phyt_params(phyt_params, FT; N = N_species, mode = mode)
-    elseif isa(phyt_params, Dict)
-        phyt_params_final = update_phyt_params(phyt_params, FT; N = N_species, mode = mode)
-    else
-        throw(ArgumentError("Phytoplankton parameters must be either Nothing or Dict!")) 
-    end
 
     if isa(bgc_params, Nothing)
         bgc_params = bgc_params_default(FT)
@@ -88,29 +71,59 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
         throw(ArgumentError("Phytoplankton parameters must be either Nothing or Dict!")) 
     end
 
-    if isa(abiotic, NamedTuple)
+    grid_d = replace_grid_storage(arch, grid)
+
+    if isa(phyto, Nothing)
+        N_inds = 2^10
+        Nsp = 1
+        phyt_params = phyt_params_default(Nsp, mode)
+        phyt_params_final = update_phyt_params(phyt_params, FT; N = Nsp, mode = mode)
+        phyto = phyto_setup(phyt_params, N_inds, Nsp)
+    elseif isa(phyto, phyto_setup)
+        @assert maximum(phyto.N) ≤ max_individuals
+        if length(phyto.N) ≠ phyto.Nsp
+            throw(ArgumentError("PlanktonModel: `phyto`: The length of `N` must be $(phyto.Nsp), the same as `Nsp`, each species has its own initial condition"))
+        end
+        if isa(phyto.params, Nothing)
+            phyto.params = phyt_params_default(phyto.Nsp, mode)
+            phyto.params = update_phyt_params(phyto.params, FT; N = phyto.Nsp, mode = mode)
+        elseif isa(phyto.params, Dict)
+            phyto.params = update_phyt_params(phyto.params, FT; N = phyto.Nsp, mode = mode)
+        else
+            throw(ArgumentError("Phytoplankton parameters must be either Nothing or Dict!")) 
+        end
+    else
+        throw(ArgumentError("PlanktonModel:`phyto` must be either Nothing or `phyto_setup`!")) 
+    end
+
+    if isa(abiotic, Nothing)
+        nothing
+    elseif isa(abiotic, abiotic_setup)
+        @assert maximum(abiotic.N) ≤ max_individuals
+        if length(abiotic.N) ≠ abiotic.Nsa
+            throw(ArgumentError("PlanktonModel: `abiotic`: The length of `N` must be $(abiotic.Nsa), the same as `Nsa`, each species has its own initial condition"))
+        end
         if isa(abiotic.params, Nothing)
-            abiotic_params = abiotic_params_default(abiotic.Nsa)
-            abiotic_params_final = update_abiotic_params(abiotic_params, FT; N = abiotic.Nsa)
+            abiotic.params = abiotic_params_default(abiotic.Nsa)
+            abiotic.params = update_abiotic_params(abiotic.params, FT; N = abiotic.Nsa)
         elseif isa(abiotic.params, Dict)
-            abiotic_params_final = update_abiotic_params(abiotic.params, FT; N = abiotic.Nsa)
+            abiotic.params = update_abiotic_params(abiotic.params, FT; N = abiotic.Nsa)
         else
             throw(ArgumentError("Abiotic particle parameters must be either Nothing or Dict!")) 
         end
-        abiotic_final = (params = abiotic_params_final, Nsa = abiotic.Nsa, N = abiotic.N, palat = abiotic.palat)
     else
-        abiotic_final = nothing
+        throw(ArgumentError("PlanktonModel:`abiotic` must be either Nothing or `abiotic_setup`!")) 
     end
 
-    inds = generate_individuals(phyt_params_final, arch, N_species, N_individual, max_individuals, FT, grid_d, mode; abiotic = abiotic_final)
+    inds = generate_individuals(phyto, abiotic, max_individuals, arch, FT, grid_d, mode)
 
     ##### check palatability between plank and abiotic
-    if isa(abiotic_final, Nothing)
-        palat = []
+    if isa(abiotic, Nothing)
+        palat = Palat([], [])
     else
         SPs = keys(inds.phytos)
         SAs = keys(inds.abiotics)
-        for p in abiotic_final.palat
+        for p in abiotic.palat.intac
             if p[1] ∉ SPs
                 throw(ArgumentError("Abiotic: $(p[1]) is not generated"))
             end
@@ -118,7 +131,15 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                 throw(ArgumentError("Abiotic: $(p[s]) is not generated"))
             end
         end
-        palat = abiotic_final.palat
+        for p in abiotic.palat.release
+            if p[1] ∉ SPs
+                throw(ArgumentError("Abiotic: $(p[1]) is not generated"))
+            end
+            if p[2] ∉ SAs
+                throw(ArgumentError("Abiotic: $(p[s]) is not generated"))
+            end
+        end
+        palat = abiotic.palat
     end
 
     tracers = generate_tracers(arch, grid_d, tracer_initial, FT)

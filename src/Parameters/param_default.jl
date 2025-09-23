@@ -321,9 +321,9 @@ Generate default abiotic particle parameter values based on species number `N`.
 function abiotic_params_default(N::Int64)
     params=Dict(
         "Nsuper"    => [1],       # Number of abiotic particles each super individual represents
-        "Rd"        => [1.0e-4],  # Distance between abiotic particle and phytoplankton cell
+        "Rd"        => [1.0e-4],  # Distance between abiotic particle and phytoplankton cell (m)
         "release_P" => [1.0e-6],  # Probability of particle release per second
-        "sz_min"    => [1.0e-3],  # Minimal size of a abiotic particle
+        "sz_min"    => [1.0e-3],  # Minimal size of a abiotic particle (mmolFe/particle)
         "Ktr"       => [0.0e-5],  # Rate of particle forming from tracer
     )
 

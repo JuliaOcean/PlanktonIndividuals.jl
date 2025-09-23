@@ -2,8 +2,8 @@
 @kernel function calc_diffusion_kernel!(rnd, xi, yi, zi, κx, κy, κz, ΔT, g::AbstractGrid)
     i = @index(Global)
     @inbounds rnd.x[i] = rnd.x[i] * √(κx*ΔT) / ΔxC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
-    @inbounds rnd.y[i] = rnd.y[i] * √(κy*ΔT) / ΔxC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
-    @inbounds rnd.z[i] = rnd.z[i] * √(κz*ΔT) / ΔxC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
+    @inbounds rnd.y[i] = rnd.y[i] * √(κy*ΔT) / ΔyC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
+    @inbounds rnd.z[i] = rnd.z[i] * √(κz*ΔT) / ΔzC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
     
 end
 function calc_diffusion!(rnd, xi, yi, zi, κx, κy, κz, ΔT, g::AbstractGrid, arch::Architecture)

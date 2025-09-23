@@ -164,7 +164,7 @@ end
                                                getbc(abio_bc_west, j, k, iter) * ΔT * Ax(ii, jj, kk, g))
 end
 @kernel function calc_particle_bc_south_kernel!(tr_temp, abio_bc_south, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
-    j, k = @index(Global, NTuple)
+    i, k = @index(Global, NTuple)
     ii = i + g.Hx
     jj = 1 + g.Hy
     kk = k + g.Hz
@@ -172,7 +172,7 @@ end
                                                getbc(abio_bc_south, i, k, iter) * ΔT * Ay(ii, jj, kk, g))
 end
 @kernel function calc_particle_bc_north_kernel!(tr_temp, abio_bc_north, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
-    j, k = @index(Global, NTuple)
+    i, k = @index(Global, NTuple)
     ii = i + g.Hx
     jj = g.Ny + g.Hy
     kk = k + g.Hz
@@ -228,16 +228,16 @@ calc_particle_bc_bottom!(tr_temp, ::Nothing, rnd_3d, abio_p, ΔT, iter, g::Abstr
  calc_particle_bc_south!(tr_temp, ::Nothing, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid, arch::Architecture) = nothing
  calc_particle_bc_north!(tr_temp, ::Nothing, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid, arch::Architecture) = nothing
 
-@kernel function copy_abiotic_particle_from_field_kernel!(abiotic, inds, de_inds)
+@kernel function copy_abiotic_particle_from_field_kernel!(abiotic, inds, de_inds, g::AbstractGrid)
     i = @index(Global)
     @inbounds abiotic.ac[de_inds[i]] = true
-    @inbounds abiotic.x[de_inds[i]]  = inds[i][1] # add a random number (0,1) if necessary
-    @inbounds abiotic.y[de_inds[i]]  = inds[i][2]
-    @inbounds abiotic.z[de_inds[i]]  = inds[i][3]
+    @inbounds abiotic.x[de_inds[i]]  = inds[i][1] - g.Hx - 0.4f0
+    @inbounds abiotic.y[de_inds[i]]  = inds[i][2] - g.Hy - 0.4f0
+    @inbounds abiotic.z[de_inds[i]]  = inds[i][3] - g.Hz - 0.4f0
 end
-function copy_abiotic_particle_from_field!(abiotic, inds, de_inds, arch::Architecture)
+function copy_abiotic_particle_from_field!(abiotic, inds, de_inds, g::AbstractGrid, arch::Architecture)
     kernel! = copy_abiotic_particle_from_field_kernel!(device(arch), 256, (size(inds,1)))
-    kernel!(abiotic, inds, de_inds)
+    kernel!(abiotic, inds, de_inds, g)
     return nothing
 end
 
@@ -249,11 +249,11 @@ function particles_from_bcs!(abiotic, tr_temp, abio_bcs::BoundaryConditions, rnd
         return nothing
     else
         inds = findall(isequal(1.0f0), tr_temp)
-        deactive_ind = findall(x -> x == 0.0f0, abiotic.ac)
+        deactive_ind = findall(isequal(false), abiotic.ac)
         if length(inds) > length(deactive_ind)
             throw(ArgumentError("number of abiotic particles exceeds the capacity at timestep $(t/86400.0) days"))
         end
-        copy_abiotic_particle_from_field!(abiotic, inds, deactive_ind, arch)
+        copy_abiotic_particle_from_field!(abiotic, inds, deactive_ind, g, arch)
         unsafe_free!(inds)
         unsafe_free!(deactive_ind)
         return nothing
