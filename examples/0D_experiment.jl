@@ -41,8 +41,7 @@ Next we setup the individual-based model by specifying the computational archite
 """
 
 # ╔═╡ f7644486-7546-4716-9bb1-58c2220e38eb
-model = PlanktonModel(arch, grid; N_species = 1, 
-								  N_individual = [2^10],
+model = PlanktonModel(arch, grid; phyto = phyto_setup(nothing, [1024], 1),
 								  max_individuals = 2^10*16)
 
 # ╔═╡ e41f726a-3779-47a5-a3ad-ad9a34280f43

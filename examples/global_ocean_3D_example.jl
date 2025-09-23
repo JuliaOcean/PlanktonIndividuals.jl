@@ -67,8 +67,8 @@ begin
 	vvels = cat(vvel..., dims=4)
 	wvels = cat(wvel..., dims=4)
 	temps = cat(temp..., dims=4)
-	mask = ones(size(temps[:,:,:,1]))
-	mask[findall(x -> x == 0.0, temps[:,:,:,1])] .= 0.0
+	mask = ones(Bool, size(temps[:,:,:,1]))
+	mask[findall(x -> x == 0.0, temps[:,:,:,1])] .= false
 	nothing
 end
 
@@ -95,11 +95,9 @@ bgc_parameter = Dict("kDOC" => 0.0, # Remineralization rate for DOC
 # ╔═╡ 191704d8-1900-4408-a509-2f488017c498
 model = PlanktonModel(CPU(), grid;
 					  mode = CarbonMode(),
-                      N_species = 1,
-                      N_individual = [2^10],
+                      phyto = phyto_setup(phyt_parameter, [1024], 1),
                       max_individuals = 2^13,
-                      bgc_params = bgc_parameter,
-                      phyt_params = phyt_parameter) 
+                      bgc_params = bgc_parameter) 
 
 # ╔═╡ 9f25ad02-d92c-42f0-8cc5-84fd5393fe1c
 begin
