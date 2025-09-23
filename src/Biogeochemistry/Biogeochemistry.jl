@@ -7,7 +7,7 @@ export Field
 export interior, zero_fields!
 export fill_halo_vel!
 export default_bcs, getbc, apply_bcs!
-export set_bc!, validate_bcs
+export set_bc!, set_bc_particle!, validate_bcs
 export tracer_names
 
 using KernelAbstractions

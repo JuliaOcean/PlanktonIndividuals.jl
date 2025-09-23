@@ -117,12 +117,19 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     end # phytoplankton
 
     ##### particle-particle interaction
-    for pair in model.timestepper.palat
+    for pair in model.timestepper.palat.intac
         plank = model.individuals.phytos[pair[1]].data
         abiotic = model.individuals.abiotics[pair[2]].data
         abio_p = model.individuals.abiotics[pair[2]].p
         particle_interaction!(abiotic, plank, model.timestepper.intac, abio_p,
                               model.timestepper.rnd, model.grid, model.arch)
+    end
+
+    ##### particle-particle release
+    for pair in model.timestepper.palat.release
+        plank = model.individuals.phytos[pair[1]].data
+        abiotic = model.individuals.abiotics[pair[2]].data
+        abio_p = model.individuals.abiotics[pair[2]].p
         particle_release!(plank, abiotic, model.timestepper.trs, model.timestepper.rnd,
                           abio_p, ΔT, model.t, model.arch)
     end

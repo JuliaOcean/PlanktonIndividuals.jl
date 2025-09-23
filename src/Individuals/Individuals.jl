@@ -19,7 +19,7 @@ using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Diagnostics
 
 using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
-using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle
+using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle, phyto_setup, abiotic_setup, Palat
 
 include("Advection/Advection.jl")
 include("Plankton/QuotaMode/QuotaMode.jl")
@@ -39,18 +39,14 @@ import .IronEnergy
 #####
 ##### generate individuals of multiple species
 #####
-function generate_individuals(params::Dict, arch::Architecture, Nsp::Int, N::Vector{Int}, maxN::Int, FT::DataType, g::AbstractGrid, mode::AbstractMode; abiotic = nothing)
+function generate_individuals(phyto::phyto_setup, abiotic::abiotic_setup, maxN, arch::Architecture, FT::DataType, g::AbstractGrid, mode::AbstractMode)
     plank_names = Symbol[]
     plank_data=[]
 
-    if length(N) ≠ Nsp
-        throw(ArgumentError("The length of `N_individual` must be $(Nsp), the same as `N_species`, each species has its own initial condition"))
-    end
-
-    for i in 1:Nsp
+    for i in 1:phyto.Nsp
         name = Symbol("sp"*string(i))
-        plank = construct_plankton(arch, i, params, maxN, FT, mode::AbstractMode)
-        initialize_plankton!(plank, N[i], g, arch, mode)
+        plank = construct_plankton(arch, i, phyto.params, maxN, FT, mode::AbstractMode)
+        initialize_plankton!(plank, phyto.N[i], g, arch, mode)
         push!(plank_names, name)
         push!(plank_data, plank)
     end
@@ -62,14 +58,6 @@ function generate_individuals(params::Dict, arch::Architecture, Nsp::Int, N::Vec
     else
         abiotic_names = Symbol[]
         abiotic_data = []
-
-        if length(abiotic.N) ≠ abiotic.Nsa
-            throw(ArgumentError("Abiotic particles: The length of `N` must be $(Nsa), the same as `Nsa`, each species has its own initial condition"))
-        end
-
-        if maximum(abiotic.N) > maxN
-            throw(ArgumentError("Abiotic particles: The number of particles should not exceed $(maxN), max_individuals"))
-        end
 
         for j in 1:abiotic.Nsa
             name = Symbol("sa"*string(j))

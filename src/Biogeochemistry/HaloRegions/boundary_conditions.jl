@@ -30,6 +30,16 @@ function set_bc!(model; tracer::Symbol, pos::Symbol, bc_value::Union{Number, Abs
     return nothing
 end
 
+function set_bc_particle!(model; sa::Symbol, pos::Symbol, bc_value::Union{Number, AbstractArray})
+    FT = model.FT
+    bc_value_d = FT.(bc_value)
+    if isa(bc_value_d, AbstractArray)
+        bc_value_d = bc_value_d |> array_type(model.arch)
+    end
+    setproperty!(model.individuals.abiotics[sa].bc, pos, bc_value_d)
+    return nothing
+end
+
 # get boundary condition at each grid point
 @inline function getbc(bc::Union{Number, AbstractArray}, i, j, t)
     if typeof(bc) <: Number

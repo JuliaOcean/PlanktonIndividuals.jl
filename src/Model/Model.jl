@@ -14,7 +14,7 @@ using PlanktonIndividuals.Individuals
 using PlanktonIndividuals.Diagnostics
 
 using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
-using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle
+using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle, phyto_setup, abiotic_setup, Palat
 
 import Base: show
 

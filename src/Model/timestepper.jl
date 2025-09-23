@@ -17,7 +17,7 @@ mutable struct timestepper
     velos::AbstractArray# a StructArray of intermediate values for RK4 particle advection
     trs::AbstractArray  # a StructArray of tracers of each individual
     intac::AbstractArray# a (Cu)array of 0 and 1 to store particle-particle interatcion
-    palat::Vector       # a vector of tuples to store the interaction between species
+    palat::Palat        # a `Palat` to store the interaction between species
 end
 
 function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, palat)

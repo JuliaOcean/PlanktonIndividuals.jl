@@ -17,9 +17,10 @@ export
     PlanktonModel, 
     CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode,
     phytoplankton, abiotic_particle, individuals,
+    phyto_setup, abiotic_setup, Palat,
 
     # BoundaryConditions
-    set_bc!,
+    set_bc!, set_bc_particle!,
 
     # Simulation
     PlanktonSimulation, update!, vel_copy!, set_vels_fields!, set_PARF_fields!, set_temp_fields!,
@@ -107,6 +108,24 @@ struct individuals
     phytos::NamedTuple
     abiotics::NamedTuple
 end
+
+mutable struct phyto_setup
+    params::Union{Nothing, Dict}
+    N::AbstractArray
+    Nsp::Int64
+end
+
+mutable struct Palat
+    intac::AbstractArray
+    release::AbstractArray
+end
+mutable struct abiotic_setup
+    params::Union{Nothing, Dict}
+    N::AbstractArray
+    Nsa::Int64
+    palat::Palat
+end
+
 
 include("Architectures.jl")
 include("Units.jl")
