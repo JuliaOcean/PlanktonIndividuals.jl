@@ -4,8 +4,7 @@ grid = RectilinearGrid(size = (1, 1, 1), x = (0,32), y = (0,32), z = (0,-32))
 
 model = PlanktonModel(CPU(), grid;
                       mode = IronEnergyMode(),
-                      N_species = 5,
-                      N_individual = [1024,1024,1024,1024,1024],
+                      phyto = phyto_setup(nothing, [1024, 1024, 1024, 1024, 1024], 5),
                       max_individuals = 1024*10)
 
 function tot_mass(tracer, g)

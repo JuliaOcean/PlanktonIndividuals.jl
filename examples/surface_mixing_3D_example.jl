@@ -66,8 +66,7 @@ Next we setup the individual-based model by specifying the architecture, grid, a
 """
 
 # ╔═╡ 7735454f-bc9f-4dad-8c40-2e5bba096307
-model = PlanktonModel(arch, grid; N_species = 1, 
-								  N_individual = [2^8],
+model = PlanktonModel(arch, grid; phyto = phyto_setup(nothing, [2^8], 1),
 								  max_individuals = 2^8*8)
 
 # ╔═╡ 2aecf438-c18a-4c9c-b1d1-febdf6fffb17
