@@ -74,10 +74,10 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
     grid_d = replace_grid_storage(arch, grid)
 
     if isa(phyto, Nothing)
-        N_inds = 2^10
+        N_inds = [2^10]
         Nsp = 1
         phyt_params = phyt_params_default(Nsp, mode)
-        phyt_params_final = update_phyt_params(phyt_params, FT; N = Nsp, mode = mode)
+        phyt_params = update_phyt_params(phyt_params, FT; N = Nsp, mode = mode)
         phyto = phyto_setup(phyt_params, N_inds, Nsp)
     elseif isa(phyto, phyto_setup)
         @assert maximum(phyto.N) ≤ max_individuals
