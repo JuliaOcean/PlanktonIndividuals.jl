@@ -39,7 +39,7 @@ import .IronEnergy
 #####
 ##### generate individuals of multiple species
 #####
-function generate_individuals(phyto::phyto_setup, abiotic::abiotic_setup, maxN, arch::Architecture, FT::DataType, g::AbstractGrid, mode::AbstractMode)
+function generate_individuals(phyto::phyto_setup, abiotic::Union{Nothing, abiotic_setup}, maxN, arch::Architecture, FT::DataType, g::AbstractGrid, mode::AbstractMode)
     plank_names = Symbol[]
     plank_data=[]
 
