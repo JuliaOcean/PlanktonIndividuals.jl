@@ -1,7 +1,7 @@
 # [Benchmarks](@id benchmarks)
 
 Here we benchmark the model performance in two `Architecture`s.
-The number of individuals used in the benchmark are `(2^10, 2^15, 2^17, 2^20)`.
+The number of individuals used in the benchmark are `(2^10, 2^12, 2^14, 2^15)`.
 And we also use different grid resolutions in 2-Dimensional and 3-Dimensional model setup.
 
 ## 0-Dimensional model
@@ -9,117 +9,119 @@ And we also use different grid resolutions in 2-Dimensional and 3-Dimensional mo
 This is a benchmark of a simple 0-Dimensional model setup without advection of Eulerian tracers. However, the advection of individuals still take the same amount of time whether the velocity field is provided or not.
 
 ```julia
-PlanktonIndividuals v0.6.1
-Julia Version 1.8.0
-Commit 5544a0fab76 (2022-08-17 13:38 UTC)
+PlanktonIndividuals v0.7.5
+Julia Version 1.11.7
+Commit f2b3dbda30a (2025-09-08 12:10 UTC)
 Platform Info:
-  OS: Linux (x86_64-pc-linux-gnu)
-  CPU: Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz
+  OS: Linux (x86_64-linux-gnu)
+  CPU: 56 × Intel(R) Xeon(R) Gold 6132 CPU @ 2.60GHz
   WORD_SIZE: 64
-  LIBM: libopenlibm
-  LLVM: libLLVM-13.0.1 (ORCJIT, broadwell)
-  GPU: Tesla P100-PCIE-12GB
-  CUDA runtime 11.8, artifact installation
-  CUDA driver 11.2
-  NVIDIA driver 460.84.0
+  LLVM: libLLVM-16.0.6 (ORCJIT, skylake-avx512)
+  GPU: Quadro GV100 (sm_70, 32.000 GiB available)
+  CUDA runtime 12.9, artifact installation
+  CUDA driver 565.57.1 for 12.7
 ```
 
-| Arch | N       | min        | median     | mean       | max        | memory     | allocs |
-| ---- | ------- | ---------- | ---------- | ---------- | ---------- | ---------- | ------ |
-| CPU  | 1024    | 2.945 ms   | 3.016 ms   | 3.167 ms   | 4.328 ms   | 478.67 KiB | 2992   |
-| CPU  | 32768   | 69.741 ms  | 69.812 ms  | 71.594 ms  | 80.231 ms  | 477.72 KiB | 2931   |
-| CPU  | 131072  | 276.553 ms | 276.966 ms | 280.569 ms | 300.907 ms | 477.72 KiB | 2931   |
-| CPU  | 1048576 | 2.582 s    | 2.590 s    | 2.590 s    | 2.598 s    | 477.72 KiB | 2931   |
-| GPU  | 1024    | 7.085 ms   | 7.158 ms   | 7.364 ms   | 9.323 ms   | 1.92 MiB   | 21327  |
-| GPU  | 32768   | 7.435 ms   | 7.520 ms   | 7.925 ms   | 10.173 ms  | 1.92 MiB   | 21327  |
-| GPU  | 131072  | 7.053 ms   | 9.161 ms   | 9.851 ms   | 19.812 ms  | 1.92 MiB   | 21294  |
-| GPU  | 1048576 | 8.005 ms   | 46.217 ms  | 47.484 ms  | 122.516 ms | 1.92 MiB   | 21294  |
+| Arch |     N |       min |    median |      mean |       max |     memory | allocs | samples |
+|------|-------|-----------|-----------|-----------|-----------|------------|--------|---------|
+|  CPU |  1024 |  2.536 ms |  2.629 ms |  2.696 ms |  3.204 ms | 463.71 KiB |   3673 |      10 |
+|  CPU |  4096 |  8.091 ms |  8.201 ms |  8.252 ms |  8.829 ms | 632.18 KiB |   3673 |      10 |
+|  CPU | 16384 | 30.433 ms | 30.558 ms | 30.745 ms | 31.809 ms |   1.28 MiB |   3595 |      10 |
+|  CPU | 32768 | 59.959 ms | 60.364 ms | 60.354 ms | 60.980 ms |   2.15 MiB |   3595 |      10 |
+|  GPU |  1024 | 13.006 ms | 13.194 ms | 13.322 ms | 14.415 ms |   2.68 MiB |  77257 |      10 |
+|  GPU |  4096 | 13.152 ms | 13.334 ms | 13.386 ms | 13.991 ms |   2.68 MiB |  77257 |      10 |
+|  GPU | 16384 | 13.562 ms | 13.755 ms | 13.800 ms | 14.595 ms |   2.68 MiB |  77260 |      10 |
+|  GPU | 32768 | 14.646 ms | 14.879 ms | 14.948 ms | 15.450 ms |   2.68 MiB |  77263 |      10 |
 
 ## 2-Dimensional model
 
 This is the benchmark of a 2-Dimensional model setup with `(Ns, 1, Ns)` grid cells. Here `Ns = [32, 64, 128]`.
 
 ```julia
-PlanktonIndividuals v0.6.1
-Julia Version 1.8.0
-Commit 5544a0fab76 (2022-08-17 13:38 UTC)
+PlanktonIndividuals v0.7.5
+Julia Version 1.11.7
+Commit f2b3dbda30a (2025-09-08 12:10 UTC)
 Platform Info:
-  OS: Linux (x86_64-pc-linux-gnu)
-  CPU: Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz
+  OS: Linux (x86_64-linux-gnu)
+  CPU: 56 × Intel(R) Xeon(R) Gold 6132 CPU @ 2.60GHz
   WORD_SIZE: 64
-  LIBM: libopenlibm
-  LLVM: libLLVM-13.0.1 (ORCJIT, broadwell)
-  GPU: Tesla P100-PCIE-12GB
-  CUDA runtime 11.8, artifact installation
-  CUDA driver 11.2
-  NVIDIA driver 460.84.0
+  LLVM: libLLVM-16.0.6 (ORCJIT, skylake-avx512)
+  GPU: Quadro GV100 (sm_70, 32.000 GiB available)
+  CUDA runtime 12.9, artifact installation
+  CUDA driver 565.57.1 for 12.7
 ```
 
-| Arch | N       | Ns  | min        | median     | mean       | max        | memory    | allocs |
-| ---- | ------- | --- | ---------- | ---------- | ---------- | ---------- | --------- | ------ |
-| CPU  | 1024    | 32  | 8.096 ms   | 8.132 ms   | 8.211 ms   | 8.688 ms   | 2.70 MiB  | 3109   |
-| CPU  | 1024    | 64  | 19.889 ms  | 19.940 ms  | 20.064 ms  | 20.952 ms  | 8.68 MiB  | 3052   |
-| CPU  | 1024    | 128 | 68.735 ms  | 69.030 ms  | 69.672 ms  | 75.046 ms  | 31.72 MiB | 3052   |
-| CPU  | 32768   | 32  | 74.115 ms  | 74.154 ms  | 76.313 ms  | 85.288 ms  | 2.70 MiB  | 3048   |
-| CPU  | 32768   | 64  | 89.999 ms  | 90.163 ms  | 92.340 ms  | 101.475 ms | 8.68 MiB  | 3052   |
-| CPU  | 32768   | 128 | 162.286 ms | 162.618 ms | 168.129 ms | 190.011 ms | 31.72 MiB | 3052   |
-| CPU  | 131072  | 32  | 282.810 ms | 282.913 ms | 286.631 ms | 307.620 ms | 2.70 MiB  | 3048   |
-| CPU  | 131072  | 64  | 328.584 ms | 328.962 ms | 332.448 ms | 357.787 ms | 8.68 MiB  | 3052   |
-| CPU  | 131072  | 128 | 447.271 ms | 453.263 ms | 470.108 ms | 509.040 ms | 31.72 MiB | 3052   |
-| CPU  | 1048576 | 32  | 2.476 s    | 2.476 s    | 2.501 s    | 2.552 s    | 2.70 MiB  | 3048   |
-| CPU  | 1048576 | 64  | 2.910 s    | 2.911 s    | 2.911 s    | 2.911 s    | 8.68 MiB  | 3052   |
-| CPU  | 1048576 | 128 | 2.905 s    | 2.909 s    | 2.909 s    | 2.914 s    | 31.72 MiB | 3052   |
-| GPU  | 1024    | 32  | 6.902 ms   | 6.920 ms   | 7.101 ms   | 8.719 ms   | 1.98 MiB  | 21513  |
-| GPU  | 1024    | 64  | 7.417 ms   | 7.622 ms   | 7.755 ms   | 8.430 ms   | 2.07 MiB  | 21632  |
-| GPU  | 1024    | 128 | 7.734 ms   | 8.071 ms   | 8.141 ms   | 8.854 ms   | 2.45 MiB  | 21713  |
-| GPU  | 32768   | 32  | 7.011 ms   | 7.092 ms   | 7.392 ms   | 10.142 ms  | 1.98 MiB  | 21513  |
-| GPU  | 32768   | 64  | 6.769 ms   | 6.837 ms   | 7.152 ms   | 10.035 ms  | 2.07 MiB  | 21632  |
-| GPU  | 32768   | 128 | 7.027 ms   | 8.381 ms   | 8.561 ms   | 11.845 ms  | 2.45 MiB  | 21713  |
-| GPU  | 131072  | 32  | 6.580 ms   | 8.054 ms   | 8.560 ms   | 15.323 ms  | 1.98 MiB  | 21541  |
-| GPU  | 131072  | 64  | 7.491 ms   | 9.106 ms   | 9.664 ms   | 16.128 ms  | 2.07 MiB  | 21599  |
-| GPU  | 131072  | 128 | 7.918 ms   | 12.640 ms  | 12.791 ms  | 23.534 ms  | 2.45 MiB  | 21680  |
-| GPU  | 1048576 | 32  | 9.781 ms   | 35.539 ms  | 36.437 ms  | 59.171 ms  | 1.98 MiB  | 21528  |
-| GPU  | 1048576 | 64  | 10.682 ms  | 37.958 ms  | 39.055 ms  | 65.476 ms  | 2.08 MiB  | 21647  |
-| GPU  | 1048576 | 128 | 7.994 ms   | 50.094 ms  | 50.772 ms  | 126.537 ms | 2.45 MiB  | 21680  |
+| Arch |     N |  Ns |        min |     median |       mean |        max |    memory | allocs | samples |
+|------|-------|-----|------------|------------|------------|------------|-----------|--------|---------|
+|  CPU |  1024 |  32 |   5.659 ms |   5.788 ms |   5.874 ms |   6.463 ms |  1.92 MiB |   4317 |      10 |
+|  CPU |  1024 |  64 |  13.497 ms |  13.608 ms |  13.770 ms |  15.069 ms |  5.80 MiB |   4878 |      10 |
+|  CPU |  1024 | 128 |  45.442 ms |  54.734 ms |  53.155 ms |  61.680 ms | 20.65 MiB |   6158 |      10 |
+|  CPU |  4096 |  32 |  11.307 ms |  11.427 ms |  11.519 ms |  12.184 ms |  2.08 MiB |   4238 |      10 |
+|  CPU |  4096 |  64 |  19.120 ms |  19.479 ms |  19.667 ms |  20.766 ms |  5.96 MiB |   4878 |      10 |
+|  CPU |  4096 | 128 |  51.716 ms |  56.439 ms |  57.364 ms |  65.370 ms | 20.82 MiB |   6158 |      10 |
+|  CPU | 16384 |  32 |  33.569 ms |  33.907 ms |  34.243 ms |  35.965 ms |  2.74 MiB |   4239 |      10 |
+|  CPU | 16384 |  64 |  41.597 ms |  42.110 ms |  42.844 ms |  45.371 ms |  6.62 MiB |   4879 |      10 |
+|  CPU | 16384 | 128 |  75.032 ms |  87.652 ms |  83.260 ms |  89.017 ms | 21.47 MiB |   6159 |      10 |
+|  CPU | 32768 |  32 |  63.176 ms |  63.657 ms |  63.717 ms |  64.465 ms |  3.62 MiB |   4239 |      10 |
+|  CPU | 32768 |  64 |  71.786 ms |  72.317 ms |  73.374 ms |  76.535 ms |  7.50 MiB |   4879 |      10 |
+|  CPU | 32768 | 128 | 106.093 ms | 116.530 ms | 113.994 ms | 120.500 ms | 22.35 MiB |   6159 |      10 |
+|  GPU |  1024 |  32 |  12.915 ms |  13.093 ms |  13.219 ms |  13.851 ms |  2.87 MiB |  83564 |      10 |
+|  GPU |  1024 |  64 |  13.688 ms |  14.272 ms |  14.355 ms |  15.455 ms |  3.15 MiB |  93423 |      10 |
+|  GPU |  1024 | 128 |  15.540 ms |  16.113 ms |  16.036 ms |  16.361 ms |  3.92 MiB | 117894 |      10 |
+|  GPU |  4096 |  32 |  12.888 ms |  13.249 ms |  13.541 ms |  15.147 ms |  2.87 MiB |  83564 |      10 |
+|  GPU |  4096 |  64 |  13.768 ms |  13.912 ms |  14.277 ms |  15.145 ms |  3.15 MiB |  93423 |      10 |
+|  GPU |  4096 | 128 |  15.740 ms |  16.697 ms |  16.592 ms |  17.422 ms |  3.92 MiB | 117894 |      10 |
+|  GPU | 16384 |  32 |  13.514 ms |  13.832 ms |  14.139 ms |  16.544 ms |  2.87 MiB |  83565 |      10 |
+|  GPU | 16384 |  64 |  13.956 ms |  14.564 ms |  14.831 ms |  17.842 ms |  3.15 MiB |  93425 |      10 |
+|  GPU | 16384 | 128 |  15.721 ms |  15.844 ms |  15.941 ms |  16.880 ms |  3.92 MiB | 117896 |      10 |
+|  GPU | 32768 |  32 |  13.689 ms |  13.823 ms |  13.926 ms |  15.010 ms |  2.87 MiB |  83568 |      10 |
+|  GPU | 32768 |  64 |  14.460 ms |  15.067 ms |  15.092 ms |  15.700 ms |  3.15 MiB |  93428 |      10 |
+|  GPU | 32768 | 128 |  16.284 ms |  17.469 ms |  17.356 ms |  18.070 ms |  3.92 MiB | 117899 |      10 |
 
 ## 3-Dimensional model
 
-This is the benchmark of a 3-Dimensional model setup with `(Ns, Ns, Ns)` grid cells. Here `Ns = [32, 64]`.
+This is the benchmark of a 3-Dimensional model setup with `(Ns, Ns, Ns)` grid cells. Here `Ns = [32, 64, 128]`.
 
 ```julia
-PlanktonIndividuals v0.6.1
-Julia Version 1.8.0
-Commit 5544a0fab76 (2022-08-17 13:38 UTC)
+PlanktonIndividuals v0.7.5
+Julia Version 1.11.7
+Commit f2b3dbda30a (2025-09-08 12:10 UTC)
 Platform Info:
-  OS: Linux (x86_64-pc-linux-gnu)
-  CPU: Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz
+  OS: Linux (x86_64-linux-gnu)
+  CPU: 56 × Intel(R) Xeon(R) Gold 6132 CPU @ 2.60GHz
   WORD_SIZE: 64
-  LIBM: libopenlibm
-  LLVM: libLLVM-13.0.1 (ORCJIT, broadwell)
-  GPU: Tesla P100-PCIE-12GB
-  CUDA runtime 11.8, artifact installation
-  CUDA driver 11.2
-  NVIDIA driver 460.84.0
+  LLVM: libLLVM-16.0.6 (ORCJIT, skylake-avx512)
+  GPU: Quadro GV100 (sm_70, 32 GiB available)
+  CUDA runtime 12.9, artifact installation
+  CUDA driver 565.57.1 for 12.7
 ```
 
-| Arch | N       | Ns  | min        | median     | mean       | max        | memory   | allocs |
-| ---- | ------- | --- | ---------- | ---------- | ---------- | ---------- | -------- | ------ |
-| CPU  | 1024    | 32  | 50.081 ms  | 50.249 ms  | 50.421 ms  | 51.994 ms  | 1.38 MiB | 2820   |
-| CPU  | 1024    | 64  | 410.840 ms | 459.105 ms | 451.043 ms | 459.516 ms | 8.43 MiB | 2821   |
-| CPU  | 32768   | 32  | 124.176 ms | 124.312 ms | 126.438 ms | 138.224 ms | 1.38 MiB | 2820   |
-| CPU  | 32768   | 64  | 498.713 ms | 534.237 ms | 534.148 ms | 554.501 ms | 8.43 MiB | 2821   |
-| CPU  | 131072  | 32  | 351.282 ms | 351.674 ms | 355.733 ms | 387.071 ms | 1.38 MiB | 2820   |
-| CPU  | 131072  | 64  | 790.994 ms | 808.337 ms | 816.691 ms | 848.149 ms | 8.43 MiB | 2821   |
-| CPU  | 1048576 | 32  | 3.019 s    | 3.072 s    | 3.072 s    | 3.125 s    | 1.38 MiB | 2820   |
-| CPU  | 1048576 | 64  | 3.258 s    | 3.258 s    | 3.258 s    | 3.258 s    | 8.43 MiB | 2821   |
-| GPU  | 1024    | 32  | 6.229 ms   | 6.286 ms   | 6.466 ms   | 7.329 ms   | 2.94 MiB | 21053  |
-| GPU  | 1024    | 64  | 9.194 ms   | 11.891 ms  | 11.689 ms  | 12.604 ms  | 9.99 MiB | 21077  |
-| GPU  | 32768   | 32  | 6.570 ms   | 6.638 ms   | 6.966 ms   | 8.974 ms   | 2.94 MiB | 21053  |
-| GPU  | 32768   | 64  | 9.143 ms   | 12.882 ms  | 12.712 ms  | 15.781 ms  | 9.99 MiB | 21077  |
-| GPU  | 131072  | 32  | 6.481 ms   | 9.150 ms   | 9.469 ms   | 16.907 ms  | 2.94 MiB | 21081  |
-| GPU  | 131072  | 64  | 9.212 ms   | 16.623 ms  | 16.438 ms  | 25.557 ms  | 9.99 MiB | 21105  |
-| GPU  | 1048576 | 32  | 7.257 ms   | 39.894 ms  | 40.268 ms  | 96.189 ms  | 2.94 MiB | 21020  |
-| GPU  | 1048576 | 64  | 9.586 ms   | 54.934 ms  | 53.741 ms  | 118.675 ms | 9.99 MiB | 21105  |
+| Arch |     N |  Ns |        min |     median |       mean |        max |    memory |  allocs | samples |
+|------|-------|-----|------------|------------|------------|------------|-----------|---------|---------|
+|  CPU |  1024 |  32 |  51.587 ms |  52.013 ms |  52.390 ms |  54.706 ms |  1.06 MiB |    4305 |      10 |
+|  CPU |  1024 |  64 | 407.569 ms | 414.229 ms | 413.787 ms | 419.221 ms |  5.55 MiB |    8017 |      10 |
+|  CPU |  1024 | 128 |    3.293 s |    3.301 s |    3.301 s |    3.310 s | 40.95 MiB |   21585 |       2 |
+|  CPU |  4096 |  32 |  56.841 ms |  58.601 ms |  58.606 ms |  60.820 ms |  1.22 MiB |    4305 |      10 |
+|  CPU |  4096 |  64 | 422.655 ms | 425.630 ms | 425.657 ms | 428.760 ms |  5.72 MiB |    8017 |      10 |
+|  CPU |  4096 | 128 |    3.318 s |    3.337 s |    3.337 s |    3.357 s | 41.11 MiB |   21585 |       2 |
+|  CPU | 16384 |  32 |  81.034 ms |  82.007 ms |  82.366 ms |  84.177 ms |  1.88 MiB |    4306 |      10 |
+|  CPU | 16384 |  64 | 454.705 ms | 457.783 ms | 457.526 ms | 459.801 ms |  6.37 MiB |    8018 |      10 |
+|  CPU | 16384 | 128 |    3.336 s |    3.374 s |    3.374 s |    3.413 s | 41.77 MiB |   21586 |       2 |
+|  CPU | 32768 |  32 | 112.225 ms | 113.137 ms | 113.290 ms | 114.879 ms |  2.76 MiB |    4306 |      10 |
+|  CPU | 32768 |  64 | 495.213 ms | 497.812 ms | 498.189 ms | 501.221 ms |  7.25 MiB |    8018 |      10 |
+|  CPU | 32768 | 128 |    3.472 s |    3.482 s |    3.482 s |    3.493 s | 42.65 MiB |   21586 |       2 |
+|  GPU |  1024 |  32 |  12.288 ms |  12.387 ms |  12.577 ms |  13.428 ms |  4.08 MiB |  115165 |      10 |
+|  GPU |  1024 |  64 |  20.906 ms |  21.227 ms |  21.697 ms |  24.127 ms | 13.06 MiB |  353213 |      10 |
+|  GPU |  1024 | 128 |  90.657 ms | 110.816 ms | 113.920 ms | 168.241 ms | 83.72 MiB | 2211802 |      10 |
+|  GPU |  4096 |  32 |  12.225 ms |  12.322 ms |  12.434 ms |  13.159 ms |  4.08 MiB |  115165 |      10 |
+|  GPU |  4096 |  64 |  20.767 ms |  21.059 ms |  21.390 ms |  24.283 ms | 13.06 MiB |  353213 |      10 |
+|  GPU |  4096 | 128 |  90.616 ms | 110.673 ms | 114.507 ms | 170.346 ms | 83.72 MiB | 2211802 |      10 |
+|  GPU | 16384 |  32 |  12.400 ms |  12.531 ms |  12.670 ms |  13.325 ms |  4.08 MiB |  115167 |      10 |
+|  GPU | 16384 |  64 |  21.132 ms |  21.983 ms |  22.558 ms |  25.184 ms | 13.06 MiB |  353215 |      10 |
+|  GPU | 16384 | 128 |  90.849 ms | 110.157 ms | 114.308 ms | 169.462 ms | 83.72 MiB | 2211804 |      10 |
+|  GPU | 32768 |  32 |  13.077 ms |  14.088 ms |  13.939 ms |  14.860 ms |  4.08 MiB |  115170 |      10 |
+|  GPU | 32768 |  64 |  21.697 ms |  22.645 ms |  22.986 ms |  25.235 ms | 13.06 MiB |  353217 |      10 |
+|  GPU | 32768 | 128 |  92.342 ms | 110.662 ms | 112.529 ms | 169.928 ms | 83.72 MiB | 2211807 |      10 |
 
 PlanktonIndividuals.jl now can also run on Apple M-series GPU. Below is a similar benchmark on Apple CPU and GPU.
 
