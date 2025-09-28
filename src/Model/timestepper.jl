@@ -16,11 +16,11 @@ mutable struct timestepper
     rnd_3d::AbstractArray#a (Cu)Array of random numbers for tracer-particle interatcion
     velos::AbstractArray# a StructArray of intermediate values for RK4 particle advection
     trs::AbstractArray  # a StructArray of tracers of each individual
-    intac::AbstractArray# a (Cu)array of 0 and 1 to store particle-particle interatcion
+    intac::Union{Nothing,AbstractArray} # a (Cu)array of 0 and 1 to store particle-particle interatcion
     palat::Palat        # a `Palat` to store the interaction between species
 end
 
-function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, palat)
+function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, intac::Union{Nothing,AbstractArray}, palat::Palat)
     vel₀ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
     vel½ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
     vel₁ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))

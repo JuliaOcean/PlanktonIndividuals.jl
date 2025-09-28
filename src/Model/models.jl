@@ -97,9 +97,10 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
     end
 
     if isa(abiotic, Nothing)
-        nothing
+        intac = nothing
     elseif isa(abiotic, abiotic_setup)
         @assert maximum(abiotic.N) ≤ max_individuals
+        intac = zeros(Bool, max_individuals, max_individuals) |> array_type(arch)
         if length(abiotic.N) ≠ abiotic.Nsa
             throw(ArgumentError("PlanktonModel: `abiotic`: The length of `N` must be $(abiotic.Nsa), the same as `Nsa`, each species has its own initial condition"))
         end
@@ -144,7 +145,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
 
     tracers = generate_tracers(arch, grid_d, tracer_initial, FT)
 
-    ts = timestepper(arch, FT, grid_d, max_individuals, palat)
+    ts = timestepper(arch, FT, grid_d, max_individuals, intac, palat)
 
     iteration  = 0
 
