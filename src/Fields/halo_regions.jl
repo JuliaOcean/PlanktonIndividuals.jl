@@ -31,6 +31,9 @@ fill_halo_east_Gc!(c, H::Int, N::Int, TX::Periodic) = fill_halo_east!(c, H, N, T
 fill_halo_north_Gc!(c, H::Int, N::Int, TY::Periodic) = fill_halo_north!(c, H, N, TY)
 fill_halo_bottom_Gc!(c, H::Int, N::Int, TZ::Periodic) = fill_halo_bottom!(c, H, N, TZ)
 
+fill_halo_top_flux_sink!(c, H::Int, N::Int, TZ::Bounded) = @views @. c[:, :, 1:H] = 0.0f0
+fill_halo_bottom_flux_sink!(c, H::Int, N::Int, TZ::Bounded) = @views @. c[:, :, N+H:N+2H] = 0.0f0
+
 @inline function fill_halo_tracer!(tracers::NamedTuple, g::AbstractGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
     for tracer in tracers
           fill_halo_west!(tracer.data, g.Hx, g.Nx, TX())
@@ -49,6 +52,12 @@ end
          fill_halo_north_Gc!(tracer.data, g.Hy, g.Ny, TY())
         fill_halo_bottom_Gc!(tracer.data, g.Hz, g.Nz, TZ())
     end
+    return nothing
+end
+
+@inline function fill_halo_flux_sink!(flux_sink, g::AbstractGrid{FT, TX, TY, TZ}) where {FT, TX, TY, TZ}
+           fill_halo_top_flux_sink!(flux_sink, g.Hz, g.Nz, TZ())
+        fill_halo_bottom_flux_sink!(flux_sink, g.Hz, g.Nz, TZ())
     return nothing
 end
 

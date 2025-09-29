@@ -19,12 +19,15 @@ function apply_tendency!(tracers, Gcs, consume, g::AbstractGrid, arch::Architect
     return nothing
 end
     
-function tracer_update!(tracers, Gcs, tracer_temp, arch::Architecture, g::AbstractGrid, params, vel, consume, ΔT, iter)
+function tracer_update!(tracers, Gcs, tracer_temp, flux_sink, arch::Architecture, g::AbstractGrid, params, vel, consume, ΔT, iter)
     ##### compute advection tendency
     tracer_advection!(tracers, tracer_temp, Gcs, vel, g, ΔT, arch)
 
     ##### compute tracer diffusion,for each time step
     tracer_diffusion!(Gcs, arch, g, tracers, params["κh"], params["κh"], params["κv"], ΔT)
+
+    ##### compute tracer sinking,for each time step
+    tracer_sinking!(Gcs, flux_sink, arch, g, tracers, params, ΔT)
 
     ##### compute biogeochemical forcings of tracers,for each time step
     zero_fields!(tracer_temp)
