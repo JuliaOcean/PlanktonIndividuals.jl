@@ -42,9 +42,9 @@ Keyword Arguments (Optional)
 - `tracer_initial` : The source of initial conditions of tracer fields, should be either a `NamedTuple` 
                     or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
 - `phyto` : nothing or a `phyto_setup`. Whether to use default setup of phytoplankton in the model. If yes,
-                    it should be a NamedTuple like this `phyto = (params = nothing, N = [2^10, 2^10], Nsp = 2)`.
+                    it should be a NamedTuple like this `phyto = phyto_setup(params = nothing, N = [2^10, 2^10], Nsp = 2)`.
 - `abiotic` : nothing or a `abiotic_setup`. Whether to include abiotic particles in the model. If yes,
-                    it should be a NamedTuple like this `abiotic = (params = nothing, N = [2^10, 2^10], Nsa = 2, palat = [(:sp1, :sa1)])`.
+                    it should be a NamedTuple like this `abiotic = abiotic_setup(params = nothing, N = [2^10, 2^10], Nsa = 2, palat = [(:sp1, :sa1)])`.
 - `t` : Model time, start from 0 by default, in second.
 """
 function PlanktonModel(arch::Architecture, grid::AbstractGrid;
