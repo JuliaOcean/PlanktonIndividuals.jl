@@ -17,31 +17,20 @@ Modules = [PlanktonIndividuals.Grids]
 Private = false
 Pages   = [
     "Grids/Grids.jl",
-    "Grids/regular_rectilinear_grid.jl",
-    "Grids/regular_lat_lon_grid.jl",
-    "Grids/vertically_stretched_lat_lon_grid.jl"
+    "Grids/rectilinear_grid.jl",
+    "Grids/lat_lon_grid.jl",
 ]
 ```
 
-## Fields
 
-```@autodocs
-Modules = [PlanktonIndividuals.Fields]
-Private = false
-Pages   =[
-    "Fields/Fields.jl",
-    "Fields/boundary_conditions.jl"
-]
-```
-
-## Biogeochmeistry
+## Biogeochemistry
 
 ```@autodocs
 Modules = [PlanktonIndividuals.Biogeochemistry]
 Private = false
 Pages   = [
     "Biogeochemistry/Biogeochemistry.jl",
-    "Biogeochemistry/nutrient_fields.jl"
+    "Biogeochemistry/tracer_fields.jl"
 ]
 ```
 
