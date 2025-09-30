@@ -15,14 +15,12 @@ end
     PlanktonModel(arch::Architecture, grid::AbstractGrid;
                   FT = Float32,
                   mode = QuotaMode(),
-                  N_species = 1,
-                  N_individual = [1024],
-                  max_individuals = 1024*8,
+                  max_individuals::Int = 8*1024,
                   bgc_params = nothing, 
-                  phyt_params = nothing,
                   tracer_initial = default_tracer_init(),
-                  abiotic = false,
-                  t = 0.0,
+                  phyto = nothing,
+                  abiotic = nothing,
+                  t::AbstractFloat = 0.0f0,
                   )
 
 Generate a `PlanktonModel` data structure. 
