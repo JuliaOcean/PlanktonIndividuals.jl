@@ -68,7 +68,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                       model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
                       model.individuals.phytos[sp].data.ac, model.tracers.NH4.data,
                       model.tracers.NO3.data, model.tracers.PO4.data, model.tracers.DOC.data,
-                      model.tracers.FeT.data, model.timestepper.par, model.timestepper.par₀, 
+                      model.tracers.DFe.data, model.timestepper.par, model.timestepper.par₀, 
                       model.timestepper.temp, model.timestepper.pop, model.arch)
             
             plankton_update!(model.individuals.phytos[sp], model.timestepper.trs,
@@ -104,7 +104,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                       model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
                       model.individuals.phytos[sp].data.ac, model.tracers.NH4.data,
                       model.tracers.NO3.data, model.tracers.PO4.data, model.tracers.DOC.data,
-                      model.tracers.FeT.data, model.timestepper.par, model.timestepper.par₀, 
+                      model.tracers.DFe.data, model.timestepper.par, model.timestepper.par₀, 
                       model.timestepper.temp, model.timestepper.pop, model.arch)
 
             plankton_update!(model.individuals.phytos[sp], model.timestepper.trs,
@@ -123,7 +123,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
         end
     end
 
-    tracer_update!(model.tracers, model.timestepper.Gcs, model.timestepper.tracer_temp, model.arch,
+    tracer_update!(model.tracers, model.timestepper.Gcs, model.timestepper.tracer_temp, model.timestepper.flux_sink, model.arch,
                 model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT, model.iteration)
 
     @inbounds model.timestepper.vel₀.u.data .= model.timestepper.vel₁.u.data

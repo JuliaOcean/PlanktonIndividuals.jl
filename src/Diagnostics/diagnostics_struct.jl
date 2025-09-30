@@ -137,7 +137,7 @@ function diag_avail(tracer, plank, abiotic, mode::AbstractMode)
 end
 
 function tracer_avail_diags()
-    return (:PAR, :DIC, :DOC, :POC, :NH4, :NO3, :DON, :PON, :PO4, :DOP, :POP, :FeT, :DOFe, :POFe, :CHO)
+    return (:PAR, :DIC, :DOC, :POC, :NH4, :NO3, :DON, :PON, :PO4, :DOP, :POP, :DFe, :PFe_inorg, :PFe_bio, :CHO, :Dust)
 end
 
 function plank_avail_diags(mode::AbstractMode)

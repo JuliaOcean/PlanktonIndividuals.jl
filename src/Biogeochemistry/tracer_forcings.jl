@@ -28,12 +28,23 @@ function tracer_forcing!(F, tracer_temp, tracer, params, ΔT)
 
     @inbounds F.POP.data .= F.POP.data .- tracer_temp.POP.data .* params["kPOP"] .* ΔT
 
-    @inbounds F.FeT.data .= F.FeT.data .+ tracer_temp.DOFe.data .* params["kDOFe"] .* ΔT
+    ##### Iron cycle
 
-    @inbounds F.DOFe.data .= F.DOFe.data .- tracer_temp.DOFe.data .* params["kDOFe"] .* ΔT .+
-                                          tracer_temp.POFe.data .* params["kPOFe"] .* ΔT
+    @inbounds F.DFe.data .= F.DFe.data .+ tracer_temp.PFe_bio.data .* params["kPOC"] .* ΔT .-
+                            (params["lambda_POC"] .* tracer_temp.POC.data .+ params["lambda_min"] .+
+                             params["lambda_dust"] .* tracer_temp.Dust.data) .* tracer_temp.DFe.data .* params["DFeFrac"] .* ΔT .+ 
+                             tracer_temp.PFe_inorg.data .* params["kdiss"] .* ΔT .- 
+                             max.((tracer_temp.DFe.data .- params["ligand"]), 0.0f0) .* tracer_temp.DFe.data .* params["DFeFrac"] .* params["lambda_Fe"] .* ΔT
 
-    @inbounds F.POFe.data .= F.POFe.data .- tracer_temp.POFe.data .* params["kPOFe"] .* ΔT
+    @inbounds F.PFe_bio.data .= F.PFe_bio.data .+ tracer_temp.POC.data .* 
+                                tracer_temp.DFe.data .* params["DFeFrac"] .* params["lambda_POC"] .* ΔT .- 
+                                params["kPOC"] .* tracer_temp.PFe_bio.data  .* ΔT
+
+    @inbounds F.PFe_inorg.data .= F.PFe_inorg.data .- tracer_temp.PFe_inorg.data .*
+                                  params["kdiss"].* ΔT .+ (params["lambda_min"] .+ params["lambda_dust"] .* 
+                                  tracer_temp.Dust.data) .* tracer_temp.DFe.data .* params["DFeFrac"] .* ΔT .+
+                                  max.((tracer_temp.DFe.data .- params["ligand"]), 0.0f0) .* tracer_temp.DFe.data .* params["DFeFrac"] .* params["lambda_Fe"] .* ΔT
+
 
     @inbounds F.CHO.data .= F.CHO.data .- tracer_temp.CHO.data .* params["kCHO"] .* ΔT
 

@@ -41,12 +41,12 @@ end
 end
 
 ##### calculate iron uptake rate (mmolFe/individual/second)
-@inline function calc_Fe_uptake(FeT, T, qFe, qFePS, qFeNR, qFeNF, Bm, CH, Sz, pop, p, ac, ΔT)
+@inline function calc_Fe_uptake(DFe, T, qFe, qFePS, qFeNR, qFeNF, Bm, CH, Sz, pop, p, ac, ΔT)
     Qfe = (qFe + qFePS + qFeNF + qFeNR)/max(1.0f-30, Bm + CH)
     regQFe = shape_func_dec(Qfe, p.qFemax, 1.0f-4, pow = 2.0f0)
     SA = p.SA * Sz^(2.0f0/3.0f0)
-    VFe = p.KSAFe * SA * FeT * regQFe * p.Nsuper * tempFunc(T, p) * ac
-    return min(VFe, FeT/ΔT/max(1.0f0,pop))
+    VFe = p.KSAFe * SA * DFe * regQFe * p.Nsuper * tempFunc(T, p) * ac
+    return min(VFe, DFe/ΔT/max(1.0f0,pop))
 end
 
 @kernel function calc_trs_uptake_kernel!(plank, trs, p, ΔT)
@@ -57,7 +57,7 @@ end
                                               plank.Bm[i], trs.pop[i], p, plank.ac[i], ΔT)
     @inbounds plank.VPO4[i] = calc_P_uptake(trs.PO4[i], trs.T[i], plank.CH[i], plank.qP[i],
                                             plank.Bm[i], trs.pop[i], p, plank.ac[i], ΔT)
-    @inbounds plank.VFe[i]  = calc_Fe_uptake(trs.FeT[i], trs.T[i], plank.qFe[i], plank.qFePS[i], 
+    @inbounds plank.VFe[i]  = calc_Fe_uptake(trs.DFe[i], trs.T[i], plank.qFe[i], plank.qFePS[i], 
                                              plank.qFeNR[i], plank.qFeNF[i], plank.Bm[i], plank.CH[i], 
                                              plank.Sz[i], trs.pop[i], p, plank.ac[i], ΔT)
 end
@@ -188,11 +188,21 @@ end
 
 ##### energy allocation
 @inline function energy_alloc(PS, ERS, ECF, ENF, ENR, p)
-    ECFt = min(PS, ECF)
-    ENFt = min(ENF, PS + ERS - ECFt) * (p.is_croc + p.is_tric)
-    ENRt = min(ENR, PS + ERS - ECFt) * p.is_nr
-    ERSt = min(ERS, max(0.0f0, ECFt + ENFt + ENRt - PS))
-    exEn = max(0.0f0, PS - ECFt - ENFt - ENRt)
+    ERSt = ERS; ECFt = ECF; ENFt = ENF; ENRt = ENR;
+    exEn = 0.0f0
+    if PS ≥ ECF + ENF + ENR
+        ERSt = 0.0f0
+        exEn = PS - ECF - ENF - ENR
+    else #### PS < ECF + ENF + ENR
+        if PS + ERS ≥ ECF + ENF + ENR
+            ERSt = ECF + ENF + ENR - PS
+        else #### PS + ERS < ECF + ENF + ENR
+            ECFt = min(PS, ECF)
+            ENFt = min(ENF, (PS + ERS - ECFt) * (p.is_croc + p.is_tric))
+            ENRt = min(ENR, (PS + ERS - ECFt) * p.is_nr)
+            ERSt = ENF + ENR
+        end
+    end
     return ERSt, ECFt, ENFt, ENRt, exEn
 end
 @kernel function energy_allocation_kernel!(plank, p)

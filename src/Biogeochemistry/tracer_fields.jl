@@ -5,7 +5,8 @@ function tracers_init(arch, g, FT = Float32)
               Field(arch, g, FT), Field(arch, g, FT),
               Field(arch, g, FT), Field(arch, g, FT),
               Field(arch, g, FT), Field(arch, g, FT),
-              Field(arch, g, FT), Field(arch, g, FT))
+              Field(arch, g, FT), Field(arch, g, FT),
+              Field(arch, g, FT))
 
     tracers = NamedTuple{tracer_names}(fields)
     return tracers
@@ -16,8 +17,8 @@ end
 Generate defalut bgc tracer initial conditions.
 """
 function default_tracer_init()
-    init = (DIC=20.0, NH4=0.5, NO3=0.8, PO4=0.10, FeT=1.0e-6, DOC=10.0, DON=0.1, DOP=0.05, DOFe=0.0, POC=0.0, PON=0.0, POP=0.0, POFe=0.0, CHO = 0.1)
-    rand_noise = (DIC=0.1, NH4=0.1, NO3=0.1, PO4=0.1, FeT=0.1, DOC=0.1, DON=0.1, DOP=0.1, DOFe=0.1, POC=0.1, PON=0.1, POP=0.1, POFe=0.1, CHO = 0.1)
+    init = (DIC=20.0, NH4=0.5, NO3=0.8, PO4=0.10, DFe=1.0e-6, DOC=10.0, DON=0.1, DOP=0.05, PFe_inorg=0.0, POC=0.0, PON=0.0, POP=0.0, PFe_bio=0.0, CHO = 0.1, Dust=0.0)
+    rand_noise = (DIC=0.1, NH4=0.1, NO3=0.1, PO4=0.1, DFe=0.1, DOC=0.1, DON=0.1, DOP=0.1, PFe_inorg=0.1, POC=0.1, PON=0.1, POP=0.1, PFe_bio=0.1, CHO = 0.1, Dust=0.1)
     return (initial_condition = init, rand_noise = rand_noise)
 end
 

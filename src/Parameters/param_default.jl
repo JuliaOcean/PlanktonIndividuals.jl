@@ -49,18 +49,25 @@ function bgc_params_default(FT)
         "Nit"          => 1/30/86400,         # Nitrification rate for NH4
         "kDON"         => 1/30/86400,         # Remineralization rate for DON, turn over time: a month (per second)
         "kDOP"         => 1/30/86400,         # Remineralization rate for DOP, turn over time: a month (per second)
-        "kDOFe"        => 1/30/86400,         # Remineralization rate for DOFe, turn over time: a month (per second)
         "kPOC"         => 1/30/86400,         # Remineralization rate for POC, turn over time: a month (per second)
         "kPON"         => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
         "kPOP"         => 1/30/86400,         # Remineralization rate for POP, turn over time: a month (per second)
-        "kPOFe"        => 1/30/86400,         # Remineralization rate for POFe, turn over time: a month (per second)
         "kCHO"         => 0.0,                # Decay rate of chemical compounds (per second)
         "κh"           => 0.0e-6,             # Horizontal diffusion
         "κv"           => 0.0e-6,             # Vertical diffusion
         "κhP"          => 0.0e-6,             # Horizontal diffusion for individuals
         "κvP"          => 0.0e-6,             # Vertical diffusion for individuals
         "shared_graz"  => 1.0,                # Using shared grazing or not - default is yes - 1.0
-    )
+        "w_sink_org"   => 2.31e-8,            # Settling velocity of organic matter (m/s)
+        "w_sink_inorg" => 2.31e-5,            # Settling velocity of inorganic matter (m/s)
+        "lambda_POC"   => 5.8e-8,             # Scavenging rate of iron by POC (m³/mmol/second)
+        "lambda_min"   => 3.5e-10,            # Minimum scavenging rate of iron (per second)
+        "kdiss"        => 4.4e-7 ,           # Dissolution rate of inorganic particulate iron  (per second)
+        "lambda_dust"  => 1.7e-3,             # Scavenging rate of iron by dust (m³/kg/second)
+        "lambda_Fe"    => 1.7,                # Coagulation rate of dissolved iron (m³/mmol/second)
+        "ligand"       => 6.0e-4,             # Ligand concentration (mmol/m³/second)
+        "DFeFrac"      => 0.01,               # Free DFe Fraction
+        )
     return params
 end
 
@@ -207,11 +214,11 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "grazFracC" => [0.7],     # Fraction goes into dissolved organic pool
         "grazFracN" => [0.7],     # Fraction goes into dissolved organic pool
         "grazFracP" => [0.7],     # Fraction goes into dissolved organic pool
-        "grazFracFe"=> [0.7],     # Fraction goes into dissolved organic pool
+        "grazFracFe"=> [0.1],     # Fraction goes into dissolved organic pool
         "mortFracC" => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracN" => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracP" => [0.5],     # Fraction goes into dissolved organic pool
-        "mortFracFe"=> [0.5],     # Fraction goes into dissolved organic pool
+        "mortFracFe"=> [0.1],     # Fraction goes into dissolved organic pool
     )
 
     if N == 1
