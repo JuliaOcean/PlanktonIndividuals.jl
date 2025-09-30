@@ -24,7 +24,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
 
     ##### abiotic particle advection, diffusion, and update
     for sa in keys(model.individuals.abiotics)
-        particles_from_bcs!(model.individuals.abiotics[sa].data, model.timestepper.tracer_temp.FeT.data, 
+        particles_from_bcs!(model.individuals.abiotics[sa].data, model.timestepper.tracer_temp.DFe.data, 
                             model.individuals.abiotics[sa].bc, model.timestepper.rnd_3d, model.individuals.abiotics[sa].p, 
                             ΔT, model.iteration, model.grid, model.t, model.arch)
         ##### RK4

@@ -188,21 +188,11 @@ end
 
 ##### energy allocation
 @inline function energy_alloc(PS, ERS, ECF, ENF, ENR, p)
-    ERSt = ERS; ECFt = ECF; ENFt = ENF; ENRt = ENR;
-    exEn = 0.0f0
-    if PS ≥ ECF + ENF + ENR
-        ERSt = 0.0f0
-        exEn = PS - ECF - ENF - ENR
-    else #### PS < ECF + ENF + ENR
-        if PS + ERS ≥ ECF + ENF + ENR
-            ERSt = ECF + ENF + ENR - PS
-        else #### PS + ERS < ECF + ENF + ENR
-            ECFt = min(PS, ECF)
-            ENFt = min(ENF, (PS + ERS - ECFt) * (p.is_croc + p.is_tric))
-            ENRt = min(ENR, (PS + ERS - ECFt) * p.is_nr)
-            ERSt = ENF + ENR
-        end
-    end
+    ECFt = min(PS, ECF)
+    ENFt = min(ENF, PS + ERS - ECFt) * (p.is_croc + p.is_tric)
+    ENRt = min(ENR, PS + ERS - ECFt) * p.is_nr
+    ERSt = min(ERS, max(0.0f0, ECFt + ENFt + ENRt - PS))
+    exEn = max(0.0f0, PS - ECFt - ENFt - ENRt)
     return ERSt, ECFt, ENFt, ENRt, exEn
 end
 @kernel function energy_allocation_kernel!(plank, p)

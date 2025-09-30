@@ -1,13 +1,3 @@
-
-
-export tracer_sinking!
-
-using KernelAbstractions
-
-using PlanktonIndividuals.Grids
-using PlanktonIndividuals.Architectures: device, array_type, Architecture
-using PlanktonIndividuals.Fields
-
 ##### calculate the sinking flux for tracer c
 @inline function calc_sinking_flux!(flux_sink, grid::AbstractGrid, w::Number, c)
     flux_sink .= w .* c
