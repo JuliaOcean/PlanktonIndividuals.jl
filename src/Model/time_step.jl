@@ -84,7 +84,8 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                                 model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT, model.arch)
             ##### Diffusion
             particle_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd,
-                                model.bgc_params["κhP"], ΔT, model.grid, model.arch)
+                                model.bgc_params["κhP"], model.bgc_params["κhP"], model.bgc_params["κvP"],
+                                ΔT, model.grid, model.arch)
 
             #### calculate accumulated Chla quantity (not concentration) and population
             find_inds!(model.individuals.phytos[sp].data, model.grid, model.arch)
