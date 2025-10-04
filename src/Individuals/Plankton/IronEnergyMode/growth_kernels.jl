@@ -100,6 +100,27 @@ function calc_PS!(plank, trs, p, arch::Architecture)
     return nothing
 end
 
+#### calculate potential maximum energy production from photoelectrochemical metabolism (mmolATP/individual/second)
+@inline function calc_PE(par, qFePS, Bm, CH, p, ptc, ac)
+    Qfe_ps = qFePS / max(1.0f-30, Bm + CH)
+    Ksat = Qfe_ps / max(1.0f-30, Qfe_ps + p.KfePS)
+    PE = par * p.ICPE_ptc * p.SA_e * Ksat * p.eATP * p.Nsuper * ptc * ac
+    return PE
+end
+
+@kernel function calc_PE_kernel!(plank, trs, p)
+    i = @index(Global)
+    @inbounds plank.PE[i] = calc_PE(trs.par[i], plank.qFePS[i],
+                                     plank.Bm[i], plank.CH[i], p,
+                                     plank.ptc[i], plank.ac[i])
+end
+
+function calc_PE!(plank, trs, p, arch::Architecture)
+    kernel! = calc_PE_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, trs, p)
+    return nothing
+end
+
 ##### calculate potential maximum respiration (mmolC/individual/second) 
 ##### and energy production (mmolATP/individual/second)
 @inline function calc_respir(CH, Bm, T, p, ac, ΔT)
@@ -187,18 +208,18 @@ function calc_nitrogen_fixation!(plank, trs, p, arch::Architecture)
 end
 
 ##### energy allocation
-@inline function energy_alloc(PS, ERS, ECF, ENF, ENR, p)
-    ECFt = min(PS, ECF)
-    ENFt = min(ENF, PS + ERS - ECFt) * (p.is_croc + p.is_tric)
-    ENRt = min(ENR, PS + ERS - ECFt) * p.is_nr
-    ERSt = min(ERS, max(0.0f0, ECFt + ENFt + ENRt - PS))
-    exEn = max(0.0f0, PS - ECFt - ENFt - ENRt)
+@inline function energy_alloc(PS, PE, ERS, ECF, ENF, ENR, p)
+    ECFt = min(PS + PE, ECF)
+    ENFt = min(ENF, PS + PE + ERS - ECFt) * (p.is_croc + p.is_tric)
+    ENRt = min(ENR, PS + PE + ERS - ECFt) * p.is_nr
+    ERSt = min(ERS, max(0.0f0, ECFt + ENFt + ENRt - PS - PE))
+    exEn = max(0.0f0, PS + PE - ECFt - ENFt - ENRt)
     return ERSt, ECFt, ENFt, ENRt, exEn
 end
 @kernel function energy_allocation_kernel!(plank, p)
     i = @index(Global)
     plank.ERS[i], plank.ECF[i], plank.ENF[i], plank.ENR[i], plank.exEn[i] = 
-        energy_alloc(plank.PS[i], plank.ERS[i], plank.ECF[i], 
+        energy_alloc(plank.PS[i], plank.PE[i], plank.ERS[i], plank.ECF[i], 
                      plank.ENF[i], plank.ENR[i], p)
     @inbounds plank.RS[i] = plank.ERS[i] / p.e_rs
     @inbounds plank.CF[i] = plank.ECF[i] / p.e_cf

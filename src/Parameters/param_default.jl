@@ -218,6 +218,9 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "mortFracN" => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracP" => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracFe"=> [0.1],     # Fraction goes into dissolved organic pool
+        "ICPE_ptc"  => [5e-5],    # Photoelectrochemical conversion efficiency of Photoelectric Particles
+        "SA_e"      => [4.5e-14], # Projected area (m²) Prochlorococcus
+        "eATP"      => [7.5e-5],  # Efficiency of electron-to-ATP conversion (mmolATP/µmol electron)
     )
 
     if N == 1
