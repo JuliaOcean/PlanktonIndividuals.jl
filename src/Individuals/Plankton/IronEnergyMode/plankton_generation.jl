@@ -35,7 +35,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                  :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, :mort_P, :mort_reg, 
                  :grazFracC, :grazFracN, :grazFracP, :grazFracFe,
                  :mortFracC, :mortFracN, :mortFracP, :mortFracFe,
-                 :ICPE_HM, :ICPE_GT, :eATP, :SA_e)
+                 :ICPE_ptc, :eATP, :SA_e)
 
     pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))
