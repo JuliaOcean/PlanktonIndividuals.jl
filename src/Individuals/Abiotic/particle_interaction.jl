@@ -51,6 +51,8 @@ end
 @kernel function merge_particle_kernel!(abiotic, plank)
     i = @index(Global)
     if abiotic.merg[i] ≠ 0
+        sa = 4.0f0 * Float32(pi) * abiotic.sz[i]^2.0f0
+        @inbounds KernelAbstractions.@atomic plank.ptc_SA[abiotic.merg[i]] += sa
         @inbounds KernelAbstractions.@atomic plank.ptc[abiotic.merg[i]] += 1.0f0
     end
 end
@@ -82,19 +84,25 @@ function get_release_probability!(plank, rnd, abio_p, ΔT, arch::Architecture)
     return nothing
 end
 
-@kernel function release_abiotic_particle_kernel!(plank, abiotic, con, idx, rnd)
+@kernel function release_abiotic_particle_kernel!(plank, abiotic, con, idx, rnd, p)
     i = @index(Global)
     if (con[i] == 1.0f0) && (idx[i] ≠ 0)
         @inbounds abiotic.ac[idx[i]] = 1.0f0
         @inbounds abiotic.x[idx[i]]  = plank.x[i] + rnd.x[i]
         @inbounds abiotic.y[idx[i]]  = plank.y[i] + rnd.y[i]
         @inbounds abiotic.z[idx[i]]  = plank.z[i] + rnd.z[i]
+
+        @inbounds abiotic.Fe_con[idx[i]] = p.sz_min
+        @inbounds abiotic.sz[idx[i]] = calculate_iron_particles_radius(p.sz_min, p)
+        
+        Rsa = 4.0f0 * Float32(pi) * abiotic.sz[idx[i]]^2.0f0
+        @inbounds plank.ptc_SA[i]   -= Rsa
         @inbounds plank.ptc[i]      -= 1.0f0
     end
 end
-function release_abiotic_particle!(plank, abiotic, con, idx, rnd, arch::Architecture)
+function release_abiotic_particle!(plank, abiotic, con, idx, rnd, arch::Architecture, p)
     kernel! = release_abiotic_particle_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, abiotic, con, idx, rnd)
+    kernel!(plank, abiotic, con, idx, rnd, p)
     return nothing
 end
 
@@ -123,7 +131,7 @@ function particle_release!(plank, abiotic, trs, rnd, abio_p, ΔT, t, arch::Archi
     accumulate!(+, trs.idc, plank.Rptc)
     trs.idc_int .= unsafe_trunc.(Int, trs.idc)
     get_tind!(plank.idx, plank.Rptc, trs.idc_int, deactive_ind, arch)
-    release_abiotic_particle!(plank, abiotic, plank.Rptc, plank.idx, rnd, arch)
+    release_abiotic_particle!(plank, abiotic, plank.Rptc, plank.idx, rnd, arch, abio_p)
     plank.idx .= 0
     unsafe_free!(deactive_ind)
     return nothing
@@ -228,16 +236,19 @@ calc_particle_bc_bottom!(tr_temp, ::Nothing, rnd_3d, abio_p, ΔT, iter, g::Abstr
  calc_particle_bc_south!(tr_temp, ::Nothing, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid, arch::Architecture) = nothing
  calc_particle_bc_north!(tr_temp, ::Nothing, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid, arch::Architecture) = nothing
 
-@kernel function copy_abiotic_particle_from_field_kernel!(abiotic, inds, de_inds, g::AbstractGrid)
+@kernel function copy_abiotic_particle_from_field_kernel!(abiotic, inds, de_inds, g::AbstractGrid, p)
     i = @index(Global)
     @inbounds abiotic.ac[de_inds[i]] = true
     @inbounds abiotic.x[de_inds[i]]  = inds[i][1] - g.Hx - 0.4f0
     @inbounds abiotic.y[de_inds[i]]  = inds[i][2] - g.Hy - 0.4f0
     @inbounds abiotic.z[de_inds[i]]  = inds[i][3] - g.Hz - 0.4f0
+
+    @inbounds abiotic.Fe_con[de_inds[i]] = p.sz_min
+    @inbounds abiotic.sz[de_inds[i]] = calculate_iron_particles_radius(p.sz_min, p)
 end
-function copy_abiotic_particle_from_field!(abiotic, inds, de_inds, g::AbstractGrid, arch::Architecture)
+function copy_abiotic_particle_from_field!(abiotic, inds, de_inds, g::AbstractGrid, arch::Architecture, p)
     kernel! = copy_abiotic_particle_from_field_kernel!(device(arch), 256, (size(inds,1)))
-    kernel!(abiotic, inds, de_inds, g)
+    kernel!(abiotic, inds, de_inds, g, p)
     return nothing
 end
 
@@ -253,7 +264,7 @@ function particles_from_bcs!(abiotic, tr_temp, abio_bcs::BoundaryConditions, rnd
         if length(inds) > length(deactive_ind)
             throw(ArgumentError("number of abiotic particles exceeds the capacity at timestep $(t/86400.0) days"))
         end
-        copy_abiotic_particle_from_field!(abiotic, inds, deactive_ind, g, arch)
+        copy_abiotic_particle_from_field!(abiotic, inds, deactive_ind, g, arch, abio_p)
         unsafe_free!(inds)
         unsafe_free!(deactive_ind)
         return nothing

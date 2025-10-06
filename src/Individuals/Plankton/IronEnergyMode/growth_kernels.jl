@@ -101,6 +101,7 @@ function calc_PS!(plank, trs, p, arch::Architecture)
 end
 
 #### calculate potential maximum energy production from photoelectrochemical metabolism (mmolATP/individual/second)
+#### interaction with micron-sized minerals
 @inline function calc_PE(par, qFePS, Bm, CH, p, ptc, ac)
     Qfe_ps = qFePS / max(1.0f-30, Bm + CH)
     Ksat = Qfe_ps / max(1.0f-30, Qfe_ps + p.KfePS)
@@ -120,6 +121,27 @@ function calc_PE!(plank, trs, p, arch::Architecture)
     kernel!(plank, trs, p)
     return nothing
 end
+
+#### interaction with Nanometer-scale minerals
+"@inline function calc_PE(par, qFePS, Bm, CH, p, ac, ptc_SA)
+    Qfe_ps = qFePS / max(1.0f-30, Bm + CH)
+    Ksat = Qfe_ps / max(1.0f-30, Qfe_ps + p.KfePS)
+    PE = par * p.ICPE_ptc * ptc_SA * Ksat * p.eATP * p.Nsuper * ac
+    return PE
+end
+
+@kernel function calc_PE_kernel!(plank, trs, p)
+    i = @index(Global)
+    @inbounds plank.PE[i] = calc_PE(trs.par[i], plank.qFePS[i],
+                                     plank.Bm[i], plank.CH[i], p,
+                                     plank.ac[i], plank.ptc_SA[i])
+end
+
+function calc_PE!(plank, trs, p, arch::Architecture)
+    kernel! = calc_PE_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, trs, p)
+    return nothing
+end"
 
 ##### calculate potential maximum respiration (mmolC/individual/second) 
 ##### and energy production (mmolATP/individual/second)

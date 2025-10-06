@@ -18,7 +18,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           NF2ST= zeros(FT, maxN), ST2NF= zeros(FT, maxN),
                           RS   = zeros(FT, maxN), ERS  = zeros(FT, maxN), BS   = zeros(FT, maxN), 
                           NR   = zeros(FT, maxN), ENR  = zeros(FT, maxN), ptc  = zeros(FT, maxN),
-                          Rptc = zeros(FT, maxN),
+                          Rptc = zeros(FT, maxN), ptc_SA= zeros(FT, maxN),
                           graz = zeros(FT, maxN), mort = zeros(FT, maxN), dvid = zeros(FT, maxN)
                           ) 
     data = replace_storage(array_type(arch), rawdata)
