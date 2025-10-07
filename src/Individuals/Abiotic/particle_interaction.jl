@@ -51,7 +51,7 @@ end
 @kernel function merge_particle_kernel!(abiotic, plank)
     i = @index(Global)
     if abiotic.merg[i] ≠ 0
-        sa = 4.0f0 * Float32(pi) * abiotic.sz[i]^2.0f0
+        sa = Float32(pi) * abiotic.sz[i]^2.0f0
         @inbounds KernelAbstractions.@atomic plank.ptc_SA[abiotic.merg[i]] += sa
         @inbounds KernelAbstractions.@atomic plank.ptc[abiotic.merg[i]] += 1.0f0
     end
@@ -95,7 +95,7 @@ end
         @inbounds abiotic.Fe_con[idx[i]] = p.sz_min
         @inbounds abiotic.sz[idx[i]] = calculate_iron_particles_radius(p.sz_min, p)
         
-        Rsa = 4.0f0 * Float32(pi) * abiotic.sz[idx[i]]^2.0f0
+        Rsa = Float32(pi) * abiotic.sz[idx[i]]^2.0f0
         @inbounds plank.ptc_SA[i]   -= Rsa
         @inbounds plank.ptc[i]      -= 1.0f0
     end
