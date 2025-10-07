@@ -9,6 +9,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           gen  = zeros(FT, maxN), age  = zeros(FT, maxN), ac   = zeros(Bool, maxN), 
                           idx  = zeros(Int,maxN), tdark= zeros(FT, maxN),
                           PS   = zeros(FT, maxN), CF   = zeros(FT, maxN), ECF  = zeros(FT, maxN),
+                          PE   = zeros(FT, maxN),
                           VNH4 = zeros(FT, maxN), VNO3 = zeros(FT, maxN), VPO4 = zeros(FT, maxN),
                           NF   = zeros(FT, maxN), ENF  = zeros(FT, maxN),
                           VFe  = zeros(FT, maxN), ρChl = zeros(FT, maxN),
@@ -17,7 +18,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           NF2ST= zeros(FT, maxN), ST2NF= zeros(FT, maxN),
                           RS   = zeros(FT, maxN), ERS  = zeros(FT, maxN), BS   = zeros(FT, maxN), 
                           NR   = zeros(FT, maxN), ENR  = zeros(FT, maxN), ptc  = zeros(FT, maxN),
-                          Rptc = zeros(FT, maxN),
+                          Rptc = zeros(FT, maxN), ptc_SA= zeros(FT, maxN),
                           graz = zeros(FT, maxN), mort = zeros(FT, maxN), dvid = zeros(FT, maxN)
                           ) 
     data = replace_storage(array_type(arch), rawdata)
@@ -33,7 +34,8 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                  :Chl2N, :R_NC, :R_PC, :NF_clock,
                  :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, :mort_P, :mort_reg, 
                  :grazFracC, :grazFracN, :grazFracP, :grazFracFe,
-                 :mortFracC, :mortFracN, :mortFracP, :mortFracFe)
+                 :mortFracC, :mortFracN, :mortFracP, :mortFracFe,
+                 :ICPE_ptc, :eATP, :SA_e)
 
     pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))
