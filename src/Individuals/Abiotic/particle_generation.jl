@@ -25,7 +25,7 @@ end
 #### Calculate the radius based on the inorganic iron content.
 
 @inline function calculate_iron_particles_radius(Fe_con::Float32, particle)
-    mass_Fe = Fe_con * particle.M_Fe * 1e-6f0
+    mass_Fe = Fe_con * particle.M_Fe * 1.0f-6
     total_mass = mass_Fe / particle.Fe_frac
     volume = total_mass / particle.ptc_de
     radius = cbrt(volume * 3.0f0 / (4.0f0 * Float32(pi)))
