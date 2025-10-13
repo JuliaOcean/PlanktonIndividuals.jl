@@ -3,7 +3,6 @@ module Abiotic
 export construct_abiotic_particle, initialize_abiotic_particle!
 export particle_interaction!, particle_release!
 export particles_from_bcs!
-export calculate_iron_particles_radius!
 
 using KernelAbstractions
 using StructArrays

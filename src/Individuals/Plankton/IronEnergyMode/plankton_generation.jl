@@ -18,7 +18,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           NF2ST= zeros(FT, maxN), ST2NF= zeros(FT, maxN),
                           RS   = zeros(FT, maxN), ERS  = zeros(FT, maxN), BS   = zeros(FT, maxN), 
                           NR   = zeros(FT, maxN), ENR  = zeros(FT, maxN), ptc  = zeros(FT, maxN),
-                          Rptc = zeros(FT, maxN), ptc_SA= zeros(FT, maxN),
+                          Rptc = zeros(FT, maxN),
                           graz = zeros(FT, maxN), mort = zeros(FT, maxN), dvid = zeros(FT, maxN)
                           ) 
     data = replace_storage(array_type(arch), rawdata)
@@ -35,7 +35,9 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                  :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, :mort_P, :mort_reg, 
                  :grazFracC, :grazFracN, :grazFracP, :grazFracFe,
                  :mortFracC, :mortFracN, :mortFracP, :mortFracFe,
-                 :ICPE_ptc, :eATP, :SA_e)
+                 :ICPE_ptc, :eATP, :SA_e, 
+                 :ptc_de, :Fe_frac, :sz_min, :M_Fe
+                 )
 
     pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))
