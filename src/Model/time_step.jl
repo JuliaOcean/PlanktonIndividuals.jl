@@ -20,7 +20,6 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
 
     zero_fields!(model.timestepper.plk)
     @inbounds model.timestepper.Chl .= 0.0f0
-    @inbounds model.timestepper.pop .= 0.0f0
 
     ##### abiotic particle advection, diffusion, and update
     for sa in keys(model.individuals.abiotics)
@@ -41,6 +40,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
 
     ##### phytoplankton advection, diffusion, and physiological update
     if model.bgc_params["shared_graz"] == 1.0f0 # shared grazing
+        @inbounds model.timestepper.pop .= 0.0f0
         for sp in keys(model.individuals.phytos)
             ##### RK4
             particle_advection!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
@@ -99,6 +99,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                       model.grid, model.bgc_params["kc"], model.bgc_params["kw"], ki)
         end
         for sp in keys(model.individuals.phytos)
+            @inbounds model.timestepper.pop .= 0.0f0
             acc_counts!(model.timestepper.pop, model.individuals.phytos[sp].data.ac,
                         model.individuals.phytos[sp].data.xi, model.individuals.phytos[sp].data.yi,
                         model.individuals.phytos[sp].data.zi, model.arch)
@@ -113,7 +114,6 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
             plankton_update!(model.individuals.phytos[sp], model.timestepper.trs,
                                 model.timestepper.rnd, model.timestepper.plk, 
                                 diags.phytos[sp], ΔT, model.t, model.arch, model.mode)
-            @inbounds model.timestepper.pop .= 0.0f0
         end
     end # phytoplankton
 

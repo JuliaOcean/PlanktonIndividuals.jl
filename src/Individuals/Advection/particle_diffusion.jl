@@ -14,11 +14,14 @@ function calc_diffusion!(rnd, xi, yi, zi, κx, κy, κz, ΔT, g::AbstractGrid, a
 end
 
 function particle_diffusion!(particle, rnd, κx, κy, κz, ΔT, g::AbstractGrid, arch::Architecture)
-    ##### generate random numbers Normal(0,1)
-    randn!(rng_type(arch), rnd.x)
-    randn!(rng_type(arch), rnd.y)
-    randn!(rng_type(arch), rnd.z)
+    ##### generate random numbers (0,1)
+    rand!(rng_type(arch), rnd.x)
+    rand!(rng_type(arch), rnd.y)
+    rand!(rng_type(arch), rnd.z)
 
+    rnd.x .= (rnd.x .- 0.5f0) .* 2.0f0
+    rnd.y .= (rnd.y .- 0.5f0) .* 2.0f0
+    rnd.z .= (rnd.z .- 0.5f0) .* 2.0f0
     ##### calculate diffusion
     calc_diffusion!(rnd, particle.xi, particle.yi, particle.zi, κx, κy, κz, ΔT, g, arch)
     particle.x .= particle.x + rnd.x .* particle.ac
