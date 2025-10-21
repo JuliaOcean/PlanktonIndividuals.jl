@@ -47,13 +47,13 @@ end
 
 ##### calculate the probability of grazing
 ##### quadratic grazing
-@kernel function calc_graz_quadratic_kernel!(plank, nuts, P)
+@kernel function calc_graz_quadratic_kernel!(plank, trs, P)
     i = @index(Global)
-    @inbounds plank.graz[i] = nuts.pop[i] * P * plank.ac[i]
+    @inbounds plank.graz[i] = trs.pop[i] * P * plank.ac[i]
 end
-function calc_graz_quadratic!(plank, nuts, P, arch)
+function calc_graz_quadratic!(plank, trs, P, arch)
     kernel! = calc_graz_quadratic_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, nuts, P)
+    kernel!(plank, trs, P)
     return nothing
 end
 
