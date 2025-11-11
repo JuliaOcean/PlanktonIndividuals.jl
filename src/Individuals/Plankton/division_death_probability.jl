@@ -4,7 +4,7 @@ struct Timer <: division_type end
 struct Sizer_Timer <: division_type end
 
 ##### calculate probability of cell division
-@inline calc_division(::Sizer, Sz, t, reg, reg2, P) = P * shape_func_inc(Sz, reg, 1.0f-3)
+@inline calc_division(::Sizer, Sz, t, reg, reg2, P) = P * shape_func_inc(Sz, reg, 2.0f-3; pow = 2.0f0)
 
 @inline calc_division(::Timer, Sz, t, reg, reg2, P) = P * shape_func_inc(t%86400/3600, reg, 1.0f-5)
 
@@ -26,8 +26,7 @@ end
 @kernel function calc_dvid_kernel!(plank, dvid_type, p, t)
     i = @index(Global)
     @inbounds plank.dvid[i] = calc_division(dvid_type, plank.Sz[i], t,
-                                            p.dvid_reg, p.dvid_reg2, p.dvid_P) *
-                                            isless(2.0f0 * p.Cquota * p.Nsuper, plank.Bm[i]) * plank.ac[i]
+                                            p.dvid_reg, p.dvid_reg2, p.dvid_P) * plank.ac[i]
 end
 function calc_dvid!(plank, dvid_type, p, t, arch)
     kernel! = calc_dvid_kernel!(device(arch), 256, (size(plank.ac,1)))
