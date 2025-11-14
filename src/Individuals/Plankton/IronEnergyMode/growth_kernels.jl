@@ -69,7 +69,7 @@ end
     @inbounds plank.VFe[i]  = calc_Fe_uptake(trs.DFe[i], trs.T[i], plank.qFe[i], plank.qFePS[i], 
                                              plank.qFeNR[i], plank.qFeNF[i], plank.Bm[i], plank.CH[i], 
                                              plank.Sz[i], trs.pop[i], p, plank.ac[i], ΔT)
-    @inbounds plank.VO2[i]  = calc_O2_diffusion_kernel!(trs.O2, plank.qO2, plank.Sz, p, plank.ac, ΔT)
+    @inbounds plank.VO2[i]  = calc_O2_diffusion_kernel!(trs.O2[i], plank.qO2[i], plank.Sz[i], p, plank.ac[i], ΔT)
 end
 function calc_trs_uptake!(plank, trs, p, ΔT, arch::Architecture)
     kernel! = calc_trs_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
