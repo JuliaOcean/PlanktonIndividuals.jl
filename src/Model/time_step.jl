@@ -70,7 +70,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                       model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
                       model.individuals.phytos[sp].data.ac, model.tracers.NH4.data,
                       model.tracers.NO3.data, model.tracers.PO4.data, model.tracers.DOC.data,
-                      model.tracers.DFe.data, model.timestepper.par, model.timestepper.par₀, 
+                      model.tracers.DFe.data, model.tracers.O2.data, model.timestepper.par, model.timestepper.par₀, 
                       model.timestepper.temp, model.timestepper.pop, model.arch)
             
             plankton_update!(model.individuals.phytos[sp], model.timestepper.trs,
