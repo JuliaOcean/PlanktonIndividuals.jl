@@ -81,7 +81,7 @@ function update_state_1!(plank, ΔT, arch::Architecture)
     return nothing
 end
 
-##### calculate light reaction (mmolATP/individual/second)
+##### calculate light reaction (μJ/individual/second)
 @inline function calc_PS(par, Bm, CH, qFePS, Chl, p)
     αI = par * p.α * Chl / max(1.0f-30, Bm)
     Qfe_ps = qFePS / max(1.0f-30, Bm + CH)
@@ -101,7 +101,7 @@ function calc_PS!(plank, trs, p, arch::Architecture)
 end
 
 ##### calculate potential maximum respiration (mmolC/individual/second) 
-##### and energy production (mmolATP/individual/second)
+##### and energy production (μJ/individual/second)
 @inline function calc_respir(CH, Bm, T, p, ac, ΔT)
     RS = CH * p.k_rs * tempFunc(T, p) * ac
     RS = min(RS, CH/ΔT) # double check CH is not over consumed
@@ -120,7 +120,7 @@ function calc_repiration!(plank, trs, p, ΔT, arch::Architecture)
 end
 
 ##### calculate potential carbon fixation rate (mmolC/individual/second)
-##### and energy consumption (mmolATP/individual/second)
+##### and energy consumption (μJ/individual/second)
 @inline function calc_CF(CH, Bm, T, p, ac)
     Qc = CH/max(1.0f-30, Bm + CH)
     regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4, pow = 2.0f0)
@@ -140,7 +140,7 @@ function calc_carbon_fixation!(plank, trs, p, arch::Architecture)
 end
 
 ##### calculate potential nitrate reduction (mmolN/individual/second)
-##### and energy consumption (mmolATP/individual/second)
+##### and energy consumption (μJ/individual/second)
 @inline function calc_NR(qNO3, qNH4, qFeNR, Bm, CH, T, p, ac, ΔT)
     Qn = qNH4/max(1.0f-30, Bm + CH)
     reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4, pow = 2.0f0)
@@ -164,7 +164,7 @@ function calc_NO3_reduction!(plank, trs, p, ΔT, arch::Architecture)
 end
 
 ##### calculate potential nitrogen fixation (mmolN/individual/second)
-##### and energy consumption (mmolATP/individual/second)
+##### and energy consumption (μJ/individual/second)
 @inline function calc_NF(qNH4, qFeNF, Bm, CH, T, p, ac)
     Qn = qNH4/max(1.0f-30, Bm + CH)
     reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4, pow = 2.0f0)
