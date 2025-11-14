@@ -3,7 +3,7 @@ function grazing!(plank, arch::Architecture, plk, p)
     ##### calculate grazing loss
     calc_loss!(plk.NH4.data, plk.NO3.data, plk.DOC.data, plk.POC.data, 
                plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
-               plk.DFe.data, plk.PFe_bio.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.graz, 
+               plk.DFe.data, plk.PFe_bio.data, plk.O2.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.graz, 
                p.grazFracC, p.grazFracN, p.grazFracP, p.grazFracFe, p.R_NC, p.R_PC, arch)
     
     ##### inactivate grazed individuals
@@ -17,7 +17,7 @@ function mortality!(plank, arch::Architecture, plk, p)
     ##### calculate mortality loss
     calc_loss!(plk.NH4.data, plk.NO3.data, plk.DOC.data, plk.POC.data, 
                plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
-               plk.DFe.data, plk.PFe_bio.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.mort, 
+               plk.DFe.data, plk.PFe_bio.data, plk.O2.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.mort, 
                p.mortFracC, p.mortFracN, p.mortFracP, p.mortFracFe, p.R_NC, p.R_PC, arch)
     
     ##### inactivate dead individuals
@@ -44,6 +44,7 @@ end
         @inbounds plank.qFePS[idx[i]] = plank.qFePS[i]
         @inbounds plank.qFeNR[idx[i]] = plank.qFeNR[i]
         @inbounds plank.qFeNF[idx[i]] = plank.qFeNF[i]
+        @inbounds plank.qO2[idx[i]]  = plank.qO2[i]
         @inbounds plank.exEn[idx[i]] = plank.exEn[i]
         @inbounds plank.Chl[idx[i]]  = plank.Chl[i]
         @inbounds plank.gen[idx[i]]  = plank.gen[i]
@@ -71,6 +72,7 @@ end
     @inbounds plank.qFePS[i]*= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.qFeNR[i]*= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.qFeNF[i]*= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.qO2[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.exEn[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.Chl[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.gen[i]  += plank.dvid[i]

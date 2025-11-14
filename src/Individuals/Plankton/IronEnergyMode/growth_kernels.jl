@@ -44,9 +44,18 @@ end
 @inline function calc_Fe_uptake(DFe, T, qFe, qFePS, qFeNR, qFeNF, Bm, CH, Sz, pop, p, ac, ΔT)
     Qfe = (qFe + qFePS + qFeNF + qFeNR)/max(1.0f-30, Bm + CH)
     regQFe = shape_func_dec(Qfe, p.qFemax, 1.0f-4, pow = 2.0f0)
-    SA = p.SA * Sz^(2.0f0/3.0f0)
+    SA = 4.0f0 * π * (p.Rad * Sz^(1.0f0/3.0f0))^2.0f0
     VFe = p.KSAFe * SA * DFe * regQFe * p.Nsuper * tempFunc(T, p) * ac
     return min(VFe, DFe/ΔT/max(1.0f0,pop))
+end
+
+##### passive diffusion of O₂ through cell memberane (positive value means uptake)
+@inline function calc_O2_diffusion_kernel!(O2, qO2, Sz, p, ac, ΔT)
+    Vcell = 4.0f0/3.0f0 * π * (p.Rad * Sz^(1.0f0/3.0f0))^3.0f0
+    SA = 4.0f0 * π * (p.Rad * Sz^(1.0f0/3.0f0))^2.0f0
+    ΔO2 = O2 - qO2/Vcell
+    VO2 = SA * ΔO2 * p.k_O2 * p.Nsuper * ac
+    return min(VO2, O2/ΔT/max(1.0f0,pop))
 end
 
 @kernel function calc_trs_uptake_kernel!(plank, trs, p, ΔT)
@@ -60,6 +69,7 @@ end
     @inbounds plank.VFe[i]  = calc_Fe_uptake(trs.DFe[i], trs.T[i], plank.qFe[i], plank.qFePS[i], 
                                              plank.qFeNR[i], plank.qFeNF[i], plank.Bm[i], plank.CH[i], 
                                              plank.Sz[i], trs.pop[i], p, plank.ac[i], ΔT)
+    @inbounds plank.VO2[i]  = calc_O2_diffusion_kernel!(trs.O2, plank.qO2, plank.Sz, p, plank.ac, ΔT)
 end
 function calc_trs_uptake!(plank, trs, p, ΔT, arch::Architecture)
     kernel! = calc_trs_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -74,6 +84,7 @@ end
     @inbounds plank.qNO3[i] += plank.VNO3[i] * ΔT
     @inbounds plank.qNH4[i] += plank.VNH4[i] * ΔT
     @inbounds plank.qFe[i]  += plank.VFe[i]  * ΔT
+    @inbounds plank.qO2[i]  += plank.VO2[i]  * ΔT
 end
 function update_state_1!(plank, ΔT, arch::Architecture)
     kernel! = update_state_1_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -212,16 +223,17 @@ function energy_allocation!(plank, p, arch::Architecture)
 end
 
 ##### update energy reserve and CH, and N quotas - second time
-@kernel function update_state_2_kernel!(plank, ΔT)
+@kernel function update_state_2_kernel!(plank, p, ΔT)
     i = @index(Global)
     @inbounds plank.CH[i]   += (plank.CF[i] - plank.RS[i]) * ΔT
-    @inbounds plank.qNO3[i] += -plank.NR[i]  * ΔT
+    @inbounds plank.qNO3[i] += -plank.NR[i] * ΔT
     @inbounds plank.qNH4[i] += plank.NR[i]  * ΔT
     @inbounds plank.qNH4[i] += plank.NF[i]  * ΔT
+    @inbounds plank.qO2[i]  += (plank.PS[i] * p.R_O2En - plank.RS[i] * p.R_O2C) * ΔT
 end
-function update_state_2!(plank, ΔT, arch::Architecture)
+function update_state_2!(plank, p, ΔT, arch::Architecture)
     kernel! = update_state_2_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, ΔT)
+    kernel!(plank, p, ΔT)
     return nothing
 end
 

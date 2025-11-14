@@ -157,7 +157,7 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
     params=Dict(
         "Nsuper"    => [1],       # Number of phyto cells each super individual represents (cells)
         "Cquota"    => [1.8e-11], # C quota of phyto cells at size = 1.0 (mmolC/cell)
-        "SA"        => [0.18],    # Surface area (μm²) Prochlorococcus
+        "Rad"       => [0.12],    # Radius (μm) of Prochlorococcus
         "mean"      => [1.2],     # Mean of the normal distribution of initial phyto individuals
         "var"       => [0.3],     # Variance of the normal distribution of initial phyto individuals
         "Chl2Cint"  => [0.10],    # Initial Chla:C ratio in phytoplankton (mgChl/mmolC)
@@ -172,6 +172,9 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "VNH4max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
         "VNO3max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
         "VPO4max"   => [1.2e-6],  # Maximum P uptake rate (mmolP/mmolC/second)
+        "R_O2En"    => [3.64e-9], # Ratio of O2 production to energy production in light reaction (mmolO₂/μJ)
+        "R_O2C"     => [1.0],     # Ration of O2 consumption to carbon consumption in respiration (mmolO₂/mmolC)
+        "k_O2"      => [3.0e-3],  # O₂ permeability coefficient (m/s)
         "k_cf"      => [1.0e-5],  # Carbon fixation rate (per second)
         "k_rs"      => [1.5e-6],  # Maximum respiration rate (per second)
         "k_nr"      => [2.8e-6],  # Nitrate reduction rate (per second)

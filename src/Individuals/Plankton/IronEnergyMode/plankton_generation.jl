@@ -5,13 +5,13 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           qNH4 = zeros(FT, maxN), exEn = zeros(FT, maxN),
                           qNO3 = zeros(FT, maxN), qP   = zeros(FT, maxN), Chl  = zeros(FT, maxN),
                           qFe  = zeros(FT, maxN), qFePS= zeros(FT, maxN), qFeNR= zeros(FT, maxN), 
-                          qFeNF= zeros(FT, maxN), 
+                          qFeNF= zeros(FT, maxN), qO2  = zeros(FT, maxN),
                           gen  = zeros(FT, maxN), age  = zeros(FT, maxN), ac   = zeros(Bool, maxN), 
                           idx  = zeros(Int,maxN), tdark= zeros(FT, maxN),
                           PS   = zeros(FT, maxN), CF   = zeros(FT, maxN), ECF  = zeros(FT, maxN),
                           VNH4 = zeros(FT, maxN), VNO3 = zeros(FT, maxN), VPO4 = zeros(FT, maxN),
                           NF   = zeros(FT, maxN), ENF  = zeros(FT, maxN),
-                          VFe  = zeros(FT, maxN), ρChl = zeros(FT, maxN),
+                          VFe  = zeros(FT, maxN), VO2  = zeros(FT, maxN), ρChl = zeros(FT, maxN),
                           PS2ST= zeros(FT, maxN), ST2PS= zeros(FT, maxN),
                           NR2ST= zeros(FT, maxN), ST2NR= zeros(FT, maxN),
                           NF2ST= zeros(FT, maxN), ST2NF= zeros(FT, maxN),
@@ -22,9 +22,10 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
-    param_names=(:Nsuper, :Cquota, :SA, :mean, :var, :Chl2Cint, 
+    param_names=(:Nsuper, :Cquota, :Rad, :mean, :var, :Chl2Cint, 
                  :α, :Topt, :Tmax, :Ea, :is_nr, :is_croc, :is_tric,
                  :PCmax, :VNO3max, :VNH4max, :VPO4max, 
+                 :R_O2En, :R_O2C, :k_O2,
                  :k_cf, :k_rs, :k_nr, :k_nf, :k_mtb,
                  :e_cf, :e_rs, :e_nr, :e_nf,
                  :k_Fe_ST2PS, :k_Fe_PS2ST, :k_Fe_ST2NR, :k_Fe_NR2ST, :k_Fe_ST2NF, :k_Fe_NF2ST,
@@ -58,7 +59,6 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     qNH4max = plank.p.qNH4max * 0.1f0
     pqmax = plank.p.qPmax * 0.1f0
     feqmax = plank.p.qFemax * 0.1f0
-    R_PC = plank.p.R_PC
     Chl2Cint = plank.p.Chl2Cint
 
     plank.data.ac[1:N]  .= true                                                       # activity
