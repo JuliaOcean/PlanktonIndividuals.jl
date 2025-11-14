@@ -1,5 +1,5 @@
 ##### deal with nutrients uptake
-@kernel function calc_consume_kernel!(ctsdic, ctsnh4, ctsno3, ctspo4, ctsdfe, csto2,
+@kernel function calc_consume_kernel!(ctsdic, ctsnh4, ctsno3, ctspo4, ctsdfe, ctso2,
                                         plank, ac, x, y, z, ΔT)
     i = @index(Global)
     @inbounds KernelAbstractions.@atomic ctsdic[x[i], y[i], z[i]] += (plank.RS[i] - plank.PS[i]) * ΔT * ac[i]
