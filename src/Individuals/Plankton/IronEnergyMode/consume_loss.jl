@@ -17,7 +17,7 @@ end
 
 ##### deal with grazed or dead individuals
 @kernel function calc_loss_kernel!(ctsnh4, ctsno3, ctsdoc, ctspoc, ctsdon, ctspon, 
-                                    ctsdop, ctspop, ctsdfe, ctspfe_bio, csto2,
+                                    ctsdop, ctspop, ctsdfe, ctspfe_bio, ctso2,
                                     plank, ac, x, y, z, loss, 
                                     lossFracC, lossFracN, lossFracP, lossFracFe, R_NC, R_PC)
     i = @index(Global)
@@ -33,10 +33,10 @@ end
     @inbounds KernelAbstractions.@atomic ctspfe_bio[x[i], y[i], z[i]] += (plank.qFe[i] + plank.qFePS[i] + plank.qFeNF[i] + plank.qFeNR[i]) * (1.0f0-lossFracFe) * ac[i] * loss[i]
     @inbounds KernelAbstractions.@atomic ctso2[x[i], y[i], z[i]]  += plank.qO2[i] * ac[i] * loss[i]
 end
-function calc_loss!(ctsnh4, ctsno3, ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, ctsdfe, ctspfe_bio, csto2,
+function calc_loss!(ctsnh4, ctsno3, ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, ctsdfe, ctspfe_bio, ctso2,
     plank, ac, x, y, z, loss, lossFracC, lossFracN, lossFracP, lossFracFe, R_NC, R_PC, arch)
     kernel! = calc_loss_kernel!(device(arch), 256, (size(ac,1)))
-    kernel!(ctsnh4, ctsno3, ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, ctsdfe, ctspfe_bio, csto2,
+    kernel!(ctsnh4, ctsno3, ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, ctsdfe, ctspfe_bio, ctso2,
             plank, ac, x, y, z, loss, lossFracC, lossFracN, lossFracP, lossFracFe, R_NC, R_PC)
 return nothing 
 end
