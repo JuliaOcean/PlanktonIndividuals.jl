@@ -93,17 +93,19 @@ function update_state_1!(plank, ΔT, arch::Architecture)
     return nothing
 end
 
-##### calculate light reaction (μJ/individual/second)
+##### calculate light reaction (mmolATP/individual/second)
 @inline function calc_PS(par, Bm, CH, qFePS, Chl, p)
     αI = par * p.α * Chl / max(1.0f-30, Bm)
     Qfe_ps = qFePS / max(1.0f-30, Bm + CH)
     Ksat = Qfe_ps / max(1.0f-30, Qfe_ps + p.KfePS)
     PS  = p.PCmax * (1.0f0 - exp(-αI)) * Bm * Ksat
+    #RePS = PS * 4.0f0 / 2.6f0 # e:ATP = 4.0:2.6
+    #OPS  = PS /2.6f0 # O2:ATP = 1.0:2.6
     return PS
 end
 @kernel function calc_PS_kernel!(plank, trs, p)
     i = @index(Global)
-    @inbounds plank.PS[i] = calc_PS(trs.par[i], plank.Bm[i], plank.CH[i],
+    @inbounds plank.PS[i] = calc_PS(trs.par[i], plank.Bm[i], plank.CH[i], 
                                     plank.qFePS[i], plank.Chl[i], p)
 end
 function calc_PS!(plank, trs, p, arch::Architecture)
@@ -113,17 +115,18 @@ function calc_PS!(plank, trs, p, arch::Architecture)
 end
 
 ##### calculate potential maximum respiration (mmolC/individual/second) 
-##### and energy production (μJ/individual/second)
-@inline function calc_respir(CH, Bm, T, p, ac, ΔT)
+##### and energy production (mmolATP/individual/second)
+@inline function calc_respir(CH, T, p, ac, ΔT)
     RS = CH * p.k_rs * tempFunc(T, p) * ac
     RS = min(RS, CH/ΔT) # double check CH is not over consumed
-    ERS = RS * p.e_rs * ac
-    return RS, ERS
+    #ERS = RS * p.e_rs * ac
+    #ORS = RS
+    #ReRS = 2.0f0/3.0f0*RS
+    return RS
 end
 @kernel function calc_respiration_kernel!(plank, trs, p, ΔT)
     i = @index(Global)
-    @inbounds plank.RS[i], plank.ERS[i] = calc_respir(plank.CH[i], plank.Bm[i], 
-                                                      trs.T[i], p, plank.ac[i], ΔT)
+    @inbounds plank.RS[i] = calc_respir(plank.CH[i], trs.T[i], p, plank.ac[i], ΔT)
 end
 function calc_repiration!(plank, trs, p, ΔT, arch::Architecture)
     kernel! = calc_respiration_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -132,18 +135,19 @@ function calc_repiration!(plank, trs, p, ΔT, arch::Architecture)
 end
 
 ##### calculate potential carbon fixation rate (mmolC/individual/second)
-##### and energy consumption (μJ/individual/second)
+##### and energy consumption (mmolATP/individual/second)
 @inline function calc_CF(CH, Bm, T, p, ac)
     Qc = CH/max(1.0f-30, Bm + CH)
     regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4, pow = 2.0f0)
     CF = p.k_cf * regQC * tempFunc_CF(T, p) * Bm * ac
     ECF = CF * p.e_cf * ac
-    return CF, ECF
+    ReCF = CF * 4.0f0 # 2NADPH, 4e⁻
+    return CF, ECF, ReCF
 end
 @kernel function calc_carbon_fixation_kernel!(plank, trs, p)
     i = @index(Global)
-    @inbounds plank.CF[i], plank.ECF[i] = calc_CF(plank.CH[i], plank.Bm[i],
-                                                  trs.T[i], p, plank.ac[i])
+    @inbounds plank.CF[i], plank.ECF[i], plank.ReCF[i] = 
+                calc_CF(plank.CH[i], plank.Bm[i], trs.T[i], p, plank.ac[i])
 end
 function calc_carbon_fixation!(plank, trs, p, arch::Architecture)
     kernel! = calc_carbon_fixation_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -152,7 +156,7 @@ function calc_carbon_fixation!(plank, trs, p, arch::Architecture)
 end
 
 ##### calculate potential nitrate reduction (mmolN/individual/second)
-##### and energy consumption (μJ/individual/second)
+##### and energy consumption (mmolATP/individual/second)
 @inline function calc_NR(qNO3, qNH4, qFeNR, Bm, CH, T, p, ac, ΔT)
     Qn = qNH4/max(1.0f-30, Bm + CH)
     reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4, pow = 2.0f0)
@@ -161,13 +165,14 @@ end
     NR = p.k_nr * reg * qNO3 * Ksat * tempFunc(T, p) * ac
     NR = min(NR, qNO3/ΔT) # double check qNO3 are not over consumed
     ENR = NR * p.e_nr * ac
-    return NR * p.is_nr, ENR * p.is_nr
+    ReNR = NR * 8.0f0 # 4NADPH, 8e⁻
+    return NR * p.is_nr, ENR * p.is_nr, ReNR
 end
 @kernel function calc_NO3_reduction_kernel!(plank, trs, p, ΔT)
     i = @index(Global)
-    @inbounds plank.NR[i], plank.ENR[i] = calc_NR(plank.qNO3[i], plank.qNH4[i],
-                                                  plank.qFeNR[i], plank.Bm[i], plank.CH[i],
-                                                  trs.T[i], p, plank.ac[i], ΔT)
+    @inbounds plank.NR[i], plank.ENR[i], plank.ReNR[i] = 
+                calc_NR(plank.qNO3[i], plank.qNH4[i], plank.qFeNR[i], 
+                        plank.Bm[i], plank.CH[i], trs.T[i], p, plank.ac[i], ΔT)
 end
 function calc_NO3_reduction!(plank, trs, p, ΔT, arch::Architecture)
     kernel! = calc_NO3_reduction_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -176,7 +181,7 @@ function calc_NO3_reduction!(plank, trs, p, ΔT, arch::Architecture)
 end
 
 ##### calculate potential nitrogen fixation (mmolN/individual/second)
-##### and energy consumption (μJ/individual/second)
+##### and energy consumption (mmolATP/individual/second)
 @inline function calc_NF(qNH4, qFeNF, Bm, CH, T, p, ac)
     Qn = qNH4/max(1.0f-30, Bm + CH)
     reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4, pow = 2.0f0)
@@ -184,13 +189,14 @@ end
     Ksat = Qfe_NF / max(1.0f-30, Qfe_NF + p.KfeNF)
     NF = p.k_nf * reg * Ksat * tempFunc(T, p) * Bm * ac
     ENF = NF * p.e_nf * ac
-    return NF * (p.is_croc + p.is_tric), ENF * (p.is_croc + p.is_tric)
+    ReNF = NF * 4.0f0 # 2NADPH, 4e⁻
+    return NF*(p.is_croc+p.is_tric), ENF*(p.is_croc+p.is_tric), ReNF*(p.is_croc+p.is_tric)
 end
 @kernel function calc_nitrogen_fixation_kernel!(plank, trs, p)
     i = @index(Global)
-    @inbounds plank.NF[i], plank.ENF[i] = calc_NF(plank.qNH4[i], plank.qFeNF[i], 
-                                                  plank.Bm[i], plank.CH[i],
-                                                  trs.T[i], p, plank.ac[i])
+    @inbounds plank.NF[i], plank.ENF[i], plank.ReNF[i] = 
+                calc_NF(plank.qNH4[i], plank.qFeNF[i], plank.Bm[i], 
+                    plank.CH[i], trs.T[i], p, plank.ac[i])
 end
 function calc_nitrogen_fixation!(plank, trs, p, arch::Architecture)
     kernel! = calc_nitrogen_fixation_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -224,17 +230,17 @@ function energy_allocation!(plank, p, arch::Architecture)
 end
 
 ##### update energy reserve and CH, and N quotas - second time
-@kernel function update_state_2_kernel!(plank, p, ΔT)
+@kernel function update_state_2_kernel!(plank, ΔT)
     i = @index(Global)
     @inbounds plank.CH[i]   += (plank.CF[i] - plank.RS[i]) * ΔT
     @inbounds plank.qNO3[i] += -plank.NR[i] * ΔT
     @inbounds plank.qNH4[i] += plank.NR[i]  * ΔT
     @inbounds plank.qNH4[i] += plank.NF[i]  * ΔT
-    @inbounds plank.qO2[i]  += (plank.PS[i] * p.R_O2En - plank.RS[i] * p.R_O2C) * ΔT
+    @inbounds plank.qO2[i]  += (plank.OPS[i] - plank.ORS[i]) * ΔT
 end
-function update_state_2!(plank, p, ΔT, arch::Architecture)
+function update_state_2!(plank, ΔT, arch::Architecture)
     kernel! = update_state_2_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, p, ΔT)
+    kernel!(plank, ΔT)
     return nothing
 end
 
@@ -269,20 +275,26 @@ end
     f_PS2ST = p.k_Fe_PS2ST * qFePS * (isless(dpar, 0.0f0) + isequal(0.0f0, par))
 
     # nitrate reduction
-    f_ST2NR = p.k_Fe_ST2NR * qFe * isequal(0.0f0, par) * isless(tdark, p.NF_clock) * p.is_nr 
-    f_NR2ST = p.k_Fe_NR2ST * qFeNR * (isequal(0.0f0, par) * 
-                isless(p.NF_clock, tdark) + isless(0.0f0, par)) * p.is_nr 
+    if p.is_nr == 1.0f0
+        f_ST2NR = p.k_Fe_ST2NR * qFe * isequal(0.0f0, par) * isless(tdark, p.NF_clock) 
+        f_NR2ST = p.k_Fe_NR2ST * qFeNR * (isequal(0.0f0, par) * 
+                isless(p.NF_clock, tdark) + isless(0.0f0, par))
+    else
+        f_ST2NR = 0.0f0
+        f_NR2ST = 0.0f0
+    end
 
-    # nitrogen fixation - Crocosphaera watsonii
-    f_ST2NF_cr = p.k_Fe_ST2NF * qFe * isequal(0.0f0, par) * isless(tdark, p.NF_clock)
-    f_NF2ST_cr = p.k_Fe_NF2ST * qFeNF * (isequal(0.0f0, par) * 
+    if p.is_croc == 1.0f0 # nitrogen fixation - Crocosphaera watsonii
+        f_ST2NF = p.k_Fe_ST2NF * qFe * isequal(0.0f0, par) * isless(tdark, p.NF_clock)
+        f_NF2ST = p.k_Fe_NF2ST * qFeNF * (isequal(0.0f0, par) * 
                     isless(p.NF_clock, tdark) + isless(0.0f0, par))
-    # nitrogen fixation - Trichodesmium
-    f_ST2NF_tr = p.k_Fe_ST2NF * qFe * isless(0.0f0, dpar)
-    f_NF2ST_tr = p.k_Fe_NF2ST * qFeNF * (isless(dpar, 0.0f0) + isequal(0.0f0, par))
-    # nitrogen fixation
-    f_ST2NF = f_ST2NF_cr * p.is_croc + f_ST2NF_tr * p.is_tric
-    f_NF2ST = f_NF2ST_cr * p.is_croc + f_NF2ST_tr * p.is_tric
+    elseif p.is_tric ==1.0f0 # nitrogen fixation - Trichodesmium
+        f_ST2NF = p.k_Fe_ST2NF * qFe * isless(0.0f0, dpar)
+        f_NF2ST = p.k_Fe_NF2ST * qFeNF * (isless(dpar, 0.0f0) + isequal(0.0f0, par))
+    else
+        f_ST2NF = 0.0f0
+        f_NF2ST = 0.0f0
+    end
 
     # photosynthesis
     f_ST2PS = min(f_ST2PS, qFe/ΔT)

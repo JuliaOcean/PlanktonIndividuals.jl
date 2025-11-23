@@ -10,7 +10,7 @@ function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
     calc_nitrogen_fixation!(plank, trs, p, arch)
     energy_allocation!(plank, p, arch) 
 
-    update_state_2!(plank, p, ΔT, arch)
+    update_state_2!(plank, ΔT, arch)
     
     calc_ρChl!(plank, trs.par, p, arch)
     calc_BS!(plank, p, arch)
