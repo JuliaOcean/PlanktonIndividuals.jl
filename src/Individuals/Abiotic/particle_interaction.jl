@@ -12,64 +12,114 @@
     end
     return dist
 end
-
-##### compare particle distance and Rd, decide whether
-##### this vesicle will be merged into phytoplankton cell
-@kernel function calc_merge_matrix_kernel!(intac, abiotic, plank, rnd, grid, abio_p)
-    i, j = @index(Global, NTuple)
-    intac[i,j] = isless(calc_distance(plank.xi[i], plank.yi[i],
-                                      plank.zi[i], plank.x[i],
-                                      plank.y[i], plank.z[i],
-                                      abiotic.xi[j], abiotic.yi[j],
-                                      abiotic.zi[j], abiotic.x[j],
-                                      abiotic.y[j], abiotic.z[j],
-                                      grid), abio_p.Rd * rnd.x[i]) * abiotic.ac[j] 
+##### 1. Reset Interaction (重置交互状态)
+##### Clears the Top-K candidate list before each step.
+@kernel function reset_interaction_kernel!(ids)
+    j, k = @index(Global, NTuple)
+    ids[j, k] = 0 
+    
 end
-function calc_merge_matrix!(intac, abiotic, plank, rnd, grid, abio_p, arch::Architecture)
-    kernel! = calc_merge_matrix_kernel!(device(arch), (16,16), (size(intac)))
-    kernel!(intac, abiotic, plank, rnd, grid, abio_p)
+
+function reset_interaction!(ids, arch::Architecture)
+    kernel! = reset_interaction_kernel!(device(arch), (16, 16), size(ids))
+    kernel!(ids)
     return nothing
 end
 
-##### clean the merge matrix - one vesicle might be close enough
-##### to two or more phytoplankton cells. 
-##### Only the first phytoplankton cell can uptake this vesicle.
-##### First, find all indices of 1.0f0 in intac, return an AbstracArray of
-##### Cartesian Index, e.g., CartesianIndex(phyto_ind, abiotic_ind)
-##### Then, assign phyto_ind to abiotic.merge[abiotic_ind]
-@kernel function assign_merge_kernel!(abiotic, inds)
+##### 2. Calculate Interaction Topology 
+##### Revised: Uses random slot assignment to avoid race conditions.
+@kernel function calc_interaction_kernel!(top_ids, plank, abiotic, rnd, grid, abio_p, K)
     i = @index(Global)
-    abiotic.merg[inds[i][2]] = inds[i][1]
+    
+    # Check if phytoplankton is active
+    if plank.ac[i] == 1.0f0 
+        
+        my_rnd = rnd.x[i]
+        
+        for j in 1:length(abiotic.ac)
+            if abiotic.ac[j] == 1.0f0
+                dist = calc_distance(plank.xi[i], plank.yi[i], plank.zi[i], plank.x[i], plank.y[i], plank.z[i],
+                                     abiotic.xi[j], abiotic.yi[j], abiotic.zi[j], abiotic.x[j], abiotic.y[j], abiotic.z[j],
+                                     grid)
+                
+                # Probabilistic check (Distance < Sensing Radius * Random)
+                if dist < (abio_p.Rd * my_rnd)
+                    
+                    slot = (i % K) + 1
+                    
+                    # Simple overwrite: The last thread to write wins.
+                    # Since all threads here passed the probability check, any of them is a valid candidate.
+                    top_ids[j, slot] = i
+                end
+            end
+        end
+        
+    end 
 end
-function assign_merge!(abiotic, inds, arch::Architecture)
-    kernel! = assign_merge_kernel!(device(arch), 256, (size(inds,1)))
-    kernel!(abiotic, inds)
+
+function calc_interaction!(top_ids, plank, abiotic, rnd, grid, abio_p, K, arch::Architecture)
+    kernel! = calc_interaction_kernel!(device(arch), 256, (size(plank.ac, 1)))
+    # Removed top_dists from arguments
+    kernel!(top_ids, plank, abiotic, rnd, grid, abio_p, K)
     return nothing
 end
 
-##### merge particles
-@kernel function merge_particle_kernel!(abiotic, plank)
-    i = @index(Global)
-    if abiotic.merg[i] ≠ 0
-        @inbounds KernelAbstractions.@atomic plank.ptc[abiotic.merg[i]] += 1.0f0
+##### 3. Consume Particle 
+##### Handles actual uptake with capacity limit. Unchanged logic.
+@kernel function consume_particle_kernel!(top_ids, plank_ptc, abio_ac, max_uptake, K)
+    j = @index(Global)
+    
+    if abio_ac[j] == 1.0f0
+        for k in 1:K
+            winner_id = top_ids[j, k]
+            if winner_id > 0
+                # Atomic Add to check capacity
+                old_val = KernelAbstractions.@atomic plank_ptc[winner_id] += 1.0f0
+                
+                if old_val < max_uptake
+                    # Success
+                    abio_ac[j] = 0.0f0
+                    break     
+                else
+                    # Full, rollback
+                    KernelAbstractions.@atomic plank_ptc[winner_id] -= 1.0f0
+                end
+            end
+        end
     end
 end
-function merge_particle!(abiotic, plank, arch::Architecture)
-    kernel! = merge_particle_kernel!(device(arch), 256, (size(abiotic.ac,1)))
-    kernel!(abiotic, plank)
+
+function consume_particle!(top_ids, plank, abiotic, max_uptake, K, arch::Architecture)
+    kernel! = consume_particle_kernel!(device(arch), 256, (size(abiotic.ac, 1)))
+    kernel!(top_ids, plank.ptc, abiotic.ac, max_uptake, K)
+    return nothing
+end
+
+##### Particle Interaction Wrapper
+##### Updated to remove top_dists
+function particle_interaction!(abiotic, plank, top_ids, 
+                               abio_p, rnd, grid, max_uptake, K, arch::Architecture)
+    rand!(rng_type(arch), rnd.x) 
+    
+    # 1. Reset (Only IDs)
+    reset_interaction!(top_ids, arch)
+    
+    # 2. Compete (No dists)
+    calc_interaction!(top_ids, plank, abiotic, rnd, grid, abio_p, K, arch)
+    
+    # 3. Consume
+    consume_particle!(top_ids, plank, abiotic, max_uptake, K, arch)
+    
     return nothing
 end
 
 ##### particle interaction wrapper
-function particle_interaction!(abiotic, plank, intac, abio_p, rnd, grid, arch::Architecture)
-    rand!(rng_type(arch), rnd.x) # generate random number (0,1)
-    calc_merge_matrix!(intac, abiotic, plank, rnd, grid, abio_p, arch)
-    inds = findall(isequal(true), intac)
-    assign_merge!(abiotic, inds, arch)
-    merge_particle!(abiotic, plank, arch)
-    unsafe_free!(inds)
-    abiotic.ac .*= isless.(abiotic.merg, 1)
-    abiotic.merg .= 0
+function particle_interaction!(abiotic, plank, top_ids, abio_p, rnd, grid, max_uptake, K, arch::Architecture)
+    rand!(rng_type(arch), rnd.x)
+    reset_interaction!(top_ids,  arch)
+    calc_interaction!(top_ids,  plank, abiotic, rnd, grid, abio_p, K, arch)
+    consume_particle!(top_ids, plank, abiotic, max_uptake, K, arch)
+    
     return nothing
 end
 
@@ -231,7 +281,7 @@ calc_particle_bc_bottom!(tr_temp, ::Nothing, rnd_3d, abio_p, ΔT, iter, g::Abstr
 @kernel function copy_abiotic_particle_from_field_kernel!(abiotic, inds, de_inds, g::AbstractGrid)
     i = @index(Global)
     @inbounds abiotic.ac[de_inds[i]] = true
-    @inbounds abiotic.x[de_inds[i]]  = inds[i][1] - g.Hx - 0.4f0
+@inbounds abiotic.x[de_inds[i]]  = inds[i][1] - g.Hx - 0.4f0
     @inbounds abiotic.y[de_inds[i]]  = inds[i][2] - g.Hy - 0.4f0
     @inbounds abiotic.z[de_inds[i]]  = inds[i][3] - g.Hz - 0.4f0
 end
