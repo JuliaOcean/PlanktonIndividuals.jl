@@ -218,6 +218,13 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "mortFracN" => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracP" => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracFe"=> [0.1],     # Fraction goes into dissolved organic pool
+        "ICPE_ptc"  => [5e-5],    # Photoelectrochemical conversion efficiency of Photoelectric Particles
+        "SA_e"      => [4.5e-14], # Projected area (m²) Prochlorococcus
+        "eATP"      => [7.5e-5],  # Efficiency of electron-to-ATP conversion (mmolATP/µmol electron)
+        "sz_min"    => [1.0e-3],  # Minimal size of a abiotic particle (mmolFe/particle)
+        "ptc_de"    => [4560.0],  # Density of iron mineral (kg/m³)
+        "Fe_frac"   => [0.65],    # Mass fraction of Fe in iron mineral
+        "M_Fe"      => [55.85],   # Molar mass of Fe (g/mol)
     )
 
     if N == 1
@@ -332,8 +339,8 @@ function abiotic_params_default(N::Int64)
         "release_P" => [1.0e-6],  # Probability of particle release per second
         "sz_min"    => [1.0e-3],  # Minimal size of a abiotic particle (mmolFe/particle)
         "Ktr"       => [0.0e-5],  # Rate of particle forming from tracer
+        "ptc_intac" => [25],  # maximum number of abiotic particles that can interact with one phytpplamton cell
     )
-
     if N == 1
         return params
     else

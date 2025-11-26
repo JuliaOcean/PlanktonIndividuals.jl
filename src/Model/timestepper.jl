@@ -16,11 +16,11 @@ mutable struct timestepper
     rnd_3d::AbstractArray#a (Cu)Array of random numbers for tracer-particle interatcion
     velos::AbstractArray# a StructArray of intermediate values for RK4 particle advection
     trs::AbstractArray  # a StructArray of tracers of each individual
-    intac::Union{Nothing,AbstractArray} # a (Cu)array of 0 and 1 to store particle-particle interatcion
+    top_ids::Union{Nothing, AbstractArray}   # Top-K candidate phyto IDs for non-bio particles
     palat::Palat        # a `Palat` to store the interaction between species
 end
 
-function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, intac::Union{Nothing,AbstractArray}, palat::Palat)
+function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, palat::Palat)
     vel₀ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
     vel½ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
     vel₁ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
@@ -54,7 +54,11 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, in
                       idc = zeros(FT, maxN), idc_int = zeros(Int, maxN))
     trs_d = replace_storage(array_type(arch), trs)
 
-    ts = timestepper(Gcs, tracer_temp, vel₀, vel½, vel₁, PARF, temp, flux_sink, plk, par, par₀, Chl, pop, rnd_d, rnd_3d, velos_d, trs_d, intac, palat)
+    K = 5  # Top-K candidates
+    raw_ids = zeros(Int, maxN, K)
+    top_ids = replace_storage(array_type(arch), raw_ids)
+  
+    ts = timestepper(Gcs, tracer_temp, vel₀, vel½, vel₁, PARF, temp, flux_sink, plk, par, par₀, Chl, pop, rnd_d, rnd_3d, velos_d, trs_d, top_ids, palat)
 
     return ts
 end
