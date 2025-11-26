@@ -122,8 +122,10 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
         plank = model.individuals.phytos[pair[1]].data
         abiotic = model.individuals.abiotics[pair[2]].data
         abio_p = model.individuals.abiotics[pair[2]].p
-        particle_interaction!(abiotic, plank, model.timestepper.intac, abio_p,
-                              model.timestepper.rnd, model.grid, model.arch)
+        max_uptake = Int(abio_p.ptc_intac)
+        K = size(model.timestepper.top_ids, 2)
+        particle_interaction!(abiotic, plank, model.timestepper.top_ids,  abio_p,
+                              model.timestepper.rnd, model.grid, max_uptake, K, model.arch)
     end
 
     ##### particle-particle release

@@ -5,7 +5,7 @@ function construct_abiotic_particle(arch::Architecture, sp::Int, params::Dict, m
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
-    param_names=(:Nsuper, :Rd, :release_P, :sz_min, :Ktr)
+    param_names=(:Nsuper, :Rd, :release_P, :sz_min, :Ktr, :ptc_intac)
 
     pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))
