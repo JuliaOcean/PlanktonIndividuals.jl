@@ -12,7 +12,7 @@
     end
     return dist
 end
-##### 1. Reset Interaction (重置交互状态)
+##### 1. Reset Interaction 
 ##### Clears the Top-K candidate list before each step.
 @kernel function reset_interaction_kernel!(ids)
     j, k = @index(Global, NTuple)
