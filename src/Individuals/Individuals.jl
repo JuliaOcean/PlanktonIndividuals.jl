@@ -39,13 +39,13 @@ import .IronEnergy
 #####
 ##### generate individuals of multiple species
 #####
-function generate_individuals(phyto::phyto_setup, abiotic::Union{Nothing, abiotic_setup}, maxN1, maxN2, arch::Architecture, FT::DataType, g::AbstractGrid, mode::AbstractMode)
+function generate_individuals(phyto::phyto_setup, abiotic::Union{Nothing, abiotic_setup}, maxN, arch::Architecture, FT::DataType, g::AbstractGrid, mode::AbstractMode)
     plank_names = Symbol[]
     plank_data=[]
 
     for i in 1:phyto.Nsp
         name = Symbol("sp"*string(i))
-        plank = construct_plankton(arch, i, phyto.params, maxN1, FT, mode::AbstractMode)
+        plank = construct_plankton(arch, i, phyto.params, FT, mode::AbstractMode)
         initialize_plankton!(plank, phyto.N[i], g, arch, mode)
         push!(plank_names, name)
         push!(plank_data, plank)
@@ -61,7 +61,7 @@ function generate_individuals(phyto::phyto_setup, abiotic::Union{Nothing, abioti
 
         for j in 1:abiotic.Nsa
             name = Symbol("sa"*string(j))
-            particle =  construct_abiotic_particle(arch, j, abiotic.params, maxN2, FT)
+            particle =  construct_abiotic_particle(arch, j, abiotic.params, maxN, FT)
             initialize_abiotic_particle!(particle, abiotic.N[j], g, arch)
             push!(abiotic_names, name)
             push!(abiotic_data, particle)
