@@ -12,113 +12,71 @@
     end
     return dist
 end
+
 ##### 1. Reset Interaction 
 ##### Clears the Top-K candidate list before each step.
-@kernel function reset_interaction_kernel!(ids)
-    j, k = @index(Global, NTuple)
-    ids[j, k] = 0 
-    
-end
-
-function reset_interaction!(ids, arch::Architecture)
-    kernel! = reset_interaction_kernel!(device(arch), (16, 16), size(ids))
-    kernel!(ids)
-    return nothing
+function reset_interaction!(intac, arch::Architecture)
+    @inbounds intac .= 0
 end
 
 ##### 2. Calculate Interaction Topology 
 ##### Revised: Uses random slot assignment to avoid race conditions.
-@kernel function calc_interaction_kernel!(top_ids, plank, abiotic, rnd, grid, abio_p, K)
+@kernel function calc_interaction_kernel!(intac, plank, abiotic, rnd, grid, abio_p, max_candidates)
     i = @index(Global)
     
-    # Check if phytoplankton is active
     if plank.ac[i] == 1.0f0 
-        
-        my_rnd = rnd.x[i]
-        
-        for j in 1:length(abiotic.ac)
-            if abiotic.ac[j] == 1.0f0
+        for k in 1:length(abiotic.ac)
+            if abiotic.ac[k] == 1.0f0
                 dist = calc_distance(plank.xi[i], plank.yi[i], plank.zi[i], plank.x[i], plank.y[i], plank.z[i],
-                                     abiotic.xi[j], abiotic.yi[j], abiotic.zi[j], abiotic.x[j], abiotic.y[j], abiotic.z[j],
+                                     abiotic.xi[k], abiotic.yi[k], abiotic.zi[k], abiotic.x[k], abiotic.y[k], abiotic.z[k],
                                      grid)
-                
-                # Probabilistic check (Distance < Sensing Radius * Random)
-                if dist < (abio_p.Rd * my_rnd)
-                    
-                    slot = (i % K) + 1
-                    
-                    # Simple overwrite: The last thread to write wins.
-                    # Since all threads here passed the probability check, any of them is a valid candidate.
-                    top_ids[j, slot] = i
+                if dist < abio_p.Rd 
+                    slot = (i % max_candidates) + 1
+                    intac[slot, k] = i
                 end
             end
         end
-        
     end 
 end
 
-function calc_interaction!(top_ids, plank, abiotic, rnd, grid, abio_p, K, arch::Architecture)
+function calc_interaction!(intac, plank, abiotic, rnd, grid, abio_p, max_candidates, arch::Architecture)
     kernel! = calc_interaction_kernel!(device(arch), 256, (size(plank.ac, 1)))
-    # Removed top_dists from arguments
-    kernel!(top_ids, plank, abiotic, rnd, grid, abio_p, K)
+    kernel!(intac, plank, abiotic, rnd, grid, abio_p, max_candidates)
     return nothing
 end
 
 ##### 3. Consume Particle 
 ##### Handles actual uptake with capacity limit. Unchanged logic.
-@kernel function consume_particle_kernel!(top_ids, plank_ptc, abio_ac, max_uptake, K)
-    j = @index(Global)
-    
-    if abio_ac[j] == 1.0f0
-        for k in 1:K
-            winner_id = top_ids[j, k]
-            if winner_id > 0
-                # Atomic Add to check capacity
-                old_val = KernelAbstractions.@atomic plank_ptc[winner_id] += 1.0f0
-                
-                if old_val < max_uptake
-                    # Success
-                    abio_ac[j] = 0.0f0
-                    break     
-                else
-                    # Full, rollback
-                    KernelAbstractions.@atomic plank_ptc[winner_id] -= 1.0f0
+@kernel function consume_particle_kernel!(intac, plank, plank_p, abiotic, max_candidates)
+    k = @index(Global)
+
+    if abiotic.ac[k] == 1.0f0
+        for j in 1:max_candidates
+            plank_id = intac[j, k]
+            if plank_id > 0  
+                if plank.ptc[plank_id] < plank_p.max_ptc
+                    KernelAbstractions.@atomic plank.ptc[plank_id] += 1.0f0
+                    abiotic.ac[k] = 0.0f0
+                    break
                 end
             end
-        end
+        end     
+                
     end
 end
 
-function consume_particle!(top_ids, plank, abiotic, max_uptake, K, arch::Architecture)
+function consume_particle!(intac, plank, plank_p, abiotic, max_candidates, arch::Architecture)
     kernel! = consume_particle_kernel!(device(arch), 256, (size(abiotic.ac, 1)))
-    kernel!(top_ids, plank.ptc, abiotic.ac, max_uptake, K)
-    return nothing
-end
-
-##### Particle Interaction Wrapper
-##### Updated to remove top_dists
-function particle_interaction!(abiotic, plank, top_ids, 
-                               abio_p, rnd, grid, max_uptake, K, arch::Architecture)
-    rand!(rng_type(arch), rnd.x) 
-    
-    # 1. Reset (Only IDs)
-    reset_interaction!(top_ids, arch)
-    
-    # 2. Compete (No dists)
-    calc_interaction!(top_ids, plank, abiotic, rnd, grid, abio_p, K, arch)
-    
-    # 3. Consume
-    consume_particle!(top_ids, plank, abiotic, max_uptake, K, arch)
-    
+    kernel!(intac, plank, plank_p, abiotic, max_candidates)
     return nothing
 end
 
 ##### particle interaction wrapper
-function particle_interaction!(abiotic, plank, top_ids, abio_p, rnd, grid, max_uptake, K, arch::Architecture)
+function particle_interaction!(abiotic, plank, plank_p, intac, abio_p, rnd, grid, max_candidates, arch::Architecture)
     rand!(rng_type(arch), rnd.x)
-    reset_interaction!(top_ids,  arch)
-    calc_interaction!(top_ids,  plank, abiotic, rnd, grid, abio_p, K, arch)
-    consume_particle!(top_ids, plank, abiotic, max_uptake, K, arch)
+    reset_interaction!(intac,  arch)
+    calc_interaction!(intac,  plank, abiotic, rnd, grid, abio_p, max_candidates, arch)
+    consume_particle!(intac, plank, plank_p, abiotic, max_candidates, arch)
     
     return nothing
 end

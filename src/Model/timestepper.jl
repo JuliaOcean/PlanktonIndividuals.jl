@@ -16,11 +16,11 @@ mutable struct timestepper
     rnd_3d::AbstractArray#a (Cu)Array of random numbers for tracer-particle interatcion
     velos::AbstractArray# a StructArray of intermediate values for RK4 particle advection
     trs::AbstractArray  # a StructArray of tracers of each individual
-    top_ids::Union{Nothing, AbstractArray}   # Top-K candidate phyto IDs for non-bio particles
+    intac::Union{Nothing, AbstractArray}   # Top-K candidate phyto IDs for abiotic particles
     palat::Palat        # a `Palat` to store the interaction between species
 end
 
-function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, palat::Palat)
+function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN1, maxN2, intac::Union{Nothing,AbstractArray}, palat::Palat)
     vel₀ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
     vel½ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
     vel₁ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
@@ -36,6 +36,8 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, pa
     flux_sink = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     temp = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     PARF = zeros(FT, g.Nx, g.Ny) |> array_type(arch)
+
+    maxN = max(maxN1, maxN2) 
 
     rnd = StructArray(x = zeros(FT, maxN), y = zeros(FT, maxN), z = zeros(FT, maxN))
     rnd_d = replace_storage(array_type(arch), rnd)
@@ -54,11 +56,8 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, pa
                       idc = zeros(FT, maxN), idc_int = zeros(Int, maxN))
     trs_d = replace_storage(array_type(arch), trs)
 
-    K = 5  # Top-K candidates
-    raw_ids = zeros(Int, maxN, K)
-    top_ids = replace_storage(array_type(arch), raw_ids)
-  
-    ts = timestepper(Gcs, tracer_temp, vel₀, vel½, vel₁, PARF, temp, flux_sink, plk, par, par₀, Chl, pop, rnd_d, rnd_3d, velos_d, trs_d, top_ids, palat)
+    
+    ts = timestepper(Gcs, tracer_temp, vel₀, vel½, vel₁, PARF, temp, flux_sink, plk, par, par₀, Chl, pop, rnd_d, rnd_3d, velos_d, trs_d, intac, palat)
 
     return ts
 end

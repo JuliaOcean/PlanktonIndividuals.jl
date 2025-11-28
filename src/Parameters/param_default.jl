@@ -218,6 +218,7 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "mortFracN" => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracP" => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracFe"=> [0.1],     # Fraction goes into dissolved organic pool
+        "max_ptc"   => [25],      # maximum number of abiotic particles that can interact with one phytoplankton cell)
     )
 
     if N == 1
@@ -332,7 +333,6 @@ function abiotic_params_default(N::Int64)
         "release_P" => [1.0e-6],  # Probability of particle release per second
         "sz_min"    => [1.0e-3],  # Minimal size of a abiotic particle (mmolFe/particle)
         "Ktr"       => [0.0e-5],  # Rate of particle forming from tracer
-        "ptc_intac" => [25],  # maximum number of abiotic particles that can interact with one phytpplamton cell
     )
 
     if N == 1

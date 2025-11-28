@@ -1,5 +1,6 @@
 mutable struct PlanktonModel
     arch::Architecture          # architecture on which models will run
+    max_candidates::Int         # maximum number of candidate phytoplankton for interaction with one abiotic particle
     FT::DataType                # floating point data type
     t::AbstractFloat            # time in second
     iteration::Int              # model interation
@@ -16,6 +17,7 @@ end
                   FT = Float32,
                   mode = QuotaMode(),
                   max_individuals::Int = 8*1024,
+                  max_abiotics::Int = 8*1024,
                   bgc_params = nothing, 
                   tracer_initial = default_tracer_init(),
                   phyto = nothing,
@@ -37,6 +39,7 @@ Keyword Arguments (Optional)
 - `max_individuals` : Maximum number of individuals for each species the model can hold,
                     usually take the maximum of all the species and apply a factor to account for the growth
                     of individuals during one simulation.
+- `max_abiotics` : Maximum number of abiotic particles for each species the model can hold.
 - `bgc_params` : Parameter set for biogeochemical processes modeled in the model, use default if `nothing`, 
                     use `Dict` to update parameters, the format and names of parameters can be found by running `bgc_params_default()`.
 - `tracer_initial` : The source of initial conditions of tracer fields, should be either a `NamedTuple` 
@@ -51,11 +54,13 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        FT = Float32,
                        mode = QuotaMode(),
                        max_individuals::Int = 8*1024,
+                       max_abiotics::Int = 8*1024,
                        bgc_params = nothing, 
                        tracer_initial = default_tracer_init(),
                        phyto = nothing,
                        abiotic = nothing,
                        t::AbstractFloat = 0.0f0,
+                       max_candidates::Int = 25,
                        )
 
     @assert isfunctional(arch) == true
@@ -97,7 +102,8 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
     if isa(abiotic, Nothing)
         intac = nothing
     elseif isa(abiotic, abiotic_setup)
-        @assert maximum(abiotic.N) ≤ max_individuals
+        @assert maximum(abiotic.N) ≤ max_abiiotics
+        intac = zeros(Int, max_candidates, max_abiotics) |> array_type(arch)
         if length(abiotic.N) ≠ abiotic.Nsa
             throw(ArgumentError("PlanktonModel: `abiotic`: The length of `N` must be $(abiotic.Nsa), the same as `Nsa`, each species has its own initial condition"))
         end
@@ -113,7 +119,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
         throw(ArgumentError("PlanktonModel:`abiotic` must be either Nothing or `abiotic_setup`!")) 
     end
 
-    inds = generate_individuals(phyto, abiotic, max_individuals, arch, FT, grid_d, mode)
+    inds = generate_individuals(phyto, abiotic, max_individuals, max_abiotics, arch, FT, grid_d, mode)
 
     ##### check palatability between plank and abiotic
     if isa(abiotic, Nothing)
@@ -142,11 +148,11 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
 
     tracers = generate_tracers(arch, grid_d, tracer_initial, FT)
 
-    ts = timestepper(arch, FT, grid_d, max_individuals, palat)
+    ts = timestepper(arch, FT, grid_d, max_individuals,max_abiotics, intac, palat)
 
     iteration  = 0
 
-    model = PlanktonModel(arch, FT, t, iteration, inds, tracers, grid_d, bgc_params_final, ts, mode)
+    model = PlanktonModel(arch, max_candidates, FT, t, iteration, inds, tracers, grid_d, bgc_params_final, ts, mode)
 
     return model
 end
