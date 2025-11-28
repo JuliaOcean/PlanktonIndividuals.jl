@@ -102,7 +102,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
     if isa(abiotic, Nothing)
         intac = nothing
     elseif isa(abiotic, abiotic_setup)
-        @assert maximum(abiotic.N) ≤ max_abiiotics
+        @assert maximum(abiotic.N) ≤ max_abiotics
         intac = zeros(Int, max_candidates, max_abiotics) |> array_type(arch)
         if length(abiotic.N) ≠ abiotic.Nsa
             throw(ArgumentError("PlanktonModel: `abiotic`: The length of `N` must be $(abiotic.Nsa), the same as `Nsa`, each species has its own initial condition"))
