@@ -239,7 +239,7 @@ calc_particle_bc_bottom!(tr_temp, ::Nothing, rnd_3d, abio_p, ΔT, iter, g::Abstr
 @kernel function copy_abiotic_particle_from_field_kernel!(abiotic, inds, de_inds, g::AbstractGrid)
     i = @index(Global)
     @inbounds abiotic.ac[de_inds[i]] = true
-@inbounds abiotic.x[de_inds[i]]  = inds[i][1] - g.Hx - 0.4f0
+    @inbounds abiotic.x[de_inds[i]]  = inds[i][1] - g.Hx - 0.4f0
     @inbounds abiotic.y[de_inds[i]]  = inds[i][2] - g.Hy - 0.4f0
     @inbounds abiotic.z[de_inds[i]]  = inds[i][3] - g.Hz - 0.4f0
 end
