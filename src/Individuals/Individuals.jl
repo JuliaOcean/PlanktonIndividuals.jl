@@ -45,7 +45,7 @@ function generate_individuals(phyto::phyto_setup, abiotic::Union{Nothing, abioti
 
     for i in 1:phyto.Nsp
         name = Symbol("sp"*string(i))
-        plank = construct_plankton(arch, i, phyto.params, FT, mode::AbstractMode)
+        plank = construct_plankton(arch, i, phyto.params, maxN1, FT, mode::AbstractMode)
         initialize_plankton!(plank, phyto.N[i], g, arch, mode)
         push!(plank_names, name)
         push!(plank_data, plank)

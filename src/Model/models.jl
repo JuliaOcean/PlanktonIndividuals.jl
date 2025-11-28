@@ -145,7 +145,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
 
     tracers = generate_tracers(arch, grid_d, tracer_initial, FT)
 
-    ts = timestepper(arch, FT, grid_d, max_individuals,intac, palat)
+    ts = timestepper(arch, FT, grid_d, max_individuals, intac, palat)
 
     iteration  = 0
 
