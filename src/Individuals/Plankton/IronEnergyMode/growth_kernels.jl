@@ -100,7 +100,7 @@ end
     Ksat = Qfe_ps / max(1.0f-30, Qfe_ps + p.KfePS)
     PS  = p.PCmax * (1.0f0 - exp(-αI)) * Bm * Ksat
     #RePS = PS * 4.0f0 / 2.6f0 # e:ATP = 4.0:2.6
-    #OPS  = PS /2.6f0 # O2:ATP = 1.0:2.6
+    #OPS  = PS / 2.6f0 # O2:ATP = 1.0:2.6
     return PS
 end
 @kernel function calc_PS_kernel!(plank, trs, p)
@@ -116,17 +116,19 @@ end
 
 ##### calculate potential maximum respiration (mmolC/individual/second) 
 ##### and energy production (mmolATP/individual/second)
-@inline function calc_respir(CH, T, p, ac, ΔT)
-    RS = CH * p.k_rs * tempFunc(T, p) * ac
-    RS = min(RS, CH/ΔT) # double check CH is not over consumed
-    #ERS = RS * p.e_rs * ac
-    #ORS = RS
-    #ReRS = 2.0f0/3.0f0*RS
-    return RS
+@inline function calc_respir(CH, Bm, qO2, T, p, ac, ΔT)
+    Qo = qO2 / max(1.0f-30, Bm + CH)
+    regQO = shape_func_inc_alt(Qo, p.qOmax, 1.0f-1, pow = 2.0f0)
+    RSo = CH * p.k_rs * regQO * tempFunc(T, p) * ac
+    RSo = min(RSo, 0.5f0*CH/ΔT, qO2/ΔT) # double check CH and qO2 is not over consumed
+    RSe = RSo
+    return RSo, RSe
 end
 @kernel function calc_respiration_kernel!(plank, trs, p, ΔT)
     i = @index(Global)
-    @inbounds plank.RS[i] = calc_respir(plank.CH[i], trs.T[i], p, plank.ac[i], ΔT)
+    @inbounds plank.RSo[i], plank.RSe[i] = 
+                calc_respir(plank.CH[i], plank.Bm[i], plank.qO2[i], 
+                            trs.T[i], p, plank.ac[i], ΔT)
 end
 function calc_repiration!(plank, trs, p, ΔT, arch::Architecture)
     kernel! = calc_respiration_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -159,7 +161,7 @@ end
 ##### and energy consumption (mmolATP/individual/second)
 @inline function calc_NR(qNO3, qNH4, qFeNR, Bm, CH, T, p, ac, ΔT)
     Qn = qNH4/max(1.0f-30, Bm + CH)
-    reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4, pow = 2.0f0)
+    reg = shape_func_dec(Qn , p.qNH4max, 1.0f-4, pow = 2.0f0)
     Qfe_NR = qFeNR / max(1.0f-30, Bm + CH)
     Ksat = Qfe_NR / max(1.0f-30, Qfe_NR + p.KfeNR)
     NR = p.k_nr * reg * qNO3 * Ksat * tempFunc(T, p) * ac
@@ -218,7 +220,6 @@ end
     plank.ERS[i], plank.ECF[i], plank.ENF[i], plank.ENR[i], plank.exEn[i] = 
         energy_alloc(plank.PS[i], plank.ERS[i], plank.ECF[i], 
                      plank.ENF[i], plank.ENR[i], p)
-    @inbounds plank.RS[i] = plank.ERS[i] / p.e_rs
     @inbounds plank.CF[i] = plank.ECF[i] / p.e_cf
     @inbounds plank.NF[i] = plank.ENF[i] / p.e_nf
     @inbounds plank.NR[i] = plank.ENR[i] / p.e_nr
@@ -232,7 +233,7 @@ end
 ##### update energy reserve and CH, and N quotas - second time
 @kernel function update_state_2_kernel!(plank, ΔT)
     i = @index(Global)
-    @inbounds plank.CH[i]   += (plank.CF[i] - plank.RS[i]) * ΔT
+    @inbounds plank.CH[i]   += (plank.CF[i] - plank.RSo[i] - plank.RSe[i]) * ΔT
     @inbounds plank.qNO3[i] += -plank.NR[i] * ΔT
     @inbounds plank.qNH4[i] += plank.NR[i]  * ΔT
     @inbounds plank.qNH4[i] += plank.NF[i]  * ΔT

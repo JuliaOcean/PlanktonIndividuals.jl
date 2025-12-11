@@ -200,6 +200,7 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "qPmax"     => [0.02],    # Maximum P quota in cell (mmolP/mmolC)
         "qFemax"    => [2.0e-5],  # Maximum Fe quota in cell (mmolFe/mmolC)
         "CHmax"     => [0.4],     # Maximum C quota in cell (mmolC/mmolC)
+        "qOmax"     => [0.5],     # Maximum O₂ quota in cell (mmolO₂/mmolC)
         "Chl2N"     => [3.0],     # Maximum Chla:N ratio in phytoplankton
         "R_NC"      => [16/106],  # N:C ratio in cell biomass
         "R_PC"      => [1/106],   # N:C ratio in cell biomass
