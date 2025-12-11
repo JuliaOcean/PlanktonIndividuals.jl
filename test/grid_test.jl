@@ -82,8 +82,7 @@ function test_lat_lon_grid()
 end
 
 function test_load_lat_lon_grid()
-    MeshArrays.GRID_LL360_download();
-	γ = MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360);
+	γ = MeshArrays.GridSpec("PeriodicChannel",ID = :onedegree);
 	Γ = MeshArrays.GridLoad(γ;option="full");
 	
 	grid_info=(XC=Γ.XC[1], YC=Γ.YC[1], RC=Γ.RC,
