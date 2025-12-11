@@ -1,5 +1,6 @@
 mutable struct PlanktonModel
     arch::Architecture          # architecture on which models will run
+    max_candidates::Int         # maximum number of candidate phytoplankton for interaction with one abiotic particle
     FT::DataType                # floating point data type
     t::AbstractFloat            # time in second
     iteration::Int              # model interation
@@ -56,6 +57,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        phyto = nothing,
                        abiotic = nothing,
                        t::AbstractFloat = 0.0f0,
+                       max_candidates::Int = 25,
                        )
 
     @assert isfunctional(arch) == true
@@ -98,7 +100,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
         intac = nothing
     elseif isa(abiotic, abiotic_setup)
         @assert maximum(abiotic.N) ≤ max_individuals
-        intac = zeros(Bool, max_individuals, max_individuals) |> array_type(arch)
+        intac = zeros(Int, max_candidates, max_individuals) |> array_type(arch)
         if length(abiotic.N) ≠ abiotic.Nsa
             throw(ArgumentError("PlanktonModel: `abiotic`: The length of `N` must be $(abiotic.Nsa), the same as `Nsa`, each species has its own initial condition"))
         end
@@ -147,7 +149,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
 
     iteration  = 0
 
-    model = PlanktonModel(arch, FT, t, iteration, inds, tracers, grid_d, bgc_params_final, ts, mode)
+    model = PlanktonModel(arch, max_candidates, FT, t, iteration, inds, tracers, grid_d, bgc_params_final, ts, mode)
 
     return model
 end

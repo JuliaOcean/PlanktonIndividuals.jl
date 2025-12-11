@@ -16,7 +16,7 @@ mutable struct timestepper
     rnd_3d::AbstractArray#a (Cu)Array of random numbers for tracer-particle interatcion
     velos::AbstractArray# a StructArray of intermediate values for RK4 particle advection
     trs::AbstractArray  # a StructArray of tracers of each individual
-    intac::Union{Nothing,AbstractArray} # a (Cu)array of 0 and 1 to store particle-particle interatcion
+    intac::Union{Nothing, AbstractArray}   # Top-K candidate phyto IDs for abiotic particles
     palat::Palat        # a `Palat` to store the interaction between species
 end
 
