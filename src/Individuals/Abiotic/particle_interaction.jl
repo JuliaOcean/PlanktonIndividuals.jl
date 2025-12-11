@@ -45,9 +45,9 @@ function calc_interaction!(intac, plank, abiotic, rnd, grid, abio_p, max_candida
     return nothing
 end
 
-##### 3. Consume Particle 
-##### Handles actual uptake with capacity limit. Unchanged logic.
-@kernel function consume_particle_kernel!(intac, plank, plank_p, abiotic, max_candidates)
+##### 3. merge Particle 
+##### Handles actual uptake with capacity limit. 
+@kernel function merge_particle_kernel!(intac, plank, plank_p, abiotic, max_candidates)
     k = @index(Global)
 
     if abiotic.ac[k] == 1.0f0
@@ -65,8 +65,8 @@ end
     end
 end
 
-function consume_particle!(intac, plank, plank_p, abiotic, max_candidates, arch::Architecture)
-    kernel! = consume_particle_kernel!(device(arch), 256, (size(abiotic.ac, 1)))
+function merge_particle!(intac, plank, plank_p, abiotic, max_candidates, arch::Architecture)
+    kernel! = merge_particle_kernel!(device(arch), 256, (size(abiotic.ac, 1)))
     kernel!(intac, plank, plank_p, abiotic, max_candidates)
     return nothing
 end
@@ -76,7 +76,7 @@ function particle_interaction!(abiotic, plank, plank_p, intac, abio_p, rnd, grid
     rand!(rng_type(arch), rnd.x)
     reset_interaction!(intac,  arch)
     calc_interaction!(intac,  plank, abiotic, rnd, grid, abio_p, max_candidates, arch)
-    consume_particle!(intac, plank, plank_p, abiotic, max_candidates, arch)
+    merge_particle!(intac, plank, plank_p, abiotic, max_candidates, arch)
     
     return nothing
 end
