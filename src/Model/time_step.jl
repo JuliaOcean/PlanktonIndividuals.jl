@@ -120,10 +120,11 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     ##### particle-particle interaction
     for pair in model.timestepper.palat.intac
         plank = model.individuals.phytos[pair[1]].data
+        plank_p = model.individuals.phytos[pair[1]].p
         abiotic = model.individuals.abiotics[pair[2]].data
         abio_p = model.individuals.abiotics[pair[2]].p
-        particle_interaction!(abiotic, plank, model.timestepper.intac, abio_p,
-                              model.timestepper.rnd, model.grid, model.arch)
+        particle_interaction!(abiotic, plank, plank_p, model.timestepper.intac, abio_p,
+                              model.timestepper.rnd, model.grid, model.max_candidates, model.arch)
     end
 
     ##### particle-particle release

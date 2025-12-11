@@ -218,6 +218,7 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "mortFracN" => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracP" => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracFe"=> [0.1],     # Fraction goes into dissolved organic pool
+        "max_ptc"   => [25],      # maximum number of abiotic particles that can interact with one phytoplankton cell)
     )
 
     if N == 1
