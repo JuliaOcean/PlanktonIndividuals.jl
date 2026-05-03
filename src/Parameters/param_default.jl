@@ -97,7 +97,8 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "C_DNA"    => [1.8e-13], # DNA C quota of phyto cells (mmolC/cell)
         "var"      => [0.3],     # Variance of the normal distribution of initial phyto individuals
         "RNA2DNA"  => [1.73],    # Initial RNA:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
-        "PRO2DNA"  => [34.83],   # Initial protein:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        "PRO_P2DNA" => [17.415], # Initial photosynthetic protein:DNA ratio in phytoplankton (mmol C/mmolC)
+        "PRO_B2DNA" => [17.415], # Initial biosynthetic protein:DNA ratio in phytoplankton (mmol C/mmolC)
         "CH2DNA"   => [23.3],    # Initial carbohydrate+lipid:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
         "Chl2DNA"  => [3.45],    # Initial Chla:DNA ratio in phytoplankton (mmolC/mmolC) from Micromonas sp.
         "α"        => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
@@ -118,14 +119,16 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "PSTmax"   => [0.70],    # Maximum P reserve in total P (mmol P/mmol P)
         "CHmax"    => [0.4],     # Maximum Carbohydrate in cell (mmol C/mmol C)
         "respir"   => [1.2e-6],  # Respiration rate(per second)
-        "k_pro"    => [6.0e-5],  # Protein synthesis rate (mmol C/mmol C/second)
+        "k_pro_P"  => [6.0e-5],  # Photosynthetic protein synthesis rate (mmol C/mmol C/second)
+        "k_pro_B"  => [6.0e-5],  # Biosynthetic protein synthesis rate (mmol C/mmol C/second)
         "k_sat_pro"=> [4.5e-13], # Hafl saturation constent for protein synthesis (mmol C/cell)
         "k_dna"    => [1.6e-7],  # DNA synthesis rate (mmol C/mmol C/second)
         "k_sat_dna"=> [1.0e-15], # Hafl saturation constent for DNA synthesis (mmol C/cell)
         "k_rna"    => [3.0e-7],  # RNA synthesis rate (mmol C/mmol C/second)
         "k_sat_rna"=> [1.0e-12], # Hafl saturation constent for RNA synthesis (mmol C/cell)
         "Chl2N"    => [3.0],     # Maximum Chla:N ratio in phytoplankton
-        "R_NC_PRO" => [1/4.5],   # N:C ratio in protein (from Inomura et al 2020.)
+        "R_NC_PRO_P" => [1/4.5], # N:C ratio in photosynthetic protein
+        "R_NC_PRO_B" => [1/4.5], # N:C ratio in biosynthetic protein
         "R_NC_DNA" => [1/2.9],   # N:C ratio in DNA (from Inomura et al 2020.)
         "R_PC_DNA" => [1/11.1],  # P:C ratio in DNA
         "R_NC_RNA" => [1/2.8],   # N:C ratio in RNA (from Inomura et al 2020.)
@@ -140,6 +143,7 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "mortFracC"=> [0.5],     # Fraction goes into dissolved organic pool
         "mortFracN"=> [0.5],     # Fraction goes into dissolved organic pool
         "mortFracP"=> [0.5],     # Fraction goes into dissolved organic pool
+        "CH_min"    => [0.001],  # Minimum carbohydrate quota (mmol C/mmol C)
     )
 
     if N == 1

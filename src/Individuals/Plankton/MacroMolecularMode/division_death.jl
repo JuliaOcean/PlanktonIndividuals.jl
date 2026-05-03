@@ -31,7 +31,8 @@ end
         @inbounds plank.x[idx[i]]    = plank.x[i]
         @inbounds plank.y[idx[i]]    = plank.y[i]
         @inbounds plank.z[idx[i]]    = plank.z[i]
-        @inbounds plank.PRO[idx[i]]  = plank.PRO[i]
+        @inbounds plank.PRO_P[idx[i]] = plank.PRO_P[i]
+        @inbounds plank.PRO_B[idx[i]] = plank.PRO_B[i]
         @inbounds plank.DNA[idx[i]]  = plank.DNA[i]
         @inbounds plank.RNA[idx[i]]  = plank.RNA[i]
         @inbounds plank.CH[idx[i]]   = plank.CH[i]
@@ -52,7 +53,8 @@ end
 ##### cell division
 @kernel function divide_to_half_kernel!(plank)
     i = @index(Global)
-    @inbounds plank.PRO[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_P[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_B[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.DNA[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.RNA[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.CH[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
