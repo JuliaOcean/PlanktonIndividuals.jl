@@ -1,10 +1,10 @@
 module Diagnostics
 
 export PlanktonDiagnostics
-export diags_spcs!, diags_proc!
-export tracer_avail_diags, plank_avail_diags
+export diags_spcs!, diags_proc!, diags_colony!
 
 using KernelAbstractions
+using StructArrays
 
 using PlanktonIndividuals.Architectures: device, Architecture, array_type
 using PlanktonIndividuals.Grids
@@ -13,7 +13,6 @@ using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMo
 using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle
 
 import Base: show
-
 
 include("diagnostics_struct.jl")
 include("diagnostics_kernels.jl")

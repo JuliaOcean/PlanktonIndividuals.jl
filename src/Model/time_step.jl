@@ -21,51 +21,67 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     zero_fields!(model.timestepper.plk)
     @inbounds model.timestepper.Chl .= 0.0f0
 
-    ##### abiotic particle advection, diffusion, and update
-    for sa in keys(model.individuals.abiotics)
+    ##### abiotic particle motion
+    for sa in eachindex(model.individuals.abiotics)
         particles_from_bcs!(model.individuals.abiotics[sa].data, model.timestepper.tracer_temp.DFe.data, 
                             model.individuals.abiotics[sa].bc, model.timestepper.rnd_3d, model.individuals.abiotics[sa].p, 
                             ΔT, model.iteration, model.grid, model.t, model.arch)
-        ##### RK4
-        particle_advection!(model.individuals.abiotics[sa].data, model.timestepper.velos, model.grid, 
-                            model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT, model.arch)
-        ##### Diffusion
-        particle_diffusion!(model.individuals.abiotics[sa].data, model.timestepper.rnd,
-                            model.bgc_params["κhP"], model.bgc_params["κhP"], model.bgc_params["κvP"],
-                            ΔT, model.grid, model.arch)
-        
-        ##### Update
-        find_inds!(model.individuals.abiotics[sa].data, model.grid, model.arch)
+        ##### particle motion
+        particle_motion!(model.individuals.abiotics[sa].data, model.timestepper.velos, model.grid, 
+                         model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, 
+                         model.timestepper.rnd, model.bgc_params["κhP"], model.bgc_params["κhP"], 
+                         model.bgc_params["κvP"],ΔT, model.arch)
     end # abiotic particles
 
-    ##### phytoplankton advection, diffusion, and physiological update
+    ##### phytoplankton motion
+    for sp in eachindex(model.individuals.phytos)
+        particle_motion!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid, 
+                         model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, 
+                         model.timestepper.rnd, model.bgc_params["κhP"], model.bgc_params["κhP"], 
+                         model.bgc_params["κvP"],ΔT, model.arch)
+    end # phytoplankton motion
+
+    ##### colonies motion
+    for cl in eachindex(model.individuals.colonies)
+        colony_motion!(model.individuals.colonies[cl].spcs, model.timestepper.velos, model.grid, 
+                       model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, 
+                       model.timestepper.rnd, model.bgc_params["κhP"], model.bgc_params["κhP"], 
+                       model.bgc_params["κvP"],ΔT, model.arch)
+    end # colony motion
+
+    ##### calculate accumulated Chla quantity (not concentration)
+    for sp in eachindex(model.individuals.phytos)
+        acc_chl!(model.timestepper.Chl, model.individuals.phytos[sp].data.Chl,
+                 model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi,
+                 model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, model.arch)
+    end
+    for cl in eachindex(model.individuals.colonies)
+        for sp in eachindex(model.individuals.colonies[cl].spcs)
+            acc_chl!(model.timestepper.Chl, model.individuals.colonies[cl].spcs[sp].data.Chl,
+                     model.individuals.colonies[cl].spcs[sp].data.ac, 
+                     model.individuals.colonies[cl].spcs[sp].data.xi,
+                     model.individuals.colonies[cl].spcs[sp].data.yi, 
+                     model.individuals.colonies[cl].spcs[sp].data.zi, model.arch)
+        end
+    end # Chla
+
+    ##### calculate PAR
+    for ki in 1:model.grid.Nz
+        calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, 
+                  model.timestepper.PARF, model.grid, model.bgc_params["kc"], 
+                  model.bgc_params["kw"], ki)
+    end # PAR
+
+    ##### phytoplankton physiological update
     if model.bgc_params["shared_graz"] == 1.0f0 # shared grazing
         @inbounds model.timestepper.pop .= 0.0f0
-        for sp in keys(model.individuals.phytos)
-            ##### RK4
-            particle_advection!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
-                                model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT, model.arch)
-            ##### Diffusion
-            particle_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd,
-                                model.bgc_params["κhP"], model.bgc_params["κhP"], model.bgc_params["κvP"],
-                                ΔT, model.grid, model.arch)
-
-            #### calculate accumulated Chla quantity (not concentration) and population
-            find_inds!(model.individuals.phytos[sp].data, model.grid, model.arch)
-            acc_chl!(model.timestepper.Chl, model.individuals.phytos[sp].data.Chl,
-                     model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi,
-                     model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, model.arch)
+        for sp in eachindex(model.individuals.phytos)
+            #### calculate population
             acc_counts!(model.timestepper.pop, model.individuals.phytos[sp].data.ac,
                         model.individuals.phytos[sp].data.xi, model.individuals.phytos[sp].data.yi,
                         model.individuals.phytos[sp].data.zi, model.arch)
         end
-        ##### calculate PAR
-        for ki in 1:model.grid.Nz
-            calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, 
-                      model.timestepper.PARF, model.grid, model.bgc_params["kc"], 
-                      model.bgc_params["kw"], ki)
-        end
-        for sp in keys(model.individuals.phytos)
+        for sp in eachindex(model.individuals.phytos)
             find_NPT!(model.timestepper.trs, model.individuals.phytos[sp].data.xi,
                       model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
                       model.individuals.phytos[sp].data.ac, model.tracers.NH4.data,
@@ -78,27 +94,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                              diags.phytos[sp], ΔT, model.t, model.arch, model.mode)
         end
     else # model.bgc_params["shared_graz"] ≠ 1.0 - species-specific grazing
-        for sp in keys(model.individuals.phytos)
-            ##### RK4
-            particle_advection!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid,
-                                model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, ΔT, model.arch)
-            ##### Diffusion
-            particle_diffusion!(model.individuals.phytos[sp].data, model.timestepper.rnd,
-                                model.bgc_params["κhP"], model.bgc_params["κhP"], model.bgc_params["κvP"],
-                                ΔT, model.grid, model.arch)
-
-            #### calculate accumulated Chla quantity (not concentration) and population
-            find_inds!(model.individuals.phytos[sp].data, model.grid, model.arch)
-            acc_chl!(model.timestepper.Chl, model.individuals.phytos[sp].data.Chl,
-                     model.individuals.phytos[sp].data.ac, model.individuals.phytos[sp].data.xi,
-                     model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi, model.arch)
-        end
-        ##### calculate PAR
-        for ki in 1:model.grid.Nz
-            calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, model.timestepper.PARF,
-                      model.grid, model.bgc_params["kc"], model.bgc_params["kw"], ki)
-        end
-        for sp in keys(model.individuals.phytos)
+        for sp in eachindex(model.individuals.phytos)
             @inbounds model.timestepper.pop .= 0.0f0
             acc_counts!(model.timestepper.pop, model.individuals.phytos[sp].data.ac,
                         model.individuals.phytos[sp].data.xi, model.individuals.phytos[sp].data.yi,
@@ -108,7 +104,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                       model.individuals.phytos[sp].data.yi, model.individuals.phytos[sp].data.zi,
                       model.individuals.phytos[sp].data.ac, model.tracers.NH4.data,
                       model.tracers.NO3.data, model.tracers.PO4.data, model.tracers.DOC.data,
-                      model.tracers.DFe.data, model.tracers.O2, model.timestepper.par, model.timestepper.par₀, 
+                      model.tracers.DFe.data, model.tracers.O2.data, model.timestepper.par, model.timestepper.par₀, 
                       model.timestepper.temp, model.timestepper.pop, model.arch)
 
             plankton_update!(model.individuals.phytos[sp], model.timestepper.trs,
@@ -116,6 +112,27 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                                 diags.phytos[sp], ΔT, model.t, model.arch, model.mode)
         end
     end # phytoplankton
+
+    ##### colony physiology update
+    for cl in eachindex(model.individuals.colonies)
+        @inbounds model.timestepper.pop .= 0.0f0
+        acc_counts!(model.timestepper.pop, model.individuals.colonies[cl].spcs.sp1.data.ac,
+                    model.individuals.colonies[cl].spcs.sp1.data.xi, 
+                    model.individuals.colonies[cl].spcs.sp1.data.yi,
+                    model.individuals.colonies[cl].spcs.sp1.data.zi, model.arch)
+
+        find_NPT!(model.timestepper.trs, model.individuals.colonies[cl].spcs.sp1.data.xi,
+                  model.individuals.colonies[cl].spcs.sp1.data.yi, 
+                  model.individuals.colonies[cl].spcs.sp1.data.zi,
+                  model.individuals.colonies[cl].spcs.sp1.data.ac, model.tracers.NH4.data,
+                  model.tracers.NO3.data, model.tracers.PO4.data, model.tracers.DOC.data,
+                  model.tracers.DFe.data, model.tracers.O2.data, model.timestepper.par, model.timestepper.par₀, 
+                  model.timestepper.temp, model.timestepper.pop, model.arch)
+
+        colony_update!(model.individuals.colonies[cl], model.timestepper.trs,
+                       model.timestepper.rnd, model.timestepper.plk, 
+                       diags.colonies[cl], ΔT, model.t, model.arch, model.mode)
+    end
 
     ##### particle-particle interaction
     for pair in model.timestepper.palat.intac
@@ -138,7 +155,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
 
     ##### diagnostics of particle-particle interaction
     if isempty(model.individuals.abiotics) == false   
-        for sp in keys(model.individuals.phytos)
+        for sp in eachindex(model.individuals.phytos)
             diags_proc!(diags.phytos[sp].ptc, 
                         model.individuals.phytos[sp].data.ptc, 
                         model.individuals.phytos[sp].data.ac, 
@@ -148,7 +165,8 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
         end
     end
 
-    for sa in keys(model.individuals.abiotics)
+    ##### diagnostics for abiotic particles
+    for sa in eachindex(model.individuals.abiotics)
         diags_proc!(diags.abiotics[sa].num, 
                     model.individuals.abiotics[sa].data.ac, 
                     model.individuals.abiotics[sa].data.ac, 
@@ -165,8 +183,8 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
 
     ##### diagnostics for tracers
     @inbounds diags.tracer.PAR .+= model.timestepper.par
-    for key in keys(diags.tracer)
-        if key in keys(model.tracers)
+    for key in eachindex(diags.tracer)
+        if key in eachindex(model.tracers)
             @inbounds diags.tracer[key] .+= model.tracers[key].data
         end
     end # tracers

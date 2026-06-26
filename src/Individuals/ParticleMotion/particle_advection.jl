@@ -22,6 +22,19 @@ function particle_boundaries!(particle, ac, g::AbstractGrid, arch::Architecture)
     return nothing
 end
 
+##### find indices (halo points included)
+@kernel function find_inds_kernel!(particle, g::AbstractGrid)
+    i = @index(Global)
+    @inbounds particle.xi[i] = unsafe_trunc(Int, get_xf_index(particle.x[i]) * particle.ac[i]) + g.Hx 
+    @inbounds particle.yi[i] = unsafe_trunc(Int, get_yf_index(particle.y[i]) * particle.ac[i]) + g.Hy
+    @inbounds particle.zi[i] = unsafe_trunc(Int, get_zf_index(particle.z[i]) * particle.ac[i]) + g.Hz
+end
+function find_inds!(particle, g::AbstractGrid, arch::Architecture)
+    kernel! = find_inds_kernel!(device(arch), 256, (size(particle.ac,1)))
+    kernel!(particle, g)
+    return nothing
+end
+
 ##### calculate uvw velocities at (x, y, z)
 @kernel function vel_interpolate_kernel!(uₜ, vₜ, wₜ, x, y, z, ac, u, v, w, g::AbstractGrid)
     i = @index(Global)
@@ -62,15 +75,59 @@ function calc_vel_rk4!(velos, arch::Architecture)
     return nothing
 end
 
-# ##### calculate final velocities by AB2
-# @kernel function calc_ab2_kernel!(velos, χ)
-#     i = @index(Global)
-#     velos.u1[i] = (1.5 + χ) * velos.u1[i] - (0.5 + χ) * velos.u2[i] 
-#     velos.v1[i] = (1.5 + χ) * velos.v1[i] - (0.5 + χ) * velos.v2[i] 
-#     velos.w1[i] = (1.5 + χ) * velos.w1[i] - (0.5 + χ) * velos.w2[i] 
-# end
-# function calc_vel_ab2!(velos, χ, arch::Architecture)
-#     kernel! = calc_ab2_kernel!(device(arch), 256, (size(velos.u1,1)))
-#     kernel!(velos, χ)
-#     return nothing
-# end
+##### update coordinates of each individual using RK4 integration
+function particle_advection!(particle, velos, g::AbstractGrid, vel₀, vel½, vel₁, ΔT, arch::Architecture)
+    vel_interpolate!(velos.u1, velos.v1, velos.w1, particle.x, particle.y, particle.z, particle.ac, 
+                     vel₀.u.data, vel₀.v.data, vel₀.w.data, g, arch)
+
+    ##### add up intermediate velocities
+    velos.u2 .= velos.u1
+    velos.v2 .= velos.v1
+    velos.w2 .= velos.w1
+
+    calc_coord!(velos, particle, velos.u1, velos.v1, velos.w1, particle.ac, ΔT, 0.5f0, arch)
+    particle_boundaries!(velos, particle.ac, g, arch)
+
+    ##### stage 2
+    vel_interpolate!(velos.u1, velos.v1, velos.w1, velos.x, velos.y, velos.z, particle.ac, 
+                     vel½.u.data, vel½.v.data, vel½.w.data, g, arch)
+
+    ##### add up intermediate velocities
+    velos.u2 .+= velos.u1 .* 2
+    velos.v2 .+= velos.v1 .* 2
+    velos.w2 .+= velos.w1 .* 2
+
+    calc_coord!(velos, particle, velos.u1, velos.v1, velos.w1, particle.ac, ΔT, 0.5f0, arch)
+    particle_boundaries!(velos, particle.ac, g, arch)
+
+    ##### stage 3
+    vel_interpolate!(velos.u1, velos.v1, velos.w1, velos.x, velos.y, velos.z, particle.ac, 
+                     vel½.u.data, vel½.v.data, vel½.w.data, g, arch)
+
+    ##### add up intermediate velocities
+    velos.u2 .+= velos.u1 .* 2
+    velos.v2 .+= velos.v1 .* 2
+    velos.w2 .+= velos.w1 .* 2
+
+    calc_coord!(velos, particle, velos.u1, velos.v1, velos.w1, particle.ac, ΔT, 1.0f0, arch)
+    particle_boundaries!(velos, particle.ac, g, arch)
+
+    ##### stage 4
+    vel_interpolate!(velos.u1, velos.v1, velos.w1, velos.x, velos.y, velos.z, particle.ac, 
+                     vel₁.u.data, vel₁.v.data, vel₁.w.data, g, arch)
+
+    ##### add up intermediate velocities
+    velos.u2 .+= velos.u1
+    velos.v2 .+= velos.v1
+    velos.w2 .+= velos.w1
+
+    ##### calculate final velocities
+    velos.u2 .= velos.u2 ./ 6
+    velos.v2 .= velos.v2 ./ 6
+    velos.w2 .= velos.w2 ./ 6
+
+    calc_coord!(particle, particle, velos.u2, velos.v2, velos.w2, particle.ac, ΔT, 1.0f0, arch)
+    particle_boundaries!(particle, particle.ac, g, arch)
+    
+    return nothing
+end

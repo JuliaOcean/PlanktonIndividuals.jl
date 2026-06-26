@@ -1,16 +1,4 @@
-##### find indices (halo points included)
-@kernel function find_inds_kernel!(particle, g::AbstractGrid)
-    i = @index(Global)
-    @inbounds particle.xi[i] = unsafe_trunc(Int, get_xf_index(particle.x[i]) * particle.ac[i]) + g.Hx 
-    @inbounds particle.yi[i] = unsafe_trunc(Int, get_yf_index(particle.y[i]) * particle.ac[i]) + g.Hy
-    @inbounds particle.zi[i] = unsafe_trunc(Int, get_zf_index(particle.z[i]) * particle.ac[i]) + g.Hz
-end
-function find_inds!(particle, g::AbstractGrid, arch::Architecture)
-    kernel! = find_inds_kernel!(device(arch), 256, (size(particle.ac,1)))
-    kernel!(particle, g)
-    return nothing
-end
-
+##### find nutrient concentrations based on indices (halo points included)
 @kernel function find_NPT_kernel!(trs, x, y, z, ac, NH4, NO3, PO4, DOC, DFe, O2, par, par₀, temp, pop)
     i = @index(Global)
     @inbounds trs.NH4[i] = max(0.0f0, NH4[x[i], y[i], z[i]]) * ac[i]

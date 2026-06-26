@@ -21,6 +21,7 @@ end
                   tracer_initial = default_tracer_init(),
                   phyto = nothing,
                   abiotic = nothing,
+                  colony = nothing,
                   t::AbstractFloat = 0.0f0,
                   )
 
@@ -45,7 +46,9 @@ Keyword Arguments (Optional)
 - `phyto` : nothing or a `phyto_setup`. Whether to use default setup of phytoplankton in the model. If yes,
                     it should be a NamedTuple like this `phyto = phyto_setup(params = nothing, N = [2^10, 2^10], Nsp = 2)`.
 - `abiotic` : nothing or a `abiotic_setup`. Whether to include abiotic particles in the model. If yes,
-                    it should be a NamedTuple like this `abiotic = abiotic_setup(params = nothing, N = [2^10, 2^10], Nsa = 2, palat = [(:sp1, :sa1)])`.
+                    it should be a NamedTuple like this `abiotic = abiotic_setup(params = nothing, N = [2^10, 2^10], Nsa = 2, palat = Palat([(:sp1, :sa1), (:sp1, :sa2)], [(:sp1, :sa2)]))`.
+- `colony` : nothing or a `colony_setup`. Whether to include colony particles in the model. If yes,
+                    it should be a NamedTuple like this `colony = colony_setup(params = nothing, N = [2^10, 2^10], Nsp = [2, 1], Ncl = 2)`.
 - `t` : Model time, start from 0 by default, in second.
 """
 function PlanktonModel(arch::Architecture, grid::AbstractGrid;
@@ -56,6 +59,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        tracer_initial = default_tracer_init(),
                        phyto = nothing,
                        abiotic = nothing,
+                       colony = nothing,
                        t::AbstractFloat = 0.0f0,
                        max_candidates::Int = 25,
                        )
@@ -116,7 +120,30 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
         throw(ArgumentError("PlanktonModel:`abiotic` must be either Nothing or `abiotic_setup`!")) 
     end
 
-    inds = generate_individuals(phyto, abiotic, max_individuals, arch, FT, grid_d, mode)
+    if isa(colony, Nothing)
+        nothing
+    elseif isa(colony, colony_setup)
+        @assert maximum(colony.N) ≤ max_individuals
+        if length(colony.N) ≠ colony.Ncl
+            throw(ArgumentError("PlanktonModel: `colony`: The length of `N` must be $(colony.Ncl), the same as `Ncl`, each colony has its own initial condition"))
+        end
+        if length(colony.Nsp) ≠ colony.Ncl
+            throw(ArgumentError("PlanktonModel: `colony`: The length of `Nsp` must be $(colony.Ncl), the same as `Ncl`, each colony has its own number of species"))
+        end
+
+        if isa(colony.params, Nothing)
+            colony.params = colony_params_default(colony.Ncl, colony.Nsp, mode)
+            colony.params = update_colony_params(colony.params, FT; Ncl = colony.Ncl, Nsp = colony.Nsp, mode = mode)
+        elseif isa(colony.params, Vector{Dict{String, Vector{Float64}}})
+            colony.params = update_colony_params(colony.params, FT; Ncl = colony.Ncl, Nsp = colony.Nsp, mode = mode)
+        else
+            throw(ArgumentError("Colony parameters must be either Nothing or Array of Dict!")) 
+        end
+    else
+        throw(ArgumentError("PlanktonModel:`colony` must be either Nothing or `colony_setup`!")) 
+    end
+
+    inds = generate_individuals(phyto, abiotic, colony, max_individuals, arch, FT, grid_d, mode)
 
     ##### check palatability between plank and abiotic
     if isa(abiotic, Nothing)
@@ -129,7 +156,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                 throw(ArgumentError("Abiotic: $(p[1]) is not generated"))
             end
             if p[2] ∉ SAs
-                throw(ArgumentError("Abiotic: $(p[s]) is not generated"))
+                throw(ArgumentError("Abiotic: $(p[2]) is not generated"))
             end
         end
         for p in abiotic.palat.release
@@ -137,7 +164,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                 throw(ArgumentError("Abiotic: $(p[1]) is not generated"))
             end
             if p[2] ∉ SAs
-                throw(ArgumentError("Abiotic: $(p[s]) is not generated"))
+                throw(ArgumentError("Abiotic: $(p[2]) is not generated"))
             end
         end
         palat = abiotic.palat
@@ -163,16 +190,32 @@ function calc_active_individuals(particle)
     return N
 end
 
+function colony_summary(colony)
+    Ncl = length(colony)
+    Nsps = zeros(Int, Ncl)
+    for i in 1:Ncl
+        Nsps[i] = length(colony[i].spcs)
+    end
+    return Nsps
+end
+
 function show(io::IO, model::PlanktonModel)
     Nsp = length(model.individuals.phytos)
     N = calc_active_individuals(model.individuals.phytos)
     cap = length(model.individuals.phytos.sp1.data.ac)
     if model.individuals.abiotics == NamedTuple(;)
-        s = "├── No abiotic particles available"
+        s = "├── No abiotic particles available\n"
     else
-        abiotic_Nsp = length(model.individuals.abiotics)
+        abiotic_Nsa = length(model.individuals.abiotics)
         abiotic_N = calc_active_individuals(model.individuals.abiotics)
-        s = "├── a biotic particles: $(abiotic_Nsp) species with $(abiotic_N) individuals for each species\n"
+        s = "├── biotic particles: $(abiotic_Nsa) species with $(abiotic_N) individuals for each species\n"
+    end
+    if model.individuals.colonies == NamedTuple(;)
+        x = "├── No colony available\n"
+    else
+        colony_Ncl = length(model.individuals.colonies)
+        colony_Nsp = colony_summary(model.individuals.colonies)
+        x = "├── colony: $(colony_Ncl) types colonies with $(colony_Nsp) species for each colony\n"
     end
 
     print(io, "PlanktonModel:\n",
@@ -181,5 +224,6 @@ function show(io::IO, model::PlanktonModel)
               "├── $(model.mode) is selected for phytoplankton physiology\n",
               "├── phytoplankton: $(Nsp) species with $(N) individuals for each species\n",
               s,
+              x,
               "└── maximum number of individuals: $(cap) per species")
 end
