@@ -157,7 +157,7 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
     params=Dict(
         "Nsuper"    => [1],       # Number of phyto cells each super individual represents (cells)
         "Cquota"    => [1.8e-11], # C quota of phyto cells at size = 1.0 (mmolC/cell)
-        "SA"        => [0.18],    # Surface area (μm²) Prochlorococcus
+        "Rad"       => [0.12],    # Radius (μm) of Prochlorococcus
         "mean"      => [1.2],     # Mean of the normal distribution of initial phyto individuals
         "var"       => [0.3],     # Variance of the normal distribution of initial phyto individuals
         "Chl2Cint"  => [0.10],    # Initial Chla:C ratio in phytoplankton (mgChl/mmolC)
@@ -168,19 +168,26 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "is_nr"     => [1.0],     # 1 for non-diazotroph, 0 for diazotroph
         "is_croc"   => [0.0],     # 1 for Crocosphaera-like N fixation pattern
         "is_tric"   => [0.0],     # 1 for Trichodesmium-like N fixation pattern
-        "PCmax"     => [7.8e-8],  # Maximum light harvesting rate (mmolATP/mmolC/second)
+        "PCmax"     => [8.0e-5],  # Maximum light harvesting rate (mmolATP/mmolC/second) 
         "VNH4max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
         "VNO3max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
         "VPO4max"   => [1.2e-6],  # Maximum P uptake rate (mmolP/mmolC/second)
+        "k_O2"      => [3.0e-12], # O₂ permeability coefficient (m²/s)
         "k_cf"      => [1.0e-5],  # Carbon fixation rate (per second)
         "k_rs"      => [1.5e-6],  # Maximum respiration rate (per second)
-        "k_nr"      => [2.8e-6],  # Nitrate reduction rate (per second)
+        "k_nr"      => [1.5e-5],  # Nitrate reduction rate (per second)
         "k_nf"      => [2.8e-6],  # N fixation rate (mmolN/mmolC/second)
         "k_mtb"     => [3.5e-5],  # Metabolic rate (per second)
-        "e_cf"      => [9.0],     # Energy consumption rate of carbon fixation (mmolATP/mmolC)
-        "e_rs"      => [5.0],     # Energy production rate of respiration (mmolATP/mmolC)
-        "e_nf"      => [8.0],     # Energy consumption rate of N fixation (mmolATP/mmolN)
-        "e_nr"      => [10.0],    # ??Energy consumption rate of NO3 reduction (mmolATP/mmolN)
+        "e_cf"      => [3.0],     # Energy consumption ratio of carbon fixation (mmolATP/mmolC)
+        "e_rs"      => [5.0],     # Energy production ratio of respiration (mmolATP/mmolC)
+        "e_nf"      => [8.0],     # Energy consumption ratio of N fixation (mmolATP/mmolN)
+        "e_nr"      => [0.0],     # Energy consumption ratio of NO3 reduction (mmolATP/mmolN)
+        "re_ps"     => [0.77],    # NADPH production ratio of light harvesting (mmolNADPH/mmolATP)
+        "re_cf"     => [2.0],     # NADPH consumption ratio of carbon fixation (mmolNADPH/mmolC)
+        "re_rs"     => [0.33],    # NADPH production ratio of respiration (mmolNADPH/mmolC)
+        "re_nf"     => [2.0],     # NADPH consumption ratio of N fixation (mmolNADPH/mmolN)
+        "re_nr"     => [4.0],     # NADPH consumption ratio of NO3 reduction (mmolNADPH/mmolN)
+        "o_ps"      => [0.38],    # O2 production ratio of light harvesting (mmolO2/mmolATP)
         "k_Fe_ST2PS"=> [2.4e-5],  # Allocation rate of Fe from storage to PS (per second)
         "k_Fe_PS2ST"=> [1.2e-6],  # Allocation rate of Fe from PS to storage (per second)
         "k_Fe_ST2NR"=> [1.2e-5],  # Allocation rate of Fe from storage to NR (per second)
@@ -193,12 +200,14 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "KsatNH4"   => [0.005],   # Half-saturation coeff (mmolN/m³)
         "KsatNO3"   => [0.010],   # Half-saturation coeff (mmolN/m³)
         "KsatPO4"   => [0.003],   # Half-saturation coeff (mmolP/m³)
-        "KSAFe"     => [2.77e-19],# Surface-area specific iron uptake rate (m³/μm²/cell/second)
+        "KSAFe"     => [2.77e-7], # Surface-area specific iron uptake rate (m/cell/second)
         "qNO3max"   => [0.25],    # Maximum NO3 quota in cell (mmolN/mmolC)
         "qNH4max"   => [0.25],    # Maximum NH4 quota in cell (mmolN/mmolC)
         "qPmax"     => [0.02],    # Maximum P quota in cell (mmolP/mmolC)
         "qFemax"    => [2.0e-5],  # Maximum Fe quota in cell (mmolFe/mmolC)
         "CHmax"     => [0.4],     # Maximum C quota in cell (mmolC/mmolC)
+        "qO2diff"   => [2.0e2],   # Intracellular O2 concentration when O2 diffusion reaches maximum (mmolO₂/m³)
+        "qO2nf"     => [1.0e2],   # Intracellular O2 concentration when N fixation reaches 0.0 (mmolO₂/m³)
         "Chl2N"     => [3.0],     # Maximum Chla:N ratio in phytoplankton
         "R_NC"      => [16/106],  # N:C ratio in cell biomass
         "R_PC"      => [1/106],   # N:C ratio in cell biomass
@@ -321,6 +330,108 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         return generate_n_species_params(N, params)
     end
 end
+
+"""
+    colony_params_default(Ncl::Int64, Nsp::AbstractArray, mode::AbstractMode)
+Generate default colony parameter values based on `AbstractMode`, colony number `Ncl` and species number `Nsp`.
+"""
+function colony_params_default(Ncl::Int64, Nsp::AbstractArray, mode::IronEnergyMode)
+    params=Dict(
+        "Nsuper"    => [1],       # Number of phyto cells each super individual represents (cells)
+        "Cquota"    => [1.8e-11], # C quota of phyto cells at size = 1.0 (mmolC/cell)
+        "Rad"       => [0.12],    # Radius (μm) of Prochlorococcus
+        "mean"      => [1.2],     # Mean of the normal distribution of initial phyto individuals
+        "var"       => [0.3],     # Variance of the normal distribution of initial phyto individuals
+        "Chl2Cint"  => [0.10],    # Initial Chla:C ratio in phytoplankton (mgChl/mmolC)
+        "α"         => [4.5e-2],  # Irradiance absorption coeff (mmolC m² second/mgChl /μmol photon)
+        "Topt"      => [27.0],    # Optimal temperature for growth (C)
+        "Tmax"      => [30.0],    # Maximal temperature for growth (C)
+        "Ea"        => [5.3e4],   # Free energy
+        "is_nr"     => [1.0],     # 1 for non-diazotroph, 0 for diazotroph
+        "is_croc"   => [0.0],     # 1 for Crocosphaera-like N fixation pattern
+        "is_tric"   => [0.0],     # 1 for Trichodesmium-like N fixation pattern
+        "PCmax"     => [8.0e-8],  # Maximum light harvesting rate (mmolATP/mmolC/second) 
+        "VNH4max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
+        "VNO3max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
+        "VPO4max"   => [1.2e-6],  # Maximum P uptake rate (mmolP/mmolC/second)
+        "k_O2"      => [3.0e-12], # O₂ permeability coefficient (m²/s)
+        "k_cf"      => [1.0e-5],  # Carbon fixation rate (per second)
+        "k_rs"      => [1.5e-6],  # Maximum respiration rate (per second)
+        "k_nr"      => [2.8e-6],  # Nitrate reduction rate (per second)
+        "k_nf"      => [2.8e-6],  # N fixation rate (mmolN/mmolC/second)
+        "k_mtb"     => [3.5e-5],  # Metabolic rate (per second)
+        "e_cf"      => [3.0],     # Energy consumption ratio of carbon fixation (mmolATP/mmolC)
+        "e_rs"      => [5.0],     # Energy production ratio of respiration (mmolATP/mmolC)
+        "e_nf"      => [8.0],     # Energy consumption ratio of N fixation (mmolATP/mmolN)
+        "e_nr"      => [0.0],     # Energy consumption ratio of NO3 reduction (mmolATP/mmolN)
+        "re_ps"     => [0.76],    # NADPH production ratio of light harvesting (mmolNADPH/mmolATP)
+        "re_cf"     => [2.0],     # NADPH consumption ratio of carbon fixation (mmolNADPH/mmolC)
+        "re_rs"     => [0.33],    # NADPH production ratio of respiration (mmolNADPH/mmolC)
+        "re_nf"     => [2.0],     # NADPH consumption ratio of N fixation (mmolNADPH/mmolN)
+        "re_nr"     => [4.0],     # NADPH consumption ratio of NO3 reduction (mmolNADPH/mmolN)
+        "o_ps"      => [0.38],    # O2 production ratio of light harvesting (mmolO2/mmolATP)
+        "k_Fe_ST2PS"=> [2.4e-5],  # Allocation rate of Fe from storage to PS (per second)
+        "k_Fe_PS2ST"=> [1.2e-6],  # Allocation rate of Fe from PS to storage (per second)
+        "k_Fe_ST2NR"=> [1.2e-5],  # Allocation rate of Fe from storage to NR (per second)
+        "k_Fe_NR2ST"=> [1.2e-5],  # Allocation rate of Fe from NR to storage (per second)
+        "k_Fe_ST2NF"=> [1.2e-5],  # Allocation rate of Fe from storage to NF (per second)
+        "k_Fe_NF2ST"=> [1.2e-5],  # Allocation rate of Fe from NF to storage (per second)
+        "KfePS"     => [3.0e-6],  # Haff-saturation coeff of iron quota for photosynthesis (mmolFe/mmolC)
+        "KfeNR"     => [2.0e-6],  # Haff-saturation coeff of iron quota for NO3 reduction (mmolFe/mmolC)
+        "KfeNF"     => [5.0e-6],  # Haff-saturation coeff of iron quota for N fixation (mmolFe/mmolC)
+        "KsatNH4"   => [0.005],   # Half-saturation coeff (mmolN/m³)
+        "KsatNO3"   => [0.010],   # Half-saturation coeff (mmolN/m³)
+        "KsatPO4"   => [0.003],   # Half-saturation coeff (mmolP/m³)
+        "KSAFe"     => [2.77e-7], # Surface-area specific iron uptake rate (m/cell/second)
+        "qNO3max"   => [0.25],    # Maximum NO3 quota in cell (mmolN/mmolC)
+        "qNH4max"   => [0.25],    # Maximum NH4 quota in cell (mmolN/mmolC)
+        "qPmax"     => [0.02],    # Maximum P quota in cell (mmolP/mmolC)
+        "qFemax"    => [2.0e-5],  # Maximum Fe quota in cell (mmolFe/mmolC)
+        "CHmax"     => [0.4],     # Maximum C quota in cell (mmolC/mmolC)
+        "qO2diff"   => [2.0e2],   # Intracellular O2 concentration when O2 diffusion reaches maximum (mmolO₂/m³)
+        "qO2nf"     => [1.0e2],   # Intracellular O2 concentration when N fixation reaches 0.0 (mmolO₂/m³)
+        "Chl2N"     => [3.0],     # Maximum Chla:N ratio in phytoplankton
+        "R_NC"      => [16/106],  # N:C ratio in cell biomass
+        "R_PC"      => [1/106],   # N:C ratio in cell biomass
+        "NF_clock"  => [21600.0], # the circadian clock for N fixation
+        "grz_P"     => [0.0],     # Grazing probability per second
+        "dvid_P"    => [1e-4],    # Probability of cell division per second.
+        "dvid_type" => [1],       # The type of cell division, 1:sizer, 2:adder.
+        "dvid_reg"  => [2.5],     # Regulations of cell division (cell size)
+        "dvid_reg2" => [12.0],    # Regulations of cell division (clock time)
+        "mort_P"    => [5e-5],    # Probability of cell natural death per second
+        "mort_reg"  => [0.5],     # Regulation of cell natural death
+        "grazFracC" => [0.7],     # Fraction goes into dissolved organic pool
+        "grazFracN" => [0.7],     # Fraction goes into dissolved organic pool
+        "grazFracP" => [0.7],     # Fraction goes into dissolved organic pool
+        "grazFracFe"=> [0.1],     # Fraction goes into dissolved organic pool
+        "mortFracC" => [0.5],     # Fraction goes into dissolved organic pool
+        "mortFracN" => [0.5],     # Fraction goes into dissolved organic pool
+        "mortFracP" => [0.5],     # Fraction goes into dissolved organic pool
+        "mortFracFe"=> [0.1],     # Fraction goes into dissolved organic pool
+        "k_TqP"     => [0.05],    # Phosphorus exchange rate between cells within a colony (per second)
+        "k_TCH"     => [0.05],    # CH exchange rate between cells within a colony (per second)
+        "k_TqO2"    => [0.05],    # O₂ exchange rate between cells within a colony (per second)
+        "k_TqFe"    => [0.05],    # iron exchange rate between cells within a colony (per second)
+        "k_TqNH4"   => [0.05],    # NH4 exchange rate between cells within a colony (per second)
+        "ϵ_TqP"     => [0.25],    # Phosphorus exchange cost between cells within a colony (per second)
+        "ϵ_TCH"     => [0.25],    # CH exchange cost between cells within a colony (per second)
+        "ϵ_TqO2"    => [0.25],    # O₂ exchange cost between cells within a colony (per second)
+        "ϵ_TqFe"    => [0.25],    # iron exchange cost between cells within a colony (per second)
+        "ϵ_TqNH4"   => [0.25],    # NH4 exchange cost between cells within a colony (per second)
+    )
+    
+    param_cl = []
+    for i in 1:Ncl
+        if Nsp[i] > 1
+            params = generate_n_species_params(Nsp[i], params)
+        end
+        push!(param_cl, copy(params))
+    end
+    return param_cl
+
+end
+
 
 """
     abiotic_params_default(N::Int64)

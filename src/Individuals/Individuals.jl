@@ -1,8 +1,9 @@
 module Individuals
 
-export particle_advection!
-export particle_diffusion!
+export particle_advection!, particle_diffusion!
+export particle_motion!, colony_motion!
 export plankton_update!
+export colony_update!
 export abiotic_particle_update!
 export generate_individuals, individuals
 export find_inds!, find_NPT!, acc_counts!, acc_chl!, calc_par!
@@ -19,27 +20,31 @@ using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Diagnostics
 
 using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
-using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle, phyto_setup, abiotic_setup, Palat
+using PlanktonIndividuals: individuals, phytoplankton, colony_particle, abiotic_particle, phyto_setup, colony_setup, abiotic_setup, Palat
 
-include("Advection/Advection.jl")
+include("ParticleMotion/ParticleMotion.jl")
 include("Plankton/QuotaMode/QuotaMode.jl")
 include("Plankton/CarbonMode/CarbonMode.jl")
 include("Plankton/MacroMolecularMode/MacroMolecularMode.jl")
 include("Plankton/IronEnergyMode/IronEnergyMode.jl")
+include("Colony/ColonyIronEnergyMode/ColonyIronEnergyMode.jl")
 include("Abiotic/Abiotic.jl")
 include("utils.jl")
 
-using .Advection
+using .ParticleMotion
 using .Abiotic
 import .Quota
 import .Carbon
 import .MacroMolecular
 import .IronEnergy
+import .ColonyIronEnergy
 
 #####
 ##### generate individuals of multiple species
 #####
-function generate_individuals(phyto::phyto_setup, abiotic::Union{Nothing, abiotic_setup}, maxN, arch::Architecture, FT::DataType, g::AbstractGrid, mode::AbstractMode)
+function generate_individuals(phyto::phyto_setup, abiotic::Union{Nothing, abiotic_setup}, 
+                              colony::Union{Nothing, colony_setup}, maxN, arch::Architecture, 
+                              FT::DataType, g::AbstractGrid, mode::AbstractMode)
     plank_names = Symbol[]
     plank_data=[]
 
@@ -54,7 +59,7 @@ function generate_individuals(phyto::phyto_setup, abiotic::Union{Nothing, abioti
 
     ## add abiotic particles
     if isa(abiotic, Nothing)
-        return individuals(planks, NamedTuple(;))
+        abiotics = NamedTuple(;)
     else
         abiotic_names = Symbol[]
         abiotic_data = []
@@ -67,8 +72,25 @@ function generate_individuals(phyto::phyto_setup, abiotic::Union{Nothing, abioti
             push!(abiotic_data, particle)
         end
         abiotics = NamedTuple{Tuple(abiotic_names)}(abiotic_data)
-        return individuals(planks, abiotics)
     end
+
+    ## add colony particles
+    if isa(colony, Nothing)
+        colonies = NamedTuple(;)
+    else
+        colony_names = Symbol[]
+        colony_data = []
+
+        for k in 1:colony.Ncl
+            name = Symbol("cl"*string(k))
+            cln =  construct_colony(arch, colony.Nsp[k], colony.params[k], maxN, FT, mode)
+            initialize_colony!(cln, colony.N[k], g, arch, mode)
+            push!(colony_names, name)
+            push!(colony_data, cln)
+        end
+        colonies = NamedTuple{Tuple(colony_names)}(colony_data)
+    end
+    return individuals(planks, abiotics, colonies)
 end
 
 #####
@@ -98,16 +120,24 @@ initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode:
 initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::IronEnergyMode) =
     IronEnergy.initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
-plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
-    MacroMolecular.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
+    MacroMolecular.plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture)
 
-plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode) =
-    Quota.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode) =
+    Quota.plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture)
 
-plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::CarbonMode) =
-    Carbon.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::CarbonMode) =
+    Carbon.plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture)
 
-plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::IronEnergyMode) =
-    IronEnergy.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::IronEnergyMode) =
+    IronEnergy.plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture)
 
+construct_colony(arch::Architecture, Nsp::Int, params::Dict, maxN::Int, FT::DataType, mode::IronEnergyMode) = 
+    ColonyIronEnergy.construct_colony(arch::Architecture, Nsp::Int, params::Dict, maxN::Int, FT::DataType)
+
+initialize_colony!(colony, N::Int, g::AbstractGrid, arch::Architecture, mode::IronEnergyMode) = 
+    ColonyIronEnergy.initialize_colony!(colony, N::Int, g::AbstractGrid, arch::Architecture)
+
+colony_update!(colony, trs, rnd, plk, diags_colony, ΔT, t, arch::Architecture, mode::IronEnergyMode) =
+    ColonyIronEnergy.colony_update!(colony, trs, rnd, plk, diags_colony, ΔT, t, arch::Architecture)
 end

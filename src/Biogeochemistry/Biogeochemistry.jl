@@ -17,7 +17,7 @@ using PlanktonIndividuals.Grids
 
 using PlanktonIndividuals: BoundaryConditions
 
-const tracer_names=(:DIC,:NH4,:NO3,:PO4,:DFe,:DOC,:DON,:DOP,:PFe_inorg,:POC,:PON,:POP,:PFe_bio,:Dust)
+const tracer_names=(:DIC,:NH4,:NO3,:PO4,:DFe,:O2,:DOC,:DON,:DOP,:PFe_inorg,:POC,:PON,:POP,:PFe_bio,:Dust)
 
 include("HaloRegions/halo_regions.jl")
 include("HaloRegions/boundary_conditions.jl")

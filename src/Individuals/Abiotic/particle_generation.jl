@@ -1,7 +1,7 @@
 function construct_abiotic_particle(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
     rawdata = StructArray(x   = zeros(FT, maxN), y   = zeros(FT, maxN), z   = zeros(FT, maxN),
                           xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN),
-                          ac  = zeros(Bool, maxN), merg= zeros(Int,maxN), idx = zeros(Int,maxN)
+                          merg= zeros(Int,maxN), idx = zeros(Int,maxN), ac  = zeros(Bool, maxN)
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
@@ -9,7 +9,7 @@ function construct_abiotic_particle(arch::Architecture, sp::Int, params::Dict, m
 
     pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))
-    for i in 1:length(param_names)
+    for i in eachindex(param_names)
         if param_names[i] ∉ pkeys
             throw(ArgumentError("PARAM: parameter not found $(param_names[i])"))
         else

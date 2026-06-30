@@ -16,8 +16,8 @@ export
     # Model
     PlanktonModel, 
     CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode,
-    phytoplankton, abiotic_particle, individuals,
-    phyto_setup, abiotic_setup, Palat,
+    phytoplankton, colony_particle, abiotic_particle, individuals,
+    phyto_setup, colony_setup, abiotic_setup, Palat,
 
     # BoundaryConditions
     set_bc!, set_bc_particle!,
@@ -29,6 +29,8 @@ export
     default_PARF, default_temperature,
     update_bgc_params, update_phyt_params, 
     bgc_params_default, phyt_params_default,
+    update_abiotic_params, update_colony_params,
+    colony_params_default, abiotic_params_default,
 
     # Biogeochemistry
     generate_tracers, default_tracer_init,
@@ -97,6 +99,12 @@ mutable struct phytoplankton
     p::NamedTuple
 end
 
+##### struct for colony
+mutable struct colony_particle
+    spcs::NamedTuple
+    intac::AbstractArray
+end
+
 ##### struct for abiotic particles
 mutable struct abiotic_particle
     data::AbstractArray
@@ -107,12 +115,20 @@ end
 struct individuals
     phytos::NamedTuple
     abiotics::NamedTuple
+    colonies::NamedTuple
 end
 
 mutable struct phyto_setup
     params::Union{Nothing, Dict}
     N::AbstractArray
     Nsp::Int64
+end
+
+mutable struct colony_setup
+    params::Union{Nothing, AbstractArray}
+    N::AbstractArray
+    Nsp::AbstractArray
+    Ncl::Int64
 end
 
 mutable struct Palat

@@ -13,7 +13,7 @@ using PlanktonIndividuals.Model
 using PlanktonIndividuals.Biogeochemistry
 
 using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
-using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle
+using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle, colony_particle
 
 import Base: show
 
