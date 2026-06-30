@@ -16,7 +16,9 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           PS2ST= zeros(FT, maxN), ST2PS= zeros(FT, maxN),
                           NR2ST= zeros(FT, maxN), ST2NR= zeros(FT, maxN),
                           NF2ST= zeros(FT, maxN), ST2NF= zeros(FT, maxN),
-                          ptc  = zeros(FT, maxN), Rptc = zeros(FT, maxN),
+                          TqP  = zeros(FT, maxN), TqO2 = zeros(FT, maxN), TCH  = zeros(FT, maxN), 
+                          TqNH4= zeros(FT, maxN), TATP = zeros(FT, maxN), TqFe = zeros(FT, maxN), 
+                          TNADPH=zeros(FT, maxN),
                           graz = zeros(FT, maxN), mort = zeros(FT, maxN), dvid = zeros(FT, maxN)
                           ) 
     data = replace_storage(array_type(arch), rawdata)
@@ -28,13 +30,15 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                  :e_cf, :e_rs, :e_nr, :e_nf,
                  :re_cf, :re_rs, :re_nr, :re_nf, :o_ps, :re_ps,
                  :k_Fe_ST2PS, :k_Fe_PS2ST, :k_Fe_ST2NR, :k_Fe_NR2ST, :k_Fe_ST2NF, :k_Fe_NF2ST,
+                 :k_TqP, :k_TCH, :k_TqO2, :k_TqFe, :k_TqNH4,
+                 :ϵ_TqP, :ϵ_TCH, :ϵ_TqO2, :ϵ_TqFe, :ϵ_TqNH4,
                  :KfePS, :KfeNR, :KfeNF, :KsatNH4, :KsatNO3, :KsatPO4, :KSAFe,
                  :CHmax, :qNH4max, :qNO3max, :qPmax, :qFemax,
                  :qO2diff, :qO2nf,
                  :Chl2N, :R_NC, :R_PC, :NF_clock,
                  :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, :mort_P, :mort_reg, 
                  :grazFracC, :grazFracN, :grazFracP, :grazFracFe,
-                 :mortFracC, :mortFracN, :mortFracP, :mortFracFe, :max_ptc)
+                 :mortFracC, :mortFracN, :mortFracP, :mortFracFe)
 
     pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))
@@ -51,6 +55,27 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
         throw(ArgumentError("PARAM: only one of the three parameters(is_tric, is_croc, is_nr) can be set to 1.0"))
     end
     return phyto
+end
+
+function construct_colony(arch::Architecture, Nsp::Int,
+                          colony_param::Dict, maxN::Int, FT::DataType)
+    colony_data = []
+    plank_names = Symbol[]
+    for i in 1:Nsp
+        name = Symbol("sp"*string(i))
+        plank = construct_plankton(arch, i, colony_param, maxN, FT)
+        push!(plank_names, name)
+        push!(colony_data, plank)
+    end
+    colony = NamedTuple{Tuple(plank_names)}(colony_data)
+    if Nsp == 2
+        intac = [(:sp1, :sp2)]
+    elseif Nsp == 3
+        intac = [(:sp1, :sp2), (:sp1, :sp3), (:sp2, :sp3)]
+    else
+        throw(ArgumentError("COLONY: only support 2 or 3 species per colony"))
+    end
+    return colony_particle(colony, intac)
 end
 
 function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)
@@ -96,4 +121,10 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     plank.data.Chl  .= plank.data.Bm .* Chl2Cint                                       # Chl
 
     mask_individuals!(plank.data, g, N, arch)
+end
+
+function initialize_colony!(colony, N::Int, g::AbstractGrid, arch::Architecture)
+    for sp in colony.spcs
+        initialize_plankton!(sp, N, g, arch)
+    end
 end

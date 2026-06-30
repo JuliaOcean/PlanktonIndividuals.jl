@@ -1,5 +1,5 @@
 ##### update physiological attributes of each individual
-function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
+function colony_plankton_growth!(plank, trs, p, ΔT, arch::Architecture)
     calc_NPFe_uptake!(plank, trs, p, ΔT, arch)
     calc_PS!(plank, trs, p, arch)
     calc_carbon_fixation!(plank, trs, p, arch)
@@ -16,7 +16,9 @@ function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
     update_states!(plank, p, ΔT, arch)
     update_cellsize!(plank, p, arch)
     update_tdark!(plank, trs, ΔT, arch)
+end
 
+function calc_plankton_population_dynamics(plank, trs, rnd, p, ΔT, t, arch::Architecture)
     ##### probabilities of grazing, mortality, and cell division
     calc_graz_quadratic!(plank, trs, p.grz_P, arch)
     calc_mort!(plank, p, arch)
