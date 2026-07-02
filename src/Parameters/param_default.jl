@@ -97,10 +97,7 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "C_DNA"    => [1.8e-13], # DNA C quota of phyto cells (mmolC/cell)
         "var"      => [0.3],     # Variance of the normal distribution of initial phyto individuals
         "RNA2DNA"  => [1.73],    # Initial RNA:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
-        "PRO_P2DNA" => [34.83],   # Initial photosynthetic protein:DNA ratio in phytoplankton (mmol C/mmolC)
-        "PRO_T2DNA" => [34.83],   # Initial transport protein:DNA ratio in phytoplankton (mmol C/mmolC)
-        "PRO_R2DNA" => [34.83],   # Initial ribosomal protein:DNA ratio in phytoplankton (mmol C/mmolC)
-        "PRO_M2DNA" => [34.83],   # Initial metabolic protein:DNA ratio in phytoplankton (mmol C/mmolC)
+        "PRO2DNA"  => [34.83],   # Initial protein:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
         "CH2DNA"   => [23.3],    # Initial carbohydrate+lipid:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
         "Chl2DNA"  => [3.45],    # Initial Chla:DNA ratio in phytoplankton (mmolC/mmolC) from Micromonas sp.
         "α"        => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
@@ -120,7 +117,6 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "NSTmax"   => [0.12],    # Maximum N reserve in total N (mmol N/mmol N)
         "PSTmax"   => [0.70],    # Maximum P reserve in total P (mmol P/mmol P)
         "CHmax"    => [0.4],     # Maximum Carbohydrate in cell (mmol C/mmol C)
-        "CH_min"   => [1.8e-13], # Minimum Carbohydrate in cell (mmol C/mmol C)
         "respir"   => [1.2e-6],  # Respiration rate(per second)
         "k_pro"    => [6.0e-5],  # Protein synthesis rate (mmol C/mmol C/second)
         "k_sat_pro"=> [4.5e-13], # Hafl saturation constent for protein synthesis (mmol C/cell)
@@ -130,17 +126,10 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "k_sat_rna"=> [1.0e-12], # Hafl saturation constent for RNA synthesis (mmol C/cell)
         "Chl2N"    => [3.0],     # Maximum Chla:N ratio in phytoplankton
         "R_NC_PRO" => [1/4.5],   # N:C ratio in protein (from Inomura et al 2020.)
-        "R_NC_PRO_P" => [1/4.5], # N:C ratio in photosynthetic protein
-        "R_NC_PRO_T" => [1/4.5], # N:C ratio in transport protein
-        "R_NC_PRO_R" => [1/4.5], # N:C ratio in ribosomal protein
-        "R_NC_PRO_M" => [1/4.5], # N:C ratio in metabolic protein
         "R_NC_DNA" => [1/2.9],   # N:C ratio in DNA (from Inomura et al 2020.)
         "R_PC_DNA" => [1/11.1],  # P:C ratio in DNA
         "R_NC_RNA" => [1/2.8],   # N:C ratio in RNA (from Inomura et al 2020.)
         "R_PC_RNA" => [1/10.7],  # P:C ratio in RNA
-        "qFemax"    => [2.0e-5],  # Maximum Fe quota in cell (mmolFe/mmolC)
-        "KsatFe"    => [3.0e-6],  # Half-saturation coeff for Fe limitation (mmolFe/mmolC)
-        "R_Fe_PRO_P"=> [1.0],     # Scaling of Fe quota to photosynthetic protein
         "dvid_P"   => [1.0e-5],  # Division probability per second
         "grz_P"    => [0.0],     # Grazing probability per second
         "mort_P"   => [5e-5],    # Probability of cell natural death per second
