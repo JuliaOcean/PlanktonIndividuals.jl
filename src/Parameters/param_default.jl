@@ -322,6 +322,96 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
     end
 end
 
+
+"""
+    phyt_params_default(N::Int64, mode::AbstractMode)
+Generate default phytoplankton parameter values based on `AbstractMode` and species number `N`.
+"""
+function phyt_params_default(N::Int64, mode::ProteinMode)
+    params=Dict(
+        "Nsuper"   => [1],       # Number of phyto cells each super individual represents
+        "C_DNA"    => [1.8e-13], # DNA C quota of phyto cells (mmolC/cell)
+        "var"      => [0.3],     # Variance of the normal distribution of initial phyto individuals
+        "RNA2DNA"  => [1.73],    # Initial RNA:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        #"PRO2DNA"  => [34.83], # Initial protein:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        "PRO_R2DNA"  => [0], # Initial ribosomal protein:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        "PRO_Mc2DNA" => [0.0],   # Initial metabolic protein:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        "PRO_Mn2DNA" => [0.0],   # Initial nitrogen metabolism protein:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        "PRO_TN2DNA" => [0.0],   # Initial nitrate transporter:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        "PRO_Tp2DNA" => [0.0],   # Initial phosphate transporter:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        "PRO_Tfe2DNA" => [0.0],  # Initial iron transporter:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        "PRO_C2DNA" => [0.0],    # Initial carbon metabolism protein:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        "CH2DNA"   => [23.3],    # Initial carbohydrate+lipid:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
+        "Chl2DNA"  => [3.45],    # Initial Chla:DNA ratio in phytoplankton (mmolC/mmolC) from Micromonas sp.
+        "α"        => [2.0e-2],  # Irradiance absorption coeff (m²/mgChl)
+        "Φ"        => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
+        "Topt"     => [27.0],    # Optimal temperature for growth (C)
+        "Tmax"     => [30.0],    # Maximal temperature for growth (C)
+        "Ea"       => [5.3e4],   # Free energy
+        "PCmax"    => [6.2e-5],  # Maximum primary production rate (per second)
+        "VDOCmax"  => [0.0],     # Maximum DOC uptake rate (mmol C/mmol C/second)
+        "KcatCF"   => [0.0],     # Maximum carbon fixation rate (per second)
+        "KcatNF"   => [0.0],     # Maximum N fixation rate (mmolN/mmolC/second)
+        "KcatNR"   => [0.0],     # Maximum nitrate reduction rate (mmolN/mmolC/second)
+        "KcatTNH4"  => [0.0],    # Maximum ammonium uptake rate (mmolN/mmolC/second)
+        "KcatTNO3"  => [0.0],    # Maximum nitrate uptake rate (mmolN/mmolC/second)
+        "KcatTPO4"  => [0.0],    # Maximum phosphate uptake rate (mmolP/mmolC/second)
+        "KcatTFe"   => [0.0],    # Maximum iron uptake rate (mmolFe/mmolC/second)
+        "KcatC"     => [0.0],    # Maximum respiration rate (per second)
+        "KSAFe"    => [2.77e-19],# Surface-area specific iron uptake rate (m³/μm²/cell/second)
+        "r_max"    => [0.0],     # Maximum Maximal elongation rate (aa/per second/per molecule)
+        "n_mC"     => [0.0],    # Length of C metabolic enzyme complex (aa/ per molecule)
+        "n_mN"     => [0.0],    # Length of N metabolic enzyme complex (aa/ per molecule)
+        "n_r"      => [0.0],     # Length of ribosome (aa/ per molecule)
+        "n_tN"     => [0.0],     # Length of ammonium transporter (aa/ per molecule)
+        "n_tPO4"   => [0.0],     # Length of phosphate transporter (aa/ per molecule)
+        "n_tFe"    => [0.0],     # Length of iron transporter
+        "n_c"      => [0.0],     # Length of respiration enzyme complex (aa/ per molecule)
+        #"VNH4max"  => [6.9e-6],  # Maximum N uptake rate (mmol N/mmol C/second)
+        #"VNO3max"  => [6.9e-6],  # Maximum N uptake rate (mmol N/mmol C/second)
+        #"VPO4max"  => [1.2e-6],  # Maximum P uptake rate (mmol P/mmol C/second)
+        "KsatNH4"  => [0.005],   # Half-saturation coeff (mmol N/m³)
+        "KsatNO3"  => [0.010],   # Half-saturation coeff (mmol N/m³)
+        "KsatPO4"  => [0.003],   # Half-saturation coeff (mmol P/m³)
+        "KsatDOC"  => [0.0],     # Half-saturation coeff (mmol C/m³)
+        "KsatFe"   => [0.0],     # Half-saturation coeff (mmol Fe/m³)
+        "NSTmax"   => [0.12],    # Maximum N reserve in total N (mmol N/mmol N)
+        "PSTmax"   => [0.70],    # Maximum P reserve in total P (mmol P/mmol P)
+        "CHmax"    => [0.4],     # Maximum Carbohydrate in cell (mmol C/mmol C)
+        "respir"   => [1.2e-6],  # Respiration rate(per second)
+        #"k_pro"    => [6.0e-5],  # Protein synthesis rate (mmol C/mmol C/second)
+        "k_sat_pro"=> [4.5e-13], # Half-saturation constant for protein synthesis (mmol C/cell)
+        "k_sDNA"   => [0],       # DNA synthesis rate (mmol C/mmol C/second)
+        "k_dna"    => [1.6e-7],  # DNA synthesis rate (mmol C/second)
+        "k_sat_dna"=> [1.0e-15], # Half-saturation constant for DNA synthesis (mmol C/cell)
+        "k_rna"    => [3.0e-7],  # RNA synthesis rate (mmol C/mmol C/second)
+        "k_sat_rna"=> [1.0e-12], # Half-saturation constant for RNA synthesis (mmol C/cell)
+        "Chl2N"    => [3.0],     # Maximum Chla:N ratio in phytoplankton
+        "R_NC_PRO" => [1/4.5],   # N:C ratio in protein (from Inomura et al 2020.)
+        "R_NC_DNA" => [1/2.9],   # N:C ratio in DNA (from Inomura et al 2020.)
+        "R_PC_DNA" => [1/11.1],  # P:C ratio in DNA
+        "R_NC_RNA" => [1/2.8],   # N:C ratio in RNA (from Inomura et al 2020.)
+        "R_PC_RNA" => [1/10.7],  # P:C ratio in RNA
+        "R_C_RNAPr" => [0], # C:C ratio in RNA/ ribosome protein
+        "dvid_P"   => [1.0e-5],  # Division probability per second
+        "grz_P"    => [0.0],     # Grazing probability per second
+        "mort_P"   => [5e-5],    # Probability of cell natural death per second
+        "mort_reg" => [0.5],     # Regulation of cell natural death
+        "grazFracC"=> [0.7],     # Fraction goes into dissolved organic pool
+        "grazFracN"=> [0.7],     # Fraction goes into dissolved organic pool
+        "grazFracP"=> [0.7],     # Fraction goes into dissolved organic pool
+        "mortFracC"=> [0.5],     # Fraction goes into dissolved organic pool
+        "mortFracN"=> [0.5],     # Fraction goes into dissolved organic pool
+        "mortFracP"=> [0.5],     # Fraction goes into dissolved organic pool
+    )
+
+    if N == 1
+        return params
+    else
+        return generate_n_species_params(N, params)
+    end
+end
+
 """
     abiotic_params_default(N::Int64)
 Generate default abiotic particle parameter values based on species number `N`.
