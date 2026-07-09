@@ -31,7 +31,13 @@ end
         @inbounds plank.x[idx[i]]    = plank.x[i]
         @inbounds plank.y[idx[i]]    = plank.y[i]
         @inbounds plank.z[idx[i]]    = plank.z[i]
-        @inbounds plank.PRO[idx[i]]  = plank.PRO[i]
+        @inbounds plank.PRO_R[idx[i]]  = plank.PRO_R[i]
+        @inbounds plank.PRO_Mc[idx[i]] = plank.PRO_Mc[i]
+        @inbounds plank.PRO_Mn[idx[i]] = plank.PRO_Mn[i]
+        @inbounds plank.PRO_Tn[idx[i]] = plank.PRO_Tn[i]
+        @inbounds plank.PRO_Tp[idx[i]] = plank.PRO_Tp[i]
+        @inbounds plank.PRO_Tfe[idx[i]] = plank.PRO_Tfe[i]
+        @inbounds plank.PRO_C[idx[i]]  = plank.PRO_C[i]
         @inbounds plank.DNA[idx[i]]  = plank.DNA[i]
         @inbounds plank.RNA[idx[i]]  = plank.RNA[i]
         @inbounds plank.CH[idx[i]]   = plank.CH[i]
@@ -52,12 +58,13 @@ end
 ##### cell division
 @kernel function divide_to_half_kernel!(plank)
     i = @index(Global)
-    @inbounds plank.PRO[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.DNA[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.RNA[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.CH[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.NST[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.PST[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_R[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_Mc[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_Mn[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_Tn[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_Tp[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_Tfe[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_C[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.Chl[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.gen[i] += plank.dvid[i]
     @inbounds plank.age[i] *= (1.0f0 - plank.dvid[i])

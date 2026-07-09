@@ -12,7 +12,8 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           CF   = zeros(FT, maxN), NR   = zeros(FT, maxN), NF   = zeros(FT, maxN),
                           VDOC = zeros(FT, maxN), VNH4 = zeros(FT, maxN),
                           VNO3 = zeros(FT, maxN), VPO4 = zeros(FT, maxN),  VFe  = zeros(FT, maxN),
-                          ρChl = zeros(FT, maxN), qFe  = zeros(FT, maxN),
+                          ρChl = zeros(FT, maxN), 
+                          qFe  = zeros(FT, maxN), qNH3 = zeros(FT, maxN), qNO3 = zeros(FT, maxN),
                           S_Pr= zeros(FT, maxN), S_Pm= zeros(FT, maxN), S_Ptno= zeros(FT, maxN),
                           S_Ptnh= zeros(FT, maxN), S_Ptp= zeros(FT, maxN), S_Ptfe= zeros(FT, maxN),
                           S_DNA= zeros(FT, maxN),S_RNA= zeros(FT, maxN), 
@@ -23,15 +24,19 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
     data = replace_storage(array_type(arch), rawdata)
 
     param_names=(:Nsuper, :C_DNA, :var, :CH2DNA, :Chl2DNA,:RNA2DNA, 
-                 :PRO_R2DNA, :PRO_Mc2DNA, :PRO_Mn2DNA, :PRO_TN2DNA, :PRO_Tp2DNA, :PRO_Tfe2DNA, :PRO_C2DNA, 
-                 :α, :Φ, :Topt, :Tmax, :Ea,
-                 :PCmax, :VDOCmax, 
-                 :KcatCF, :KcatNF, :KcatNR, :KcatTNH4, :KcatTNO3, :KcatTPO4; :KcatTFe, :KcatC, :KSAFe,
+                 :PRO_R2DNA, :PRO_Mc2DNA, :PRO_Mn2DNA, :PRO_Tn2DNA, :PRO_Tp2DNA, :PRO_Tfe2DNA, :PRO_C2DNA, 
+                 :α, :Φ, :Topt, :Tmax, :Ea, :PCmax, :VDOCmax, 
+                 :KcatCF, :KcatNF, :KcatNR, :KcatTNH4, :KcatTNO3, :KcatTPO4; :KcatTFe, :KcatC, 
                  :r_max, :n_mC, :n_mN, :n_r, :n_tN, :n_tPO4, :n_tFe, :n_c,
-                 :KsatDOC, :KsatNH4, :KsatNO3, :KsatPO4, :KsatFe, 
-                 :CHmax, :NSTmax, :PSTmax,
+                 :KsatDOC, :KsatNH4, :KsatNO3, :KsatPO4, :KsatNR,
+                 :KfePS, :KfeNR, :KfeNF, 
+                 :TN_max, :TP_max, :TFe_max,
+                 :CHmax, :NSTmax, :PSTmax, :qNH4max, :qNO3max, :qFemax, 
+                 :k_degr, :k_degp, :k_degmc, :k_degchl,
+                 :PRO_Rmin, :PRO_Pmin, :PRO_Mcmin, :Chlmin,
                  :Chl2N, :R_NC_PRO, :R_NC_DNA, :R_NC_RNA, :R_PC_DNA, :R_PC_RNA,:R_C_RNAPr, 
-                 :respir, :k_rna, :k_sat_rna, :k_dna, :k_sat_dna, 
+                 :e_rs, :e_cf, :e_nf, :e_nr,
+                 :k_rna, :k_sat_rna, :k_dna, :k_sat_dna, 
                  :dvid_P, :grz_P, :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP,
                  :mortFracC, :mortFracN, :mortFracP)
 
@@ -56,7 +61,7 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     PRO_R2DNA = plank.p.PRO_R2DNA
     PRO_Mc2DNA = plank.p.PRO_Mc2DNA
     PRO_Mn2DNA = plank.p.PRO_Mn2DNA
-    PRO_TN2DNA = plank.p.PRO_TN2DNA
+    PRO_Tn2DNA = plank.p.PRO_Tn2DNA
     PRO_Tp2DNA = plank.p.PRO_Tp2DNA
     PRO_Tfe2DNA = plank.p.PRO_Tfe2DNA
     PRO_C2DNA = plank.p.PRO_C2DNA
@@ -105,7 +110,7 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     plank.data.PRO_R .= plank.data.PRO_R .* C_DNA .* Nsuper .* plank.data.ac .* PRO_R2DNA
     plank.data.PRO_Mc .= plank.data.PRO_Mc .* C_DNA .* Nsuper .* plank.data.ac .* PRO_Mc2DNA
     plank.data.PRO_Mn .= plank.data.PRO_Mn .* C_DNA .* Nsuper .* plank.data.ac .* PRO_Mn2DNA
-    plank.data.PRO_TN .= plank.data.PRO_TN .* C_DNA .* Nsuper .* plank.data.ac .* PRO_TN2DNA
+    plank.data.PRO_Tn .= plank.data.PRO_Tn .* C_DNA .* Nsuper .* plank.data.ac .* PRO_Tn2DNA
     plank.data.PRO_Tp .= plank.data.PRO_Tp .* C_DNA .* Nsuper .* plank.data.ac .* PRO_Tp2DNA
     plank.data.PRO_Tfe .= plank.data.PRO_Tfe .* C_DNA .* Nsuper .* plank.data.ac .* PRO_Tfe2DNA
     plank.data.PRO_C .= plank.data.PRO_C .* C_DNA .* Nsuper .* plank.data.ac .* PRO_C2DNA
@@ -117,13 +122,13 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     mask_individuals!(plank.data, g, N, arch)
 end
 
-@inline function total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_TN, PRO_Tp, PRO_Tfe, DNA, RNA, CH, Chl)
-    PRO = PRO_R + PRO_Mc + PRO_Mn + PRO_TN + PRO_Tp + PRO_Tfe
+@inline function total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_C, DNA, RNA, CH, Chl)
+    PRO = PRO_R + PRO_Mc + PRO_Mn + PRO_Tn + PRO_Tp + PRO_Tfe + PRO_C   
     C_tot = PRO + DNA + RNA + CH + Chl / 893.49f0 * 55.0f0 
     return C_tot
 end
-@inline function total_N_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_TN, PRO_Tp, PRO_Tfe, DNA, RNA, NST, Chl, p)
-    PRO = PRO_R + PRO_Mc + PRO_Mn + PRO_TN + PRO_Tp + PRO_Tfe
+@inline function total_N_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_C, DNA, RNA, NST, Chl, p)
+    PRO = PRO_R + PRO_Mc + PRO_Mn + PRO_Tn + PRO_Tp + PRO_Tfe + PRO_C
     N_tot = PRO * p.R_NC_PRO + DNA * p.R_NC_DNA + RNA * p.R_NC_RNA + NST + Chl / 893.49f0 * 4.0f0
     return N_tot
 end

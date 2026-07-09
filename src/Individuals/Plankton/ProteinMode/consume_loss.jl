@@ -17,11 +17,11 @@ end
 @kernel function calc_loss_kernel!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank, ac, x, y, z,
                            loss, lossFracC, lossFracN, lossFracP, p)
     i = @index(Global)
-    @inbounds KernelAbstractions.@atomic ctsdoc[x[i], y[i], z[i]] += total_C_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i]) * lossFracC * ac[i] * loss[i]
-    @inbounds KernelAbstractions.@atomic ctsdon[x[i], y[i], z[i]] += total_N_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.NST[i], plank.Chl[i], p) * lossFracN * ac[i] * loss[i]
+    @inbounds KernelAbstractions.@atomic ctsdoc[x[i], y[i], z[i]] += total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_C, plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i]) * lossFracC * ac[i] * loss[i]
+    @inbounds KernelAbstractions.@atomic ctsdon[x[i], y[i], z[i]] += total_N_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_C, plank.DNA[i], plank.RNA[i], plank.NST[i], plank.Chl[i], p) * lossFracN * ac[i] * loss[i]
     @inbounds KernelAbstractions.@atomic ctsdop[x[i], y[i], z[i]] += total_P_biomass(plank.DNA[i], plank.RNA[i], plank.PST[i], p) * lossFracP * ac[i] * loss[i]
-    @inbounds KernelAbstractions.@atomic ctspoc[x[i], y[i], z[i]] += total_C_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i]) * (1.0f0-lossFracC) * ac[i] * loss[i]
-    @inbounds KernelAbstractions.@atomic ctspon[x[i], y[i], z[i]] += total_N_biomass(plank.PRO[i], plank.DNA[i], plank.RNA[i], plank.NST[i], plank.Chl[i], p) * (1.0f0-lossFracN) * ac[i] * loss[i]
+    @inbounds KernelAbstractions.@atomic ctspoc[x[i], y[i], z[i]] += total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_C, plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i]) * (1.0f0-lossFracC) * ac[i] * loss[i]
+    @inbounds KernelAbstractions.@atomic ctspon[x[i], y[i], z[i]] += total_N_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_C, plank.DNA[i], plank.RNA[i], plank.NST[i], plank.Chl[i], p) * (1.0f0-lossFracN) * ac[i] * loss[i]
     @inbounds KernelAbstractions.@atomic ctspop[x[i], y[i], z[i]] += total_P_biomass(plank.DNA[i], plank.RNA[i], plank.PST[i], p) * (1.0f0-lossFracP) * ac[i] * loss[i]
 end
 function calc_loss!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank, ac, x, y, z,
@@ -29,5 +29,5 @@ function calc_loss!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank, ac, x
     kernel! = calc_loss_kernel!(device(arch), 256, (size(ac,1)))
     kernel!(ctsdoc, ctspoc, ctsdon, ctspon, ctsdop, ctspop, plank, ac, x, y, z, 
             loss, lossFracC, lossFracN, lossFracP, p)
-return nothing 
+return nothing      
 end
