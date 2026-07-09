@@ -231,13 +231,17 @@ end
 ##### respiration first use Carbohydrate, if it's not enough, use protein then.
 @kernel function update_quotas_2_kernel!(plank, ΔT, p)
     i = @index(Global)
-    @inbounds plank.CH[i]   = plank.CH[i]  + (plank.VDOC[i] - plank.RS[i]) * ΔT +
+    @inbounds plank.CH[i]   = plank.CH[i]   + (plank.CF[i] + plank.VDOC[i] - plank.RS[i]) * ΔT +
                              (plank.D_Pr[i] + plank.D_Pp[i] + plank.D_Pmc[i] + plank.D_chl[i]) * ΔT
     @inbounds plank.qNH3[i] = plank.qNH3[i] + (plank.NR[i] + plank.NF[i]) * ΔT + 
                              (plank.D_Pr[i] + plank.D_Pp[i] + plank.D_Pmc[i] + plank.D_chl[i]) * p.R_NC_PRO * ΔT
     @inbounds plank.qNO3[i] = plank.qNO3[i] - plank.NR[i] * ΔT
-    @inbounds plank.NST[i]  = plank.NST[i] + (plank.NF[i]) * ΔT + 
+    @inbounds plank.NST[i]  = plank.NST[i]  + (plank.NF[i]) * ΔT + 
                              (plank.D_Pr[i] + plank.D_Pp[i] + plank.D_Pmc[i] + plank.D_chl[i]) * p.R_NC_PRO * ΔT
+    @inbounds plank.PRO_R[i]  = plank.PRO_R[i]  - plank.D_Pr[i]  * ΔT
+    @inbounds plank.PRO_P[i]  = plank.PRO_P[i]  - plank.D_Pp[i]  * ΔT
+    @inbounds plank.PRO_Mc[i] = plank.PRO_Mc[i] - plank.D_Pmc[i] * ΔT
+    @inbounds plank.Chl[i]    = plank.Chl[i]    - plank.D_chl[i] * ΔT
     #@inbounds plank.PRO[i] = plank.PRO[i] - max(0.0f0, (0.0f0 - plank.CH[i]))
     #@inbounds plank.NST[i] = plank.NST[i] + max(0.0f0, (0.0f0 - plank.CH[i])) * p.R_NC_PRO
     #@inbounds plank.CH[i]  = plank.CH[i]  + max(0.0f0, (0.0f0 - plank.CH[i]))
