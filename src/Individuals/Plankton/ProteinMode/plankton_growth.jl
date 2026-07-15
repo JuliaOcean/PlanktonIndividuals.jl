@@ -4,15 +4,23 @@ function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
 
     update_quotas_1!(plank, ΔT, arch)
 
+    calc_respiration!(plank, trs.T, p, ΔT, arch)
+
+    calc_carbon_fixation!(plank, trs.T, p, arch)
+
+    calc_NO3_reduction!(plank, trs.T, p, ΔT, arch)
+
+    calc_nitrogen_fixation!(plank, trs.T, p, arch::Architecture)
+
     calc_organic_uptake!(plank, trs, p, ΔT, arch)
 
     calc_ρChl!(plank, trs.par, p, arch)
 
-    calc_respir!(plank, trs.T, p, arch)
+    calc_degradation!(plank, p, trs, arch)
 
     update_quotas_2!(plank, ΔT, p, arch)
 
-    calc_BS!(plank, trs.T, p, arch)
+    calc_BS!(plank, trs, p, arch)
 
     update_biomass!(plank, p, ΔT, arch)
 

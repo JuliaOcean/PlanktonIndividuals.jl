@@ -6,7 +6,7 @@ export update_bgc_params, update_phyt_params, update_abiotic_params
 
 using PlanktonIndividuals.Grids
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
+using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode, ProteinMode
 
 include("param_default.jl")
 include("param_update.jl")

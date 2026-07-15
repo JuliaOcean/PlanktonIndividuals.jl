@@ -1,4 +1,4 @@
-module MacroMolecular
+module Protein
 
 export plankton_update!
 export construct_plankton, initialize_plankton!
