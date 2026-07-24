@@ -1,6 +1,8 @@
 ##### update physiological attributes of each individual
 function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
 
+    calc_PS!(plank, trs, p, arch)
+
     calc_respiration!(plank, trs.T, p, ΔT, arch)
 
     calc_inorganic_uptake!(plank, trs, p, ΔT, arch)

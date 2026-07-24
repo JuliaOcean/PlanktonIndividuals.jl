@@ -9,7 +9,7 @@ using KernelAbstractions
 using PlanktonIndividuals.Architectures: device, Architecture, array_type
 using PlanktonIndividuals.Grids
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
+using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode, ProteinMode
 using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle
 
 import Base: show

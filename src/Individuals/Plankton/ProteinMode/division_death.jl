@@ -38,6 +38,7 @@ end
         @inbounds plank.PRO_Tp[idx[i]] = plank.PRO_Tp[i]
         @inbounds plank.PRO_Tfe[idx[i]] = plank.PRO_Tfe[i]
         @inbounds plank.PRO_RS[idx[i]]  = plank.PRO_RS[i]
+        @inbounds plank.PRO_P[idx[i]]  = plank.PRO_P[i]
         @inbounds plank.DNA[idx[i]]  = plank.DNA[i]
         @inbounds plank.RNA[idx[i]]  = plank.RNA[i]
         @inbounds plank.CH[idx[i]]   = plank.CH[i]
@@ -66,7 +67,8 @@ end
     @inbounds plank.PRO_Tn[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.PRO_Tp[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.PRO_Tfe[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.PRO_RS[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_RS[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0
+    @inbounds plank.PRO_P[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0
     @inbounds plank.Chl[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.DNA[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.RNA[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 

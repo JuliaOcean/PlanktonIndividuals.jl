@@ -16,12 +16,22 @@ end
     return min(1.0f0, k / OGT_rate)
 end
 
-##### calculate photosynthesis rate (mmolC/individual/second)
-@inline function calc_PS(par, T, Chl, PRO, p)
-    αI  = par * p.α * p.Φ
-    PCm = p.PCmax * tempFunc_PS(T, p)
-    PS  = PCm * (1.0f0 - exp(-αI / max(1.0f-30, PCm) * Chl / max(1.0f-30, PRO))) * PRO
+##### calculate photosynthesis rate (mmolATP/individual/second)
+@inline function calc_PS(par, PRO_P, Chl, p)
+    αI = par * p.α * Chl / max(1.0f-30, PRO_P)
+    PS = p.PCmax * (1.0f0 - exp(-αI)) * PRO_P
     return PS
+end
+
+##### calculate photosynthesis rate kernel
+@kernel function calc_PS_kernel!(plank, trs, p)
+    i = @index(Global)
+    @inbounds plank.PS[i] = calc_PS(trs.par[i], plank.PRO_P[i], plank.Chl[i], p) * plank.ac[i]
+end
+function calc_PS!(plank, trs, p, arch::Architecture)
+    kernel! = calc_PS_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, trs, p)
+    return nothing
 end
 
 ##### calculate respiration (mmolC/individual/second)
@@ -43,15 +53,15 @@ function calc_respiration!(plank, T, p, ΔT, arch)
 end
 
 ##### calculate nutrient uptake rate (mmolN/individual/second)
-@inline function calc_NPFe_uptake(NH4, NO3, PO4, DFe, T, PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, qNH3, qNO3, PST, qFe, DNA, RNA, CH, Chl, pop, p, ac, ΔT)
-    C_tot = total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, DNA, RNA, CH, Chl)
-    N_tot = total_N_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, DNA, RNA, qNO3, qNH3, Chl, p)
+@inline function calc_NPFe_uptake(NH4, NO3, PO4, DFe, T, PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, PRO_P, qNH3, qNO3, PST, qFe, DNA, RNA, CH, Chl, pop, p, ac, ΔT)
+    C_tot = total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, PRO_P, DNA, RNA, CH, Chl)
+    N_tot = total_N_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, PRO_P, DNA, RNA, qNO3, qNH3, Chl, p)
     P_tot = total_P_biomass(DNA, RNA, PST, p)
     R_qNH3 = qNH3 / max(1.0f-30, N_tot)
     R_qNO3 = qNO3 / max(1.0f-30, N_tot)
     R_PST  = PST  / max(1.0f-30, P_tot)
     R_qFe  = qFe  / max(1.0f-30, C_tot)
-    regQNH3 = shape_func_dec(R_qNH3, p.qNH3max, 1.0f-4)
+    regQNH3 = shape_func_dec(R_qNH3, p.qNH4max, 1.0f-4)
     regQNO3 = shape_func_dec(R_qNO3, p.qNO3max, 1.0f-4)
     regQP   = shape_func_dec(R_PST,  p.PSTmax,  1.0f-4)
     regQFe  = shape_func_dec(R_qFe,  p.qFemax,  1.0f-4)
@@ -72,7 +82,7 @@ end
     i = @index(Global)
     @inbounds plank.VNH4[i], plank.VNO3[i], plank.VPO4[i], plank.VFe[i], plank.EVNO3[i], plank.EVPO4[i], plank.EVFe[i] = 
                             calc_NPFe_uptake(trs.NH4[i], trs.NO3[i], trs.PO4[i], trs.DFe[i], trs.T[i], plank.PRO_R[i], plank.PRO_Mc[i], 
-                                             plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], 
+                                             plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.PRO_P[i],
                                              plank.qNH3[i], plank.qNO3[i], plank.PST[i], plank.qFe[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i],
                                              trs.pop[i], p, plank.ac[i], ΔT)
 end
@@ -135,8 +145,8 @@ end
 
 ##### calculate potential carbon fixation rate (mmolC/individual/second)
 ##### and energy consumption rate of carbon fixation (mmolATP/individual/second)
-@inline function calc_CF(CH, Chl, DNA, RNA, PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, T, p, ac)
-    C_tot = total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, DNA, RNA, CH, Chl)
+@inline function calc_CF(CH, Chl, DNA, RNA, PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, PRO_P, T, p, ac)
+    C_tot = total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, PRO_P, DNA, RNA, CH, Chl)
     Qc    = CH / max(1.0f-30, C_tot)
     regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4)
     CF  = p.KcatCF * PRO_Mc * tempFunc_CF(T, p) * regQC * ac
@@ -146,7 +156,7 @@ end
 @kernel function calc_carbon_fixation_kernel!(plank, T, p)
     i = @index(Global)
     @inbounds plank.CF[i], plank.ECF[i] = calc_CF(plank.CH[i], plank.Chl[i], plank.DNA[i], plank.RNA[i], plank.PRO_R[i], plank.PRO_Mc[i], plank.PRO_Mn[i], 
-                                                  plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], T[i], p, plank.ac[i])
+                                                  plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.PRO_P[i], T[i], p, plank.ac[i])
 end
 function calc_carbon_fixation!(plank, T, p, arch)
     kernel! = calc_carbon_fixation_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -156,8 +166,8 @@ end
 
 ##### calculate potential nitrate reduction (mmolN/individual/second)
 ##### and energy consumption (mmolATP/individual/second)
-@inline function calc_NR(qNO3, qNH4, PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, DNA, RNA, CH, Chl, T, p, ac, ΔT)
-    C_tot = total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, DNA, RNA, CH, Chl)
+@inline function calc_NR(qNO3, qNH4, PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, PRO_P, DNA, RNA, CH, Chl, T, p, ac, ΔT)
+    C_tot = total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, PRO_P, DNA, RNA, CH, Chl)
     Qn = qNH4/max(1.0f-30, C_tot)
     reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4, pow = 2.0f0)
     Ksat = qNO3 / max(1.0f-30, (qNO3 + p.KsatNR))
@@ -169,7 +179,7 @@ end
 end
 @kernel function calc_NO3_reduction_kernel!(plank, T, p, ΔT)
     i = @index(Global)
-    @inbounds plank.NR[i], plank.ENR[i] = calc_NR(plank.qNO3[i], plank.qNH4[i], plank.PRO_R[i], plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i], T[i], p, plank.ac[i], ΔT)
+    @inbounds plank.NR[i], plank.ENR[i] = calc_NR(plank.qNO3[i], plank.qNH4[i], plank.PRO_R[i], plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.PRO_P[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i], T[i], p, plank.ac[i], ΔT)
 end
 function calc_NO3_reduction!(plank, T, p, ΔT, arch::Architecture)
     kernel! = calc_NO3_reduction_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -179,8 +189,8 @@ end
 
 ##### calculate potential nitrogen fixation (mmolN/individual/second)
 ##### and energy consumption (mmolATP/individual/second)
-@inline function calc_NF(qNH4, PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, DNA, RNA, CH, Chl, T, p, ac)
-    C_tot = total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, DNA, RNA, CH, Chl)
+@inline function calc_NF(qNH4, PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, PRO_P, DNA, RNA, CH, Chl, T, p, ac)
+    C_tot = total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, PRO_P, DNA, RNA, CH, Chl)
     Qn = qNH4/max(1.0f-30, C_tot)
     reg = shape_func_dec(Qn, p.qNH4max, 1.0f-4, pow = 2.0f0)
     NF = p.KcatNF * PRO_Mn * tempFunc(T, p) * reg * ac
@@ -189,7 +199,7 @@ end
 end
 @kernel function calc_nitrogen_fixation_kernel!(plank, T, p)
     i = @index(Global)
-    @inbounds plank.NF[i], plank.ENF[i] = calc_NF(plank.qNH4[i], plank.PRO_R[i], plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i], T[i], p, plank.ac[i])
+    @inbounds plank.NF[i], plank.ENF[i] = calc_NF(plank.qNH4[i], plank.PRO_R[i], plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.PRO_P[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i], T[i], p, plank.ac[i])
 end
 function calc_nitrogen_fixation!(plank, T, p, arch::Architecture)
     kernel! = calc_nitrogen_fixation_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -231,9 +241,9 @@ end
 
 ##### calculate DOC uptake rate (mmolC/individual/second)
 ##### DOC uptake needs support of photosynthesis for at least 5% of total C acquisition.
-@inline function calc_DOC_uptake(DOC, T, CH, PRO_R, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_Mc, PRO_Mn, PRO_RS, DNA, RNA, Chl, qNO3, qNH3, PST, pop, p, ΔT)
-    C_tot = total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, DNA, RNA, CH, Chl)
-    N_tot = total_N_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, DNA, RNA, qNO3, qNH3, Chl, p)
+@inline function calc_DOC_uptake(DOC, T, CH, PRO_R, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_Mc, PRO_Mn, PRO_RS, PRO_P, DNA, RNA, Chl, qNO3, qNH3, PST, pop, p, ΔT)
+    C_tot = total_C_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, PRO_P, DNA, RNA, CH, Chl)
+    N_tot = total_N_biomass(PRO_R, PRO_Mc, PRO_Mn, PRO_Tn, PRO_Tp, PRO_Tfe, PRO_RS, PRO_P, DNA, RNA, qNO3, qNH3, Chl, p)
     P_tot = total_P_biomass(DNA, RNA, PST, p)
     R_CH = CH / max(1.0f-30, C_tot)
     regQ = shape_func_dec(R_CH, p.CHmax, 1.0f-4)
@@ -245,7 +255,7 @@ end
     i = @index(Global)
     @inbounds plank.VDOC[i] = calc_DOC_uptake(trs.DOC[i], trs.T[i],
                                               plank.CH[i], plank.PRO_R[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i],
-                                              plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_RS[i], plank.DNA[i], plank.RNA[i], plank.Chl[i],
+                                              plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_RS[i], plank.PRO_P[i], plank.DNA[i], plank.RNA[i], plank.Chl[i],
                                               plank.qNO3[i], plank.qNH3[i], plank.PST[i], trs.pop[i], p, ΔT) * plank.ac[i]
 
     @inbounds plank.VDOC[i] = plank.VDOC[i] * isless(0.05f0, plank.CF[i]/(plank.VDOC[i]+plank.CF[i]))
@@ -259,9 +269,8 @@ end
 ##### calculate ρChl
 @kernel function calc_ρChl_kernel!(plank, par, p)
     i = @index(Global)
-    @inbounds plank.ρChl[i] = plank.PS[i] / max(1.0f-30, plank.PRO[i]) /
-                              max(1.0f-30, par[i] * p.α * p.Φ * plank.Chl[i]/max(1.0f-30, plank.PRO[i])) *
-                              isless(0.1f0, par[i]) * plank.ac[i]
+    @inbounds plank.ρChl[i] = p.Chl2N / max(1.0f-30, par[i] * p.α * plank.Chl[i] / plank.PRO_P[i]) *
+                              isless(1.0f-1, par[i]) * plank.ac[i]
 end
 function calc_ρChl!(plank, par, p, arch)
     kernel! = calc_ρChl_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -327,9 +336,11 @@ end
                               NST/(NST + p.k_sat_rna * p.Nsuper * p.R_NC_RNA),
                               plank.PST[i]/(plank.PST[i] + p.k_sat_rna * p.Nsuper * p.R_PC_RNA))
     
-    @inbounds C_tot = total_C_biomass(plank.PRO_R[i], plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i])
+    @inbounds C_tot = total_C_biomass(plank.PRO_R[i], plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.PRO_P[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i])
     @inbounds QFe  = plank.qFe[i] / max(1.0f-30, C_tot)
     @inbounds Ksat_Fe = QFe / max(1.0f-30, (QFe + p.KFe_em))
+    @inbounds αI = trs.par[i] * p.α * plank.Chl[i] / max(1.0f-30, plank.PRO_P[i])
+    @inbounds RegLight = αI / (αI + 0.1f0)
     @inbounds lim_TN =  shape_func_dec(trs.NO3[i] + trs.NH4[i], p.TN_max, 1.0f-4)
     @inbounds lim_TP =  shape_func_dec(trs.PO4[i], p.TP_max, 1.0f-4)
     @inbounds lim_TFe = shape_func_dec(trs.DFe[i], p.TFe_max, 1.0f-4)
@@ -341,6 +352,7 @@ end
     @inbounds plank.S_Ptp[i] = plank.PRO_R[i]  * p.r_max / p.n_tPO4 * limit_PRO * tempFunc(trs.T[i], p) * lim_TP    * plank.ac[i]
     @inbounds plank.S_Ptfe[i]= plank.PRO_R[i]  * p.r_max / p.n_tFe  * limit_PRO * tempFunc(trs.T[i], p) * lim_TFe   * plank.ac[i]
     @inbounds plank.S_Prs[i] = plank.PRO_R[i]  * p.r_max / p.n_rs   * limit_PRO * tempFunc(trs.T[i], p) * Ksat_Fe   * plank.ac[i]
+    @inbounds plank.S_Pp[i] = plank.PRO_R[i] * p.r_max / p.n_p * limit_PRO * tempFunc(trs.T[i], p) * RegLight * Ksat_Fe * plank.ac[i]
     @inbounds plank.S_DNA[i] = p.k_dna  * limit_DNA * tempFunc(trs.T[i], p) * isless(plank.DNA[i]/(p.C_DNA * p.Nsuper), 2.0f0) * plank.ac[i]
     @inbounds plank.S_RNA[i] = plank.S_Pr[i] * p.R_C_RNAPr * plank.ac[i] 
 
@@ -351,6 +363,7 @@ end
     @inbounds plank.ESPtp[i] = plank.S_Ptp[i] * p.e_sp
     @inbounds plank.ESPtfe[i]= plank.S_Ptfe[i] * p.e_sp
     @inbounds plank.ESPrs[i] = plank.S_Prs[i] * p.e_sp
+    @inbounds plank.ESPp[i] = plank.S_Pp[i] * p.e_sp
     @inbounds plank.EDNA[i] = plank.S_DNA[i] * p.e_dna
     @inbounds plank.ERNA[i] = plank.S_RNA[i] * p.e_rna  
 end
@@ -361,13 +374,13 @@ function calc_BS!(plank, trs, p, arch)
 end
 
 ##### calculate energy consumption of protein, DNA, RNA synthesis (mmolATP/individual/second)
-@inline function calc_PRO_DNA_RNA_energy(ESPr,ESPmc, ESPmn, ESPtn, ESPtp, ESPtfe, ESPrs, EDNA, ERNA, exEN_PS, exEN_RS)
+@inline function calc_PRO_DNA_RNA_energy(ESPr,ESPmc, ESPmn, ESPtn, ESPtp, ESPtfe, ESPrs, ESPp, EDNA, ERNA, exEN_PS, exEN_RS)
     Esupply = exEN_PS + exEN_RS
     PS_avail = exEN_PS
     RS_avail = exEN_RS
-    Edemand = ESPr + ESPmc + ESPmn + ESPtn + ESPtp + ESPtfe + ESPrs + EDNA + ERNA
+    Edemand = ESPr + ESPmc + ESPmn + ESPtn + ESPtp + ESPtfe + ESPrs + ESPp + EDNA + ERNA
     if Edemand <= 0.0f0
-        return 0.0f0, 0.0f0, 0.0f0, 0.0f0,  0.0f0, 0.0f0, 0.0f0, 0.0f0, 0.0f0, exEN_PS, exEN_RS
+        return 0.0f0, 0.0f0, 0.0f0, 0.0f0, 0.0f0, 0.0f0, 0.0f0, 0.0f0, 0.0f0, 0.0f0, exEN_PS, exEN_RS
     else
         Eused = min(Esupply, Edemand)
         scale = Eused / Edemand
@@ -378,18 +391,19 @@ end
         tESPtp = ESPtp * scale
         tESPtfe = ESPtfe * scale
         tESPrs = ESPrs * scale
+        tESPp = ESPp * scale
         tEDNA = EDNA * scale
         tERNA = ERNA * scale
         exEN_PS = max(PS_avail - Eused, 0.0f0)
         exEN_RS = max(RS_avail - max(Eused - PS_avail, 0.0f0), 0.0f0)
     end
         
-    return tESPr, tESPmc, tESPmn, tESPtn, tESPtp, tESPtfe, tESPrs, tEDNA, tERNA, exEN_PS, exEN_RS
+    return tESPr, tESPmc, tESPmn, tESPtn, tESPtp, tESPtfe, tESPrs, tESPp, tEDNA, tERNA, exEN_PS, exEN_RS
 end
 @kernel function calc_PRO_DNA_RNA_energy_kernel!(plank, p)
     i = @index(Global)
-    @inbounds plank.ESPr[i], plank.ESPmc[i], plank.ESPmn[i], plank.ESPtn[i], plank.ESPtp[i], plank.ESPtfe[i], plank.ESPrs[i], plank.EDNA[i], plank.ERNA[i], plank.exEN_PS[i], plank.exEN_RS[i] = 
-        calc_PRO_DNA_RNA_energy(plank.ESPr[i], plank.ESPmc[i], plank.ESPmn[i], plank.ESPtn[i], plank.ESPtp[i], plank.ESPtfe[i], plank.ESPrs[i], plank.EDNA[i], plank.ERNA[i], plank.exEN_PS[i], plank.exEN_RS[i])
+    @inbounds plank.ESPr[i], plank.ESPmc[i], plank.ESPmn[i], plank.ESPtn[i], plank.ESPtp[i], plank.ESPtfe[i], plank.ESPrs[i], plank.ESPp[i], plank.EDNA[i], plank.ERNA[i], plank.exEN_PS[i], plank.exEN_RS[i] = 
+        calc_PRO_DNA_RNA_energy(plank.ESPr[i], plank.ESPmc[i], plank.ESPmn[i], plank.ESPtn[i], plank.ESPtp[i], plank.ESPtfe[i], plank.ESPrs[i], plank.ESPp[i], plank.EDNA[i], plank.ERNA[i], plank.exEN_PS[i], plank.exEN_RS[i])
         plank.S_Pr[i]  = plank.ESPr[i]  / p.e_sp
         plank.S_Pmc[i] = plank.ESPmc[i]  / p.e_sp
         plank.S_Pmn[i] = plank.ESPmn[i]  / p.e_sp
@@ -397,6 +411,7 @@ end
         plank.S_Ptp[i] = plank.ESPtp[i]  / p.e_sp
         plank.S_Ptfe[i]= plank.ESPtfe[i] / p.e_sp
         plank.S_Prs[i] = plank.ESPrs[i]  / p.e_sp
+        plank.S_Pp[i] = plank.ESPp[i] / p.e_sp
         plank.S_DNA[i] = plank.EDNA[i]   / p.e_dna
         plank.S_RNA[i] = plank.ERNA[i]   / p.e_rna
 end
@@ -416,12 +431,13 @@ end
     @inbounds plank.PRO_Tp[i]  += ΔT * plank.S_Ptp[i]
     @inbounds plank.PRO_Tfe[i] += ΔT * plank.S_Ptfe[i]
     @inbounds plank.PRO_RS[i]  += ΔT * plank.S_Prs[i]
+    @inbounds plank.PRO_P[i]   += ΔT * plank.S_Pp[i]
     @inbounds plank.DNA[i] += ΔT * plank.S_DNA[i]
     @inbounds plank.RNA[i] += ΔT * plank.S_RNA[i]
 
-    @inbounds S_PRO = plank.S_Pr[i] + plank.S_Pmc[i] + plank.S_Pmn[i] + plank.S_Ptn[i] + plank.S_Ptp[i] + plank.S_Ptfe[i] + plank.S_Prs[i]
-    @inbounds plank.CH[i]  -= ΔT *(S_PRO + plank.S_DNA[i] + plank.S_RNA[i] + 
-                                   plank.S_Pp[i] * plank.ρChl[i])
+    @inbounds S_PRO = plank.S_Pr[i] + plank.S_Pmc[i] + plank.S_Pmn[i] + plank.S_Ptn[i] + plank.S_Ptp[i] + plank.S_Ptfe[i] + plank.S_Prs[i] + plank.S_Pp[i]
+    @inbounds plank.CH[i]  -= ΔT * (S_PRO + plank.S_DNA[i] + plank.S_RNA[i] +
+                                    plank.S_Pp[i] * plank.ρChl[i] * 55.0f0 / 893.49f0)
     @inbounds plank.qNH3[i]-= ΔT *(S_PRO * p.R_NC_PRO + plank.S_DNA[i] * p.R_NC_DNA + 
                                    plank.S_RNA[i] * p.R_NC_RNA + 
                                    plank.S_Pp[i] * plank.ρChl[i] * 4.0f0 / 55.0f0)
@@ -438,7 +454,7 @@ end
 ##### calculate exudation of carbon. Nitrogen and phosphorus will not be exuded for now
 @kernel function calc_exudation_kernel!(plank, p)
     i = @index(Global)
-    @inbounds tot_C = total_C_biomass(plank.PRO_R[i], plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i])
+    @inbounds tot_C = total_C_biomass(plank.PRO_R[i], plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.PRO_P[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i])
     @inbounds plank.exu[i] = max(0.0f0, plank.CH[i] - p.CHmax * tot_C)
 end
 function calc_exudation!(plank, p, arch)

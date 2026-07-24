@@ -21,6 +21,16 @@ function diags_spcs!(diags_sp, plank::phytoplankton, ac, x, y, z, mode::Abstract
         diags = (:PS, :VDOC, :VHN4, :VNO3, :VPO4, :S_PRO, :S_DNA, :S_RNA, :resp, :ρChl, :CH, :NST, :PST, :PRO, :DNA, :RNA, :Chl, :ptc)
     elseif isa(mode, IronEnergyMode)
         diags = (:PS, :CF, :ECF, :RS, :ERS, :NR, :ENR, :NF, :ENF, :BS, :VNH4, :VNO3, :VPO4, :VFe, :PS2ST, :ST2PS, :NR2ST, :ST2NR, :NF2ST, :ST2NF, :Bm, :exEn, :CH, :qNO3, :qNH4, :qP, :qFe, :qFePS, :qFeNR, :qFeNF, :Chl, :tdark, :ptc)
+    elseif isa(mode, ProteinMode)
+        diags = (:PS, :CF, :ECF, :RS, :ERS, :NR, :ENR, :NF, :ENF,
+                 :VNH4, :VNO3, :VPO4, :VFe, :VDOC,
+                 :PRO_R, :PRO_Mc, :PRO_Mn, :PRO_Tn, :PRO_Tp, :PRO_Tfe, :PRO_RS, :PRO_P,
+                 :DNA, :RNA, :CH, :Chl, :qNH3, :qNO3, :qFe, :PST,
+                 :S_Pr, :S_Pmc, :S_Pmn, :S_Ptn, :S_Ptp, :S_Ptfe, :S_Prs, :S_Pp, :S_DNA, :S_RNA,
+                 :ESPr, :ESPmc, :ESPmn, :ESPtn, :ESPtp, :ESPtfe, :ESPrs, :ESPp, :EDNA, :ERNA,
+                 :exEN_RS, :exEN_PS,
+                 :D_Pr, :D_Pp, :D_Pmc, :D_chl,
+                 :ρChl, :exu, :ptc)
     end
 
     for diag in keys(diags_sp)
