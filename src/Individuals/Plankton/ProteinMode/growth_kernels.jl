@@ -179,7 +179,7 @@ end
 end
 @kernel function calc_NO3_reduction_kernel!(plank, T, p, ΔT)
     i = @index(Global)
-    @inbounds plank.NR[i], plank.ENR[i] = calc_NR(plank.qNO3[i], plank.qNH4[i], plank.PRO_R[i], plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.PRO_P[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i], T[i], p, plank.ac[i], ΔT)
+    @inbounds plank.NR[i], plank.ENR[i] = calc_NR(plank.qNO3[i], plank.qNH3[i], plank.PRO_R[i], plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.PRO_P[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i], T[i], p, plank.ac[i], ΔT)
 end
 function calc_NO3_reduction!(plank, T, p, ΔT, arch::Architecture)
     kernel! = calc_NO3_reduction_kernel!(device(arch), 256, (size(plank.ac,1)))
@@ -199,7 +199,7 @@ end
 end
 @kernel function calc_nitrogen_fixation_kernel!(plank, T, p)
     i = @index(Global)
-    @inbounds plank.NF[i], plank.ENF[i] = calc_NF(plank.qNH4[i], plank.PRO_R[i], plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.PRO_P[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i], T[i], p, plank.ac[i])
+    @inbounds plank.NF[i], plank.ENF[i] = calc_NF(plank.qNH3[i], plank.PRO_R[i], plank.PRO_Mc[i], plank.PRO_Mn[i], plank.PRO_Tn[i], plank.PRO_Tp[i], plank.PRO_Tfe[i], plank.PRO_RS[i], plank.PRO_P[i], plank.DNA[i], plank.RNA[i], plank.CH[i], plank.Chl[i], T[i], p, plank.ac[i])
 end
 function calc_nitrogen_fixation!(plank, T, p, arch::Architecture)
     kernel! = calc_nitrogen_fixation_kernel!(device(arch), 256, (size(plank.ac,1)))
