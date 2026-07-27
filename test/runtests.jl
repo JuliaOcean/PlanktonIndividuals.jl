@@ -9,9 +9,10 @@ using PlanktonIndividuals
         include("output_test.jl")
     end
     @testset "Example tests" begin
-        include("example_3D_test.jl")
-        include("example_2D_test.jl")
-        include("example_1D_test.jl")
-        include("example_0D_test.jl")
+        include("test_0D_iron_energy_mode.jl")
+        include("test_0D_protein_mode.jl")
+        include("test_1D_macro_molecular_mode.jl")
+        include("test_2D_quota_mode.jl")
+        include("test_3D_carbon_mode.jl")
     end
 end

@@ -1,7 +1,8 @@
 ##### grazing and grazing loss
 function grazing!(plank, arch::Architecture, plk, p)
     ##### calculate grazing loss
-    calc_loss!(plk.DOC.data, plk.POC.data, plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data, plk.DFe.data, plk.PFe_bio.data,
+    calc_loss!(plk.DOC.data, plk.POC.data, plk.DON.data, plk.PON.data, 
+               plk.DOP.data, plk.POP.data, plk.DFe.data, plk.PFe_bio.data,
                plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.graz, 
                p.grazFracC, p.grazFracN, p.grazFracP, p.grazFracFe, p, arch)
     
@@ -14,7 +15,8 @@ end
 ##### mortality and mortality loss
 function mortality!(plank, arch::Architecture, plk, p)
     ##### calculate mortality loss
-    calc_loss!(plk.DOC.data, plk.POC.data, plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data, plk.DFe.data, plk.PFe_bio.data,
+    calc_loss!(plk.DOC.data, plk.POC.data, plk.DON.data, plk.PON.data, 
+               plk.DOP.data, plk.POP.data, plk.DFe.data, plk.PFe_bio.data,
                plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.mort, 
                p.mortFracC, p.mortFracN, p.mortFracP, p.mortFracFe, p, arch)
     
@@ -31,18 +33,18 @@ end
         @inbounds plank.x[idx[i]]    = plank.x[i]
         @inbounds plank.y[idx[i]]    = plank.y[i]
         @inbounds plank.z[idx[i]]    = plank.z[i]
-        @inbounds plank.PRO_R[idx[i]]  = plank.PRO_R[i]
-        @inbounds plank.PRO_Mc[idx[i]] = plank.PRO_Mc[i]
-        @inbounds plank.PRO_Mn[idx[i]] = plank.PRO_Mn[i]
-        @inbounds plank.PRO_Tn[idx[i]] = plank.PRO_Tn[i]
-        @inbounds plank.PRO_Tp[idx[i]] = plank.PRO_Tp[i]
-        @inbounds plank.PRO_Tfe[idx[i]] = plank.PRO_Tfe[i]
-        @inbounds plank.PRO_RS[idx[i]]  = plank.PRO_RS[i]
-        @inbounds plank.PRO_P[idx[i]]  = plank.PRO_P[i]
+        @inbounds plank.PRO_RB[idx[i]] = plank.PRO_RB[i]
+        @inbounds plank.PRO_MC[idx[i]] = plank.PRO_MC[i]
+        @inbounds plank.PRO_MN[idx[i]] = plank.PRO_MN[i]
+        @inbounds plank.PRO_TN[idx[i]] = plank.PRO_TN[i]
+        @inbounds plank.PRO_TP[idx[i]] = plank.PRO_TP[i]
+        @inbounds plank.PRO_TFe[idx[i]]= plank.PRO_TFe[i]
+        @inbounds plank.PRO_RS[idx[i]] = plank.PRO_RS[i]
+        @inbounds plank.PRO_PS[idx[i]] = plank.PRO_PS[i]
         @inbounds plank.DNA[idx[i]]  = plank.DNA[i]
         @inbounds plank.RNA[idx[i]]  = plank.RNA[i]
         @inbounds plank.CH[idx[i]]   = plank.CH[i]
-        @inbounds plank.qNH3[idx[i]] = plank.qNH3[i]
+        @inbounds plank.qNH4[idx[i]] = plank.qNH4[i]
         @inbounds plank.qNO3[idx[i]] = plank.qNO3[i]
         @inbounds plank.qFe[idx[i]]  = plank.qFe[i]
         @inbounds plank.PST[idx[i]]  = plank.PST[i]
@@ -61,19 +63,19 @@ end
 ##### cell division
 @kernel function divide_to_half_kernel!(plank)
     i = @index(Global)
-    @inbounds plank.PRO_R[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.PRO_Mc[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.PRO_Mn[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.PRO_Tn[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.PRO_Tp[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.PRO_Tfe[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.PRO_RS[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0
-    @inbounds plank.PRO_P[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0
+    @inbounds plank.PRO_RB[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_MC[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_MN[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_TN[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_TP[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_TFe[i]*= (2.0f0 - plank.dvid[i]) / 2.0f0 
+    @inbounds plank.PRO_RS[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0
+    @inbounds plank.PRO_PS[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0
     @inbounds plank.Chl[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.DNA[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.RNA[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.CH[i]  *= (2.0f0 - plank.dvid[i]) / 2.0f0 
-    @inbounds plank.qNH3[i]*= (2.0f0 - plank.dvid[i]) / 2.0f0
+    @inbounds plank.qNH4[i]*= (2.0f0 - plank.dvid[i]) / 2.0f0
     @inbounds plank.qNO3[i]*= (2.0f0 - plank.dvid[i]) / 2.0f0
     @inbounds plank.qFe[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0
     @inbounds plank.PST[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 

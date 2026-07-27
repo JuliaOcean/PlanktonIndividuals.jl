@@ -7,7 +7,7 @@ function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
 
     calc_inorganic_uptake!(plank, trs, p, ΔT, arch)
 
-    calc_NPFe_energy_alloc!(plank, p, arch)
+    calc_uptake_energy_alloc!(plank, p, arch)
 
     update_quotas_1!(plank, ΔT, arch)
 
@@ -29,7 +29,7 @@ function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
 
     calc_BS!(plank, trs, p, arch)
     
-    calc_PRO_DNA_RNA_energy_alloc!(plank, p, arch)
+    calc_BS_energy_alloc!(plank, p, arch)
 
     update_biomass!(plank, p, ΔT, arch)
 

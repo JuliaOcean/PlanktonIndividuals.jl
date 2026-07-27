@@ -52,6 +52,6 @@ TPt=TPt + sum(model.individuals.phytos.sp1.data.qP .+
           sum(model.individuals.phytos.sp5.data.qP .+ 
               model.individuals.phytos.sp5.data.Bm .* model.individuals.phytos.sp5.p.R_PC)
 
-@testset "PlanktonIndividuals 0D tests:" begin
+@testset "PlanktonIndividuals 0D IronEnergyMode tests:" begin
     @test isapprox(TP,TPt; atol=1e1)
 end

@@ -46,6 +46,6 @@ TCt = tot_mass(model.tracers.DIC.data, grid) +
       tot_mass(model.tracers.POC.data, grid)
 TCt = TCt + sum(model.individuals.phytos.sp1.data.Bm)
 
-@testset "PlanktonIndividuals 3D tests:" begin
+@testset "PlanktonIndividuals 3D CarbonMode tests:" begin
     @test isapprox(TC,TCt; atol=1e3)
 end
