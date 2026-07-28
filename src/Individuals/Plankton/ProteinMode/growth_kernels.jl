@@ -207,8 +207,8 @@ end
     @inbounds plank.ENR[i] = min(plank.ENR[i], plank.exE_PS[i] + plank.exE_RS[i] - plank.ECF[i])
     @inbounds plank.ENF[i] = min(plank.ENF[i], plank.exE_PS[i] + plank.exE_RS[i] - plank.ECF[i])
 
-    @inbounds plank.exE_PS[i] -= min(plank.exE_PS[i], plank.ECF[i] + plank.ENR[i] + plank.ENF[i])
     @inbounds plank.exE_RS[i] -= max(0.0f0, plank.ECF[i] + plank.ENR[i] + plank.ENF[i] - plank.exE_PS[i])
+    @inbounds plank.exE_PS[i] -= min(plank.exE_PS[i], plank.ECF[i] + plank.ENR[i] + plank.ENF[i])
        
     @inbounds plank.CF[i] = plank.ECF[i] / p.e_CF
     @inbounds plank.NR[i] = plank.ENR[i] / p.e_NR
@@ -387,8 +387,8 @@ end
     @inbounds plank.EDNA[i]   *= Eused / max(1.0f-30, Edemand)
     @inbounds plank.ERNA[i]   *= Eused / max(1.0f-30, Edemand)
 
-    @inbounds plank.exE_PS[i] -= min(plank.exE_PS[i], Eused)
     @inbounds plank.exE_RS[i] -= min(plank.exE_RS[i], max(Eused - plank.exE_PS[i], 0.0f0))
+    @inbounds plank.exE_PS[i] -= min(plank.exE_PS[i], Eused)
     
     @inbounds plank.SP_RB[i] = plank.ESP_RB[i]  / p.e_SP
     @inbounds plank.SP_MC[i] = plank.ESP_MC[i]  / p.e_SP
