@@ -94,7 +94,9 @@ end
 ##### calculate energy consumption of nutrient uptakes (mmolATP/individual/second)
 @kernel function calc_uptake_energy_kernel!(plank, p)
     i = @index(Global)
-    @inbounds Esupply = max(plank.exE_RS[i] - p.e_min, 0.0f0)
+    @inbounds exE_RS = max(plank.exE_RS[i]- max(p.e_min - plank.exE_PS[i], 0.0f0), 0.0f0)
+    @inbounds exE_PS = max(plank.exE_PS[i]- p.e_min, 0.0f0)
+    @inbounds Esupply = plank.exE_RS[i]
     @inbounds Edemand = plank.EVNO3[i] + plank.EVPO4[i] + plank.EVFe[i]
     @inbounds Eused = min(Esupply, Edemand)
 
@@ -208,6 +210,7 @@ end
     @inbounds plank.ENF[i] = min(plank.ENF[i], plank.exE_PS[i] + plank.exE_RS[i] - plank.ECF[i])
 
     @inbounds plank.exE_RS[i] -= max(0.0f0, plank.ECF[i] + plank.ENR[i] + plank.ENF[i] - plank.exE_PS[i])
+    @inbounds plank.exE_RS[i] = max(0.0f0, plank.exE_RS[i])
     @inbounds plank.exE_PS[i] -= min(plank.exE_PS[i], plank.ECF[i] + plank.ENR[i] + plank.ENF[i])
        
     @inbounds plank.CF[i] = plank.ECF[i] / p.e_CF
@@ -329,14 +332,14 @@ end
     @inbounds lim_TP =  shape_func_dec(trs.PO4[i], p.TP_max, 1.0f-4)
     @inbounds lim_TFe = shape_func_dec(trs.DFe[i], p.TFe_max, 1.0f-4)
      
-    @inbounds plank.SP_RB[i] = plank.PRO_RB[i]  * p.r_max / p.n_RB   * limit_RNA
-    @inbounds plank.SP_MC[i] = plank.PRO_RB[i]  * p.r_max / p.n_MC  
-    @inbounds plank.SP_MN[i] = plank.PRO_RB[i]  * p.r_max / p.n_MN   * Ksat_Fe
-    @inbounds plank.SP_TN[i] = plank.PRO_RB[i]  * p.r_max / p.n_TN   * lim_TN
-    @inbounds plank.SP_TP[i] = plank.PRO_RB[i]  * p.r_max / p.n_TPO4 * lim_TP
-    @inbounds plank.SP_TFe[i]= plank.PRO_RB[i]  * p.r_max / p.n_TFe  * lim_TFe
-    @inbounds plank.SP_RS[i] = plank.PRO_RB[i]  * p.r_max / p.n_RS   * Ksat_Fe
-    @inbounds plank.SP_PS[i] = plank.PRO_RB[i]  * p.r_max / p.n_PS   * regI * Ksat_Fe
+    @inbounds plank.SP_RB[i] = plank.PRO_RB[i]  * p.KcatRB * p.β_RB   * limit_RNA
+    @inbounds plank.SP_MC[i] = plank.PRO_RB[i]  * p.KcatRB * p.β_MC
+    @inbounds plank.SP_MN[i] = plank.PRO_RB[i]  * p.KcatRB * p.β_MN   * Ksat_Fe
+    @inbounds plank.SP_TN[i] = plank.PRO_RB[i]  * p.KcatRB * p.β_TN   * lim_TN
+    @inbounds plank.SP_TP[i] = plank.PRO_RB[i]  * p.KcatRB * p.β_TPO4 * lim_TP
+    @inbounds plank.SP_TFe[i]= plank.PRO_RB[i]  * p.KcatRB * p.β_TFe  * lim_TFe
+    @inbounds plank.SP_RS[i] = plank.PRO_RB[i]  * p.KcatRB * p.β_RS   * Ksat_Fe
+    @inbounds plank.SP_PS[i] = plank.PRO_RB[i]  * p.KcatRB * p.β_PS   * regI * Ksat_Fe
 
     @inbounds plank.SP_RB[i] *= limit_PRO * tempFunc(trs.T[i], p) * plank.ac[i]
     @inbounds plank.SP_MC[i] *= limit_PRO * tempFunc(trs.T[i], p) * plank.ac[i]
