@@ -38,7 +38,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                  :β_MC, :β_MN, :β_RB, :β_TN, :β_TPO4, :β_TFe, :β_RS, :β_PS,
                  :KsatDOC, :KsatNH4, :KsatNO3, :KsatPO4, :KsatNR, :KsatFe, :KFe_em,
                  :TN_max, :TP_max, :TFe_max,
-                 :CHmax, :PSTmax, :qNH4max, :qNO3max, :qFemax,
+                 :CHmax, :PSTmax, :qNH4max, :qNO3max, :qFemax,:PARmax,
                  :k_degRB, :k_degPS, :k_degMC, :k_degChl,
                  :PRO_RBmin, :PRO_PSmin, :PRO_MCmin, :Chlmin,
                  :Chl2N, :R_NC_PRO, :R_NC_DNA, :R_NC_RNA, :R_PC_DNA, :R_PC_RNA,:R_C_RNAPRB, 
@@ -97,6 +97,7 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     rand!(rng_type(arch), plank.data.PST)
     rand!(rng_type(arch), plank.data.qNO3)
     rand!(rng_type(arch), plank.data.qNH4)
+    rand!(rng_type(arch), plank.data.qFe)
 
     plank.data.DNA    .= plank.data.DNA    .* var .+ 1.0f0                  # range: (1.0,1.0+var)
     plank.data.RNA    .= plank.data.RNA    .* var .* 2.0f0 .+ 1.0f0 .- var  # range: (1.0-var,1.0+var)
@@ -112,7 +113,7 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     plank.data.PST    .= plank.data.PST    .* var .* 2.0f0 .+ 1.0f0 .- var  # range: (1.0-var,1.0+var)
     plank.data.qNO3   .= plank.data.qNO3   .* var .* 2.0f0 .+ 1.0f0 .- var  # range: (1.0-var,1.0+var)
     plank.data.qNH4   .= plank.data.qNH4   .* var .* 2.0f0 .+ 1.0f0 .- var  # range: (1.0-var,1.0+var)
-
+    plank.data.qFe    .= plank.data.qFe    .* var .* 2.0f0 .+ 1.0f0 .- var  # range: (1.0-var,1.0+var)
 
     plank.data.x   .=(plank.data.x .* g.Nx) .* plank.data.ac                                             # x, unit: grid spacing, starting from 0
     plank.data.y   .=(plank.data.y .* g.Ny) .* plank.data.ac                                             # y, unit: grid spacing, starting from 0
@@ -129,11 +130,12 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     plank.data.PRO_TFe.= plank.data.PRO_TFe.* C_DNA .* Nsuper .* plank.data.ac .* PRO_TFe2DNA
     plank.data.PRO_RS .= plank.data.PRO_RS .* C_DNA .* Nsuper .* plank.data.ac .* PRO_RS2DNA
     plank.data.PRO_PS .= plank.data.PRO_PS .* C_DNA .* Nsuper .* plank.data.ac .* PRO_PS2DNA
-    plank.data.CH     .= plank.data.CH  .* plank.data.DNA .* CH2DNA                                         # CH  mmolC/individual
-    plank.data.PST    .= plank.data.PST .* plank.data.CH ./ 106.0f0                                         # PST mmolP/individual
-    plank.data.qNO3   .= plank.data.qNO3.* plank.data.CH ./ 106.0f0 .* 16.0f0                               # PST mmolP/individual
-    plank.data.qNH4   .= plank.data.qNH4.* plank.data.CH ./ 106.0f0 .* 16.0f0                               # PST mmolP/individual
-    plank.data.Chl    .= plank.data.DNA .* Chl2DNA * 893.49f0 / 55.0f0                                      # Chl mgChl/individual
+    plank.data.CH     .= plank.data.CH  .* plank.data.DNA .* CH2DNA                                         # CH   mmolC/individual
+    plank.data.PST    .= plank.data.PST .* plank.data.CH ./ 106.0f0                                         # PST  mmolP/individual
+    plank.data.qNO3   .= plank.data.qNO3.* plank.data.CH ./ 106.0f0 .* 16.0f0                               # qNO3 mmolN/individual
+    plank.data.qNH4   .= plank.data.qNH4.* plank.data.CH ./ 106.0f0 .* 16.0f0                               # qNH4 mmolN/individual
+    plank.data.Chl    .= plank.data.DNA .* Chl2DNA * 893.49f0 / 55.0f0  
+    plank.data.qFe    .= plank.data.qFe .* plank.data.CH ./ 10000.0f0
 
     mask_individuals!(plank.data, g, N, arch)
 end

@@ -27,7 +27,7 @@ function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
 
     update_quotas_2!(plank, ΔT, p, arch)
 
-    calc_BS!(plank, trs, p, arch)
+    calc_BS!(plank, trs, p, arch, ΔT)
     
     calc_BS_energy_alloc!(plank, p, arch)
 

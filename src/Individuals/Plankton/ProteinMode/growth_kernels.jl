@@ -33,7 +33,7 @@ end
 @kernel function calc_respir_kernel!(plank, T, p, ΔT)
     i = @index(Global)
     @inbounds plank.RS[i] = p.KcatRS * plank.PRO_RS[i] * tempFunc(T[i], p) * plank.ac[i]
-    @inbounds plank.RS[i] = min(plank.RS[i], plank.CH[i] / ΔT)
+    @inbounds plank.RS[i] = min(plank.RS[i], plank.CH[i] * 9.9f-1 / ΔT)
     @inbounds plank.ERS[i]= plank.RS[i] * p.e_RS * plank.ac[i]
     @inbounds plank.exE_RS[i] = copy(plank.ERS[i])
 end
@@ -262,15 +262,21 @@ end
 ##### calculate protein and chla degration under N stravation (mmolC/individual/second)
 @kernel function calc_degradation_kernel!(plank, p, trs)
     i = @index(Global)
-    @inbounds reg_PRB = shape_func_dec(plank.qNH4[i], p.qNH4max, 1.0f-4, pow = 1.0f0)
-    @inbounds reg_PPS = shape_func_dec(plank.qNH4[i], p.qNH4max, 1.0f-4, pow = 4.0f0)
-    @inbounds reg_PMC = shape_func_dec(plank.qNH4[i], p.qNH4max, 1.0f-4, pow = 2.0f0)
-    @inbounds reg_Chl = shape_func_dec(plank.qNH4[i], p.qNH4max, 1.0f-4, pow = 4.0f0)
+    @inbounds C_tot = total_C_biomass(plank.PRO_RB[i], plank.PRO_MC[i], plank.PRO_MN[i], 
+                                      plank.PRO_TN[i], plank.PRO_TP[i], plank.PRO_TFe[i], 
+                                      plank.PRO_RS[i], plank.PRO_PS[i], plank.DNA[i], 
+                                      plank.RNA[i], plank.CH[i], plank.Chl[i])
+    @inbounds Qn = (plank.qNH4[i] + plank.qNO3[i]) / max(1.0f-30, C_tot)
 
-    @inbounds plank.DP_RB[i] = p.k_degRB * reg_PRB * (plank.PRO_RB[i] - p.PRO_RBmin)
-    @inbounds plank.DP_PS[i] = p.k_degPS * reg_PPS * (plank.PRO_PS[i] - p.PRO_PSmin)
-    @inbounds plank.DP_MC[i] = p.k_degMC * reg_PMC * (plank.PRO_MC[i] - p.PRO_MCmin)
-    @inbounds plank.DChl[i]  = p.k_degChl* reg_Chl * (plank.Chl[i] - p.Chlmin)
+    @inbounds reg_PRB = shape_func_dec(Qn, 0.1f0 * (p.qNH4max + p.qNO3max), 1.0f-4, pow = 1.0f0)
+    @inbounds reg_PPS = shape_func_dec(Qn, 0.1f0 * (p.qNH4max + p.qNO3max), 1.0f-4, pow = 4.0f0)
+    @inbounds reg_PMC = shape_func_dec(Qn, 0.1f0 * (p.qNH4max + p.qNO3max), 1.0f-4, pow = 2.0f0)
+    @inbounds reg_Chl = shape_func_dec(Qn, 0.1f0 * (p.qNH4max + p.qNO3max), 1.0f-4, pow = 4.0f0)
+
+    @inbounds plank.DP_RB[i] = p.k_degRB * reg_PRB * max(0.0f0, (plank.PRO_RB[i] - p.PRO_RBmin))
+    @inbounds plank.DP_PS[i] = p.k_degPS * reg_PPS * max(0.0f0, (plank.PRO_PS[i] - p.PRO_PSmin))
+    @inbounds plank.DP_MC[i] = p.k_degMC * reg_PMC * max(0.0f0, (plank.PRO_MC[i] - p.PRO_MCmin))
+    @inbounds plank.DChl[i]  = p.k_degChl* reg_Chl * max(0.0f0, (plank.Chl[i] - p.Chlmin))
 
     @inbounds plank.DP_RB[i] *= tempFunc(trs.T[i], p) * plank.ac[i]
     @inbounds plank.DP_PS[i] *= tempFunc(trs.T[i], p) * plank.ac[i]
@@ -308,7 +314,7 @@ function update_quotas_2!(plank, ΔT, p, arch)
 end
 
 ##### calculate protein, DNA, RNA synthesis (mmol C /individual/second)
-@kernel function calc_BS_kernel!(plank, trs, p)
+@kernel function calc_BS_kernel!(plank, trs, p, ΔT)
     i  = @index(Global)
     @inbounds NST = plank.qNH4[i] + plank.qNO3[i]
     @inbounds limit_PRO = min(plank.CH[i]/(plank.CH[i] + p.k_sat_PRO * p.Nsuper),
@@ -326,8 +332,7 @@ end
                                       plank.RNA[i], plank.CH[i], plank.Chl[i])
     @inbounds QFe  = plank.qFe[i] / max(1.0f-30, C_tot)
     @inbounds Ksat_Fe = QFe / max(1.0f-30, (QFe + p.KFe_em))
-    @inbounds regI = trs.par[i] * p.α * plank.Chl[i] / max(1.0f-30, plank.PRO_PS[i])
-    @inbounds regI = 1.0f0 / max(1.0f-30, regI)
+    @inbounds regI = shape_func_dec(trs.par[i], p.PARmax, 1.0f-4, pow = 2.0f0)
     @inbounds lim_TN =  shape_func_dec(trs.NO3[i] + trs.NH4[i], p.TN_max, 1.0f-4)
     @inbounds lim_TP =  shape_func_dec(trs.PO4[i], p.TP_max, 1.0f-4)
     @inbounds lim_TFe = shape_func_dec(trs.DFe[i], p.TFe_max, 1.0f-4)
@@ -353,6 +358,31 @@ end
     @inbounds plank.SDNA[i] = p.k_DNA  * limit_DNA * plank.ac[i] * tempFunc(trs.T[i], p) 
     @inbounds plank.SDNA[i] *= isless(plank.DNA[i]/(p.C_DNA * p.Nsuper), 2.0f0)
     @inbounds plank.SRNA[i] = plank.SP_RB[i] * p.R_C_RNAPRB * plank.ac[i] 
+    
+    @inbounds SPRO_tot = plank.SP_RB[i] + plank.SP_MC[i] + plank.SP_MN[i] + plank.SP_TN[i] + 
+                         plank.SP_TP[i] + plank.SP_TFe[i] + plank.SP_RS[i] + plank.SP_PS[i]
+    @inbounds C_demand = (SPRO_tot + plank.SDNA[i]  + plank.SRNA[i] + 
+                          plank.SP_PS[i] * plank.ρChl[i] * 55.0f0 / 893.49f0) * ΔT
+    @inbounds N_demand = (SPRO_tot * p.R_NC_PRO + plank.SDNA[i] * p.R_NC_DNA + 
+                          plank.SRNA[i] * p.R_NC_RNA + 
+                          plank.SP_PS[i] * plank.ρChl[i] * 4.0f0 / 55.0f0) * ΔT
+    @inbounds P_demand = (plank.SDNA[i] * p.R_PC_DNA + plank.SRNA[i] * p.R_PC_RNA) * ΔT
+    
+    @inbounds r_C = min(plank.CH[i]   * 9.9f-1 / max(1.0f-30, C_demand), 1.0f0)
+    @inbounds r_N = min(plank.qNH4[i] * 9.9f-1 / max(1.0f-30, N_demand), 1.0f0)
+    @inbounds r_P = min(plank.PST[i]  * 9.9f-1 / max(1.0f-30, P_demand), 1.0f0)
+
+    @inbounds plank.SP_RB[i] *= min(r_C, r_N)
+    @inbounds plank.SP_MC[i] *= min(r_C, r_N)
+    @inbounds plank.SP_MN[i] *= min(r_C, r_N)
+    @inbounds plank.SP_TN[i] *= min(r_C, r_N)
+    @inbounds plank.SP_TP[i] *= min(r_C, r_N)
+    @inbounds plank.SP_TFe[i]*= min(r_C, r_N)
+    @inbounds plank.SP_RS[i] *= min(r_C, r_N)
+    @inbounds plank.SP_PS[i] *= min(r_C, r_N)
+
+    @inbounds plank.SDNA[i]  *= min(r_C, r_N, r_P)
+    @inbounds plank.SRNA[i]  *= min(r_C, r_N, r_P)
 
     @inbounds plank.ESP_RB[i] = plank.SP_RB[i] * p.e_SP
     @inbounds plank.ESP_MC[i] = plank.SP_MC[i] * p.e_SP
@@ -365,9 +395,9 @@ end
     @inbounds plank.EDNA[i]  = plank.SDNA[i] * p.e_DNA
     @inbounds plank.ERNA[i]  = plank.SRNA[i] * p.e_RNA  
 end
-function calc_BS!(plank, trs, p, arch)
+function calc_BS!(plank, trs, p, arch, ΔT)
     kernel! = calc_BS_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, trs, p)
+    kernel!(plank, trs, p, ΔT)
     return nothing
 end
 
@@ -376,7 +406,8 @@ end
     i = @index(Global)
     @inbounds Esupply = plank.exE_PS[i] + plank.exE_RS[i]
     @inbounds Edemand = plank.ESP_RB[i] + plank.ESP_MC[i] + plank.ESP_MN[i] + plank.ESP_TN[i] +
-                        plank.ESP_TP[i] + plank.ESP_TFe[i]+ plank.ESP_RS[i] + plank.ESP_PS[i]
+                        plank.ESP_TP[i] + plank.ESP_TFe[i]+ plank.ESP_RS[i] + plank.ESP_PS[i] +
+                        plank.EDNA[i]   + plank.ERNA[i]
     @inbounds Eused = min(Esupply, Edemand)
     
     @inbounds plank.ESP_RB[i] *= Eused / max(1.0f-30, Edemand)
