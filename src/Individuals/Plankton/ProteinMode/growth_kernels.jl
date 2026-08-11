@@ -260,7 +260,7 @@ function calc_ρChl!(plank, par, p, arch)
 end
 
 ##### calculate protein and chla degration under N stravation (mmolC/individual/second)
-@kernel function calc_degradation_kernel!(plank, p, trs)
+@kernel function calc_degradation_kernel!(plank, p, trs, ΔT)
     i = @index(Global)
     @inbounds C_tot = total_C_biomass(plank.PRO_RB[i], plank.PRO_MC[i], plank.PRO_MN[i], 
                                       plank.PRO_TN[i], plank.PRO_TP[i], plank.PRO_TFe[i], 
@@ -278,14 +278,19 @@ end
     @inbounds plank.DP_MC[i] = p.k_degMC * reg_PMC * max(0.0f0, (plank.PRO_MC[i] - p.PRO_MCmin))
     @inbounds plank.DChl[i]  = p.k_degChl* reg_Chl * max(0.0f0, (plank.Chl[i] - p.Chlmin))
 
+    @inbounds plank.DP_RB[i] = min(plank.DP_RB[i], max(0.0f0, plank.PRO_RB[i] - p.PRO_RBmin) / ΔT)
+    @inbounds plank.DP_PS[i] = min(plank.DP_PS[i], max(0.0f0, plank.PRO_PS[i] - p.PRO_PSmin) / ΔT)
+    @inbounds plank.DP_MC[i] = min(plank.DP_MC[i], max(0.0f0, plank.PRO_MC[i] - p.PRO_MCmin) / ΔT)
+    @inbounds plank.DChl[i]  = min(plank.DChl[i],  max(0.0f0, plank.Chl[i] - p.Chlmin) / ΔT)
+
     @inbounds plank.DP_RB[i] *= tempFunc(trs.T[i], p) * plank.ac[i]
     @inbounds plank.DP_PS[i] *= tempFunc(trs.T[i], p) * plank.ac[i]
     @inbounds plank.DP_MC[i] *= tempFunc(trs.T[i], p) * plank.ac[i]
     @inbounds plank.DChl[i]  *= tempFunc(trs.T[i], p) * plank.ac[i]
 end 
-function calc_degradation!(plank, p, trs, arch)
+function calc_degradation!(plank, p, trs, ΔT, arch)
     kernel! = calc_degradation_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, p, trs)
+    kernel!(plank, p, trs, ΔT)
     return nothing
 end
 
@@ -337,7 +342,7 @@ end
     @inbounds lim_TP =  shape_func_dec(trs.PO4[i], p.TP_max, 1.0f-4)
     @inbounds lim_TFe = shape_func_dec(trs.DFe[i], p.TFe_max, 1.0f-4)
      
-    @inbounds plank.SP_RB[i] = plank.PRO_RB[i]  * p.KcatRB * p.β_RB   * limit_RNA
+    @inbounds plank.SP_RB[i] = plank.PRO_RB[i]  * p.KcatRB * p.β_RB  
     @inbounds plank.SP_MC[i] = plank.PRO_RB[i]  * p.KcatRB * p.β_MC
     @inbounds plank.SP_MN[i] = plank.PRO_RB[i]  * p.KcatRB * p.β_MN   * Ksat_Fe
     @inbounds plank.SP_TN[i] = plank.PRO_RB[i]  * p.KcatRB * p.β_TN   * lim_TN
@@ -357,7 +362,7 @@ end
     
     @inbounds plank.SDNA[i] = p.k_DNA  * limit_DNA * plank.ac[i] * tempFunc(trs.T[i], p) 
     @inbounds plank.SDNA[i] *= isless(plank.DNA[i]/(p.C_DNA * p.Nsuper), 2.0f0)
-    @inbounds plank.SRNA[i] = plank.SP_RB[i] * p.R_C_RNAPRB * plank.ac[i] 
+    @inbounds plank.SRNA[i] = plank.SP_RB[i] * p.R_C_RNAPRB * plank.ac[i] * limit_RNA
     
     @inbounds SPRO_tot = plank.SP_RB[i] + plank.SP_MC[i] + plank.SP_MN[i] + plank.SP_TN[i] + 
                          plank.SP_TP[i] + plank.SP_TFe[i] + plank.SP_RS[i] + plank.SP_PS[i]

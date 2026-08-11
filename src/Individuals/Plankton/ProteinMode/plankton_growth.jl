@@ -23,7 +23,7 @@ function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
 
     calc_ρChl!(plank, trs.par, p, arch)
 
-    calc_degradation!(plank, p, trs, arch)
+    calc_degradation!(plank, p, trs, ΔT, arch)
 
     update_quotas_2!(plank, ΔT, p, arch)
 
