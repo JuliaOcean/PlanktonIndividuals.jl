@@ -307,7 +307,8 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "Φ"         => [4.0e-5],  # Maximum quantum yield (mmolC/μmol photon)
         "Topt"      => [27.0],    # Optimal temperature for growth (C)
         "Tmax"      => [30.0],    # Maximal temperature for growth (C)
-        "Ea"        => [5.3e4],   # Free energy
+        "Ea_ref"    => [5.3e4],   # Free energy
+        "Topt_ref"  => [26.0],    # reference optimal growth temperature(C)
         "PCmax"     => [4.2e-5],  # Maximum primary production rate (per second)
         "respir"    => [1.2e-6],  # Respiration rate(per second)
         "f_T2B"     => [2.7e-6],  # Thermal damage rate (1.0/K/s)

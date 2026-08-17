@@ -12,7 +12,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
-    param_names=(:Nsuper, :Cquota, :mean, :var, :α, :Φ, :Topt, :Tmax, :Ea, :PCmax, :Chl2C, :respir, :f_T2B,
+    param_names=(:Nsuper, :Cquota, :mean, :var, :α, :Φ, :Topt, :Tmax, :Ea_ref, :Topt_ref, :PCmax, :Chl2C, :respir, :f_T2B,
                  :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, :mort_P, :mort_reg, :grazFracC, :mortFracC,
                  :thermal, :is_bact)
 
