@@ -5,7 +5,7 @@
     Ea = p.Ea_ref * (p.Topt_ref / p.Topt)
     k = exp(-Ea/(8.3145f0*(T+273.15f0))) * regT
     k = max(0.0f0, k)
-    OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
+    OGT_rate = exp(-Ea/(8.3145f0*(p.Topt+273.15f0)))
     return min(1.0f0, k/OGT_rate)
 end
 
@@ -14,7 +14,7 @@ end
     Ea = p.Ea_ref * (p.Topt_ref / p.Topt)
     k = exp(-Ea/(8.3145f0*(T+273.15f0)))
     k = max(0.0f0, k)
-    OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
+    OGT_rate = exp(-Ea/(8.3145f0*(p.Topt+273.15f0)))
     return min(1.0f0, k/OGT_rate)
 end
 
