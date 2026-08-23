@@ -17,18 +17,16 @@ StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 
 [weakdeps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-GPUArrays = "0c68f7d7-f131-5f86-a1c3-88cf8149b2d7"
 Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
 
 [extensions]
 PI_CUDAExt = "CUDA"
-PI_MetalExt = ["Metal", "GPUArrays"]
+PI_MetalExt = ["Metal"]
 
 [compat]
 Adapt = "^4"
 CUDA = "^5"
 Metal = "^1"
-GPUArrays = "^11"
 JLD2 = "^0.6"
 KernelAbstractions = "^0.9"
 StructArrays = "^0.7"
