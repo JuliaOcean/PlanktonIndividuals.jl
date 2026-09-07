@@ -314,11 +314,11 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "f_T2B"     => [2.7e-6],  # Thermal damage rate (1.0/K/s)
         "grz_P"     => [0.0],     # Grazing probability per second
         "dvid_P"    => [5e-5],    # Probability of cell division per second.
-        "dvid_type" => [1],       # The type of cell division, 1:sizer, 2:adder.
+        "dvid_type" => [1],       # The type of cell division, 1:sizer, 2:adder
         "dvid_reg"  => [1.9],     # Regulations of cell division (sizer)
         "dvid_reg2" => [12.0],    # Regulations of cell division (sizer)
         "mort_P"    => [5e-5],    # Probability of cell natural death per second
-        "mort_reg"  => [0.5],     # Regulation of cell natural death
+        "mort_reg"  => [5.0e-2],  # Regulation of cell natural death
         "grazFracC" => [0.7],     # Fraction goes into dissolved organic pool
         "mortFracC" => [0.5],     # Fraction goes into dissolved organic pool
         "thermal"   => [1.0],     # thermal damage, 1 for on, 0 for off
