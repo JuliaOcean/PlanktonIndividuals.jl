@@ -13,6 +13,7 @@ function calc_diffusion!(rnd, xi, yi, zi, κx, κy, κz, ΔT, g::AbstractGrid, a
 end
 
 function particle_diffusion!(particle, rnd, κx, κy, κz, ΔT, g::AbstractGrid, arch::Architecture)
+    getfield(parentmodule(@__MODULE__), :find_inds!)(particle, g, arch)
     ##### generate random numbers (0,1)
     rand!(rng_type(arch), rnd.x)
     rand!(rng_type(arch), rnd.y)
