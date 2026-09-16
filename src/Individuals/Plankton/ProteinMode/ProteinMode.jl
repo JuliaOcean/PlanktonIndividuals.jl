@@ -7,6 +7,7 @@ using KernelAbstractions
 using StructArrays
 using Random
 using LinearAlgebra: dot
+using Distributions: Gamma
 
 using PlanktonIndividuals.Architectures: device, Architecture, rng_type, array_type, unsafe_free!
 using PlanktonIndividuals.Grids

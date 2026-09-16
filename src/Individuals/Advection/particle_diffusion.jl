@@ -1,10 +1,9 @@
 ##### calculate diffusivities of each individual
 @kernel function calc_diffusion_kernel!(rnd, xi, yi, zi, κx, κy, κz, ΔT, g::AbstractGrid)
     i = @index(Global)
-    @inbounds rnd.x[i] = rnd.x[i] * √(κx*ΔT) / ΔxC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
-    @inbounds rnd.y[i] = rnd.y[i] * √(κy*ΔT) / ΔyC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
-    @inbounds rnd.z[i] = rnd.z[i] * √(κz*ΔT) / ΔzC(xi[i]+g.Hx, yi[i]+g.Hy, zi[i]+g.Hz, g)
-    
+    @inbounds rnd.x[i] = rnd.x[i] * √(κx*ΔT) / ΔxC(xi[i], yi[i], zi[i], g)
+    @inbounds rnd.y[i] = rnd.y[i] * √(κy*ΔT) / ΔyC(xi[i], yi[i], zi[i], g)
+    @inbounds rnd.z[i] = rnd.z[i] * √(κz*ΔT) / ΔzC(xi[i], yi[i], zi[i], g)
 end
 function calc_diffusion!(rnd, xi, yi, zi, κx, κy, κz, ΔT, g::AbstractGrid, arch::Architecture)
     kernel! = calc_diffusion_kernel!(device(arch), 256, (size(rnd.x,1)))
@@ -27,7 +26,6 @@ function particle_diffusion!(particle, rnd, κx, κy, κz, ΔT, g::AbstractGrid,
     particle.x .= particle.x + rnd.x .* particle.ac
     particle.y .= particle.y + rnd.y .* particle.ac
     particle.z .= particle.z + rnd.z .* particle.ac
-
     ##### keep individuals in the domain
     particle_boundaries!(particle, particle.ac, g, arch)
 end

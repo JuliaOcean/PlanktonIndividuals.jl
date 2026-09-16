@@ -118,6 +118,6 @@ plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, 
 plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::IronEnergyMode) =
     IronEnergy.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
     
-plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::ProteinMode) =
-    Protein.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, g::AbstractGrid, arch::Architecture, mode::ProteinMode) =
+    Protein.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, g::AbstractGrid, arch::Architecture, mode::AbstractMode)
 end

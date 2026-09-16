@@ -27,13 +27,14 @@ function diags_spcs!(diags_sp, plank::phytoplankton, ac, x, y, z, mode::Abstract
     elseif isa(mode, ProteinMode)
         diags = (:PS, :CF, :ECF, :RS, :ERS, :NR, :ENR, :NF, :ENF,
                  :VNH4, :VNO3, :VPO4, :VFe, :VDOC,
-                 :PRO_RB, :PRO_MC, :PRO_MN, :PRO_TN, :PRO_TP, :PRO_TFe, :PRO_RS, :PRO_PS,
+                 :PRO_RB, :PRO_MC, :PRO_MN, :PRO_TN, :PRO_TP, :PRO_TFe, :PRO_RS, :PRO_PS, :PRO_OT,
                  :DNA, :RNA, :CH, :Chl, :qNH4, :qNO3, :qFe, :PST,
-                 :SP_RB, :SP_MC, :SP_MN, :SP_TN, :SP_TP, :SP_TFe, :SP_RS, :SP_PS, :SDNA, :SRNA,
+                 :SP_RB, :SP_MC, :SP_MN, :SP_TN, :SP_TP, :SP_TFe, :SP_RS, :SP_PS, :SP_OT, :ESP_OT, :SDNA, :SRNA,
+                 :EVNO3, :EVPO4, :EVFe, 
                  :ESP_RB, :ESP_MC, :ESP_MN, :ESP_TN, :ESP_TP, :ESP_TFe, :ESP_RS, :ESP_PS, :EDNA, :ERNA,
                  :exE_RS, :exE_PS,
-                 :DP_RB, :DP_PS, :DP_MC, :DChl,
-                 :ρChl, :exu, :ptc)
+                 :DP_RB, :DP_PS, :DP_MC, :DChl, :DRNA, :Chl_lag, :Chl_clock,
+                 :SChl, :exu, :ptc)
     end
 
     for diag in keys(diags_sp)

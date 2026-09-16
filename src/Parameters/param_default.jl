@@ -330,6 +330,7 @@ Generate default phytoplankton parameter values based on `AbstractMode` and spec
 function phyt_params_default(N::Int64, mode::ProteinMode)
     params=Dict(
         "Nsuper"     => [1],       # Number of phyto cells each super individual represents
+        "Cquota"     => [1.8e-11], # Structural C quota of phyto cells at size = 1.0 (mmolC/cell)
         "C_DNA"      => [1.8e-13], # DNA C quota of phyto cells (mmolC/cell)
         "var"        => [0.3],     # Variance of the normal distribution of initial phyto individuals
         "RNA2DNA"    => [1.73],    # Initial RNA:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
@@ -341,9 +342,11 @@ function phyt_params_default(N::Int64, mode::ProteinMode)
         "PRO_TFe2DNA"=> [8.5e-4],  # Initial iron transporter:DNA ratio in phytoplankton (mmol C/mmolC) from Synechococcus sp.
         "PRO_RS2DNA" => [2.91],    # Initial carbon metabolism protein:DNA ratio in phytoplankton (mmol C/mmolC) from Synechococcus sp.
         "PRO_PS2DNA" => [7.03],    # Initial photosynthesis protein:DNA ratio in phytoplankton (mmol C/mmolC) from Synechococcus sp.
+        "PRO_OT2DNA" => [293.94],  # Initial other protein:DNA ratio in phytoplankton (mmol C/mmolC) from Synechococcus sp.
         "CH2DNA"     => [23.3],    # Initial carbohydrate+lipid:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
         "Chl2DNA"    => [3.45],    # Initial Chla:DNA ratio in phytoplankton (mmolC/mmolC) from Micromonas sp.
-        "α"          => [4.5e-2],  # Irradiance absorption coeff (mmolC m² second/mgChl /μmol photon)
+        "α"          => [8e-6],    # Irradiance absorption coeff (mmolATP m² /mgChl /μmol photon)
+        "α_chl"      => [8e-6],    # Irradiance absorption coeff for chla synthesis(mmolC m² /mgChl /μmol photon)
         "Topt"       => [27.0],    # Optimal temperature for growth (C)
         "Tmax"       => [30.0],    # Maximal temperature for growth (C)
         "Ea"         => [5.3e4],   # Free energy
@@ -369,6 +372,7 @@ function phyt_params_default(N::Int64, mode::ProteinMode)
         "β_TFe"      => [6e-5],    # Fraction of ribosomes synthesizing iron transporter protein from Synechococcus sp.
         "β_RS"       => [0.2],     # Fraction of ribosomes synthesizing respiration protein from Synechococcus sp.
         "β_PS"       => [0.48],    # Fraction of ribosomes synthesizing photosynthesis protein from Synechococcus sp.
+        "β_OT"       => [0.05],    # Fraction of ribosomes synthesizing other proteins from Synechococcus sp.
         "KsatNH4"    => [0.005],   # Half-saturation coeff (mmol N/m³)
         "KsatNO3"    => [0.010],   # Half-saturation coeff (mmol N/m³)
         "KsatPO4"    => [0.003],   # Half-saturation coeff (mmol P/m³)
@@ -385,13 +389,20 @@ function phyt_params_default(N::Int64, mode::ProteinMode)
         "qNO3max"    => [0.25],    # Maximum NO3 quota in cell (mmolN/mmolC)
         "qFemax"     => [2.0e-5],  # Maximum Fe quota in cell (mmolFe/mmolC)
         "PARmax"     => [600.0],   # Maximum PAR for photosynthesis protein synthesis (μmol photon/m²/second)
+        "QC2N_dna"   => [10],      # Maximum cellular carbon to nitrogen ratio (mmolC/mmolN)
+        "QC2N_chl"   => [10],      # Maximum cellular carbon to nitrogen ratio (mmolC/mmolN)
         "k_degRB"    => [2.8e-5],  # Ribosome protein degradation rate (per second)
         "k_degPS"    => [1.9e-5],  # photosynthesis protein degradation rate (per second)
         "k_degMC"    => [1.1e-5],  # Carbon fixation protein degradation rate (per second)
-        "k_degChl"   => [3.3e-6],  # Chlorophyll degradation rate (per second)
+        "k_degChl"   => [3.3e-5],  # Chlorophyll degradation rate (per second)
+        "k_degRNA"   => [2.8e-5],  # RNA degradation rate (per second)
+        "DP_RBmax"   => [0.02],    # Maximum Ribosome contents for protein degradation (mmolC/mmolC)
+        "lag_shape"  => [10.8],    # Shape parameter for the lag distribution (Gamma)
+        "lag_scale"  => [1.89 * 86400.0],     # Scale parameter for the lag distribution (Gamma)
         "PRO_RBmin"  => [5.9e-13], # Minimum ribosome protein quota (mmol C/individual) from Synechococcus sp.
         "PRO_PSmin"  => [1.5e-12], # Minimum photosynthesis protein quota (mmol C/individual) from Synechococcus sp.
         "PRO_MCmin"  => [3.6e-13], # Minimum carbon fixation protein quota (mmol C/individual) from Synechococcus sp.
+        "RNAmin"     => [7.9e-13], # Minimum RNA quota (mmol C/individual) from Synechococcus sp.
         "Chlmin"     => [9e-12],   # Minimum Chl quota (mg Chl/individual)
         "e_TNO3"     => [1.0],     # Energy consumption rate of nitrate transporter (mmolATP/mmolN) from Synechococcus sp.
         "e_TPO4"     => [1.0],     # Energy consumption rate of phosphate transporter (mmolATP/mmolP) from Synechococcus sp.
@@ -408,7 +419,7 @@ function phyt_params_default(N::Int64, mode::ProteinMode)
         "k_sat_DNA"  => [1.0e-15], # Half-saturation constant for DNA synthesis (mmol C/cell)
         "k_sat_RNA"  => [1.0e-12], # Half-saturation constant for RNA synthesis (mmol C/cell)
         "k_sat_PRO"  => [4.5e-13], # Half-saturation constant for protein synthesis (mmol C/cell)
-        "Chl2N"      => [3.0],     # Maximum Chla:N ratio in phytoplankton
+        "Chl2C"      => [0.54],    # Maximum Chla:C ratio in phytoplankton (mgChl/mmolC)
         "R_NC_PRO"   => [1/4.5],   # N:C ratio in protein (from Inomura et al 2020.)
         "R_NC_DNA"   => [1/2.9],   # N:C ratio in DNA (from Inomura et al 2020.)
         "R_PC_DNA"   => [1/11.1],  # P:C ratio in DNA
@@ -416,17 +427,18 @@ function phyt_params_default(N::Int64, mode::ProteinMode)
         "R_PC_RNA"   => [1/10.7],  # P:C ratio in RNA
         "R_C_RNAPRB" => [1.53],    # C:C ratio in RNA/ ribosome protein
         "dvid_P"     => [1.0e-5],  # Division probability per second
+        "dvid_reg"   => [2],       # Regulations of cell division (cell size)
         "grz_P"      => [0.0],     # Grazing probability per second
         "mort_P"     => [5e-5],    # Probability of cell natural death per second
         "mort_reg"   => [0.5],     # Regulation of cell natural death
         "grazFracC"  => [0.7],     # Fraction goes into dissolved organic pool
         "grazFracN"  => [0.7],     # Fraction goes into dissolved organic pool
         "grazFracP"  => [0.7],     # Fraction goes into dissolved organic pool
-        "grazFracFe" => [0.1],    # Fraction goes into dissolved organic pool
+        "grazFracFe" => [0.1],     # Fraction goes into dissolved organic pool
         "mortFracC"  => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracN"  => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracP"  => [0.5],     # Fraction goes into dissolved organic pool
-        "mortFracFe" => [0.1],    # Fraction goes into dissolved organic pool
+        "mortFracFe" => [0.1],     # Fraction goes into dissolved organic pool
     )
 
     if N == 1

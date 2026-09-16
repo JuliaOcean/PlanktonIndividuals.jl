@@ -1,11 +1,11 @@
 ##### update physiological attributes of each individual
-function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
+function plankton_growth!(plank, trs, rnd, p, ΔT, t, g::AbstractGrid, arch::Architecture)
 
     calc_PS!(plank, trs, p, arch)
 
     calc_respiration!(plank, trs.T, p, ΔT, arch)
 
-    calc_inorganic_uptake!(plank, trs, p, ΔT, arch)
+    calc_inorganic_uptake!(plank, trs, p, ΔT, g, arch)
 
     calc_uptake_energy_alloc!(plank, p, arch)
 
@@ -21,11 +21,9 @@ function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
 
     calc_organic_uptake!(plank, trs, p, ΔT, arch)
 
-    calc_ρChl!(plank, trs.par, p, arch)
-
-    calc_degradation!(plank, p, trs, ΔT, arch)
-
     update_quotas_2!(plank, ΔT, p, arch)
+
+    calc_Chl_synthesis!(plank, trs.par, p, arch)
 
     calc_BS!(plank, trs, p, arch, ΔT)
     
@@ -36,6 +34,10 @@ function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
     calc_exudation!(plank, p, arch)
 
     update_CH!(plank, arch)
+
+    calc_degradation!(plank, p, trs, ΔT, arch)
+
+    update_quotas_3!(plank, ΔT, p, arch)
 
     ##### probabilities of grazing, mortality, and cell division
     calc_graz_quadratic!(plank, trs, p.grz_P, arch)

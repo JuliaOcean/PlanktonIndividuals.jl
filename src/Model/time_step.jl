@@ -75,7 +75,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
             
             plankton_update!(model.individuals.phytos[sp], model.timestepper.trs,
                              model.timestepper.rnd, model.timestepper.plk, 
-                             diags.phytos[sp], ΔT, model.t, model.arch, model.mode)
+                             diags.phytos[sp], ΔT, model.t, model.grid, model.arch, model.mode)
         end
     else # model.bgc_params["shared_graz"] ≠ 1.0 - species-specific grazing
         for sp in keys(model.individuals.phytos)
@@ -113,7 +113,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
 
             plankton_update!(model.individuals.phytos[sp], model.timestepper.trs,
                                 model.timestepper.rnd, model.timestepper.plk, 
-                                diags.phytos[sp], ΔT, model.t, model.arch, model.mode)
+                                diags.phytos[sp], ΔT, model.t, model.grid, model.arch, model.mode)
         end
     end # phytoplankton
 

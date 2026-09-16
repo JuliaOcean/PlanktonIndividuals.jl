@@ -1,4 +1,4 @@
-function plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+function plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, g::AbstractGrid, arch::Architecture, mode::AbstractMode)
     plank = phyto.data
     p = phyto.p
 
@@ -24,7 +24,7 @@ function plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Archit
     unsafe_free!(deactive_ind)
 
     ##### phytoplankton physiology processes and interactions with fields
-    plankton_growth!(plank, trs, rnd, p, ΔT, t, arch)
+    plankton_growth!(plank, trs, rnd, p, ΔT, t, g, arch)
     calc_consume!(plk.DIC.data, plk.DOC.data, plk.NH4.data, plk.NO3.data, plk.PO4.data, plk.DFe.data,
                   plank, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, arch)
     

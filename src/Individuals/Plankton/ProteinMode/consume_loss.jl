@@ -21,12 +21,12 @@ end
     i = @index(Global)
     @inbounds KernelAbstractions.@atomic ctsdoc[x[i], y[i], z[i]] += total_C_biomass(plank.PRO_RB[i], plank.PRO_MC[i], plank.PRO_MN[i], 
                                                                                      plank.PRO_TN[i], plank.PRO_TP[i], plank.PRO_TFe[i], 
-                                                                                     plank.PRO_RS[i], plank.PRO_PS[i], plank.DNA[i], 
+                                                                                     plank.PRO_RS[i], plank.PRO_PS[i], plank.PRO_OT[i], plank.DNA[i], 
                                                                                      plank.RNA[i], plank.CH[i], plank.Chl[i]) * lossFracC * ac[i] * loss[i]
 
     @inbounds KernelAbstractions.@atomic ctsdon[x[i], y[i], z[i]] += total_N_biomass(plank.PRO_RB[i], plank.PRO_MC[i], plank.PRO_MN[i], 
                                                                                      plank.PRO_TN[i], plank.PRO_TP[i], plank.PRO_TFe[i], 
-                                                                                     plank.PRO_RS[i], plank.PRO_PS[i], plank.DNA[i], 
+                                                                                     plank.PRO_RS[i], plank.PRO_PS[i], plank.PRO_OT[i], plank.DNA[i], 
                                                                                      plank.RNA[i], plank.qNO3[i], plank.qNH4[i], 
                                                                                      plank.Chl[i], p) * lossFracN * ac[i] * loss[i]
 
@@ -36,13 +36,13 @@ end
 
     @inbounds KernelAbstractions.@atomic ctspoc[x[i], y[i], z[i]] += total_C_biomass(plank.PRO_RB[i], plank.PRO_MC[i], plank.PRO_MN[i], 
                                                                                      plank.PRO_TN[i], plank.PRO_TP[i], plank.PRO_TFe[i], 
-                                                                                     plank.PRO_RS[i], plank.PRO_PS[i], plank.DNA[i], 
+                                                                                     plank.PRO_RS[i], plank.PRO_PS[i], plank.PRO_OT[i], plank.DNA[i], 
                                                                                      plank.RNA[i], plank.CH[i], plank.Chl[i]) * 
                                                                                      (1.0f0-lossFracC) * ac[i] * loss[i]
 
     @inbounds KernelAbstractions.@atomic ctspon[x[i], y[i], z[i]] += total_N_biomass(plank.PRO_RB[i], plank.PRO_MC[i], plank.PRO_MN[i], 
                                                                                      plank.PRO_TN[i], plank.PRO_TP[i], plank.PRO_TFe[i], 
-                                                                                     plank.PRO_RS[i], plank.PRO_PS[i], plank.DNA[i], 
+                                                                                     plank.PRO_RS[i], plank.PRO_PS[i], plank.PRO_OT[i], plank.DNA[i], 
                                                                                      plank.RNA[i], plank.qNO3[i], plank.qNH4[i], 
                                                                                      plank.Chl[i], p) * (1.0f0-lossFracN) * ac[i] * loss[i]
 

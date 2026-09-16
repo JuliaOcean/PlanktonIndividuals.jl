@@ -41,6 +41,7 @@ end
         @inbounds plank.PRO_TFe[idx[i]]= plank.PRO_TFe[i]
         @inbounds plank.PRO_RS[idx[i]] = plank.PRO_RS[i]
         @inbounds plank.PRO_PS[idx[i]] = plank.PRO_PS[i]
+        @inbounds plank.PRO_OT[idx[i]] = plank.PRO_OT[i]
         @inbounds plank.DNA[idx[i]]  = plank.DNA[i]
         @inbounds plank.RNA[idx[i]]  = plank.RNA[i]
         @inbounds plank.CH[idx[i]]   = plank.CH[i]
@@ -52,6 +53,8 @@ end
         @inbounds plank.gen[idx[i]]  = plank.gen[i]
         @inbounds plank.ac[idx[i]]   = plank.ac[i]
         @inbounds plank.dvid[idx[i]] = plank.dvid[i]
+        @inbounds plank.Chl_lag[idx[i]] = plank.Chl_lag[i]
+        @inbounds plank.Chl_clock[idx[i]] = plank.Chl_clock[i]
     end
 end
 function copy_daughter_individuals!(plank, con, idx::AbstractArray{Int,1}, arch)
@@ -71,6 +74,7 @@ end
     @inbounds plank.PRO_TFe[i]*= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.PRO_RS[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0
     @inbounds plank.PRO_PS[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0
+    @inbounds plank.PRO_OT[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0
     @inbounds plank.Chl[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.DNA[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
     @inbounds plank.RNA[i] *= (2.0f0 - plank.dvid[i]) / 2.0f0 
