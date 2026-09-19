@@ -70,7 +70,7 @@ end
 ##### calculate the probability of mortality caused by thermal exposure
 @kernel function calc_thermal_mort_kernel!(plank, p)
     i = @index(Global)
-    @inbounds plank.mort[i] = p.mort_P * shape_func_inc_alt(plank.Bd[i], max(1.0f-30, plank.Bm[i]), p.mort_reg, pow = 6.0f0) * plank.ac[i]
+    @inbounds plank.mort[i] = p.mort_P * shape_func_inc(plank.Bd[i], max(1.0f-30, plank.Bm[i]), p.mort_reg, pow = 4.0f0) * plank.ac[i]
 end
 function calc_thermal_mort!(plank, p, arch)
     kernel! = calc_thermal_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
