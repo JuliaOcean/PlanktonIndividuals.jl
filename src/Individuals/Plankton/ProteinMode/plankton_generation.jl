@@ -35,13 +35,13 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
     param_names=(:Nsuper, :Cquota, :C_DNA, :var, :CH2DNA, :Chl2DNA,:RNA2DNA, 
                  :PRO_RB2DNA, :PRO_MC2DNA, :PRO_MN2DNA, :PRO_TN2DNA, 
                  :PRO_TP2DNA, :PRO_TFe2DNA, :PRO_RS2DNA, :PRO_PS2DNA, :PRO_OT2DNA,
-                 :α, :α_chl, :Topt, :Tmax, :Ea, :is_nr, :is_croc, :is_tric, :PCmax, :VDOCmax, 
+                 :α, :Topt, :Tmax, :Ea, :is_nr, :is_croc, :is_tric, :PCmax, :VDOCmax, 
                  :KcatCF, :KcatNF, :KcatNR, :KcatTNH4, :KcatTNO3, :KcatTPO4, :KcatTFe, :KcatRS, :KcatRB,
                  :β_MC, :β_MN, :β_RB, :β_TN, :β_TPO4, :β_TFe, :β_RS, :β_PS, :β_OT,
                  :KsatDOC, :KsatNH4, :KsatNO3, :KsatPO4, :KsatNR, :KsatFe, :KFe_em,
                  :TN_max, :TP_max, :TFe_max,
-                 :CHmax, :PSTmax, :qNH4max, :qNO3max, :qFemax,:PARmax,:QC2N_chl, :QC2N_dna, 
-                 :k_degRB, :k_degPS, :k_degMC, :k_degChl, :k_degRNA, :DP_RBmax, :lag_shape, :lag_scale,
+                 :CHmax, :PSTmax, :qNH4max, :qNO3max, :qFemax,:PARmax,:QC2N_chl, :QC2N_dna, :QN2C_DP,  
+                 :k_degRB, :k_degPS, :k_degMC, :k_degChl, :k_degRNA, :lag_shape, :lag_scale,
                  :PRO_RBmin, :PRO_PSmin, :PRO_MCmin, :Chlmin,:RNAmin,
                  :Chl2C, :R_NC_PRO, :R_NC_DNA, :R_NC_RNA, :R_PC_DNA, :R_PC_RNA,:R_C_RNAPRB, 
                  :e_TNO3, :e_TPO4, :e_TFe, :e_RS, :e_CF, :e_NF, :e_NR, :e_SP, :e_DNA, :e_RNA, :e_min,
@@ -140,8 +140,8 @@ function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture
     plank.data.PRO_OT .= plank.data.PRO_OT  .* plank.data.DNA .* PRO_OT2DNA
     plank.data.CH     .= plank.data.CH      .* plank.data.DNA .* CH2DNA                                      # CH   mmolC/individual
     plank.data.PST    .= plank.data.PST  .* plank.data.CH ./ 106.0f0                                         # PST  mmolP/individual
-    plank.data.qNO3   .= plank.data.qNO3 .* plank.data.CH ./ 106.0f0 .* 16.0f0 .* 2.6f0                      # qNO3 mmolN/individual
-    plank.data.qNH4   .= plank.data.qNH4 .* plank.data.CH ./ 106.0f0 .* 16.0f0 ./ 10.0f0                     # qNH4 mmolN/individual   
+    plank.data.qNO3   .= plank.data.qNO3 .* plank.data.CH ./ 106.0f0 .* 16.0f0                               # qNO3 mmolN/individual
+    plank.data.qNH4   .= plank.data.qNH4 .* plank.data.CH ./ 106.0f0 .* 16.0f0                               # qNH4 mmolN/individual   
     plank.data.qFe    .= plank.data.qFe  .* plank.data.CH ./ 10000.0f0                                       # qFe  mmolFe/individual
     plank.data.Chl    .= plank.data.Chl  .* plank.data.DNA .* Chl2DNA * 893.49f0 / 55.0f0
 
