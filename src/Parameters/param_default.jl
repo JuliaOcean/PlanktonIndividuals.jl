@@ -225,6 +225,7 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "ptc_de"    => [4560.0],  # Density of iron mineral (kg/m³)
         "Fe_frac"   => [0.65],    # Mass fraction of Fe in iron mineral
         "M_Fe"      => [55.85],   # Molar mass of Fe (g/mol)
+        "max_ptc"   => [25],      # maximum number of abiotic particles that can interact with one phytoplankton cell)
     )
 
     if N == 1
