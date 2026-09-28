@@ -101,14 +101,14 @@ function calc_PS!(plank, trs, p, arch::Architecture)
 end
 
 #### calculate potential maximum energy production from photoelectrochemical metabolism (mmolATP/individual/second)
-#### interaction with micron-sized minerals
+#### interaction with semiconducting minerals
 @inline function calc_PE(par, qFePS, Bm, CH, p, ptc, ac)
 
     Qfe_ps = qFePS / max(1.0f-30, Bm + CH)
     Ksat = Qfe_ps / max(1.0f-30, Qfe_ps + p.KfePS)
 
     volume_ptc= p.sz_min * p.M_Fe * 1.0f-6 /(p.Fe_frac * p.ptc_de)  
-    radius_ptc = cbrt(volume_ptc * 3.0f0 / (4.0f0 *Float32(π)))
+    radius_ptc = (volume_ptc * 3.0f0 / (4.0f0 *Float32(π)))^(1.0f0 / 3.0f0)
     SA_ptc = Float32(π) * (radius_ptc^2.0f0)
     
     PE = par * p.ICPE_ptc * min(p.SA_e, SA_ptc) * Ksat * p.eATP * p.Nsuper * ptc * ac
