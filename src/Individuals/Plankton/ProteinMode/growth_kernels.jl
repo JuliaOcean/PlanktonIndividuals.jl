@@ -94,8 +94,8 @@ end
 ##### calculate energy consumption of nutrient uptakes (mmolATP/individual/second)
 @kernel function calc_uptake_energy_kernel!(plank, p)
     i = @index(Global)
-    @inbounds plank.exE_RS[i] = max(plank.exE_RS[i]- max(p.e_min - plank.exE_PS[i], 0.0f0), 0.0f0)
-    @inbounds plank.exE_PS[i] = max(plank.exE_PS[i]- p.e_min, 0.0f0)
+    @inbounds plank.exE_PS[i] = max(plank.exE_PS[i]- max(p.e_min * p.Nsuper - plank.exE_RS[i], 0.0f0), 0.0f0)
+    @inbounds plank.exE_RS[i] = max(plank.exE_RS[i]- p.e_min * p.Nsuper, 0.0f0)
     
     @inbounds Esupply = plank.exE_RS[i]
     @inbounds Edemand = plank.EVNO3[i] + plank.EVPO4[i] + plank.EVFe[i]
@@ -207,15 +207,15 @@ end
     i = @index(Global)
     @inbounds exE_PS0 = plank.exE_PS[i]
     @inbounds ECF_demand = plank.ECF[i]
-    @inbounds plank.ECF[i] = min(plank.ECF[i], plank.exE_PS[i] * 0.85f0)
-    @inbounds plank.ENR[i] = min(plank.ENR[i], plank.exE_PS[i] * 0.95f0 + plank.exE_RS[i] - plank.ECF[i])
-    @inbounds plank.ENF[i] = min(plank.ENF[i], plank.exE_PS[i] * 0.95f0 + plank.exE_RS[i] - plank.ECF[i])
+    @inbounds plank.ECF[i] = min(plank.ECF[i], plank.exE_PS[i] * 0.75f0)
+    @inbounds plank.ENR[i] = min(plank.ENR[i], plank.exE_PS[i] * 0.9f0 + plank.exE_RS[i] - plank.ECF[i])
+    @inbounds plank.ENF[i] = min(plank.ENF[i], plank.exE_PS[i] * 0.9f0 + plank.exE_RS[i] - plank.ECF[i])
 
-    @inbounds plank.exE_RS[i] -= max(0.0f0, plank.ECF[i] + plank.ENR[i] + plank.ENF[i] - plank.exE_PS[i] * 0.95f0)
+    @inbounds plank.exE_RS[i] -= max(0.0f0, plank.ECF[i] + plank.ENR[i] + plank.ENF[i] - plank.exE_PS[i] * 0.9f0)
     @inbounds plank.exE_RS[i]  = max(0.0f0, plank.exE_RS[i])
-    @inbounds plank.exE_PS[i] -= min(plank.exE_PS[i] * 0.95f0, plank.ECF[i] + plank.ENR[i] + plank.ENF[i])
+    @inbounds plank.exE_PS[i] -= min(plank.exE_PS[i] * 0.9f0, plank.ECF[i] + plank.ENR[i] + plank.ENF[i])
 
-    @inbounds exE_PS2CN =  max(0.0f0, plank.exE_PS[i] - exE_PS0 * 0.05f0)
+    @inbounds exE_PS2CN =  max(0.0f0, plank.exE_PS[i] - exE_PS0 * 0.1f0)
     @inbounds exE_CF = min(max(0.0f0, ECF_demand - plank.ECF[i]), exE_PS2CN)
     @inbounds plank.ECF[i] += exE_CF
     @inbounds plank.exE_PS[i] -= exE_CF
@@ -462,7 +462,9 @@ end
 
     @inbounds SPRO = plank.SP_RB[i] + plank.SP_MC[i] + plank.SP_MN[i] + plank.SP_TN[i] + 
                      plank.SP_TP[i] + plank.SP_TFe[i]+ plank.SP_RS[i] + plank.SP_PS[i] + plank.SP_OT[i]
-
+    
+    @inbounds ex_RS = plank.exE_RS[i] / p.e_RS
+    @inbounds plank.CH[i]  += ΔT * ex_RS
     @inbounds plank.CH[i]  -= ΔT * (SPRO + plank.SDNA[i] + plank.SRNA[i])
     @inbounds plank.CH[i]  -= ΔT * ( plank.SChl[i] / 893.49f0 * 55.0f0)
 
