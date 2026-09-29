@@ -36,10 +36,33 @@ end
 
 @kernel function calc_MM_dvid_kernel!(plank, p)
     i = @index(Global)
-    @inbounds plank.dvid[i] = p.dvid_P * isless(2.0f0, plank.DNA[i]/(p.C_DNA*p.Nsuper))
+    @inbounds C_struct = plank.PRO[i] + plank.DNA[i] + plank.RNA[i] + plank.Chl[i] / 893.49f0 * 55.0f0
+
+    @inbounds Qc = C_struct / (p.Cquota * p.Nsuper)
+    @inbounds dvid_C =  shape_func_inc(Qc, p.dvid_reg, 1.0f-3; pow = 2.0f0) 
+    @inbounds dvid_DNA = isless(2.0f0, plank.DNA[i] / (p.C_DNA * p.Nsuper)) 
+    @inbounds plank.dvid[i] = p.dvid_P * dvid_C * dvid_DNA * plank.ac[i]
 end
 function calc_MM_dvid!(plank, p, arch)
     kernel! = calc_MM_dvid_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, p)
+    return nothing
+end
+
+@kernel function calc_protein_dvid_kernel!(plank, p)
+    i = @index(Global)
+    @inbounds C_struct = plank.PRO_RB[i] + plank.PRO_MC[i] + plank.PRO_MN[i] + 
+                         plank.PRO_TN[i] + plank.PRO_TP[i] + plank.PRO_TFe[i] + 
+                         plank.PRO_RS[i] + plank.PRO_PS[i] + plank.PRO_OT[i] +
+                         plank.DNA[i] + plank.RNA[i] + plank.Chl[i] / 893.49f0 * 55.0f0
+
+    @inbounds Qc = C_struct / (p.Cquota * p.Nsuper)
+    @inbounds dvid_C =  shape_func_inc(Qc, p.dvid_reg, 1.0f-3; pow = 2.0f0) 
+    @inbounds dvid_DNA = isless(2.0f0, plank.DNA[i] / (p.C_DNA * p.Nsuper)) 
+    @inbounds plank.dvid[i] = p.dvid_P * dvid_C * dvid_DNA * plank.ac[i]
+end
+function calc_protein_dvid!(plank, p, arch)
+    kernel! = calc_protein_dvid_kernel!(device(arch), 256, (size(plank.ac,1)))
     kernel!(plank, p)
     return nothing
 end
@@ -78,13 +101,24 @@ function calc_thermal_mort!(plank, p, arch)
     return nothing
 end
 
-##### calculate the probability of mortality for MMM
+##### calculate the probability of mortality for Macromolecular mode
 @kernel function calc_MM_mort_kernel!(plank, p)
     i = @index(Global)
     @inbounds plank.mort[i] = p.mort_P * shape_func_inc(plank.age[i], p.mort_reg, 1f-4) * plank.ac[i]
 end
 function calc_MM_mort!(plank, p, arch)
     kernel! = calc_MM_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, p)
+    return nothing
+end
+
+##### calculate the probability of mortality for protein mode
+@kernel function calc_protein_mort_kernel!(plank, p)
+    i = @index(Global)
+    @inbounds plank.mort[i] = p.mort_P * shape_func_inc(plank.age[i], p.mort_reg, 1f-4) * plank.ac[i]
+end
+function calc_protein_mort!(plank, p, arch)
+    kernel! = calc_protein_mort_kernel!(device(arch), 256, (size(plank.ac,1)))
     kernel!(plank, p)
     return nothing
 end

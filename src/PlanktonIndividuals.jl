@@ -15,7 +15,7 @@ export
 
     # Model
     PlanktonModel, 
-    CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode,
+    CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode, ProteinMode,
     phytoplankton, colony_particle, abiotic_particle, individuals,
     phyto_setup, colony_setup, abiotic_setup, Palat,
 
@@ -83,6 +83,12 @@ struct MacroMolecularMode <: AbstractMode end
 Type for the phytoplankton physiology mode which resolves carbon, nitrogen, phosphorus, and iron quotas. This mode also resolves energy.
 """
 struct IronEnergyMode <: AbstractMode end
+
+"""
+    ProteinMode <: AbstractMode
+Type for the phytoplankton physiology mode which resolves protein synthesis.
+"""
+struct ProteinMode <: AbstractMode end
 
 mutable struct BoundaryConditions
     west::Union{Nothing, Number, AbstractArray}

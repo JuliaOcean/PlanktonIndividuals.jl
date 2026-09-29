@@ -46,6 +46,6 @@ TPt = TPt + sum(model.individuals.phytos.sp1.data.PST .+
                model.individuals.phytos.sp1.data.RNA .* model.individuals.phytos.sp1.p.R_PC_RNA)
 
 
-@testset "PlanktonIndividuals 1D tests:" begin
+@testset "PlanktonIndividuals 1D MacroMolecularMode tests:" begin
     @test isapprox(TP,TPt; atol=2e1)
 end 

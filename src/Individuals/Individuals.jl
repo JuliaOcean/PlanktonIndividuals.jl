@@ -19,7 +19,7 @@ using PlanktonIndividuals.Architectures: device, Architecture, rng_type
 using PlanktonIndividuals.Grids
 using PlanktonIndividuals.Diagnostics
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
+using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode, ProteinMode
 using PlanktonIndividuals: individuals, phytoplankton, colony_particle, abiotic_particle, phyto_setup, colony_setup, abiotic_setup, Palat
 
 include("ParticleMotion/ParticleMotion.jl")
@@ -27,6 +27,7 @@ include("Plankton/QuotaMode/QuotaMode.jl")
 include("Plankton/CarbonMode/CarbonMode.jl")
 include("Plankton/MacroMolecularMode/MacroMolecularMode.jl")
 include("Plankton/IronEnergyMode/IronEnergyMode.jl")
+include("Plankton/ProteinMode/ProteinMode.jl")
 include("Colony/ColonyIronEnergyMode/ColonyIronEnergyMode.jl")
 include("Abiotic/Abiotic.jl")
 include("utils.jl")
@@ -37,6 +38,7 @@ import .Quota
 import .Carbon
 import .MacroMolecular
 import .IronEnergy
+import .Protein
 import .ColonyIronEnergy
 
 #####
@@ -108,6 +110,9 @@ construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::Dat
 construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType, mode::IronEnergyMode) = 
     IronEnergy.construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
 
+construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType, mode::ProteinMode) = 
+    Protein.construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
+
 initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::MacroMolecularMode) =
     MacroMolecular.initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
@@ -120,8 +125,11 @@ initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode:
 initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::IronEnergyMode) =
     IronEnergy.initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
-plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
-    MacroMolecular.plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture)
+initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::ProteinMode) =
+    Protein.initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
+
+plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
+    MacroMolecular.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture)
 
 plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode) =
     Quota.plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture)
@@ -131,6 +139,9 @@ plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, m
 
 plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::IronEnergyMode) =
     IronEnergy.plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture)
+
+plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::ProteinMode) =
+    Protein.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture)
 
 construct_colony(arch::Architecture, Nsp::Int, params::Dict, maxN::Int, FT::DataType, mode::IronEnergyMode) = 
     ColonyIronEnergy.construct_colony(arch::Architecture, Nsp::Int, params::Dict, maxN::Int, FT::DataType)
