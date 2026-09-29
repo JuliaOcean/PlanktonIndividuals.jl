@@ -23,8 +23,18 @@ function write_output!(writer::Union{PlanktonOutputWriter, Nothing}, model::Plan
                 if filesize(writer.phytoplankton_file) ≥ writer.max_filesize
                     start_next_phytoplankton_file(writer)
                 end
-                write_individuals_to_jld2(model.individuals.phytos, writer.phytoplankton_file, model.t,
+                write_particles_to_jld2(model.individuals.phytos, writer.phytoplankton_file, model.t,
                                           model.iteration, writer.phytoplankton_include)
+            end
+        end
+
+        if writer.save_colony
+            if model.iteration % writer.colony_iteration_interval == 0.0f0
+                if filesize(writer.colony_file) ≥ writer.max_filesize
+                    start_next_colony_file(writer)
+                end
+                write_colonies_to_jld2(model.individuals.colonies, writer.colony_file, model.t,
+                                          model.iteration, writer.colony_include)
             end
         end
 
@@ -33,7 +43,7 @@ function write_output!(writer::Union{PlanktonOutputWriter, Nothing}, model::Plan
                 if filesize(writer.abiotic_particle_file) ≥ writer.max_filesize
                     start_next_abiotic_particle_file(writer)
                 end
-                write_individuals_to_jld2(model.individuals.abiotics, writer.abiotic_particle_file, model.t,
+                write_particles_to_jld2(model.individuals.abiotics, writer.abiotic_particle_file, model.t,
                                           model.iteration, writer.abiotic_particle_include)
             end
         end
@@ -62,6 +72,17 @@ function start_next_phytoplankton_file(writer::PlanktonOutputWriter)
     writer.phytoplankton_file = replace(writer.phytoplankton_file, r"part\d+.jld2$" => "part" * string(writer.part_phytoplankton) * ".jld2")
 end
 
+function start_next_colony_file(writer::PlanktonOutputWriter)
+    if writer.part_colony == 1
+        part1_path = replace(writer.colony_file, r".jld2$" => "_part1.jld2")
+        mv(writer.colony_file, part1_path, force=true)
+        writer.colony_file = part1_path
+    end
+
+    writer.part_colony += 1
+    writer.colony_file = replace(writer.colony_file, r"part\d+.jld2$" => "part" * string(writer.part_colony) * ".jld2")
+end
+
 function start_next_abiotic_particle_file(writer::PlanktonOutputWriter)
     if writer.part_abiotic_particle == 1
         part1_path = replace(writer.abiotic_particle_file, r".jld2$" => "_part1.jld2")
@@ -71,6 +92,79 @@ function start_next_abiotic_particle_file(writer::PlanktonOutputWriter)
 
     writer.part_abiotic_particle += 1
     writer.abiotic_particle_file = replace(writer.abiotic_particle_file, r"part\d+.jld2$" => "part" * string(writer.part_abiotic_particle) * ".jld2")
+end
+
+function write_particles_to_jld2(particles::NamedTuple, filepath, t, iter, atts)
+    jldopen(filepath, "a+") do file
+        file["timeseries/t/$iter"] = t
+        for sp in keys(particles)
+            spi = NamedTuple{atts}([getproperty(particles[sp].data, att) for att in atts])
+            for att in atts
+                file["timeseries/$sp/$att/$iter"] = Array(spi[att])
+            end
+        end
+    end
+end
+
+function write_colonies_to_jld2(colonies::NamedTuple, filepath, t, iter, atts)
+    jldopen(filepath, "a+") do file
+        file["timeseries/t/$iter"] = t
+        for cl in keys(colonies)
+            for sp in keys(colonies[cl].spcs)
+                spi = NamedTuple{atts}([getproperty(colonies[cl].spcs[sp].data, att) for att in atts])
+                for att in atts
+                    file["timeseries/$cl/$sp/$att/$iter"] = Array(spi[att])
+                end
+            end
+        end
+    end
+end
+
+function write_diags_to_jld2(diags, filepath, t, iter, ncounts, grid)
+    jldopen(filepath, "a+") do file
+        file["timeseries/t/$iter"] = t
+        for key in keys(diags.tracer)
+            file["timeseries/$key/$iter"] = Array(interior(diags.tracer[key], grid)) ./ ncounts
+        end
+        for sp in keys(diags.phytos)
+            for proc in keys(diags.phytos[sp])
+                file["timeseries/phyto/$sp/$proc/$iter"] = Array(interior(diags.phytos[sp][proc],grid)) ./ ncounts 
+            end
+        end
+        for cl in keys(diags.colonies)
+            for sp in keys(diags.colonies[cl])
+                for proc in keys(diags.colonies[cl][sp])
+                    file["timeseries/colony/$cl/$sp/$proc/$iter"] = Array(interior(diags.colonies[cl][sp][proc],grid)) ./ ncounts 
+                end
+            end
+        end
+        for sa in keys(diags.abiotics)
+            for proc in keys(diags.abiotics[sa])
+                file["timeseries/abiotic/$sa/$proc/$iter"] = Array(interior(diags.abiotics[sa][proc],grid)) ./ ncounts 
+            end
+        end
+    end
+    ##### zeros diags
+    for tr in diags.tracer
+        tr .= 0.0f0
+    end
+    for sp in diags.phytos
+        for proc in sp
+            proc .= 0.0f0
+        end
+    end
+    for sp in diags.abiotics
+        for proc in sp
+            proc .= 0.0f0
+        end
+    end
+    for cl in diags.colonies
+        for sp in cl
+            for proc in sp
+                proc .= 0.0f0
+            end
+        end
+    end
 end
 
 ##### write a brief summary of each species at each time step into a txt file
@@ -153,50 +247,5 @@ function write_species_dynamics(t::AbstractFloat, phytos, filepath, mode::Carbon
         println(io,@sprintf("%3.0f  %2.2f  %6.0f  %1.2f  %1.2f  %1.2f  %.8E",
                             day,hour,pop,gen_ave,age_ave,size_ave,Bm_ave))
         close(io);
-    end
-end
-
-function write_individuals_to_jld2(particles::NamedTuple, filepath, t, iter, atts)
-    jldopen(filepath, "a+") do file
-        file["timeseries/t/$iter"] = t
-        for sp in keys(particles)
-            spi = NamedTuple{atts}([getproperty(particles[sp].data, att) for att in atts])
-            for att in atts
-                file["timeseries/$sp/$att/$iter"] = Array(spi[att])
-            end
-        end
-    end
-end
-
-function write_diags_to_jld2(diags, filepath, t, iter, ncounts, grid)
-    jldopen(filepath, "a+") do file
-        file["timeseries/t/$iter"] = t
-        for key in keys(diags.tracer)
-            file["timeseries/$key/$iter"] = Array(interior(diags.tracer[key], grid)) ./ ncounts
-        end
-        for sp in keys(diags.phytos)
-            for proc in keys(diags.phytos[sp])
-                file["timeseries/phyto/$sp/$proc/$iter"] = Array(interior(diags.phytos[sp][proc],grid)) ./ ncounts 
-            end
-        end
-        for sa in keys(diags.abiotics)
-            for proc in keys(diags.abiotics[sa])
-                file["timeseries/abiotic/$sa/$proc/$iter"] = Array(interior(diags.abiotics[sa][proc],grid)) ./ ncounts 
-            end
-        end
-    end
-    ##### zeros diags
-    for tr in diags.tracer
-        tr .= 0.0f0
-    end
-    for sp in diags.phytos
-        for proc in sp
-            proc .= 0.0f0
-        end
-    end
-    for sp in diags.abiotics
-        for proc in sp
-            proc .= 0.0f0
-        end
     end
 end

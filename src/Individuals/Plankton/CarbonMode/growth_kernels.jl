@@ -2,18 +2,18 @@
 @inline function tempFunc_PS(T, p)
     x = T - p.Topt; xmax = p.Tmax - p.Topt
     regT = shape_func_dec(x, xmax, 1.0f-1)
-    k = exp(-p.Ea/(8.3145f0*(T+273.15f0))) * regT
-    k = max(0.0f0, k)
-    OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
-    return min(1.0f0, k/OGT_rate)
+    Ea = p.Ea_ref * (p.Topt_ref / max(1.0f-30, p.Topt))
+    Δtemp = 1.0f0/(T+273.15f0) - 1.0f0/(p.Topt+273.15f0)
+    k = exp(-Ea/8.3145f0*Δtemp) * regT
+    return min(1.0f0, k)
 end
 
 ##### temperature function for metabolic rates
 @inline function tempFunc(T, p)
-    k = exp(-p.Ea/(8.3145f0*(T+273.15f0)))
-    k = max(0.0f0, k)
-    OGT_rate = exp(-p.Ea/(8.3145f0*(p.Topt+273.15f0)))
-    return min(1.0f0, k/OGT_rate)
+    Ea = p.Ea_ref * (p.Topt_ref / p.Topt)
+    Δtemp = 1.0f0/(T+273.15f0) - 1.0f0/(p.Topt+273.15f0)
+    k = exp(-Ea/8.3145f0*Δtemp)
+    return min(1.0f0, k)
 end
 
 ##### allocation of functional biomass to repair
