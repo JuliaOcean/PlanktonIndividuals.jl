@@ -114,28 +114,8 @@ function calc_PE!(plank, trs, p, arch::Architecture)
     return nothing
 end
 
-##### calculate potential maximum respiration (mmolC/individual/second) 
-##### and energy production (mmolATP/individual/second)
-@inline function calc_respir(CH, Bm, T, p, ac, ΔT)
-    RS = CH * p.k_rs * tempFunc(T, p) * ac
-    RS = min(RS, CH/ΔT) # double check CH is not over consumed
-    ERS = RS * p.e_rs * ac
-    return RS, ERS
-end
-@kernel function calc_respiration_kernel!(plank, trs, p, ΔT)
-    i = @index(Global)
-    @inbounds plank.RS[i], plank.ERS[i] = calc_respir(plank.CH[i], plank.Bm[i], 
-                                                      trs.T[i], p, plank.ac[i], ΔT)
-end
-function calc_repiration!(plank, trs, p, ΔT, arch::Architecture)
-    kernel! = calc_respiration_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, trs, p, ΔT)
-    return nothing
-end
-
 ##### calculate potential carbon fixation rate (mmolC/individual/second)
-##### and energy consumption (mmolATP/individual/second)
-@inline function calc_CF(CH, Bm, T, p, ac)
+@inline function calc_CF(PS, CH, Bm, T, p, ac)
     Qc = CH/max(1.0f-30, Bm + CH)
     regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4, pow = 2.0f0)
     CF = p.k_cf * regQC * tempFunc_CF(T, p) * Bm * ac
