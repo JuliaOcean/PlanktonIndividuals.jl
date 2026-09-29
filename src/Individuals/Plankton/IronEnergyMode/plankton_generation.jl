@@ -11,6 +11,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           PS   = zeros(FT, maxN), BS   = zeros(FT, maxN), CF   = zeros(FT, maxN), 
                           NF   = zeros(FT, maxN), NR   = zeros(FT, maxN), OPS  = zeros(FT, maxN),
                           RSo  = zeros(FT, maxN), RSe  = zeros(FT, maxN), RSP  = zeros(FT, maxN), 
+                          PE   = zeros(FT, maxN),
                           VNH4 = zeros(FT, maxN), VNO3 = zeros(FT, maxN), VPO4 = zeros(FT, maxN),
                           VFe  = zeros(FT, maxN), VO2  = zeros(FT, maxN), ρChl = zeros(FT, maxN),
                           PS2ST= zeros(FT, maxN), ST2PS= zeros(FT, maxN),
@@ -34,7 +35,9 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                  :Chl2N, :R_NC, :R_PC, :NF_clock,
                  :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, :mort_P, :mort_reg, 
                  :grazFracC, :grazFracN, :grazFracP, :grazFracFe,
-                 :mortFracC, :mortFracN, :mortFracP, :mortFracFe, :max_ptc)
+                 :mortFracC, :mortFracN, :mortFracP, :mortFracFe,
+                 :ICPE_ptc, :eATP, :SA_e, 
+                 :ptc_de, :Fe_frac, :sz_min, :M_Fe, :max_ptc)
 
     pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))
