@@ -86,7 +86,35 @@ function calc_PS!(plank, trs, p, arch::Architecture)
     return nothing
 end
 
-##### calculate carbon fixation rate (mmolC/individual/second)
+#### calculate potential maximum energy production from photoelectrochemical metabolism (mmolATP/individual/second)
+#### interaction with semiconducting minerals
+@inline function calc_PE(par, qFePS, Bm, CH, p, ptc, ac)
+
+    Qfe_ps = qFePS / max(1.0f-30, Bm + CH)
+    Ksat = Qfe_ps / max(1.0f-30, Qfe_ps + p.KfePS)
+
+    volume_ptc= p.sz_min * p.M_Fe * 1.0f-6 /(p.Fe_frac * p.ptc_de)  
+    radius_ptc = (volume_ptc * 3.0f0 / (4.0f0 *Float32(π)))^(1.0f0 / 3.0f0)
+    SA_ptc = Float32(π) * (radius_ptc^2.0f0)
+    
+    PE = par * p.ICPE_ptc * min(p.SA_e, SA_ptc) * Ksat * p.eATP * p.Nsuper * ptc * ac
+    return PE
+end
+
+@kernel function calc_PE_kernel!(plank, trs, p)
+    i = @index(Global)
+    @inbounds plank.PE[i] = calc_PE(trs.par[i], plank.qFePS[i],
+                                     plank.Bm[i], plank.CH[i], p,
+                                     plank.ptc[i], plank.ac[i])
+end
+
+function calc_PE!(plank, trs, p, arch::Architecture)
+    kernel! = calc_PE_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, trs, p)
+    return nothing
+end
+
+##### calculate potential carbon fixation rate (mmolC/individual/second)
 @inline function calc_CF(PS, CH, Bm, T, p, ac)
     Qc = CH/max(1.0f-30, Bm + CH)
     regQC = shape_func_dec(Qc, p.CHmax, 1.0f-4, pow = 2.0f0)
@@ -208,14 +236,14 @@ function calc_repiration!(plank, trs, p, ΔT, arch::Architecture)
 end
 
 ##### energy allocation
-@inline function energy_redox_alloc(PS, OPS, VO2, RSo, RSe, CF, NF, NR, 
+@inline function energy_redox_alloc(PS, PE, OPS, VO2, RSo, RSe, CF, NF, NR, 
                                     ATP, NADPH, qO2, Sz, p, ΔT)
     # Total O₂ available for respiration at current time-step
     O2t = (OPS + VO2) * ΔT + qO2
     RSo_max = min(RSo, O2t/ΔT*0.99f0)
     # ATP and NADPH left after CF from PS
     PSReLeft = max(0.0f0, OPS / p.o_ps * p.re_ps - CF * p.re_cf)
-    PSEnLeft = max(0.0f0, PS - CF * p.e_cf)
+    PSEnLeft = max(0.0f0, PS + PE - CF * p.e_cf)
     # Total ATP and NADPH available
     ReSup_N = PSReLeft + RSe * p.re_rs
     EnSup_N = PSEnLeft + RSo_max * p.e_rs
@@ -244,10 +272,11 @@ end
     i = @index(Global)
     plank.RSo[i], plank.RSe[i], plank.RSP[i], plank.NF[i], 
     plank.NR[i], plank.ATP[i], plank.NADPH[i] = 
-        energy_redox_alloc(plank.PS[i], plank.OPS[i], plank.VO2[i], 
-                           plank.RSo[i], plank.RSe[i],plank.CF[i], 
-                           plank.NF[i], plank.NR[i], plank.ATP[i], 
-                           plank.NADPH[i], plank.qO2[i], plank.Sz[i], p, ΔT)
+        energy_redox_alloc(plank.PS[i], plank.PE[i], plank.OPS[i], 
+                           plank.VO2[i], plank.RSo[i], plank.RSe[i],
+                           plank.CF[i], plank.NF[i], plank.NR[i], 
+                           plank.ATP[i], plank.NADPH[i], plank.qO2[i], 
+                           plank.Sz[i], p, ΔT)
 end
 function energy_redox_allocation!(plank, p, ΔT, arch::Architecture)
     kernel! = energy_redox_allocation_kernel!(device(arch), 256, (size(plank.ac,1)))

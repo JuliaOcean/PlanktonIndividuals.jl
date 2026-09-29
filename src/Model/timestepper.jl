@@ -20,7 +20,7 @@ mutable struct timestepper
     palat::Palat        # a `Palat` to store the interaction between species
 end
 
-function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, intac::Union{Nothing,AbstractArray}, palat::Palat)
+function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, intac::Union{Nothing, AbstractArray}, palat::Palat)
     vel₀ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
     vel½ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
     vel₁ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
@@ -55,7 +55,8 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, in
                       idc = zeros(FT, maxN), idc_int = zeros(Int, maxN))
     trs_d = replace_storage(array_type(arch), trs)
 
-    ts = timestepper(Gcs, tracer_temp, vel₀, vel½, vel₁, PARF, temp, flux_sink, plk, par, par₀, Chl, pop, rnd_d, rnd_3d, velos_d, trs_d, intac, palat)
+    ts = timestepper(Gcs, tracer_temp, vel₀, vel½, vel₁, PARF, temp, flux_sink, plk, par, par₀, Chl, pop, 
+    rnd_d, rnd_3d, velos_d, trs_d, intac, palat)
 
     return ts
 end

@@ -2,6 +2,8 @@
 function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
     calc_NPFe_uptake!(plank, trs, p, ΔT, arch)
     calc_PS!(plank, trs, p, arch)
+    calc_PE!(plank, trs, p, arch)
+    calc_repiration!(plank,trs,p, ΔT, arch)
     calc_carbon_fixation!(plank, trs, p, arch)
     calc_NO3_reduction!(plank, trs, p, ΔT, arch)
     calc_nitrogen_fixation!(plank, trs, p, arch)
