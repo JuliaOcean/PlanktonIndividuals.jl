@@ -28,7 +28,6 @@ PI_MetalExt = ["Metal"]
 Adapt = "^4"
 CUDA = "^5"
 Distributions = "0.25.131"
-GPUArrays = "^11"
 JLD2 = "^0.6"
 KernelAbstractions = "^0.9"
 Metal = "^1"
