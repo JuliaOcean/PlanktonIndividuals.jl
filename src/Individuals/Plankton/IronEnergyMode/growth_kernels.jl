@@ -272,10 +272,11 @@ end
     i = @index(Global)
     plank.RSo[i], plank.RSe[i], plank.RSP[i], plank.NF[i], 
     plank.NR[i], plank.ATP[i], plank.NADPH[i] = 
-        energy_redox_alloc(plank.PS[i], plank.OPS[i], plank.VO2[i], 
-                           plank.RSo[i], plank.RSe[i],plank.CF[i], 
-                           plank.NF[i], plank.NR[i], plank.ATP[i], 
-                           plank.NADPH[i], plank.qO2[i], plank.Sz[i], p, ΔT)
+        energy_redox_alloc(plank.PS[i], plank.PE[i], plank.OPS[i], 
+                           plank.VO2[i], plank.RSo[i], plank.RSe[i],
+                           plank.CF[i], plank.NF[i], plank.NR[i], 
+                           plank.ATP[i], plank.NADPH[i], plank.qO2[i], 
+                           plank.Sz[i], p, ΔT)
 end
 function energy_redox_allocation!(plank, p, ΔT, arch::Architecture)
     kernel! = energy_redox_allocation_kernel!(device(arch), 256, (size(plank.ac,1)))
