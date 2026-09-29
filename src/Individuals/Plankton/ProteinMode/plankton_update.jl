@@ -1,4 +1,4 @@
-function plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::AbstractMode)
+function plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture)
     plank = phyto.data
     p = phyto.p
 
@@ -29,6 +29,6 @@ function plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Archit
                   plank, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, arch)
     
     ##### diagnostics of processes for each species
-    diags_spcs!(diags_spcs, phyto, plank.ac, plank.xi, plank.yi, plank.zi, mode, arch)
+    diags_spcs!(diags_spcs, phyto, plank.ac, plank.xi, plank.yi, plank.zi, arch)
     diags_proc!(diags_spcs.num, plank.ac, plank.ac, plank.xi, plank.yi, plank.zi, arch)
 end
