@@ -70,10 +70,7 @@ function bgc_params_default(FT)
     return params
 end
 
-"""
-    phyt_params_default(N::Int64, mode::AbstractMode)
-Generate default phytoplankton parameter values based on `AbstractMode` and species number `N`.
-"""
+
 #=
 CH includes cabohydrate and lipids
 ┌─────────┬────────────────┬────────────────────┬───────────────────────────┬──────────────────────────┐
@@ -91,9 +88,14 @@ CH includes cabohydrate and lipids
 │k_rna_sat│       1.00e-12 │           2.40e-14 │                  1.76e-10 │                 1.74e-11 │
 └─────────┴────────────────┴────────────────────┴───────────────────────────┴──────────────────────────┘
 =#
+"""
+    phyt_params_default(N::Int64, mode::AbstractMode)
+Generate default phytoplankton parameter values based on `AbstractMode` and species number `N`.
+"""
 function phyt_params_default(N::Int64, mode::MacroMolecularMode)
     params=Dict(
         "Nsuper"   => [1],       # Number of phyto cells each super individual represents
+        "Cquota"   => [1.8e-13], # C quota of phyto cells (mmolC/cell)
         "C_DNA"    => [1.8e-13], # DNA C quota of phyto cells (mmolC/cell)
         "var"      => [0.3],     # Variance of the normal distribution of initial phyto individuals
         "RNA2DNA"  => [1.73],    # Initial RNA:DNA ratio in phytoplankton (mmol C/mmolC) from Micromonas sp.
@@ -131,6 +133,7 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "R_NC_RNA" => [1/2.8],   # N:C ratio in RNA (from Inomura et al 2020.)
         "R_PC_RNA" => [1/10.7],  # P:C ratio in RNA
         "dvid_P"   => [1.0e-5],  # Division probability per second
+        "dvid_reg" => [2.0],     # Regulation of cell division 
         "grz_P"    => [0.0],     # Grazing probability per second
         "mort_P"   => [5e-5],    # Probability of cell natural death per second
         "mort_reg" => [0.5],     # Regulation of cell natural death

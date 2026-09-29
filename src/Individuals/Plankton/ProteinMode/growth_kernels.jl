@@ -43,7 +43,7 @@ function calc_respiration!(plank, T, p, ΔT, arch)
 end
 
 ##### calculate nutrient uptake rate (mmolN/individual/second)
-@kernel function calc_inorganic_uptake_kernel!(plank, trs, p, ΔT, g)
+@kernel function calc_inorganic_uptake_kernel!(plank, trs, p, ΔT)
     i = @index(Global)
     @inbounds C_tot = total_C_biomass(plank.PRO_RB[i], plank.PRO_MC[i], plank.PRO_MN[i], 
                                       plank.PRO_TN[i], plank.PRO_TP[i], plank.PRO_TFe[i], 
@@ -75,19 +75,19 @@ end
     @inbounds plank.VPO4[i] *= tempFunc(trs.T[i], p) * plank.ac[i]  #mmolP/individual/second
     @inbounds plank.VFe[i]  *= tempFunc(trs.T[i], p) * plank.ac[i]  #mmolFe/individual/second
 
-    @inbounds grid = volume(plank.xi[i], plank.yi[i], plank.zi[i], g)
-    @inbounds plank.VNH4[i] = min(plank.VNH4[i], trs.NH4[i]/ΔT/max(1.0f0, trs.pop[i]) * grid)
-    @inbounds plank.VNO3[i] = min(plank.VNO3[i], trs.NO3[i]/ΔT/max(1.0f0, trs.pop[i]) * grid)
-    @inbounds plank.VPO4[i] = min(plank.VPO4[i], trs.PO4[i]/ΔT/max(1.0f0, trs.pop[i]) * grid)
-    @inbounds plank.VFe[i]  = min(plank.VFe[i],  trs.DFe[i]/ΔT/max(1.0f0, trs.pop[i]) * grid)
+
+    @inbounds plank.VNH4[i] = min(plank.VNH4[i], trs.NH4[i]/ΔT/max(1.0f0, trs.pop[i]))
+    @inbounds plank.VNO3[i] = min(plank.VNO3[i], trs.NO3[i]/ΔT/max(1.0f0, trs.pop[i]))
+    @inbounds plank.VPO4[i] = min(plank.VPO4[i], trs.PO4[i]/ΔT/max(1.0f0, trs.pop[i]))
+    @inbounds plank.VFe[i]  = min(plank.VFe[i],  trs.DFe[i]/ΔT/max(1.0f0, trs.pop[i]))
     
     @inbounds plank.EVNO3[i] = plank.VNO3[i] * p.e_TNO3
     @inbounds plank.EVPO4[i] = plank.VPO4[i] * p.e_TPO4
     @inbounds plank.EVFe[i]  = plank.VFe[i]  * p.e_TFe 
 end
-function calc_inorganic_uptake!(plank, trs, p, ΔT, g, arch::Architecture)
+function calc_inorganic_uptake!(plank, trs, p, ΔT, arch::Architecture)
     kernel! = calc_inorganic_uptake_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, trs, p, ΔT, g)
+    kernel!(plank, trs, p, ΔT)
     return nothing
 end
 

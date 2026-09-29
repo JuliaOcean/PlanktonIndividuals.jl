@@ -1,11 +1,11 @@
 ##### update physiological attributes of each individual
-function plankton_growth!(plank, trs, rnd, p, ΔT, t, g::AbstractGrid, arch::Architecture)
+function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
 
     calc_PS!(plank, trs, p, arch)
 
     calc_respiration!(plank, trs.T, p, ΔT, arch)
 
-    calc_inorganic_uptake!(plank, trs, p, ΔT, g, arch)
+    calc_inorganic_uptake!(plank, trs, p, ΔT, arch)
 
     calc_uptake_energy_alloc!(plank, p, arch)
 
@@ -41,8 +41,8 @@ function plankton_growth!(plank, trs, rnd, p, ΔT, t, g::AbstractGrid, arch::Arc
 
     ##### probabilities of grazing, mortality, and cell division
     calc_graz_quadratic!(plank, trs, p.grz_P, arch)
-    calc_MM_mort!(plank, p, arch)
+    calc_protein_mort!(plank, p, arch)
     ##### Bernouli-like distribution
-    calc_MM_dvid!(plank, p, arch)
+    calc_protein_dvid!(plank, p, arch)
     get_probability!(plank, rnd, ΔT, arch)
 end
