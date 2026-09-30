@@ -3,28 +3,53 @@ name: Documentation
 on:
   push:
     branches:
-      - master
-    tags: 
-      - '*'
+      - 'main'
+    tags: '*'
   pull_request:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  statuses: write
+  pull-requests: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macOS-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
         with:
-          repository: JuliaOcean/PlanktonKernels.jl
-          path: deps/PlanktonKernels.jl
-      - uses: julia-actions/setup-julia@latest
-        with:
-          version: '1.13'
+          version: '1'
+      - uses: julia-actions/cache@v3
       - name: Install dependencies
-        run: julia --project=docs/ -e 'using Pkg; Pkg.develop([PackageSpec(path="deps/PlanktonKernels.jl"), PackageSpec(path=pwd())]); Pkg.instantiate()'
+        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+
+      - name: Resolve benchmark env
+        run: julia --project=benchmark -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+
+      - name: Run small-tier benchmark
+        env:
+          DATADEPS_ALWAYS_ACCEPT: "true"
+          GITHUB_SHA: ${{ github.sha }}
+          BENCH_TIER: small
+          BENCH_TRACERS: all
+        run: julia --project=benchmark benchmark/solvers.jl
+
+      - name: Sync latest timings into docs source tree
+        run: cp benchmark/results/latest_timings_small.md docs/src/explanation/latest_timings_small.md
+
       - name: Build and deploy
-        run: julia --project=docs/ --code-coverage=user docs/make.jl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
           GKSwstype: 100
+        run: julia --project=docs/ docs/make.jl
+      - name: Save cache on failure
+        uses: julia-actions/cache@v3
+        if: failure()
