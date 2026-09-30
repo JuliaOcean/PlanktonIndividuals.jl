@@ -29,24 +29,24 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
         ##### particle motion
         particle_motion!(model.individuals.abiotics[sa].data, model.timestepper.velos, model.grid, 
                          model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, 
-                         model.timestepper.rnd, model.bgc_params["κhP"], model.bgc_params["κhP"], 
-                         model.bgc_params["κvP"],ΔT, model.arch)
+                         model.timestepper.rnd, model.individuals.abiotics[sa].p.κhP, model.individuals.abiotics[sa].p.κhP,
+                         model.individuals.abiotics[sa].p.κvP,ΔT, model.arch)
     end # abiotic particles
 
     ##### phytoplankton motion
     for sp in eachindex(model.individuals.phytos)
         particle_motion!(model.individuals.phytos[sp].data, model.timestepper.velos, model.grid, 
                          model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, 
-                         model.timestepper.rnd, model.bgc_params["κhP"], model.bgc_params["κhP"], 
-                         model.bgc_params["κvP"],ΔT, model.arch)
+                         model.timestepper.rnd, model.individuals.phytos[sp].p.κhP, model.individuals.phytos[sp].p.κhP,
+                         model.individuals.phytos[sp].p.κvP,ΔT, model.arch)
     end # phytoplankton motion
 
     ##### colonies motion
     for cl in eachindex(model.individuals.colonies)
         colony_motion!(model.individuals.colonies[cl].spcs, model.timestepper.velos, model.grid, 
                        model.timestepper.vel₀, model.timestepper.vel½, model.timestepper.vel₁, 
-                       model.timestepper.rnd, model.bgc_params["κhP"], model.bgc_params["κhP"], 
-                       model.bgc_params["κvP"],ΔT, model.arch)
+                       model.timestepper.rnd, model.individuals.colonies[cl].spcs.sp1.p.κhP, model.individuals.colonies[cl].spcs.sp1.p.κhP,
+                       model.individuals.colonies[cl].spcs.sp1.p.κvP,ΔT, model.arch)
     end # colony motion
 
     ##### calculate accumulated Chla quantity (not concentration)
@@ -68,12 +68,12 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     ##### calculate PAR
     for ki in 1:model.grid.Nz
         calc_par!(model.timestepper.par, model.arch, model.timestepper.Chl, 
-                  model.timestepper.PARF, model.grid, model.bgc_params["kc"], 
-                  model.bgc_params["kw"], ki)
+                  model.timestepper.PARF, model.grid, model.options.kc,
+                  model.options.kw, ki)
     end # PAR
 
     ##### phytoplankton physiological update
-    if model.bgc_params["shared_graz"] == 1.0f0 # shared grazing
+    if model.options.shared_graz == 1.0f0 # shared grazing
         @inbounds model.timestepper.pop .= 0.0f0
         for sp in eachindex(model.individuals.phytos)
             #### calculate population
@@ -93,7 +93,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                              model.timestepper.rnd, model.timestepper.plk, 
                              diags.phytos[sp], ΔT, model.t, model.arch, model.mode)
         end
-    else # model.bgc_params["shared_graz"] ≠ 1.0 - species-specific grazing
+    else # model.options.shared_graz ≠ 1.0 - species-specific grazing
         for sp in eachindex(model.individuals.phytos)
             @inbounds model.timestepper.pop .= 0.0f0
             acc_counts!(model.timestepper.pop, model.individuals.phytos[sp].data.ac,
@@ -141,7 +141,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
         abiotic = model.individuals.abiotics[pair[2]].data
         abio_p = model.individuals.abiotics[pair[2]].p
         particle_interaction!(abiotic, plank, plank_p, model.timestepper.intac, abio_p,
-                              model.timestepper.rnd, model.grid, model.max_candidates, model.arch)
+                              model.timestepper.rnd, model.grid, model.options.max_candidates, model.arch)
     end
 
     ##### particle-particle release
@@ -176,10 +176,10 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
     end
     
     ##### tracers update
-    tracer_update!(model.tracers, model.timestepper.Gcs, model.timestepper.tracer_temp, 
-                   model.timestepper.flux_sink, model.arch,
-                   model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT, 
-                   model.iteration)
+    bgc_tracer_update!(model.tracers, model.timestepper.Gcs, model.timestepper.tracer_temp,
+                       model.timestepper.flux_sink, model.arch,
+                       model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT,
+                       model.iteration)
 
     ##### diagnostics for tracers
     @inbounds diags.tracer.PAR .+= model.timestepper.par

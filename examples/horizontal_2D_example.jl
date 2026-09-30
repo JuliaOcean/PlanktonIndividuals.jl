@@ -5,7 +5,7 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ 54683b9a-bf00-4956-8894-e263eded3db8
-using PlanktonIndividuals, Plots, PlutoUI
+using PlanktonIndividuals, Plots, PlutoUI, PlanktonKernels
 
 # ╔═╡ e74d8d84-546b-4ccd-9724-78ed29f587c3
 begin

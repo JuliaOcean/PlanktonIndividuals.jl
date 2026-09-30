@@ -9,7 +9,7 @@ function diags_proc!(diags_proc, proc, ac, x, y, z, arch)
     return nothing 
 end
 
-function diags_spcs!(diags_sp, plank::phytoplankton, ac, x, y, z, arch::Architecture)
+function diags_spcs!(diags_sp, plank::Phytoplankton, ac, x, y, z, arch::Architecture)
     for diag in keys(diags_sp)
         if diag in (:num, :graz, :mort, :dvid, :ptc)
             nothing

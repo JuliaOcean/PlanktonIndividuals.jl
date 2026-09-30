@@ -18,10 +18,16 @@ jobs:
           - x64
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          repository: JuliaOcean/PlanktonKernels.jl
+          path: deps/PlanktonKernels.jl
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+      - name: Develop PlanktonKernels
+        run: julia --project=. -e 'using Pkg; Pkg.develop(path="deps/PlanktonKernels.jl")'
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
       - uses: julia-actions/julia-processcoverage@v1

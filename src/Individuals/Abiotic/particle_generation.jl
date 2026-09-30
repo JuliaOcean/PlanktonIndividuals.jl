@@ -5,7 +5,7 @@ function construct_abiotic_particle(arch::Architecture, sp::Int, params::Dict, m
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
-    param_names=(:Nsuper, :Rd, :release_P, :sz_min, :Ktr)
+    param_names=(:κhP, :κvP, :Nsuper, :Rd, :release_P, :sz_min, :Ktr)
 
     pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))
@@ -17,7 +17,7 @@ function construct_abiotic_particle(arch::Architecture, sp::Int, params::Dict, m
         end
     end
     p = NamedTuple{param_names}(FT.(tmp))
-    return abiotic_particle(data, p, default_bcs())
+    return AbioticParticle(data, p, default_bcs())
 end
 
 function initialize_abiotic_particle!(particle, N::Int, g::AbstractGrid, arch::Architecture)
@@ -32,4 +32,14 @@ function initialize_abiotic_particle!(particle, N::Int, g::AbstractGrid, arch::A
     particle.data.z  .=(particle.data.z .* g.Nz) .* particle.data.ac                                         # z, unit: grid spacing, starting from 0
 
     mask_individuals!(particle.data, g, N, arch)
+end
+
+function set_bc_particle!(abiotic::AbioticParticle, pos::Symbol, bc_value::Union{Number, AbstractArray},
+                          FT::DataType, arch::Architecture)
+    bc_value_d = FT.(bc_value)
+    if isa(bc_value_d, AbstractArray)
+        bc_value_d = bc_value_d |> array_type(arch)
+    end
+    setproperty!(abiotic.bc, pos, bc_value_d)
+    return nothing
 end

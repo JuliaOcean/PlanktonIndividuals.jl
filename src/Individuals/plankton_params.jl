@@ -1,75 +1,16 @@
-"""
-    default_PARF(grid, ΔT, iterations)
-Generate default hourly surface PAR.
-"""
-function default_PARF(grid, ΔT, iterations)
-    PAR = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3871666666666666, 87.10258333333333, 475.78150000000016, 929.2737916666669,
-           1232.3633333333337, 1638.918916666667, 1823.7921666666664, 1906.2769583333336, 1776.0280416666667,
-           1678.5026249999999, 1410.216666666667, 815.4129583333336, 525.104, 135.993, 2.9493750000000003, 0.0, 0.0, 0.0,]
-    total_days = Int((ΔT * iterations) ÷ 86400 + 1)
-    PAR_day = zeros(grid.Nx, grid.Ny, 24)
-    for i in 1:24
-        PAR_day[:,:,i] .= PAR[i]
-    end
-    PAR_domain = repeat(PAR_day, outer = (1,1,total_days))
-    return PAR_domain
-end
+# Individual parameter defaults, dispatched by physiology mode.
+function phyt_params_default end
+function colony_params_default end
+function abiotic_params_default end
 
-"""
-    default_temperature(grid, ΔT, iterations)
-Generate default hourly temperature.
-"""
-function default_temperature(grid, ΔT, iterations)
-    temp = [26.646446609406727, 26.56698729810778, 26.517037086855467, 26.5, 26.517037086855467, 26.56698729810778,
-            26.646446609406727, 26.75, 26.87059047744874, 27.0, 27.12940952255126, 27.25, 27.353553390593273,
-            27.43301270189222, 27.482962913144533, 27.5, 27.482962913144533, 27.43301270189222, 27.353553390593273,
-            27.25, 27.12940952255126, 27.0, 26.87059047744874, 26.75]
-    total_days = Int((ΔT * iterations) ÷ 86400 + 1)
-    temp_day = zeros(grid.Nx, grid.Ny, grid.Nz, 24)
-    for i in 1:24
-        temp_day[:,:,end,i] .= temp[i]
+function generate_n_species_params(N, params)
+    p = []
+    for key in keys(params)
+        pa = (key, fill(params[key][1],N))
+        push!(p, pa)
     end
-    # vertical temperature gradient
-    for j in grid.Nz-1:-1:1
-        temp_day[:,:,j,:] .= temp_day[:,:,j+1,:] .+ 4.0e-4 * grid.zC[j]
-    end
-    temp_domain = repeat(temp_day, outer = (1,1,1,total_days))
-    return temp_domain
+    return Dict(p)
 end
-
-"""
-    bgc_params_default(FT::DataType)
-Generate default biogeochemical parameter values 
-"""
-function bgc_params_default(FT)
-    params = Dict{String, FT}(
-        "kw"           => 0.046,              # PAR attenuation (/m)
-        "kc"           => 0.04,               # PAR attenuation (m²/mgChl)
-        "kDOC"         => 1/30/86400,         # Remineralization rate for DOC, turn over time: a month (per second)
-        "Nit"          => 1/30/86400,         # Nitrification rate for NH4
-        "kDON"         => 1/30/86400,         # Remineralization rate for DON, turn over time: a month (per second)
-        "kDOP"         => 1/30/86400,         # Remineralization rate for DOP, turn over time: a month (per second)
-        "kPOC"         => 1/30/86400,         # Remineralization rate for POC, turn over time: a month (per second)
-        "kPON"         => 1/30/86400,         # Remineralization rate for PON, turn over time: a month (per second)
-        "kPOP"         => 1/30/86400,         # Remineralization rate for POP, turn over time: a month (per second)
-        "κh"           => 0.0e-6,             # Horizontal diffusion
-        "κv"           => 0.0e-6,             # Vertical diffusion
-        "κhP"          => 0.0e-6,             # Horizontal diffusion for individuals
-        "κvP"          => 0.0e-6,             # Vertical diffusion for individuals
-        "shared_graz"  => 1.0,                # Using shared grazing or not - default is yes - 1.0
-        "w_sink_org"   => 2.31e-8,            # Settling velocity of organic matter (m/s)
-        "w_sink_inorg" => 2.31e-5,            # Settling velocity of inorganic matter (m/s)
-        "lambda_POC"   => 5.8e-8,             # Scavenging rate of iron by POC (m³/mmol/second)
-        "lambda_min"   => 3.5e-10,            # Minimum scavenging rate of iron (per second)
-        "kdiss"        => 4.4e-7 ,           # Dissolution rate of inorganic particulate iron  (per second)
-        "lambda_dust"  => 1.7e-3,             # Scavenging rate of iron by dust (m³/kg/second)
-        "lambda_Fe"    => 1.7,                # Coagulation rate of dissolved iron (m³/mmol/second)
-        "ligand"       => 6.0e-4,             # Ligand concentration (mmol/m³/second)
-        "DFeFrac"      => 0.01,               # Free DFe Fraction
-        )
-    return params
-end
-
 
 #=
 CH includes cabohydrate and lipids
@@ -94,6 +35,8 @@ Generate default phytoplankton parameter values based on `AbstractMode` and spec
 """
 function phyt_params_default(N::Int64, mode::MacroMolecularMode)
     params=Dict(
+        "κhP"      => [0.0],     # Horizontal particle diffusivity (m²/s)
+        "κvP"      => [0.0],     # Vertical particle diffusivity (m²/s)
         "Nsuper"   => [1],       # Number of phyto cells each super individual represents
         "Cquota"   => [1.8e-13], # C quota of phyto cells (mmolC/cell)
         "C_DNA"    => [1.8e-13], # DNA C quota of phyto cells (mmolC/cell)
@@ -133,7 +76,7 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "R_NC_RNA" => [1/2.8],   # N:C ratio in RNA (from Inomura et al 2020.)
         "R_PC_RNA" => [1/10.7],  # P:C ratio in RNA
         "dvid_P"   => [1.0e-5],  # Division probability per second
-        "dvid_reg" => [2.0],     # Regulation of cell division 
+        "dvid_reg" => [2.0],     # Regulation of cell division
         "grz_P"    => [0.0],     # Grazing probability per second
         "mort_P"   => [5e-5],    # Probability of cell natural death per second
         "mort_reg" => [0.5],     # Regulation of cell natural death
@@ -152,12 +95,15 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
     end
 end
 
+
 """
     phyt_params_default(N::Int64, mode::AbstractMode)
 Generate default phytoplankton parameter values based on `AbstractMode` and species number `N`.
 """
 function phyt_params_default(N::Int64, mode::IronEnergyMode)
     params=Dict(
+        "κhP"       => [0.0],     # Horizontal particle diffusivity (m²/s)
+        "κvP"       => [0.0],     # Vertical particle diffusivity (m²/s)
         "Nsuper"    => [1],       # Number of phyto cells each super individual represents (cells)
         "Cquota"    => [1.8e-11], # C quota of phyto cells at size = 1.0 (mmolC/cell)
         "Rad"       => [0.12],    # Radius (μm) of Prochlorococcus
@@ -171,7 +117,7 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
         "is_nr"     => [1.0],     # 1 for non-diazotroph, 0 for diazotroph
         "is_croc"   => [0.0],     # 1 for Crocosphaera-like N fixation pattern
         "is_tric"   => [0.0],     # 1 for Trichodesmium-like N fixation pattern
-        "PCmax"     => [8.0e-5],  # Maximum light harvesting rate (mmolATP/mmolC/second) 
+        "PCmax"     => [8.0e-5],  # Maximum light harvesting rate (mmolATP/mmolC/second)
         "VNH4max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
         "VNO3max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
         "VPO4max"   => [1.2e-6],  # Maximum P uptake rate (mmolP/mmolC/second)
@@ -247,12 +193,15 @@ function phyt_params_default(N::Int64, mode::IronEnergyMode)
     end
 end
 
+
 """
     phyt_params_default(N::Int64, mode::AbstractMode)
 Generate default phytoplankton parameter values based on `AbstractMode` and species number `N`.
 """
 function phyt_params_default(N::Int64, mode::QuotaMode)
     params=Dict(
+        "κhP"      => [0.0],     # Horizontal particle diffusivity (m²/s)
+        "κvP"      => [0.0],     # Vertical particle diffusivity (m²/s)
         "Nsuper"   => [1],       # Number of phyto cells each super individual represents
         "Cquota"   => [1.8e-11], # C quota of phyto cells at size = 1.0
         "mean"     => [1.2],     # Mean of the normal distribution of initial phyto individuals
@@ -302,12 +251,15 @@ function phyt_params_default(N::Int64, mode::QuotaMode)
     end
 end
 
+
 """
     phyt_params_default(N::Int64, mode::AbstractMode)
 Generate default phytoplankton parameter values based on `AbstractMode` and species number `N`.
 """
 function phyt_params_default(N::Int64, mode::CarbonMode)
     params=Dict(
+        "κhP"       => [0.0],     # Horizontal particle diffusivity (m²/s)
+        "κvP"       => [0.0],     # Vertical particle diffusivity (m²/s)
         "Nsuper"    => [1],       # Number of phyto cells each super individual represents
         "Cquota"    => [1.8e-11], # C quota of phyto cells at size = 1.0
         "mean"      => [1.2],     # Mean of the normal distribution of initial phyto individuals
@@ -349,6 +301,8 @@ Generate default phytoplankton parameter values based on `AbstractMode` and spec
 """
 function phyt_params_default(N::Int64, mode::ProteinMode)
     params=Dict(
+        "κhP"        => [0.0],     # Horizontal particle diffusivity (m²/s)
+        "κvP"        => [0.0],     # Vertical particle diffusivity (m²/s)
         "Nsuper"     => [1],       # Number of phyto cells each super individual represents
         "Cquota"     => [1.8e-11], # Structural C quota of phyto cells at size = 1.0 (mmolC/cell)
         "C_DNA"      => [1.8e-13], # DNA C quota of phyto cells (mmolC/cell)
@@ -467,12 +421,15 @@ function phyt_params_default(N::Int64, mode::ProteinMode)
     end
 end
 
+
 """
     colony_params_default(Ncl::Int64, Nsp::AbstractArray, mode::AbstractMode)
 Generate default colony parameter values based on `AbstractMode`, colony number `Ncl` and species number `Nsp`.
 """
 function colony_params_default(Ncl::Int64, Nsp::AbstractArray, mode::IronEnergyMode)
     params=Dict(
+        "κhP"       => [0.0],     # Horizontal particle diffusivity (m²/s)
+        "κvP"       => [0.0],     # Vertical particle diffusivity (m²/s)
         "Nsuper"    => [1],       # Number of phyto cells each super individual represents (cells)
         "Cquota"    => [1.8e-11], # C quota of phyto cells at size = 1.0 (mmolC/cell)
         "Rad"       => [0.12],    # Radius (μm) of Prochlorococcus
@@ -486,7 +443,7 @@ function colony_params_default(Ncl::Int64, Nsp::AbstractArray, mode::IronEnergyM
         "is_nr"     => [1.0],     # 1 for non-diazotroph, 0 for diazotroph
         "is_croc"   => [0.0],     # 1 for Crocosphaera-like N fixation pattern
         "is_tric"   => [0.0],     # 1 for Trichodesmium-like N fixation pattern
-        "PCmax"     => [8.0e-8],  # Maximum light harvesting rate (mmolATP/mmolC/second) 
+        "PCmax"     => [8.0e-8],  # Maximum light harvesting rate (mmolATP/mmolC/second)
         "VNH4max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
         "VNO3max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
         "VPO4max"   => [1.2e-6],  # Maximum P uptake rate (mmolP/mmolC/second)
@@ -556,109 +513,7 @@ function colony_params_default(Ncl::Int64, Nsp::AbstractArray, mode::IronEnergyM
         "ϵ_TqFe"    => [0.25],    # iron exchange cost between cells within a colony (per second)
         "ϵ_TqNH4"   => [0.25],    # NH4 exchange cost between cells within a colony (per second)
     )
-    
-    param_cl = []
-    for i in 1:Ncl
-        if Nsp[i] > 1
-            params = generate_n_species_params(Nsp[i], params)
-        end
-        push!(param_cl, copy(params))
-    end
-    return param_cl
 
-end
-
-
-"""
-    colony_params_default(Ncl::Int64, Nsp::AbstractArray, mode::AbstractMode)
-Generate default colony parameter values based on `AbstractMode`, colony number `Ncl` and species number `Nsp`.
-"""
-function colony_params_default(Ncl::Int64, Nsp::AbstractArray, mode::IronEnergyMode)
-    params=Dict(
-        "Nsuper"    => [1],       # Number of phyto cells each super individual represents (cells)
-        "Cquota"    => [1.8e-11], # C quota of phyto cells at size = 1.0 (mmolC/cell)
-        "Rad"       => [0.12],    # Radius (μm) of Prochlorococcus
-        "mean"      => [1.2],     # Mean of the normal distribution of initial phyto individuals
-        "var"       => [0.3],     # Variance of the normal distribution of initial phyto individuals
-        "Chl2Cint"  => [0.10],    # Initial Chla:C ratio in phytoplankton (mgChl/mmolC)
-        "α"         => [4.5e-2],  # Irradiance absorption coeff (mmolC m² second/mgChl /μmol photon)
-        "Topt"      => [27.0],    # Optimal temperature for growth (C)
-        "Tmax"      => [30.0],    # Maximal temperature for growth (C)
-        "Ea"        => [5.3e4],   # Free energy
-        "is_nr"     => [1.0],     # 1 for non-diazotroph, 0 for diazotroph
-        "is_croc"   => [0.0],     # 1 for Crocosphaera-like N fixation pattern
-        "is_tric"   => [0.0],     # 1 for Trichodesmium-like N fixation pattern
-        "PCmax"     => [8.0e-8],  # Maximum light harvesting rate (mmolATP/mmolC/second) 
-        "VNH4max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
-        "VNO3max"   => [6.9e-6],  # Maximum N uptake rate (mmolN/mmolC/second)
-        "VPO4max"   => [1.2e-6],  # Maximum P uptake rate (mmolP/mmolC/second)
-        "k_O2"      => [3.0e-12], # O₂ permeability coefficient (m²/s)
-        "k_cf"      => [1.0e-5],  # Carbon fixation rate (per second)
-        "k_rs"      => [1.5e-6],  # Maximum respiration rate (per second)
-        "k_nr"      => [2.8e-6],  # Nitrate reduction rate (per second)
-        "k_nf"      => [2.8e-6],  # N fixation rate (mmolN/mmolC/second)
-        "k_mtb"     => [3.5e-5],  # Metabolic rate (per second)
-        "e_cf"      => [3.0],     # Energy consumption ratio of carbon fixation (mmolATP/mmolC)
-        "e_rs"      => [5.0],     # Energy production ratio of respiration (mmolATP/mmolC)
-        "e_nf"      => [8.0],     # Energy consumption ratio of N fixation (mmolATP/mmolN)
-        "e_nr"      => [0.0],     # Energy consumption ratio of NO3 reduction (mmolATP/mmolN)
-        "re_ps"     => [0.76],    # NADPH production ratio of light harvesting (mmolNADPH/mmolATP)
-        "re_cf"     => [2.0],     # NADPH consumption ratio of carbon fixation (mmolNADPH/mmolC)
-        "re_rs"     => [0.33],    # NADPH production ratio of respiration (mmolNADPH/mmolC)
-        "re_nf"     => [2.0],     # NADPH consumption ratio of N fixation (mmolNADPH/mmolN)
-        "re_nr"     => [4.0],     # NADPH consumption ratio of NO3 reduction (mmolNADPH/mmolN)
-        "o_ps"      => [0.38],    # O2 production ratio of light harvesting (mmolO2/mmolATP)
-        "k_Fe_ST2PS"=> [2.4e-5],  # Allocation rate of Fe from storage to PS (per second)
-        "k_Fe_PS2ST"=> [1.2e-6],  # Allocation rate of Fe from PS to storage (per second)
-        "k_Fe_ST2NR"=> [1.2e-5],  # Allocation rate of Fe from storage to NR (per second)
-        "k_Fe_NR2ST"=> [1.2e-5],  # Allocation rate of Fe from NR to storage (per second)
-        "k_Fe_ST2NF"=> [1.2e-5],  # Allocation rate of Fe from storage to NF (per second)
-        "k_Fe_NF2ST"=> [1.2e-5],  # Allocation rate of Fe from NF to storage (per second)
-        "KfePS"     => [3.0e-6],  # Haff-saturation coeff of iron quota for photosynthesis (mmolFe/mmolC)
-        "KfeNR"     => [2.0e-6],  # Haff-saturation coeff of iron quota for NO3 reduction (mmolFe/mmolC)
-        "KfeNF"     => [5.0e-6],  # Haff-saturation coeff of iron quota for N fixation (mmolFe/mmolC)
-        "KsatNH4"   => [0.005],   # Half-saturation coeff (mmolN/m³)
-        "KsatNO3"   => [0.010],   # Half-saturation coeff (mmolN/m³)
-        "KsatPO4"   => [0.003],   # Half-saturation coeff (mmolP/m³)
-        "KSAFe"     => [2.77e-7], # Surface-area specific iron uptake rate (m/cell/second)
-        "qNO3max"   => [0.25],    # Maximum NO3 quota in cell (mmolN/mmolC)
-        "qNH4max"   => [0.25],    # Maximum NH4 quota in cell (mmolN/mmolC)
-        "qPmax"     => [0.02],    # Maximum P quota in cell (mmolP/mmolC)
-        "qFemax"    => [2.0e-5],  # Maximum Fe quota in cell (mmolFe/mmolC)
-        "CHmax"     => [0.4],     # Maximum C quota in cell (mmolC/mmolC)
-        "qO2diff"   => [2.0e2],   # Intracellular O2 concentration when O2 diffusion reaches maximum (mmolO₂/m³)
-        "qO2nf"     => [1.0e2],   # Intracellular O2 concentration when N fixation reaches 0.0 (mmolO₂/m³)
-        "Chl2N"     => [3.0],     # Maximum Chla:N ratio in phytoplankton
-        "R_NC"      => [16/106],  # N:C ratio in cell biomass
-        "R_PC"      => [1/106],   # N:C ratio in cell biomass
-        "NF_clock"  => [21600.0], # the circadian clock for N fixation
-        "grz_P"     => [0.0],     # Grazing probability per second
-        "dvid_P"    => [1e-4],    # Probability of cell division per second.
-        "dvid_type" => [1],       # The type of cell division, 1:sizer, 2:adder.
-        "dvid_reg"  => [2.5],     # Regulations of cell division (cell size)
-        "dvid_reg2" => [12.0],    # Regulations of cell division (clock time)
-        "mort_P"    => [5e-5],    # Probability of cell natural death per second
-        "mort_reg"  => [0.5],     # Regulation of cell natural death
-        "grazFracC" => [0.7],     # Fraction goes into dissolved organic pool
-        "grazFracN" => [0.7],     # Fraction goes into dissolved organic pool
-        "grazFracP" => [0.7],     # Fraction goes into dissolved organic pool
-        "grazFracFe"=> [0.1],     # Fraction goes into dissolved organic pool
-        "mortFracC" => [0.5],     # Fraction goes into dissolved organic pool
-        "mortFracN" => [0.5],     # Fraction goes into dissolved organic pool
-        "mortFracP" => [0.5],     # Fraction goes into dissolved organic pool
-        "mortFracFe"=> [0.1],     # Fraction goes into dissolved organic pool
-        "k_TqP"     => [0.05],    # Phosphorus exchange rate between cells within a colony (per second)
-        "k_TCH"     => [0.05],    # CH exchange rate between cells within a colony (per second)
-        "k_TqO2"    => [0.05],    # O₂ exchange rate between cells within a colony (per second)
-        "k_TqFe"    => [0.05],    # iron exchange rate between cells within a colony (per second)
-        "k_TqNH4"   => [0.05],    # NH4 exchange rate between cells within a colony (per second)
-        "ϵ_TqP"     => [0.25],    # Phosphorus exchange cost between cells within a colony (per second)
-        "ϵ_TCH"     => [0.25],    # CH exchange cost between cells within a colony (per second)
-        "ϵ_TqO2"    => [0.25],    # O₂ exchange cost between cells within a colony (per second)
-        "ϵ_TqFe"    => [0.25],    # iron exchange cost between cells within a colony (per second)
-        "ϵ_TqNH4"   => [0.25],    # NH4 exchange cost between cells within a colony (per second)
-    )
-    
     param_cl = []
     for i in 1:Ncl
         if Nsp[i] > 1
@@ -677,6 +532,8 @@ Generate default abiotic particle parameter values based on species number `N`.
 """
 function abiotic_params_default(N::Int64)
     params=Dict(
+        "κhP"       => [0.0],     # Horizontal particle diffusivity (m²/s)
+        "κvP"       => [0.0],     # Vertical particle diffusivity (m²/s)
         "Nsuper"    => [1],       # Number of abiotic particles each super individual represents
         "Rd"        => [1.0e-4],  # Distance between abiotic particle and phytoplankton cell (m)
         "release_P" => [1.0e-6],  # Probability of particle release per second
@@ -690,11 +547,79 @@ function abiotic_params_default(N::Int64)
     end
 end
 
-function generate_n_species_params(N, params)
-    p = []
-    for key in keys(params)
-        pa = (key, fill(params[key][1],N))
-        push!(p, pa)
+"""
+    update_phyt_params(tmp::Dict, FT::DataType; N::Int64, mode::AbstractMode)
+Update parameter values based on a `Dict` provided by user
+Keyword Arguments
+=================
+- `tmp` is a `Dict` containing the parameters needed to be upadated
+- `FT`: Floating point data type. Default: `Float32`.
+- `N` is a `Int64` indicating the number of species
+- `mode` is the mode of phytoplankton physiology resolved in the model
+"""
+function update_phyt_params(tmp::Dict, FT::DataType; N::Int = 1, mode::AbstractMode = QuotaMode())
+    parameters = phyt_params_default(N,mode)
+    tmp_keys = collect(keys(tmp))
+    pkeys = collect(keys(parameters))
+    for key in tmp_keys
+        if length(findall(x->x==key, pkeys))==0
+            throw(ArgumentError("PARAM: phyt parameter not found $key"))
+        else
+            parameters[key] = FT.(tmp[key])
+        end
     end
-    return Dict(p)
+    return parameters
+end
+
+"""
+    update_colony_params(tmp::Dict, FT::DataType; N::Int64, mode::AbstractMode)
+Update parameter values based on a `Dict` provided by user
+Keyword Arguments
+=================
+- `tmp` is a `Dict` containing the parameters needed to be upadated
+- `FT`: Floating point data type. Default: `Float32`.
+- `N` is a `Int64` indicating the number of species
+- `mode` is the mode of phytoplankton physiology resolved in the model
+"""
+function update_colony_params(tmps::AbstractArray, FT::DataType;
+                              Ncl::Int = 1, Nsp::AbstractArray = [1],
+                              mode::AbstractMode = IronEnergyMode())
+    parameters = colony_params_default(Ncl, Nsp, mode)
+    for i in eachindex(tmps)
+        tmp = tmps[i]
+        tmp_keys = collect(keys(tmp))
+        pkeys = collect(keys(parameters[i]))
+        for key in tmp_keys
+            if length(findall(x->x==key, pkeys))==0
+                throw(ArgumentError("PARAM: colony parameter not found $key"))
+            else
+                parameters[i][key] = FT.(tmp[key])
+            end
+        end
+    end
+    return parameters
+end
+
+
+"""
+    update_abiotic_params(tmp::Dict, FT::DataType; N::Int64)
+Update parameter values based on a `Dict` provided by user
+Keyword Arguments
+=================
+- `tmp` is a `Dict` containing the parameters needed to be upadated
+- `FT`: Floating point data type. Default: `Float32`.
+- `N` is a `Int64` indicating the number of species
+"""
+function update_abiotic_params(tmp::Dict, FT::DataType; N::Int = 1)
+    parameters = abiotic_params_default(N)
+    tmp_keys = collect(keys(tmp))
+    pkeys = collect(keys(parameters))
+    for key in tmp_keys
+        if length(findall(x->x==key, pkeys))==0
+            throw(ArgumentError("PARAM: abiotic parameter not found $key"))
+        else
+            parameters[key] = FT.(tmp[key])
+        end
+    end
+    return parameters
 end

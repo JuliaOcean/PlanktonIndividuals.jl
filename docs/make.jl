@@ -1,4 +1,4 @@
-using Documenter, Pkg, PlanktonIndividuals, Plots
+using Documenter, Pkg, PlanktonIndividuals, PlanktonKernels, Plots
 import PlutoSliderServer
 Pkg.precompile()
 

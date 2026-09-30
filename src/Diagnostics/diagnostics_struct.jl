@@ -1,11 +1,3 @@
-mutable struct PlanktonDiagnostics
-    phytos::NamedTuple       # for each species of phytoplankton
-    abiotics::NamedTuple     # for each species of abiotic particle
-    colonies::NamedTuple     # for each colony
-    tracer::NamedTuple       # for tracers
-    iteration_interval::Int  # time interval that the diagnostics is time averaged
-end
-
 """
     PlanktonDiagnostics(model; tracer=(:PAR, :NH4, :NO3, :DOC),
                                phytoplankton = (:num, :graz, :mort, :dvid, :ptc),

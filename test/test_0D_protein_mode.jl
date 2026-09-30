@@ -1,18 +1,18 @@
-using PlanktonIndividuals
+using PlanktonIndividuals, PlanktonKernels
 
 grid = RectilinearGrid(size = (1, 1, 1), x = (0,32), y = (0,32), z = (0,-32))
 
 model = PlanktonModel(CPU(), grid;
                       mode = ProteinMode(),
                       phyto = phyto_setup(nothing, [1024], 1),
-                      max_individuals = 1024*10)
+                      options = let opt = model_options(); opt.max_individuals = 1024*10; opt end)
 
 function tot_mass(tracer, g)
     mass = zeros(g.Nx, g.Ny, g.Nz)
     for i in 1:g.Nx
         for j in 1:g.Ny
             for k in 1:g.Nz
-                mass[i,j,k] = tracer[i+g.Hx, j+g.Hy, k+g.Hz] * PlanktonIndividuals.Grids.volume(i+g.Hx, j+g.Hy, k+g.Hz, g)
+                mass[i,j,k] = tracer[i+g.Hx, j+g.Hy, k+g.Hz] * PlanktonKernels.Grids.volume(i+g.Hx, j+g.Hy, k+g.Hz, g)
             end
         end
     end

@@ -1,24 +1,15 @@
-mutable struct PlanktonModel
-    arch::Architecture          # architecture on which models will run
-    max_candidates::Int         # maximum number of candidate phytoplankton for interaction with one abiotic particle
-    FT::DataType                # floating point data type
-    t::AbstractFloat            # time in second
-    iteration::Int              # model interation
-    individuals::individuals    # individuals
-    tracers::NamedTuple         # tracer fields
-    grid::AbstractGrid          # grid information
-    bgc_params::Dict            # biogeochemical parameter set
-    timestepper::timestepper    # operating Tuples and arrays for timestep
-    mode::AbstractMode          # Carbon, Quota, or MacroMolecular
+function model_options(;max_individuals::Int = 8*1024, max_candidates::Int = 25,
+                        kc::Float64 = 0.04, kw::Float64 = 0.046, shared_graz::Float64 = 1.0)
+    return ModelOpts(max_individuals, max_candidates, kc, kw, shared_graz)
 end
 
 """
     PlanktonModel(arch::Architecture, grid::AbstractGrid;
                   FT = Float32,
                   mode = QuotaMode(),
-                  max_individuals::Int = 8*1024,
+                  options = model_options(),
                   bgc_params = nothing, 
-                  tracer_initial = default_tracer_init(),
+                  tracer_initial = bgc_tracer_init(),
                   phyto = nothing,
                   abiotic = nothing,
                   colony = nothing,
@@ -34,11 +25,10 @@ Keyword Arguments (Required)
 
 Keyword Arguments (Optional)
 ============================
+- `options`: Model settings from `model_options()`, stored as `model.options`.
+                Includes particle limits, `kc`, `kw`, and `shared_graz`.
 - `FT`: Floating point data type. Default: `Float32`.
 - `mode` : Phytoplankton physiology mode, choose among CarbonMode(), QuotaMode(), or MacroMolecularMode().
-- `max_individuals` : Maximum number of individuals for each species the model can hold,
-                    usually take the maximum of all the species and apply a factor to account for the growth
-                    of individuals during one simulation.
 - `bgc_params` : Parameter set for biogeochemical processes modeled in the model, use default if `nothing`, 
                     use `Dict` to update parameters, the format and names of parameters can be found by running `bgc_params_default()`.
 - `tracer_initial` : The source of initial conditions of tracer fields, should be either a `NamedTuple` 
@@ -54,17 +44,22 @@ Keyword Arguments (Optional)
 function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        FT = Float32,
                        mode = QuotaMode(),
-                       max_individuals::Int = 8*1024,
+                       options = model_options(),
                        bgc_params = nothing, 
-                       tracer_initial = default_tracer_init(),
+                       tracer_initial = bgc_tracer_init(),
                        phyto = nothing,
                        abiotic = nothing,
                        colony = nothing,
                        t::AbstractFloat = 0.0f0,
-                       max_candidates::Int = 25,
                        )
 
     @assert isfunctional(arch) == true
+
+    max_individuals = options.max_individuals
+    max_candidates = options.max_candidates
+    max_individuals > 0 || throw(ArgumentError("max_individuals must be positive"))
+    max_candidates > 0 || throw(ArgumentError("max_candidates must be positive"))
+
 
     if isa(bgc_params, Nothing)
         bgc_params = bgc_params_default(FT)
@@ -72,7 +67,7 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
     elseif isa(bgc_params, Dict)
         bgc_params_final = update_bgc_params(bgc_params, FT)
     else
-        throw(ArgumentError("Phytoplankton parameters must be either Nothing or Dict!")) 
+        throw(ArgumentError("Biogeochemical parameters must be either Nothing or Dict!"))
     end
 
     grid_d = replace_grid_storage(arch, grid)
@@ -170,13 +165,13 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
         palat = abiotic.palat
     end
 
-    tracers = generate_tracers(arch, grid_d, tracer_initial, FT)
+    tracers = generate_bgc_tracers(arch, grid_d, tracer_initial, FT)
 
     ts = timestepper(arch, FT, grid_d, max_individuals, intac, palat)
 
     iteration  = 0
 
-    model = PlanktonModel(arch, max_candidates, FT, t, iteration, inds, tracers, grid_d, bgc_params_final, ts, mode)
+    model = PlanktonModel(arch, options, FT, t, iteration, inds, tracers, grid_d, bgc_params_final, ts, mode)
 
     return model
 end

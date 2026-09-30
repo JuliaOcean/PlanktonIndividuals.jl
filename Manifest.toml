@@ -2,7 +2,7 @@
 
 julia_version = "1.13.1"
 manifest_format = "2.1"
-project_hash = "b6c42b64d5f3abe1907c828b153e871b8ec01f7c"
+project_hash = "906a0972eb98e143b7fce75e2feff5868a5b0fea"
 
 [[deps.Accessors]]
 deps = ["CompositionsBase", "ConstructionBase", "Dates", "InverseFunctions", "MacroTools"]
@@ -456,16 +456,22 @@ version = "1.13.0"
     REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 
 [[deps.PlanktonIndividuals]]
-deps = ["Adapt", "Distributions", "JLD2", "KernelAbstractions", "LinearAlgebra", "Pkg", "Printf", "Random", "Serialization", "Statistics", "StructArrays"]
+deps = ["Artifacts", "Distributions", "JLD2", "KernelAbstractions", "LinearAlgebra", "PlanktonKernels", "Printf", "Random", "StructArrays"]
 path = "."
 uuid = "dfeb4ede-c75e-11e9-050d-41ab7a730e9e"
-version = "0.7.5"
+version = "1.0.0"
 
-    [deps.PlanktonIndividuals.extensions]
-    PI_CUDAExt = "CUDA"
-    PI_MetalExt = ["Metal"]
+[[deps.PlanktonKernels]]
+deps = ["Adapt", "KernelAbstractions", "Random", "Serialization"]
+path = "../PlanktonKernels.jl"
+uuid = "19089417-46be-418e-a42f-b04816cfc5c6"
+version = "0.1.0"
 
-    [deps.PlanktonIndividuals.weakdeps]
+    [deps.PlanktonKernels.extensions]
+    PK_CUDAExt = "CUDA"
+    PK_MetalExt = "Metal"
+
+    [deps.PlanktonKernels.weakdeps]
     CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
     Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
 

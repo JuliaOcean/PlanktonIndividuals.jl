@@ -6,7 +6,7 @@ using InteractiveUtils
 
 # ╔═╡ 1149e16f-752a-4c33-8892-b7c8fa5a2f77
 begin
-	using PlanktonIndividuals, Plots, JLD2
+	using PlanktonIndividuals, Plots, JLD2, PlanktonKernels
 	using Plots.PlotMeasures
 	using PlutoUI
 end

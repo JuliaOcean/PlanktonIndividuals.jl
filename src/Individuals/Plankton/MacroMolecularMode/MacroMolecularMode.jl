@@ -1,19 +1,18 @@
 module MacroMolecular
 
-export plankton_update!
-export construct_plankton, initialize_plankton!
 
 using KernelAbstractions
 using StructArrays
 using Random
 using LinearAlgebra: dot
 
-using PlanktonIndividuals.Architectures: device, Architecture, rng_type, array_type, unsafe_free!
-using PlanktonIndividuals.Grids
-using PlanktonIndividuals.Diagnostics
+using PlanktonKernels.Architectures: device, Architecture, rng_type, array_type, unsafe_free!
+using PlanktonKernels.Grids: AbstractGrid, ΔzF, volume
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
-using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle
+using PlanktonIndividuals.Diagnostics
+using PlanktonIndividuals.Diagnostics: diags_spcs!, diags_proc!
+using PlanktonIndividuals: Phytoplankton
+
 
 include("../../utils.jl")
 include("../division_death_probability.jl")

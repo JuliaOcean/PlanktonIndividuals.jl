@@ -13,11 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          repository: JuliaOcean/PlanktonKernels.jl
+          path: deps/PlanktonKernels.jl
       - uses: julia-actions/setup-julia@latest
         with:
           version: '1.13'
       - name: Install dependencies
-        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+        run: julia --project=docs/ -e 'using Pkg; Pkg.develop([PackageSpec(path="deps/PlanktonKernels.jl"), PackageSpec(path=pwd())]); Pkg.instantiate()'
       - name: Build and deploy
         run: julia --project=docs/ --code-coverage=user docs/make.jl
         env:

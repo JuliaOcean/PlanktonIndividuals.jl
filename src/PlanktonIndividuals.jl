@@ -1,51 +1,34 @@
 module PlanktonIndividuals
 
-if VERSION < v"1.6"
-    error("This version of PlanktonIndividuals.jl requires Julia v1.6 or newer.")
+if VERSION < v"1.11"
+    error("This version of PlanktonIndividuals.jl requires Julia v1.11 or newer.")
 end
 
 export
-    # Architectures
-    Architecture, GPU, CPU,
-
-    # Grids
-    RectilinearGrid,
-    LatLonGrid, LoadLatLonGrid,
-    Periodic, Bounded,
-
-    # Model
-    PlanktonModel, 
+    # Types and Structs
     CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode, ProteinMode,
-    phytoplankton, colony_particle, abiotic_particle, individuals,
     phyto_setup, colony_setup, abiotic_setup, Palat,
 
+    # Model
+    PlanktonModel, model_options,
+
     # BoundaryConditions
-    set_bc!, set_bc_particle!,
+    set_bc_particle!,
 
     # Simulation
-    PlanktonSimulation, update!, vel_copy!, set_vels_fields!, set_PARF_fields!, set_temp_fields!,
+    PlanktonSimulation, update!, set_vels_fields!, set_PARF_fields!, set_temp_fields!,
 
-    # Parameters
+    # Mode defaults and model parameter updates
     default_PARF, default_temperature,
-    update_bgc_params, update_phyt_params, 
-    bgc_params_default, phyt_params_default,
-    update_abiotic_params, update_colony_params,
-    colony_params_default, abiotic_params_default,
-
-    # Biogeochemistry
-    generate_tracers, default_tracer_init,
+    update_phyt_params, phyt_params_default,
+    update_abiotic_params, colony_params_default,
+    update_colony_params, abiotic_params_default,
 
     # Output
-    PlanktonDiagnostics, PlanktonOutputWriter, interior,
+    PlanktonDiagnostics, PlanktonOutputWriter
 
-    # Units
-    second, minute, hour, meter, kilometer,
-    seconds, minutes, hours, meters, kilometers,
-    KiB, MiB, GiB, TiB
+using Artifacts: artifact_hash, artifact_path
 
-using Pkg.Artifacts
-
-import Base: show
 
 p=dirname(pathof(PlanktonIndividuals))
 artifact_toml = joinpath(p, "../Artifacts.toml")
@@ -54,122 +37,25 @@ surface_mixing_vels = joinpath(artifact_path(surface_mixing_vels_hash)*"/velocit
 global_vels_hash = artifact_hash("OCCA_FlowFields", artifact_toml)
 global_vels = joinpath(artifact_path(global_vels_hash)*"/OCCA_FlowFields.jld2")
 
-"""
-    AbstractMode
-Abstract type for phytoplankton physiology modes supported by PlanktonIndividuals.
-"""
-abstract type AbstractMode end
 
-"""
-    CarbonMode <: AbstractMode
-Type for the phytoplankton physiology mode which only resolves carbon quota.
-"""
-struct CarbonMode <: AbstractMode end
+using PlanktonKernels.Architectures: Architecture
+using PlanktonKernels.Grids: AbstractGrid
+using PlanktonKernels.Fields: BoundaryConditions
 
-"""
-    QuotaMode <: AbstractMode
-Type for the phytoplankton physiology mode which resolves carbon, nitrogen, and phosphorus quotas.
-"""
-struct QuotaMode <: AbstractMode end
-
-"""
-    MacroMolecularMode <: AbstractMode
-Type for the phytoplankton physiology mode which resolves marco-molecules.
-"""
-struct MacroMolecularMode <: AbstractMode end
-
-"""
-    IronEnergyMode <: AbstractMode
-Type for the phytoplankton physiology mode which resolves carbon, nitrogen, phosphorus, and iron quotas. This mode also resolves energy.
-"""
-struct IronEnergyMode <: AbstractMode end
-
-"""
-    ProteinMode <: AbstractMode
-Type for the phytoplankton physiology mode which resolves protein synthesis.
-"""
-struct ProteinMode <: AbstractMode end
-
-mutable struct BoundaryConditions
-    west::Union{Nothing, Number, AbstractArray}
-    east::Union{Nothing, Number, AbstractArray}
-    north::Union{Nothing, Number, AbstractArray}
-    south::Union{Nothing, Number, AbstractArray}
-    top::Union{Nothing, Number, AbstractArray}
-    bottom::Union{Nothing, Number, AbstractArray}
-end
-
-##### struct for phytoplankton
-mutable struct phytoplankton
-    data::AbstractArray
-    p::NamedTuple
-end
-
-##### struct for colony
-mutable struct colony_particle
-    spcs::NamedTuple
-    intac::AbstractArray
-end
-
-##### struct for abiotic particles
-mutable struct abiotic_particle
-    data::AbstractArray
-    p::NamedTuple
-    bc::BoundaryConditions
-end
-
-struct individuals
-    phytos::NamedTuple
-    abiotics::NamedTuple
-    colonies::NamedTuple
-end
-
-mutable struct phyto_setup
-    params::Union{Nothing, Dict}
-    N::AbstractArray
-    Nsp::Int64
-end
-
-mutable struct colony_setup
-    params::Union{Nothing, AbstractArray}
-    N::AbstractArray
-    Nsp::AbstractArray
-    Ncl::Int64
-end
-
-mutable struct Palat
-    intac::AbstractArray
-    release::AbstractArray
-end
-mutable struct abiotic_setup
-    params::Union{Nothing, Dict}
-    N::AbstractArray
-    Nsa::Int64
-    palat::Palat
-end
-
-
-include("Architectures.jl")
-include("Units.jl")
-include("Grids/Grids.jl")
-include("Parameters/Parameters.jl")
-include("Biogeochemistry/Biogeochemistry.jl")
+include("model_structs.jl")
 include("Diagnostics/Diagnostics.jl")
 include("Individuals/Individuals.jl")
 include("Model/Model.jl")
 include("Output/Output.jl")
 include("Simulation/Simulation.jl")
 
+using .Individuals.Abiotic: set_bc_particle!
 
-using .Architectures
-using .Grids
-using .Parameters
-using .Biogeochemistry
 using .Diagnostics
 using .Individuals
+using .Individuals: IndividualParticles
 using .Model
 using .Output
 using .Simulation
-using .Units
 
 end # module

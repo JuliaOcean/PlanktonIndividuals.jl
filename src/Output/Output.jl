@@ -1,19 +1,18 @@
 module Output
 
+import PlanktonIndividuals: PlanktonOutputWriter
+
 export PlanktonOutputWriter
-export write_output!
-export humanize_filesize
 
 using LinearAlgebra: dot
-using Statistics, JLD2, Serialization, Printf
+using JLD2
+using Printf: @sprintf
 
-using PlanktonIndividuals.Grids
+using PlanktonKernels.Fields: interior
+
 using PlanktonIndividuals.Diagnostics
 using PlanktonIndividuals.Model
-using PlanktonIndividuals.Biogeochemistry
-
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
-using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle, colony_particle
+using PlanktonIndividuals: CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
 
 import Base: show
 

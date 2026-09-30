@@ -1,19 +1,18 @@
 module ColonyIronEnergy
 
-export colony_update!
-export construct_colony, initialize_colony!
 
 using KernelAbstractions
 using StructArrays
 using Random
 using LinearAlgebra: dot
 
-using PlanktonIndividuals.Architectures: device, Architecture, rng_type, array_type, unsafe_free!
-using PlanktonIndividuals.Grids
-using PlanktonIndividuals.Diagnostics
+using PlanktonKernels.Architectures: device, Architecture, rng_type, array_type, unsafe_free!
+using PlanktonKernels.Grids: AbstractGrid, ΔzF, volume
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode
-using PlanktonIndividuals: individuals, phytoplankton, colony_particle, abiotic_particle
+using PlanktonIndividuals.Diagnostics
+using PlanktonIndividuals.Diagnostics: diags_proc!, diags_colony!
+using PlanktonIndividuals: IronEnergyMode, Phytoplankton, ColonyParticle
+
 
 include("../../utils.jl")
 include("../../Plankton/IronEnergyMode/growth_kernels.jl")

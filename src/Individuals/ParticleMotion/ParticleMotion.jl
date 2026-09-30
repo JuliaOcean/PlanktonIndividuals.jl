@@ -1,15 +1,11 @@
 module ParticleMotion
 
-export particle_advection!, particle_diffusion!
-export particle_motion!, colony_motion!
-export find_inds!
 
 using KernelAbstractions
 using Random
 
-using PlanktonIndividuals.Architectures: device, Architecture, rng_type
-using PlanktonIndividuals.Grids
-using PlanktonIndividuals: phytoplankton, abiotic_particle
+using PlanktonKernels.Architectures: device, Architecture, rng_type
+using PlanktonKernels.Grids: AbstractGrid, Periodic, Bounded, ΔxC, ΔyC, ΔzC
 
 include("interpolation.jl")
 include("particle_advection.jl")

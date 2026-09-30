@@ -5,7 +5,7 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ 88e0998b-177d-4de6-8ebf-932a6969ee7a
-using PlanktonIndividuals
+using PlanktonIndividuals, PlanktonKernels
 
 # ╔═╡ 1251276b-991b-4c5c-af05-697f439d8dad
 md"""# Global Ocean 3D example

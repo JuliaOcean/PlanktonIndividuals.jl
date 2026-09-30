@@ -14,7 +14,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
-    param_names=(:Nsuper, :Cquota, :C_DNA, :var, :PRO2DNA, :RNA2DNA, :CH2DNA, :Chl2DNA,
+    param_names=(:κhP, :κvP, :Nsuper, :Cquota, :C_DNA, :var, :PRO2DNA, :RNA2DNA, :CH2DNA, :Chl2DNA,
                  :α, :Φ, :Topt, :Tmax, :Ea,
                  :PCmax, :VDOCmax, :VNO3max, :VNH4max, :VPO4max, :KsatDOC, :KsatNH4, :KsatNO3,
                  :KsatPO4, :CHmax, :NSTmax, :PSTmax,
@@ -33,7 +33,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
         end
     end
     p = NamedTuple{param_names}(FT.(tmp))
-    return phytoplankton(data, p)
+    return Phytoplankton(data, p)
 end
 
 function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)

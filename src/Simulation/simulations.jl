@@ -1,21 +1,3 @@
-mutable struct PlanktonInput
-    temp::AbstractArray{AbstractFloat,4}      # temperature
-    PARF::AbstractArray{AbstractFloat,3}      # PARF
-    vels::NamedTuple                          # velocity fields
-    ΔT_vel::AbstractFloat                     # time step of velocities provided
-    ΔT_PAR::AbstractFloat                     # time step of surface PAR provided
-    ΔT_temp::AbstractFloat                    # time step of temperature provided
-end
-
-mutable struct PlanktonSimulation
-    model::PlanktonModel                       # Model object
-    input::PlanktonInput                       # model input, temp, PAR, and velocities
-    diags::Union{PlanktonDiagnostics,Nothing}  # diagnostics
-    ΔT::AbstractFloat                          # model time step
-    iterations::Int                            # run the simulation for this number of iterations
-    output_writer::Union{PlanktonOutputWriter,Nothing} # Output writer
-end
-
 """
     PlanktonSimulation(model; ΔT, iterations,
                        PARF = default_PARF(model.grid),

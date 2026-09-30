@@ -1,16 +1,15 @@
 module Diagnostics
 
+import PlanktonIndividuals: PlanktonDiagnostics
+
 export PlanktonDiagnostics
-export diags_spcs!, diags_proc!, diags_colony!
 
 using KernelAbstractions
 using StructArrays
 
-using PlanktonIndividuals.Architectures: device, Architecture, array_type
-using PlanktonIndividuals.Grids
+using PlanktonKernels.Architectures: device, Architecture, array_type
 
-using PlanktonIndividuals: AbstractMode, CarbonMode, QuotaMode, MacroMolecularMode, IronEnergyMode, ProteinMode
-using PlanktonIndividuals: individuals, phytoplankton, abiotic_particle
+using PlanktonIndividuals: Phytoplankton
 
 import Base: show
 

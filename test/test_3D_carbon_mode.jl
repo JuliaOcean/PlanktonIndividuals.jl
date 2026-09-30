@@ -1,4 +1,4 @@
-using PlanktonIndividuals
+using PlanktonIndividuals, PlanktonKernels
 
 grid = RectilinearGrid(size = (16, 16, 16), x = (0,32), y = (0,32), z = (0,-32))
 
@@ -9,7 +9,7 @@ function tot_mass(tracer, g)
     for i in 1:g.Nx
         for j in 1:g.Ny
             for k in 1:g.Nz
-                mass[i,j,k] = tracer[i+g.Hx, j+g.Hy, k+g.Hz] * PlanktonIndividuals.Grids.volume(i+g.Hx, j+g.Hy, k+g.Hz, g)
+                mass[i,j,k] = tracer[i+g.Hx, j+g.Hy, k+g.Hz] * PlanktonKernels.Grids.volume(i+g.Hx, j+g.Hy, k+g.Hz, g)
             end
         end
     end
