@@ -1,5 +1,3 @@
-# Shared type definitions, ordered so field types are defined before use.
-
 """
     AbstractMode
 Abstract type for phytoplankton physiology modes supported by PlanktonIndividuals.
@@ -87,7 +85,7 @@ end
 
 mutable struct timestepper
     Gcs::NamedTuple                         # a NamedTuple same as tracers to store tendencies
-    tracer_temp::NamedTuple                 # a NamedTuple same as tracers to store tracers fields in multi-dims advection scheme
+    bgc_tracer_tmp::NamedTuple                 # a NamedTuple same as tracers to store tracers fields in multi-dims advection scheme
     vel₀::NamedTuple                        # a NamedTuple with u, v, w velocities
     vel½::NamedTuple                        # a NamedTuple with u, v, w velocities
     vel₁::NamedTuple                        # a NamedTuple with u, v, w velocities

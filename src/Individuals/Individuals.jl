@@ -28,8 +28,7 @@ include("Abiotic/Abiotic.jl")
 include("utils.jl")
 
 using .ParticleMotion
-using .Abiotic
-using .Abiotic: construct_abiotic_particle, initialize_abiotic_particle!
+import .Abiotic
 import .Quota
 import .Carbon
 import .MacroMolecular
@@ -64,8 +63,8 @@ function generate_individuals(phyto::phyto_setup, abiotic::Union{Nothing, abioti
 
         for j in 1:abiotic.Nsa
             name = Symbol("sa"*string(j))
-            particle =  construct_abiotic_particle(arch, j, abiotic.params, maxN, FT)
-            initialize_abiotic_particle!(particle, abiotic.N[j], g, arch)
+            particle = Abiotic.construct_abiotic_particle(arch, j, abiotic.params, maxN, FT)
+            Abiotic.initialize_abiotic_particle!(particle, abiotic.N[j], g, arch)
             push!(abiotic_names, name)
             push!(abiotic_data, particle)
         end
@@ -124,8 +123,8 @@ initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode:
 initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture, mode::ProteinMode) =
     Protein.initialize_plankton!(plank, N::Int64, g::AbstractGrid, arch::Architecture)
 
-plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
-    MacroMolecular.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture)
+plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::MacroMolecularMode) =
+    MacroMolecular.plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture)
 
 plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::QuotaMode) =
     Quota.plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture)
@@ -136,8 +135,8 @@ plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, m
 plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::IronEnergyMode) =
     IronEnergy.plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture)
 
-plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture, mode::ProteinMode) =
-    Protein.plankton_update!(phyto, trs, proc, plk, diags_spcs, ΔT, t, arch::Architecture)
+plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture, mode::ProteinMode) =
+    Protein.plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Architecture)
 
 construct_colony(arch::Architecture, Nsp::Int, params::Dict, maxN::Int, FT::DataType, mode::IronEnergyMode) = 
     ColonyIronEnergy.construct_colony(arch::Architecture, Nsp::Int, params::Dict, maxN::Int, FT::DataType)

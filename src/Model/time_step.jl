@@ -7,13 +7,11 @@ Keyword Arguments
 - `model`: `PlanktonModel` to be updated one time step forward.
 - `ΔT`: The length of a time step.
 - `diags`: `PlanktonDiagnostics` to be updated.
-- `resultpath` (optional): The file path to store model output. 
 """
 function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
-    # model.t = model.t+ΔT
+    model.t = model.t+ΔT
     model.iteration = model.iteration+1
-    model.t = model.iteration * ΔT 
-
+    
     @inbounds model.timestepper.vel½.u.data .= (model.timestepper.vel₀.u.data .+ model.timestepper.vel₁.u.data) .* 0.5f0
     @inbounds model.timestepper.vel½.v.data .= (model.timestepper.vel₀.v.data .+ model.timestepper.vel₁.v.data) .* 0.5f0
     @inbounds model.timestepper.vel½.w.data .= (model.timestepper.vel₀.w.data .+ model.timestepper.vel₁.w.data) .* 0.5f0
@@ -23,7 +21,7 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
 
     ##### abiotic particle motion
     for sa in eachindex(model.individuals.abiotics)
-        particles_from_bcs!(model.individuals.abiotics[sa].data, model.timestepper.tracer_temp.DFe.data, 
+        particles_from_bcs!(model.individuals.abiotics[sa].data, model.timestepper.bgc_tracer_tmp.DFe.data, 
                             model.individuals.abiotics[sa].bc, model.timestepper.rnd_3d, model.individuals.abiotics[sa].p, 
                             ΔT, model.iteration, model.grid, model.t, model.arch)
         ##### particle motion
@@ -175,8 +173,11 @@ function TimeStep!(model::PlanktonModel, ΔT, diags::PlanktonDiagnostics)
                     model.individuals.abiotics[sa].data.zi, model.arch)
     end
     
+    # Convert total particle amounts once, after all species and particle contributions.
+    consume2concentrations!(model.timestepper.plk, model.grid, model.arch)
+
     ##### tracers update
-    bgc_tracer_update!(model.tracers, model.timestepper.Gcs, model.timestepper.tracer_temp,
+    bgc_tracer_update!(model.tracers, model.timestepper.Gcs, model.timestepper.bgc_tracer_tmp,
                        model.timestepper.flux_sink, model.arch,
                        model.grid, model.bgc_params, model.timestepper.vel₁, model.timestepper.plk, ΔT,
                        model.iteration)

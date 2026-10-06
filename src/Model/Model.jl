@@ -11,12 +11,12 @@ using LinearAlgebra: dot
 
 using PlanktonKernels.Architectures: CPU, GPU, Architecture, array_type, isfunctional
 using PlanktonKernels.Grids: AbstractGrid, short_show, replace_grid_storage
-using PlanktonKernels.Fields: Field, tracers_init, zero_fields!
-using PlanktonKernels.Biogeochemistry: bgc_tracer_names, bgc_tracer_init, generate_bgc_tracers, bgc_tracer_update!, bgc_params_default, update_bgc_params
+using PlanktonKernels.Fields: Field, init_tracers, zero_fields!
+using PlanktonKernels.Biogeochemistry: bgc_tracer_names, bgc_tracer_default_init, generate_bgc_tracers, bgc_tracer_update!, bgc_params_default, update_bgc_params
 
 using PlanktonIndividuals.Individuals
 using PlanktonIndividuals.Individuals: plankton_update!, colony_update!, generate_individuals,
-    find_NPT!, acc_counts!, acc_chl!, calc_par!
+    find_NPT!, acc_counts!, acc_chl!, calc_par!, consume2concentrations!
 using PlanktonIndividuals.Individuals.ParticleMotion: particle_motion!, colony_motion!
 using PlanktonIndividuals.Individuals.Abiotic: particle_interaction!, particle_release!, particles_from_bcs!
 using PlanktonIndividuals.Diagnostics

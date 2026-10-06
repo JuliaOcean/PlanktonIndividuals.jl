@@ -3,9 +3,9 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, in
     vel½ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
     vel₁ = (u = Field(arch, g, FT), v = Field(arch, g, FT), w = Field(arch, g, FT))
 
-    Gcs = tracers_init(arch, g, bgc_tracer_names, FT)
-    tracer_temp = tracers_init(arch, g, bgc_tracer_names, FT)
-    plk = tracers_init(arch, g, bgc_tracer_names, FT)
+    Gcs = init_tracers(arch, g, bgc_tracer_names, FT)
+    bgc_tracer_tmp = init_tracers(arch, g, bgc_tracer_names, FT)
+    plk = init_tracers(arch, g, bgc_tracer_names, FT)
 
     par = zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
     par₀= zeros(FT, g.Nx+g.Hx*2, g.Ny+g.Hy*2, g.Nz+g.Hz*2) |> array_type(arch)
@@ -33,7 +33,7 @@ function timestepper(arch::Architecture, FT::DataType, g::AbstractGrid, maxN, in
                       idc = zeros(FT, maxN), idc_int = zeros(Int, maxN))
     trs_d = replace_storage(array_type(arch), trs)
 
-    ts = timestepper(Gcs, tracer_temp, vel₀, vel½, vel₁, PARF, temp, flux_sink, plk, par, par₀, Chl, pop, 
+    ts = timestepper(Gcs, bgc_tracer_tmp, vel₀, vel½, vel₁, PARF, temp, flux_sink, plk, par, par₀, Chl, pop, 
     rnd_d, rnd_3d, velos_d, trs_d, intac, palat)
 
     return ts

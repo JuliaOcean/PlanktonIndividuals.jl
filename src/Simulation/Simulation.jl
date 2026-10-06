@@ -26,7 +26,6 @@ using PlanktonIndividuals.Output: write_output!, humanize_filesize
 import Base: show
 
 
-include("default_forcing.jl")
 include("simulations.jl")
 include("utils.jl")
 include("update.jl")

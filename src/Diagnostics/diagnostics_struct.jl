@@ -184,5 +184,5 @@ function diag_avail(tracer, plank, abiotic, colony, model)
 end
 
 function tracer_avail_diags()
-    return (:PAR, :DIC, :DOC, :POC, :NH4, :NO3, :O2, :DON, :PON, :PO4, :DOP, :POP, :DFe, :PFe_inorg, :PFe_bio, :Dust)
+    return (:PAR, :DIC, :DOC, :POC, :NH4, :NO3, :O2, :DON, :PON, :PO4, :DOP, :POP, :DFe, :PIFe, :POFe, :Dust)
 end

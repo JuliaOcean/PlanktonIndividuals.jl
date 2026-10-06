@@ -18,7 +18,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
 
     pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))
-    for i in 1:length(param_names)
+    for i in eachindex(param_names)
         if param_names[i] ∉ pkeys
             throw(ArgumentError("PARAM: parameter not found $(param_names[i])"))
         else

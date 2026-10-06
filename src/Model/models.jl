@@ -9,7 +9,7 @@ end
                   mode = QuotaMode(),
                   options = model_options(),
                   bgc_params = nothing, 
-                  tracer_initial = bgc_tracer_init(),
+                  tracer_initial = bgc_tracer_default_init(),
                   phyto = nothing,
                   abiotic = nothing,
                   colony = nothing,
@@ -31,8 +31,8 @@ Keyword Arguments (Optional)
 - `mode` : Phytoplankton physiology mode, choose among CarbonMode(), QuotaMode(), or MacroMolecularMode().
 - `bgc_params` : Parameter set for biogeochemical processes modeled in the model, use default if `nothing`, 
                     use `Dict` to update parameters, the format and names of parameters can be found by running `bgc_params_default()`.
-- `tracer_initial` : The source of initial conditions of tracer fields, should be either a `NamedTuple` 
-                    or a `Dict` containing the file paths pointing to the files of nutrient initial conditions.
+- `tracer_initial` : The source of initial conditions of tracer fields, is a `NamedTuple` mapping tracer names to `(init=value, rand_noise=noise)`
+                    or file paths pointing to serialized nutrient initial conditions.
 - `phyto` : nothing or a `phyto_setup`. Whether to use default setup of phytoplankton in the model. If yes,
                     it should be a NamedTuple like this `phyto = phyto_setup(params = nothing, N = [2^10, 2^10], Nsp = 2)`.
 - `abiotic` : nothing or a `abiotic_setup`. Whether to include abiotic particles in the model. If yes,
@@ -46,14 +46,12 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
                        mode = QuotaMode(),
                        options = model_options(),
                        bgc_params = nothing, 
-                       tracer_initial = bgc_tracer_init(),
+                       tracer_initial = bgc_tracer_default_init(),
                        phyto = nothing,
                        abiotic = nothing,
                        colony = nothing,
                        t::AbstractFloat = 0.0f0,
                        )
-
-    @assert isfunctional(arch) == true
 
     max_individuals = options.max_individuals
     max_candidates = options.max_candidates

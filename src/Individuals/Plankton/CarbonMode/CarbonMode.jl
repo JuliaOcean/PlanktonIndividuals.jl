@@ -1,6 +1,5 @@
 module Carbon
 
-
 using KernelAbstractions
 using StructArrays
 using Random
@@ -12,7 +11,6 @@ using PlanktonKernels.Grids: AbstractGrid, ΔzF, volume
 using PlanktonIndividuals.Diagnostics
 using PlanktonIndividuals.Diagnostics: diags_spcs!, diags_proc!
 using PlanktonIndividuals: Phytoplankton
-
 
 include("../../utils.jl")
 include("../division_death_probability.jl")

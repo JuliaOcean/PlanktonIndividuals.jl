@@ -49,11 +49,8 @@ include("Model/Model.jl")
 include("Output/Output.jl")
 include("Simulation/Simulation.jl")
 
-using .Individuals.Abiotic: set_bc_particle!
-
 using .Diagnostics
 using .Individuals
-using .Individuals: IndividualParticles
 using .Model
 using .Output
 using .Simulation
