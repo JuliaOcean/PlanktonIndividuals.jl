@@ -47,27 +47,35 @@ end
 
 ##### 3. merge Particle 
 ##### Handles actual uptake with capacity limit. 
-@kernel function merge_particle_kernel!(intac, plank, plank_p, abiotic, max_candidates)
+@kernel function merge_particle_kernel!(intac, ptc, ac, max_ptc, max_candidates)
     k = @index(Global)
 
-    if abiotic.ac[k] == 1.0f0
+    if ac[k]
         for j in 1:max_candidates
             plank_id = intac[j, k]
-            if plank_id > 0  
-                if plank.ptc[plank_id] < plank_p.max_ptc
-                    KernelAbstractions.@atomic plank.ptc[plank_id] += 1.0f0
-                    abiotic.ac[k] = 0.0f0
+            if plank_id > 0
+                # Several abiotic particles may choose the same cell. Reserve a
+                # slot atomically so the capacity check and increment cannot race.
+                previous = KernelAbstractions.@atomic ptc[plank_id]
+                while previous < max_ptc
+                    observed, accepted = KernelAbstractions.@atomicreplace ptc[plank_id] previous => previous + one(previous)
+                    if accepted
+                        ac[k] = false
+                        break
+                    end
+                    previous = observed
+                end
+                if !ac[k]
                     break
                 end
             end
-        end     
-                
+        end
     end
 end
 
 function merge_particle!(intac, plank, plank_p, abiotic, max_candidates, arch::Architecture)
     kernel! = merge_particle_kernel!(device(arch), 256, (size(abiotic.ac, 1)))
-    kernel!(intac, plank, plank_p, abiotic, max_candidates)
+    kernel!(intac, plank.ptc, abiotic.ac, plank_p.max_ptc, max_candidates)
     return nothing
 end
 

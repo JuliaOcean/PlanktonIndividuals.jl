@@ -47,7 +47,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                  :e_TNO3, :e_TPO4, :e_TFe, :e_RS, :e_CF, :e_NF, :e_NR, :e_SP, :e_DNA, :e_RNA, :e_min,
                  :k_sat_RNA, :k_DNA, :k_sat_DNA, :k_sat_PRO, 
                  :dvid_P, :dvid_reg, :grz_P, :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :grazFracFe,
-                 :mortFracC, :mortFracN, :mortFracP, :mortFracFe)
+                 :mortFracC, :mortFracN, :mortFracP, :mortFracFe, :max_ptc)
 
     pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))

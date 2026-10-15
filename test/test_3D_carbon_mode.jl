@@ -1,51 +1,20 @@
-using PlanktonIndividuals, PlanktonKernels
+@testset "PlanktonIndividuals 3D CarbonMode tests" begin
+    Random.seed!(1234)
+    grid = RectilinearGrid(size = (16, 16, 16), x = (0,32), y = (0,32), z = (0,-32))
 
-grid = RectilinearGrid(size = (16, 16, 16), x = (0,32), y = (0,32), z = (0,-32))
+    model = PlanktonModel(CPU(), grid; mode = CarbonMode())
 
-model = PlanktonModel(CPU(), grid; mode = CarbonMode()) 
+    uvel = zeros(16,16,16,11)
+    vvel = zeros(16,16,16,11)
+    wvel = zeros(16,16,17,11)
 
-function tot_mass(tracer, g)
-    mass = zeros(g.Nx, g.Ny, g.Nz)
-    for i in 1:g.Nx
-        for j in 1:g.Ny
-            for k in 1:g.Nz
-                mass[i,j,k] = tracer[i+g.Hx, j+g.Hy, k+g.Hz] * PlanktonKernels.Grids.volume(i+g.Hx, j+g.Hy, k+g.Hz, g)
-            end
-        end
-    end
-    return sum(mass)
-end
+    # Uniform horizontal flow is divergence-free on the periodic domain.
+    uvel .= 1e-4
+    vvel .= -1e-4
 
-TC = tot_mass(model.tracers.DIC.data, grid) +
-     tot_mass(model.tracers.DOC.data, grid) +
-     tot_mass(model.tracers.POC.data, grid)
-TC = TC + sum(model.individuals.phytos.sp1.data.Bm)
+    test_example_state(model; initial_counts=[1024])
 
-uvel = zeros(16,16,16,11)
-vvel = zeros(16,16,16,11)
-wvel = zeros(16,16,17,11)
+    sim = PlanktonSimulation(model, ΔT = 60.0, iterations = 10, vels=(u=uvel, v=vvel, w=wvel))
 
-for i in 1:11
-    uvel[:,:,:,i] .= randn(16,16,16) .* 1e-4
-    vvel[:,:,:,i] .= randn(16,16,16) .* 1e-4
-    wvel[:,:,:,i] .= randn(16,16,17) .* 1e-4
-end
-
-# add boundary conditions for DOC
-model.tracers.DON.bc.west  = 1.0e-3 # west boundary condition of 0.1 mmol/m^2/second
-model.tracers.DON.bc.east  = randn(16,16) .* 1e-3 # east boundary condition of -0.1 mmol/m^2/second
-model.tracers.DON.bc.south = randn(16,16,10) .* 1e-3 # south boundary condition of 0.1 mmol/m^2/second
-model.tracers.DON.bc.north = randn(16,16,10) .* 1e-3 # north boundary condition of -0.1 mmol/m^2/second
-
-sim = PlanktonSimulation(model, ΔT = 60.0, iterations = 10, vels=(u=uvel, v=vvel, w=wvel)) 
-
-update!(sim)
-
-TCt = tot_mass(model.tracers.DIC.data, grid) +
-      tot_mass(model.tracers.DOC.data, grid) +
-      tot_mass(model.tracers.POC.data, grid)
-TCt = TCt + sum(model.individuals.phytos.sp1.data.Bm)
-
-@testset "PlanktonIndividuals 3D CarbonMode tests:" begin
-    @test isapprox(TC,TCt; atol=1e3)
+    test_example_evolution!(sim)
 end

@@ -86,6 +86,7 @@ function phyt_params_default(N::Int64, mode::MacroMolecularMode)
         "mortFracC"=> [0.5],     # Fraction goes into dissolved organic pool
         "mortFracN"=> [0.5],     # Fraction goes into dissolved organic pool
         "mortFracP"=> [0.5],     # Fraction goes into dissolved organic pool
+        "max_ptc"  => [25],      # Maximum attached abiotic particles per phytoplankton individual
     )
 
     if N == 1
@@ -242,6 +243,7 @@ function phyt_params_default(N::Int64, mode::QuotaMode)
         "mortFracC"=> [0.5],     # Fraction goes into dissolved organic pool
         "mortFracN"=> [0.5],     # Fraction goes into dissolved organic pool
         "mortFracP"=> [0.5],     # Fraction goes into dissolved organic pool
+        "max_ptc"  => [25],      # Maximum attached abiotic particles per phytoplankton individual
     )
 
     if N == 1
@@ -285,6 +287,7 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "mortFracC" => [0.5],     # Fraction goes into dissolved organic pool
         "thermal"   => [1.0],     # thermal damage, 1 for on, 0 for off
         "is_bact"   => [0.0],     # is this specis bacteria or not, 1 for bacteria, 0 for phytoplankton
+        "max_ptc"   => [25],      # Maximum attached abiotic particles per phytoplankton individual
     )
 
     if N == 1
@@ -412,6 +415,7 @@ function phyt_params_default(N::Int64, mode::ProteinMode)
         "mortFracN"  => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracP"  => [0.5],     # Fraction goes into dissolved organic pool
         "mortFracFe" => [0.1],     # Fraction goes into dissolved organic pool
+        "max_ptc"    => [25],      # Maximum attached abiotic particles per phytoplankton individual
     )
 
     if N == 1
