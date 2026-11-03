@@ -1,5 +1,5 @@
 function model_options(;max_individuals::Int = 8*1024, max_candidates::Int = 25,
-                        kc::Float64 = 0.04, kw::Float64 = 0.046, shared_graz::Float64 = 1.0)
+                        kc::Real = 0.04, kw::Real = 0.046, shared_graz::Real = 1.0)
     return ModelOpts(max_individuals, max_candidates, kc, kw, shared_graz)
 end
 
@@ -58,6 +58,9 @@ function PlanktonModel(arch::Architecture, grid::AbstractGrid;
     max_individuals > 0 || throw(ArgumentError("max_individuals must be positive"))
     max_candidates > 0 || throw(ArgumentError("max_candidates must be positive"))
 
+    options.kc = FT(options.kc)
+    options.kw = FT(options.kw)
+    options.shared_graz = FT(options.shared_graz)
 
     if isa(bgc_params, Nothing)
         bgc_params = bgc_params_default(FT)

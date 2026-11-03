@@ -108,8 +108,8 @@ end
 mutable struct ModelOpts
     max_individuals::Int        # maximum number of individuals for each species the model can hold
     max_candidates::Int         # maximum number of candidate phytoplankton for interaction with one abiotic particle
-    kc::Float64                 # light attenuation coefficient, unit: m^-1
-    kw::Float64                 # light attenuation coefficient, unit: m^-1
+    kc::Real                    # light attenuation coefficient, unit: m^-1
+    kw::Real               # light attenuation coefficient, unit: m^-1
     shared_graz::Float64        # whether to use shared grazing for all species, 1: yes, 0: no
 end
 
