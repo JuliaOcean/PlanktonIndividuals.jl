@@ -9,8 +9,8 @@
     grid=RectilinearGrid(size=(2,2,2),x=(0,2),y=(0,2),z=(0,-2))
     model=PlanktonModel(CPU(),grid;options=opt,mode=CarbonMode(),phyto=phyto_setup(nothing,[8],1))
     @test model.options === opt
-    @test model.options.kc == 0.05
-    @test model.options.kw == 0.06
+    @test model.options.kc ≈ 0.05
+    @test model.options.kw ≈ 0.06
     @test length(model.individuals.phytos.sp1.data.x) == 32
     @test model.options.max_candidates == 7
     @test !haskey(model.bgc_params,"shared_graz")

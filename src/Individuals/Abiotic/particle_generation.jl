@@ -34,12 +34,17 @@ function initialize_abiotic_particle!(particle, N::Int, g::AbstractGrid, arch::A
     mask_individuals!(particle.data, g, N, arch)
 end
 
-function set_bc_particle!(abiotic::AbioticParticle, pos::Symbol, bc_value::Union{Number, AbstractArray},
-                          FT::DataType, arch::Architecture)
-    bc_value_d = FT.(bc_value)
-    if isa(bc_value_d, AbstractArray)
-        bc_value_d = bc_value_d |> array_type(arch)
+function set_bc_particle!(abiotic::AbioticParticle, pos::Symbol, bc_value_c::Union{Number, AbstractArray},
+                          bc_value_v::Union{Number, AbstractArray}, FT::DataType, arch::Architecture)
+    bc_value_c_d = FT.(bc_value_c)
+    bc_value_v_d = FT.(bc_value_v)
+    if isa(bc_value_c_d, AbstractArray)
+        bc_value_c_d = bc_value_c_d |> array_type(arch)
     end
+    if isa(bc_value_v_d, AbstractArray)
+        bc_value_v_d = bc_value_v_d |> array_type(arch)
+    end
+    bc_value_d = (bc_value_c_d, bc_value_v_d)
     setproperty!(abiotic.bc, pos, bc_value_d)
     return nothing
 end

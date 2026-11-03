@@ -8,6 +8,7 @@ using PlanktonKernels.Units
         include("model_test.jl")
         include("parameter_test.jl")
         include("particle_interaction_test.jl")
+        include("particle_bcs_test.jl")
         include("output_test.jl")
     end
     @testset "Example tests" begin
