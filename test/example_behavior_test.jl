@@ -45,8 +45,8 @@ end
                 dark_sim, lit_sim = forced_example(dark, 0.0), forced_example(lit, 200.0)
                 initial_inventory = example_inventory(dark)
                 initial_P = mode isa CarbonMode ? 0.0 : particle_phosphorus(dark.individuals.phytos.sp1, mode)
-                update!(dark_sim)
-                update!(lit_sim)
+                sim_run!(dark_sim)
+                sim_run!(lit_sim)
                 for model in (dark, lit)
                     d = model.individuals.phytos.sp1.data
                     @test count(d.ac) == 16
@@ -111,11 +111,11 @@ end
             vels = (u=zeros(g.Nx, g.Ny, g.Nz, 3),
                     v=zeros(g.Nx, g.Ny, g.Nz, 3),
                     w=zeros(g.Nx, g.Ny, g.Nz+1, 3))
-            update!(forced_example(batch, 200.0; iterations=2))
+            sim_run!(forced_example(batch, 200.0; iterations=2))
             split_sim = forced_example(split, 200.0)
-            update!(split_sim)
-            update!(split_sim)
-            update!(forced_example(zero_flow, 200.0; iterations=2, vels))
+            sim_run!(split_sim)
+            sim_run!(split_sim)
+            sim_run!(forced_example(zero_flow, 200.0; iterations=2, vels))
             for other in (split, zero_flow)
                 @test other.t == batch.t == 20
                 @test other.iteration == batch.iteration == 2
@@ -143,8 +143,8 @@ end
     model = physiology_example(QuotaMode(); size=(1, 1, 4))
     depleted = deepcopy(model)
     depleted.tracers.PO4.data .= 0
-    update!(forced_example(model, 200.0))
-    update!(forced_example(depleted, 200.0))
+    sim_run!(forced_example(model, 200.0))
+    sim_run!(forced_example(depleted, 200.0))
     rich, poor = model.individuals.phytos.sp1.data, depleted.individuals.phytos.sp1.data
     @test all(>(0), rich.VPO4[rich.ac])
     @test all(iszero, poor.VPO4[poor.ac])
@@ -167,7 +167,7 @@ end
     rich.tracers.NH4.data .= 3 * p.KsatN
     rich.tracers.NO3.data .= 0
     rich.tracers.PO4.data .= 3 * p.KsatP
-    update!(forced_example(rich, 200.0))
+    sim_run!(forced_example(rich, 200.0))
     reference = rich.individuals.phytos.sp1.data
     @test all(>(0), reference.PS[reference.ac])
     @test sum(reference.Bm[reference.ac]) > initial_biomass
@@ -185,7 +185,7 @@ end
         model.tracers.NH4.data .= nh4
         model.tracers.NO3.data .= no3
         model.tracers.PO4.data .= po4
-        update!(forced_example(model, 200.0))
+        sim_run!(forced_example(model, 200.0))
         data = model.individuals.phytos.sp1.data
         @test data.PS[data.ac] ≈ relative_PS .* reference.PS[reference.ac]
         @test sum(data.Bm[data.ac]) < sum(reference.Bm[reference.ac])
@@ -212,7 +212,7 @@ end
     set_bc!(don, CPU(); pos=:north, bc_c=cat(fill(1e-4, 2, 4), fill(2e-4, 2, 4); dims=3), bc_v=1.0)
     initial_DON = tot_mass(model.tracers.DON.data, model.grid)
     initial_C = example_inventory(model)
-    update!(forced_example(model, 0.0; iterations=2))
+    sim_run!(forced_example(model, 0.0; iterations=2))
     # Signed inflow × face area × duration. Both time slices must be applied once.
     expected = (1e-3 - 2e-4) * (6 * 8) * 20 +
                ((3e-4 - 1e-4) + (6e-4 - 2e-4)) * (2 * 8) * 10

@@ -4,7 +4,7 @@ import PlanktonIndividuals: PlanktonInput, PlanktonSimulation
 
 export PlanktonSimulation
 export default_PARF, default_temperature
-export update!, set_vels_fields!, set_PARF_fields!, set_temp_fields!
+export sim_run!, set_vels_fields!, set_PARF_fields!, set_temp_fields!
 
 using PlanktonKernels.Fields: vel_copy!, copy_interior!, validate_bcs
 

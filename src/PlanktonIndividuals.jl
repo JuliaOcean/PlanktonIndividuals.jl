@@ -16,7 +16,7 @@ export
     set_bc_particle!,
 
     # Simulation
-    PlanktonSimulation, update!, set_vels_fields!, set_PARF_fields!, set_temp_fields!,
+    PlanktonSimulation, sim_run!, set_vels_fields!, set_PARF_fields!, set_temp_fields!,
 
     # Mode defaults and model parameter updates
     default_PARF, default_temperature,

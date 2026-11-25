@@ -98,7 +98,7 @@ function test_example_evolution!(sim)
     initial_DOC = copy(model.tracers.DOC.data)
     initial_positions = copy(model.individuals.phytos.sp1.data.z)
     t0, iter0 = model.t, model.iteration
-    update!(sim)
+    sim_run!(sim)
     @test model.iteration == iter0 + sim.iterations
     @test model.t ≈ t0 + sim.ΔT * sim.iterations
     test_example_state(model)

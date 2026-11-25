@@ -23,7 +23,7 @@ function test_output()
     
     @test sim.output_writer isa PlanktonOutputWriter
 
-    update!(sim)
+    sim_run!(sim)
     
     @test isfile("result/dynamic_species001.txt")
     @test isfile("result/diags_part1.jld2")

@@ -14,7 +14,7 @@
     @test length(model.individuals.phytos.sp1.data.x) == 32
     @test model.options.max_candidates == 7
     @test !haskey(model.bgc_params,"shared_graz")
-    update!(PlanktonSimulation(model;ΔT=1.0,iterations=1))
+    sim_run!(PlanktonSimulation(model;ΔT=1.0,iterations=1))
     @test all(isfinite,model.tracers.DIC.data)
     other_opt=deepcopy(opt)
     other_opt.max_individuals=64

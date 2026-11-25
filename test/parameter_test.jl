@@ -98,7 +98,7 @@ function test_particle_diffusivity_parameters()
         phyto=phyto_setup(Dict("κhP"=>[0.0,0.01],"κvP"=>[0.0,0.01]),[8,8],2))
     positions=[copy(sp.data.x) for sp in model.individuals.phytos]
     sim=PlanktonSimulation(model;ΔT=1.0,iterations=1)
-    update!(sim)
+    sim_run!(sim)
     @test model.individuals.phytos.sp1.data.x[1:8] == positions[1][1:8]
     @test model.individuals.phytos.sp2.data.x[1:8] != positions[2][1:8]
     return nothing
