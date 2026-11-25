@@ -1,5 +1,5 @@
 using PlanktonIndividuals, PlanktonKernels
-using PlanktonKernels.Fields: BoundaryCondition, BoundaryConditions
+using PlanktonKernels.Fields: default_bcs
 
 @testset "Abiotic boundary fluxes" begin
     ab = PlanktonIndividuals.Individuals.Abiotic
@@ -8,6 +8,7 @@ using PlanktonKernels.Fields: BoundaryCondition, BoundaryConditions
         dims = (g.Nx+2g.Hx,g.Ny+2g.Hy,g.Nz+2g.Hz)
         p = (sz_min=FT(2), Nsuper=FT(3))
         rnd = fill(FT(0.5),dims)
+        particle = PlanktonIndividuals.AbioticParticle(zeros(FT, 1), p, default_bcs())
         for (face,axis,upper,shape,area) in
             ((:west,1,false,(4,2),12),(:east,1,true,(4,2),12),
              (:south,2,false,(3,2),8),(:north,2,true,(3,2),8),
@@ -28,16 +29,15 @@ using PlanktonKernels.Fields: BoundaryCondition, BoundaryConditions
                         ii,jj,kk = idx .+ (g.Hx,g.Hy,g.Hz)
                         expected[ii,jj,kk] = FT(3) < cv*vv*FT(0.5)*FT(area)
                     end
-                    bcs = BoundaryConditions(nothing,nothing,nothing,nothing,nothing,nothing)
-                    setproperty!(bcs,face,BoundaryCondition(c,v))
-                    ab.calc_particle_bcs!(out,bcs,rnd,p,FT(0.5),t,g,CPU())
+                    set_bc_particle!(particle, face, c, v, FT, CPU())
+                    ab.calc_particle_bcs!(out, particle.bc, rnd, p, FT(0.5), t, g, CPU())
                     @test out == expected
                 end
             end
+            setproperty!(particle.bc, face, nothing)
         end
         out = fill(FT(7),dims)
-        bcs = BoundaryConditions(nothing,nothing,nothing,nothing,nothing,nothing)
-        ab.calc_particle_bcs!(out,bcs,rnd,p,FT(0.5),1,g,CPU())
+        ab.calc_particle_bcs!(out, default_bcs(), rnd, p, FT(0.5), 1, g, CPU())
         @test all(==(FT(7)),out)
     end
 end
@@ -45,10 +45,19 @@ end
 @testset "Abiotic boundary setter" begin
     for FT in (Float32, Float64)
         @testset "$FT" begin
-            bcs = BoundaryConditions(nothing,nothing,nothing,nothing,nothing,nothing)
-            particle = PlanktonIndividuals.AbioticParticle(zeros(FT,1), (;), bcs)
-            @test PlanktonIndividuals.Individuals.Abiotic.set_bc_particle!(particle, :top, FT(0.5), FT, CPU()) === nothing
-            @test particle.bc.top isa BoundaryCondition
+            particle = PlanktonIndividuals.AbioticParticle(zeros(FT, 1), (;), default_bcs())
+            concentration = [1 2; 3 4]
+            velocity = fill(0.25, 2, 2, 2)
+            @test set_bc_particle!(particle, :top, concentration, velocity, FT, CPU()) === nothing
+            @test particle.bc.top.c isa Matrix{FT}
+            @test particle.bc.top.v isa Array{FT, 3}
+            @test particle.bc.top.c == concentration
+            @test particle.bc.top.v == velocity
+            @test particle.bc.bottom === nothing
+
+            @test set_bc_particle!(particle, :top, 2, 0.5, FT, CPU()) === nothing
+            @test particle.bc.top.c === FT(2)
+            @test particle.bc.top.v === FT(0.5)
         end
     end
 end

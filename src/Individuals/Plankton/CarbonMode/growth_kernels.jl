@@ -20,23 +20,28 @@ end
 ##### only functional when damaged biomass is greater than 0.0
 ##### use Bd/Bm as the allocation, more damaged biomass means more allocation to repair
 @inline function gamma_alloc(Bm, Bd, p)
-    γ = Bd / max(1.0f-30, Bm) * isless(0.0f0, Bd)
-    γ = min(1.0f0, γ) * isequal(1.0f0, p.thermal)
+    γ = Bd / max(1.0f-30, Bm)
+    γ = min(1.0f0, γ) * isequal(1.0f0, p.thermal) * isless(0.0f0, Bd)
     return γ
 end
 
 ##### calculate photosynthesis rate (mmolC/individual/second)
-@inline function calc_photosynthesis(par, T, Chl, Bm, Bd, p)
+@inline function calc_photosynthesis(par, T, NH4, NO3, PO4, Chl, Bm, Bd, p)
     αI  = par * p.α * p.Φ
     PCm = p.PCmax * (tempFunc(T, p) * p.thermal + tempFunc_PS(T, p) * (1.0f0 - p.thermal))
     light_limit = 1.0f0 - exp(-αI / max(1.0f-30, PCm) * Chl / max(1.0f-30, Bm))
     PS  = PCm * max(0.0f0, Bm - Bd) * (light_limit * (1.0f0 - p.is_bact) + p.is_bact)
+    nut_limit = min((NH4 + NO3) / max(1.0f-30, p.KsatN + NH4 + NO3), 
+                    PO4 / max(1.0f-30, p.KsatP + PO4))
+    PS = PS * nut_limit
     return PS
 end
 
 @kernel function calc_PS_kernel!(plank, trs, p)
     i = @index(Global)
-    @inbounds plank.PS[i] = calc_photosynthesis(trs.par[i], trs.T[i], plank.Chl[i], plank.Bm[i], plank.Bd[i], p) * plank.ac[i]
+    @inbounds plank.PS[i] = calc_photosynthesis(trs.par[i], trs.T[i], trs.NH4[i], 
+                                                trs.NO3[i], trs.PO4[i], plank.Chl[i], 
+                                                plank.Bm[i], plank.Bd[i], p) * plank.ac[i]
 end
 
 function calc_PS!(plank, trs, p, arch::Architecture)

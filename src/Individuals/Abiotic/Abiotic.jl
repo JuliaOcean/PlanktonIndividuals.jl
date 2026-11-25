@@ -8,7 +8,7 @@ using LinearAlgebra: dot
 
 using PlanktonKernels.Architectures: device, Architecture, rng_type, array_type, unsafe_free!
 using PlanktonKernels.Grids: AbstractGrid, ΔxC, ΔyC, ΔzC, ΔxF, ΔyF, ΔzF, Ax, Ay, Az, volume
-using PlanktonKernels.Fields: default_bcs, getbc, BoundaryConditions
+using PlanktonKernels.Fields: default_bcs, getbc, BoundaryConditions, BoundaryCondition
 
 using PlanktonIndividuals.Diagnostics
 using PlanktonIndividuals: AbioticParticle

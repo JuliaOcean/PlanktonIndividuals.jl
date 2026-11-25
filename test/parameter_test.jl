@@ -14,6 +14,17 @@ function test_parameters()
     tmp_phyt_carbon = Dict("PCmax" => [1f-5])
     param_phyt_carbon = update_phyt_params(tmp_phyt_carbon, Float32; N = 1, mode = CarbonMode())
     @test param_phyt_carbon["PCmax"] == [1f-5]
+    @test param_phyt_carbon["KsatN"] == [0.015]
+    @test param_phyt_carbon["KsatP"] == [0.003]
+
+    mode = CarbonMode()
+    overrides = Dict("KsatN" => [0.03, 0.06], "KsatP" => [0.004, 0.008])
+    params = update_phyt_params(overrides, Float32; N=2, mode)
+    for sp in 1:2
+        phyto = PlanktonIndividuals.Individuals.construct_plankton(CPU(), sp, params, 8, Float32, mode)
+        @test phyto.p.KsatN === Float32(overrides["KsatN"][sp])
+        @test phyto.p.KsatP === Float32(overrides["KsatP"][sp])
+    end
 
     tmp_phyt_quota = Dict("PCmax" => [1f-5, 1f-5, 1f-5])
     param_phyt_quota = update_phyt_params(tmp_phyt_quota, Float32; N = 3, mode = QuotaMode())

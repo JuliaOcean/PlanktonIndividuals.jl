@@ -44,7 +44,6 @@ function set_bc_particle!(abiotic::AbioticParticle, pos::Symbol, bc_value_c::Uni
     if isa(bc_value_v_d, AbstractArray)
         bc_value_v_d = bc_value_v_d |> array_type(arch)
     end
-    bc_value_d = (bc_value_c_d, bc_value_v_d)
-    setproperty!(abiotic.bc, pos, bc_value_d)
+    setproperty!(abiotic.bc, pos, BoundaryCondition(bc_value_c_d, bc_value_v_d))
     return nothing
 end

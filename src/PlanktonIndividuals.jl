@@ -51,6 +51,7 @@ include("Simulation/Simulation.jl")
 
 using .Diagnostics
 using .Individuals
+using .Individuals.Abiotic: set_bc_particle!
 using .Model
 using .Output
 using .Simulation

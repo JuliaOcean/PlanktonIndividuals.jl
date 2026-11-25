@@ -155,6 +155,47 @@ end
     @test all(<(0), diff(column))
 end
 
+@testset "CarbonMode nutrient limitation" begin
+    Random.seed!(2026)
+    initial = physiology_example(CarbonMode(); FT=Float64)
+    phyto = initial.individuals.phytos.sp1
+    p = phyto.p
+    initial_biomass = sum(phyto.data.Bm[phyto.data.ac])
+
+    # At three times both half-saturation concentrations, the limiting factor is 3/4.
+    rich = deepcopy(initial)
+    rich.tracers.NH4.data .= 3 * p.KsatN
+    rich.tracers.NO3.data .= 0
+    rich.tracers.PO4.data .= 3 * p.KsatP
+    update!(forced_example(rich, 200.0))
+    reference = rich.individuals.phytos.sp1.data
+    @test all(>(0), reference.PS[reference.ac])
+    @test sum(reference.Bm[reference.ac]) > initial_biomass
+
+    @testset "$name" for (name, nh4, no3, po4, relative_PS) in (
+        ("NH4 only", p.KsatN, 0, 3 * p.KsatP, 2/3),
+        ("NO3 only", 0, p.KsatN, 3 * p.KsatP, 2/3),
+        ("Combined nitrogen", p.KsatN/2, p.KsatN/2, 3 * p.KsatP, 2/3),
+        ("Phosphate limitation", 3 * p.KsatN, 0, p.KsatP, 2/3),
+        ("Both at half saturation", p.KsatN, 0, p.KsatP, 2/3),
+        ("No inorganic nitrogen", 0, 0, 3 * p.KsatP, 0),
+        ("No phosphate", 3 * p.KsatN, 0, 0, 0),
+    )
+        model = deepcopy(initial)
+        model.tracers.NH4.data .= nh4
+        model.tracers.NO3.data .= no3
+        model.tracers.PO4.data .= po4
+        update!(forced_example(model, 200.0))
+        data = model.individuals.phytos.sp1.data
+        @test data.PS[data.ac] ≈ relative_PS .* reference.PS[reference.ac]
+        @test sum(data.Bm[data.ac]) < sum(reference.Bm[reference.ac])
+        if iszero(relative_PS)
+            # Respiration still consumes biomass when photosynthesis stops.
+            @test sum(data.Bm[data.ac]) < initial_biomass
+        end
+    end
+end
+
 @testset "Example boundary flux mass balance" begin
     grid = RectilinearGrid(size=(2, 3, 4), x=(0, 2), y=(0, 6), z=(0, -8),
                            topology=(Bounded, Bounded, Bounded))
@@ -164,10 +205,11 @@ end
                          bgc_params=Dict("kDON"=>0.0, "w_sink_org"=>0.0, "w_sink_inorg"=>0.0))
     # Retain scalar, spatial, and time-dependent boundary coverage from the 3D
     # example, now with an analytic budget and no DON reaction in CarbonMode.
-    model.tracers.DON.bc.west = 1e-3
-    model.tracers.DON.bc.east = fill(2e-4, 3, 4)
-    model.tracers.DON.bc.south = cat(fill(3e-4, 2, 4), fill(6e-4, 2, 4); dims=3)
-    model.tracers.DON.bc.north = cat(fill(1e-4, 2, 4), fill(2e-4, 2, 4); dims=3)
+    don = model.tracers.DON
+    set_bc!(don, CPU(); pos=:west, bc_c=1e-3, bc_v=1.0)
+    set_bc!(don, CPU(); pos=:east, bc_c=fill(2e-4, 3, 4), bc_v=1.0)
+    set_bc!(don, CPU(); pos=:south, bc_c=cat(fill(3e-4, 2, 4), fill(6e-4, 2, 4); dims=3), bc_v=1.0)
+    set_bc!(don, CPU(); pos=:north, bc_c=cat(fill(1e-4, 2, 4), fill(2e-4, 2, 4); dims=3), bc_v=1.0)
     initial_DON = tot_mass(model.tracers.DON.data, model.grid)
     initial_C = example_inventory(model)
     update!(forced_example(model, 0.0; iterations=2))
