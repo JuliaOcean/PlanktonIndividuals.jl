@@ -155,6 +155,14 @@ end
     @test all(<(0), diff(column))
 end
 
+function carbon_mode_nutrient_inventory(model)
+    phyto = model.individuals.phytos.sp1
+    biomass = sum(phyto.data.Bm[phyto.data.ac])
+    nitrogen = sum(tot_mass(model.tracers[key].data, model.grid) for key in (:NH4, :NO3, :DON, :PON))
+    phosphorus = sum(tot_mass(model.tracers[key].data, model.grid) for key in (:PO4, :DOP, :POP))
+    return [nitrogen + biomass * phyto.p.R_NC, phosphorus + biomass * phyto.p.R_PC]
+end
+
 @testset "CarbonMode nutrient limitation" begin
     Random.seed!(2026)
     initial = physiology_example(CarbonMode(); FT=Float64)
@@ -162,37 +170,97 @@ end
     p = phyto.p
     initial_biomass = sum(phyto.data.Bm[phyto.data.ac])
 
-    # At three times both half-saturation concentrations, the limiting factor is 3/4.
     rich = deepcopy(initial)
-    rich.tracers.NH4.data .= 3 * p.KsatN
+    rich.tracers.NH4.data .= 3 * p.KsatNH4
     rich.tracers.NO3.data .= 0
-    rich.tracers.PO4.data .= 3 * p.KsatP
+    rich.tracers.PO4.data .= 3 * p.KsatPO4
     sim_run!(forced_example(rich, 200.0))
     reference = rich.individuals.phytos.sp1.data
     @test all(>(0), reference.PS[reference.ac])
+    @test reference.BS[reference.ac] ≈ (3/4) .* reference.PS[reference.ac]
     @test sum(reference.Bm[reference.ac]) > initial_biomass
 
-    @testset "$name" for (name, nh4, no3, po4, relative_PS) in (
-        ("NH4 only", p.KsatN, 0, 3 * p.KsatP, 2/3),
-        ("NO3 only", 0, p.KsatN, 3 * p.KsatP, 2/3),
-        ("Combined nitrogen", p.KsatN/2, p.KsatN/2, 3 * p.KsatP, 2/3),
-        ("Phosphate limitation", 3 * p.KsatN, 0, p.KsatP, 2/3),
-        ("Both at half saturation", p.KsatN, 0, p.KsatP, 2/3),
-        ("No inorganic nitrogen", 0, 0, 3 * p.KsatP, 0),
-        ("No phosphate", 3 * p.KsatN, 0, 0, 0),
+    @testset "$name" for (name, nh4, no3, po4, growth_fraction, nh4_share) in (
+        ("NH4 only", p.KsatNH4, 0, 3 * p.KsatPO4, 1/2, 1.0),
+        ("NO3 only", 0, p.KsatNO3, 3 * p.KsatPO4, 1/2, 0.0),
+        ("Combined nitrogen", p.KsatNH4/2, p.KsatNO3/2, 3 * p.KsatPO4, 2/3, 1/2),
+        ("Phosphate limitation", 3 * p.KsatNH4, 0, p.KsatPO4, 1/2, 1.0),
+        ("Both at half saturation", p.KsatNH4, 0, p.KsatPO4, 1/2, 1.0),
+        ("No inorganic nitrogen", 0, 0, 3 * p.KsatPO4, 0, 0.0),
+        ("No phosphate", 3 * p.KsatNH4, 0, 0, 0, 1.0),
     )
         model = deepcopy(initial)
         model.tracers.NH4.data .= nh4
         model.tracers.NO3.data .= no3
         model.tracers.PO4.data .= po4
-        sim_run!(forced_example(model, 200.0))
+        inventory = carbon_mode_nutrient_inventory(model)
+        carbon = example_inventory(model)
+        sim = forced_example(model, 200.0)
+        sim_run!(sim)
         data = model.individuals.phytos.sp1.data
-        @test data.PS[data.ac] ≈ relative_PS .* reference.PS[reference.ac]
-        @test sum(data.Bm[data.ac]) < sum(reference.Bm[reference.ac])
-        if iszero(relative_PS)
-            # Respiration still consumes biomass when photosynthesis stops.
-            @test sum(data.Bm[data.ac]) < initial_biomass
+
+        # Nutrients limit biosynthesis while the photosynthetic rate is unchanged.
+        @test data.PS[data.ac] ≈ reference.PS[reference.ac]
+        @test data.BS[data.ac] ≈ growth_fraction .* reference.PS[reference.ac]
+        @test all(iszero, data.RP[data.ac])
+        @test all(iszero, data.Bd[data.ac])
+        @test data.Bm[data.ac] ≈ phyto.data.Bm[phyto.data.ac] .+ sim.ΔT .* data.BS[data.ac] rtol=1e-10
+
+        # The tracer tendencies isolate particle exchange from background reactions.
+        fixed = sim.ΔT * sum(data.BS[data.ac])
+        flux = model.timestepper.plk
+        @test tot_mass(flux.NH4.data, model.grid) ≈ -p.R_NC * fixed * nh4_share
+        @test tot_mass(flux.NO3.data, model.grid) ≈ -p.R_NC * fixed * (1 - nh4_share)
+        @test tot_mass(flux.PO4.data, model.grid) ≈ -p.R_PC * fixed
+        @test carbon_mode_nutrient_inventory(model) ≈ inventory rtol=1e-10
+        @test example_inventory(model) ≈ carbon rtol=1e-10
+    end
+end
+
+@testset "CarbonMode repair with scarce nutrients" begin
+    model = physiology_example(CarbonMode(); FT=Float64)
+    data = model.individuals.phytos.sp1.data
+    first, second = findall(data.ac)[1:2]
+    data.Bd[first] = 0.2 * data.Bm[first]
+    data.Bd[second] = 1e-6 * data.Bm[second]
+    damage = copy(data.Bd)
+    carbon = example_inventory(model)
+    model.tracers.NH4.data .= 0
+    model.tracers.NO3.data .= 0
+    sim = forced_example(model, 200.0)
+    sim_run!(sim)
+
+    @test all(>(0), data.PS[data.ac])
+    @test all(iszero, data.BS[data.ac])
+    @test data.RP[first] ≈ data.PS[first]
+    @test data.RP[second] * sim.ΔT ≈ damage[second]
+    @test 0 <= data.Bd[first] < damage[first]
+    @test data.Bd[second] ≈ 0 atol=eps(damage[second])
+    @test all(iszero, data.RP[findall(data.ac)[3:end]])
+    @test example_inventory(model) ≈ carbon rtol=1e-10
+end
+
+@testset "CarbonMode organic losses" begin
+    @testset "$event" for (event, fractions) in ((:graz, (0.2, 0.4, 0.6)), (:mort, (0.3, 0.5, 0.7)))
+        model = physiology_example(CarbonMode(); FT=Float64)
+        phyto = model.individuals.phytos.sp1
+        keys = Tuple(Symbol(event, :Frac, element) for element in (:C, :N, :P))
+        phyto.p = merge(phyto.p, NamedTuple{keys}(fractions))
+        data = phyto.data
+        i = findfirst(data.ac)
+        biomass = data.Bm[i]
+        before = carbon_mode_nutrient_inventory(model)
+        getproperty(data, event)[i] = 1
+        sim_run!(forced_example(model, 0.0))
+
+        @test !data.ac[i]
+        flux = model.timestepper.plk
+        for (dissolved, particulate, ratio, fraction) in
+            zip((:DOC, :DON, :DOP), (:POC, :PON, :POP), (1, phyto.p.R_NC, phyto.p.R_PC), fractions)
+            @test tot_mass(flux[dissolved].data, model.grid) ≈ biomass * ratio * fraction
+            @test tot_mass(flux[particulate].data, model.grid) ≈ biomass * ratio * (1 - fraction)
         end
+        @test carbon_mode_nutrient_inventory(model) ≈ before rtol=1e-10
     end
 end
 

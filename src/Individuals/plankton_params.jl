@@ -274,9 +274,11 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "Ea_ref"    => [5.3e4],   # Free energy
         "Topt_ref"  => [26.0],    # reference optimal growth temperature(C)
         "PCmax"     => [4.2e-5],  # Maximum primary production rate (per second)
-        "KsatN"     => [0.015],   # Half-saturation coeff (mmol N/m³)
-        "KsatP"     => [0.003],   # Half-saturation coeff (mmol P/m³)
-        "respir"    => [1.2e-6],  # Respiration rate(per second)
+        "KsatNO3"   => [0.010],   # Half-saturation coeff (mmol N/m³)
+        "KsatNH4"   => [0.005],   # Half-saturation coeff (mmol N/m³)
+        "KsatPO4"   => [0.003],   # Half-saturation coeff (mmol P/m³)
+        "R_NC"      => [16/106],  # N:C ratio in cell biomass
+        "R_PC"      => [1/106],   # P:C ratio in cell biomass
         "f_T2B"     => [2.7e-6],  # Thermal damage rate (1.0/K/s)
         "grz_P"     => [0.0],     # Grazing probability per second
         "dvid_P"    => [5e-5],    # Probability of cell division per second.
@@ -286,7 +288,11 @@ function phyt_params_default(N::Int64, mode::CarbonMode)
         "mort_P"    => [5e-5],    # Probability of cell natural death per second
         "mort_reg"  => [5.0e-2],  # Regulation of cell natural death
         "grazFracC" => [0.7],     # Fraction goes into dissolved organic pool
+        "grazFracN" => [0.7],     # Fraction goes into dissolved organic pool
+        "grazFracP" => [0.7],     # Fraction goes into dissolved organic pool
         "mortFracC" => [0.5],     # Fraction goes into dissolved organic pool
+        "mortFracN" => [0.5],     # Fraction goes into dissolved organic pool
+        "mortFracP" => [0.5],     # Fraction goes into dissolved organic pool
         "thermal"   => [1.0],     # thermal damage, 1 for on, 0 for off
         "is_bact"   => [0.0],     # is this specis bacteria or not, 1 for bacteria, 0 for phytoplankton
         "max_ptc"   => [25],      # Maximum attached abiotic particles per phytoplankton individual

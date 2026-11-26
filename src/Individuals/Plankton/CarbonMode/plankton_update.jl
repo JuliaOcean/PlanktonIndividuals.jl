@@ -25,7 +25,8 @@ function plankton_update!(phyto, trs, rnd, plk, diags_spcs, ΔT, t, arch::Archit
 
     ##### phytoplankton physiology processes and interactions with fields
     plankton_growth!(plank, trs, rnd, p, ΔT, t, arch)
-    calc_consume!(plk.DIC.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, arch)
+    calc_consume!(plk.DIC.data, plk.NH4.data, plk.NO3.data, plk.PO4.data,
+                  plank, plank.ac, plank.xi, plank.yi, plank.zi, ΔT, p.R_NC, p.R_PC, arch)
     
     ##### diagnostics of processes for each species
     diags_spcs!(diags_spcs, phyto, plank.ac, plank.xi, plank.yi, plank.zi, arch)

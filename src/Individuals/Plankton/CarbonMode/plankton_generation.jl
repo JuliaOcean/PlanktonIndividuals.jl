@@ -1,8 +1,9 @@
 function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
     rawdata = StructArray(x   = zeros(FT, maxN), y   = zeros(FT, maxN), z   = zeros(FT, maxN),
                           xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN),
-                          Sz  = zeros(FT, maxN),
-                          Bm  = zeros(FT, maxN), Bd  = zeros(FT, maxN), Chl = zeros(FT, maxN),
+                          Sz  = zeros(FT, maxN), Bm  = zeros(FT, maxN), Bd  = zeros(FT, maxN),
+                          Chl = zeros(FT, maxN), γ   = zeros(FT, maxN),
+                          fNO3= zeros(FT, maxN), fNH4= zeros(FT, maxN), fPO4= zeros(FT, maxN),
                           gen = zeros(FT, maxN), age = zeros(FT, maxN),
                           idx = zeros(Int,maxN), ac  = zeros(Bool, maxN),
                           PS  = zeros(FT, maxN), BS  = zeros(FT, maxN), RS  = zeros(FT, maxN),
@@ -14,9 +15,11 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
 
     param_names=(:κhP, :κvP, :Nsuper, :Cquota, :mean, :var, :α, :Φ, 
                  :Topt, :Tmax, :Ea_ref, :Topt_ref, :PCmax, 
-                 :Chl2C, :respir, :f_T2B, :KsatN, :KsatP,
+                 :Chl2C, :f_T2B, :KsatNO3, :KsatNH4, :KsatPO4,
+                 :R_NC, :R_PC, 
                  :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, 
-                 :mort_P, :mort_reg, :grazFracC, :mortFracC,
+                 :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, 
+                 :mortFracC, :mortFracN, :mortFracP,
                  :thermal, :is_bact, :max_ptc)
 
     pkeys = Symbol.(collect(keys(params)))
