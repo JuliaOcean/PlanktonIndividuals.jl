@@ -3,7 +3,7 @@ function grazing!(plank, arch::Architecture, plk, p)
     ##### calculate grazing loss
     calc_loss!(plk.NH4.data, plk.NO3.data, plk.DOC.data, plk.POC.data, 
                plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
-               plk.DFe.data, plk.PFe_bio.data, plk.O2.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.graz, 
+               plk.DFe.data, plk.POFe.data, plk.O2.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.graz, 
                p.grazFracC, p.grazFracN, p.grazFracP, p.grazFracFe, p.R_NC, p.R_PC, arch)
     
     ##### inactivate grazed individuals
@@ -17,7 +17,7 @@ function mortality!(plank, arch::Architecture, plk, p)
     ##### calculate mortality loss
     calc_loss!(plk.NH4.data, plk.NO3.data, plk.DOC.data, plk.POC.data, 
                plk.DON.data, plk.PON.data, plk.DOP.data, plk.POP.data,
-               plk.DFe.data, plk.PFe_bio.data, plk.O2.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.mort, 
+               plk.DFe.data, plk.POFe.data, plk.O2.data, plank, plank.ac, plank.xi, plank.yi, plank.zi, plank.mort, 
                p.mortFracC, p.mortFracN, p.mortFracP, p.mortFracFe, p.R_NC, p.R_PC, arch)
     
     ##### inactivate dead individuals

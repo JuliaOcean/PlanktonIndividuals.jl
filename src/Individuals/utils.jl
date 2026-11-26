@@ -93,6 +93,23 @@ function inactivate!(plank, loss)
     @inbounds plank.ac .*= isless.(loss, 1.0f0)
 end
 
+##### consume to concentrations before applied to tracers
+@kernel function consume2concentrations_kernel!(consume, g::AbstractGrid)
+    i, j, k = @index(Global, NTuple)
+    ### offset index for halo points
+    ii = i + g.Hx
+    jj = j + g.Hy
+    kk = k + g.Hz
+    consume[ii, jj, kk] = consume[ii, jj, kk] / volume(ii, jj, kk, g)
+end
+function consume2concentrations!(plk, g, arch)
+    kernel! = consume2concentrations_kernel!(device(arch), (16,16), (g.Nx, g.Ny, g.Nz))
+    for name in keys(plk)
+        kernel!(plk[name].data, g)
+    end
+    return nothing
+end
+
 ##### shape function - decrease from 1.0 to 0.0 while x increase from 0.0 to 1.0
 ##### sharp decrease near x/xmax = 1.0
 @inline function shape_func_dec(x, xmax, k; pow = 4.0f0)

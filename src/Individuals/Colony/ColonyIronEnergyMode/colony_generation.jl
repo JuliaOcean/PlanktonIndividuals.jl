@@ -23,7 +23,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
-    param_names=(:Nsuper, :Cquota, :Rad, :mean, :var, :Chl2Cint, 
+    param_names=(:κhP, :κvP, :Nsuper, :Cquota, :Rad, :mean, :var, :Chl2Cint,
                  :α, :Topt, :Tmax, :Ea, :is_nr, :is_croc, :is_tric,
                  :PCmax, :VNO3max, :VNH4max, :VPO4max, :k_O2,
                  :k_cf, :k_rs, :k_nr, :k_nf, :k_mtb,
@@ -50,7 +50,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
         end
     end
     p = NamedTuple{param_names}(FT.(tmp))
-    phyto = phytoplankton(data, p)
+    phyto = Phytoplankton(data, p)
     if (phyto.p.is_tric + phyto.p.is_croc + phyto.p.is_nr) > 1.0f0
         throw(ArgumentError("PARAM: only one of the three parameters(is_tric, is_croc, is_nr) can be set to 1.0"))
     end
@@ -75,7 +75,7 @@ function construct_colony(arch::Architecture, Nsp::Int,
     else
         throw(ArgumentError("COLONY: only support 2 or 3 species per colony"))
     end
-    return colony_particle(colony, intac)
+    return ColonyParticle(colony, intac)
 end
 
 function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)

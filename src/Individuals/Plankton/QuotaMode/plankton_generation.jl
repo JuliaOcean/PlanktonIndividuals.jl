@@ -13,15 +13,15 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
-    param_names=(:Nsuper, :Cquota, :mean, :var, :Chl2Cint, :α, :Φ, :Topt, :Tmax, :Ea,
+    param_names=(:κhP, :κvP, :Nsuper, :Cquota, :mean, :var, :Chl2Cint, :α, :Φ, :Topt, :Tmax, :Ea,
                  :PCmax, :VDOCmax, :VNO3max, :VNH4max, :VPO4max,
                  :KsatDOC, :KsatNH4, :KsatNO3, :KsatPO4, :Cqmax, :Nqmax, :Pqmax,
                  :Chl2N, :R_NC, :R_PC, :k_mtb, :respir, :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2,
-                 :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP)
+                 :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :mortFracC, :mortFracN, :mortFracP, :max_ptc)
 
     pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))
-    for i in 1:length(param_names)
+    for i in eachindex(param_names)
         if param_names[i] ∉ pkeys
             throw(ArgumentError("PARAM: parameter not found $(param_names[i])"))
         else
@@ -29,7 +29,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
         end
     end
     p = NamedTuple{param_names}(FT.(tmp))
-    return phytoplankton(data, p)
+    return Phytoplankton(data, p)
 end
 
 function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)

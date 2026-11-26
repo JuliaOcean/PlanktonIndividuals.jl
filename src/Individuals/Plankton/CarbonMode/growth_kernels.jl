@@ -16,27 +16,51 @@ end
     return min(1.0f0, k)
 end
 
-##### allocation of functional biomass to repair
+@kernel function calc_nut_limit_kernel!(plank, trs, p)
+    i = @index(Global)
+    @inbounds plank.fNO3[i] = trs.NO3[i] / max(1.0f-30, p.KsatNO3 + trs.NO3[i])
+    @inbounds plank.fNH4[i] = trs.NH4[i] / max(1.0f-30, p.KsatNH4 + trs.NH4[i])
+    @inbounds plank.fPO4[i] = trs.PO4[i] / max(1.0f-30, p.KsatPO4 + trs.PO4[i])
+end
+function calc_nut_limit!(plank, trs, p, arch)
+    kernel! = calc_nut_limit_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, trs, p)
+    return nothing
+end
+
+##### allocation of functional biomass to growth and repair
 ##### only functional when damaged biomass is greater than 0.0
-##### use Bd/Bm as the allocation, more damaged biomass means more allocation to repair
+##### use Bd/Bm as the allocation factor
+##### more damaged biomass means more allocation to repair
 @inline function gamma_alloc(Bm, Bd, p)
-    γ = Bd / max(1.0f-30, Bm) * isless(0.0f0, Bd)
+    γ = Bd / max(1.0f-30, Bm)
     γ = min(1.0f0, γ) * isequal(1.0f0, p.thermal)
-    return γ
+    return 1.0f0 - γ
+end
+@kernel function gamma_alloc_kernel!(plank, p)
+    i = @index(Global)
+    @inbounds plank.γ[i] = gamma_alloc(plank.Bm[i], plank.Bd[i], p)
+    @inbounds plank.γ[i] = plank.γ[i] * min(plank.fNO3[i] + plank.fNH4[i], plank.fPO4[i])
+end
+function calc_gamma_alloc!(plank, p, arch)
+    kernel! = gamma_alloc_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, p)
+    return nothing
 end
 
 ##### calculate photosynthesis rate (mmolC/individual/second)
 @inline function calc_photosynthesis(par, T, Chl, Bm, Bd, p)
     αI  = par * p.α * p.Φ
     PCm = p.PCmax * (tempFunc(T, p) * p.thermal + tempFunc_PS(T, p) * (1.0f0 - p.thermal))
-    light_limit = 1.0f0 - exp(-αI / max(1.0f-30, PCm) * Chl / max(1.0f-30, Bm))
+    light_limit = 1.0f0 - exp(-αI / max(1.0f-30, PCm) * Chl / max(1.0f-30, Bm - Bd))
     PS  = PCm * max(0.0f0, Bm - Bd) * (light_limit * (1.0f0 - p.is_bact) + p.is_bact)
     return PS
 end
 
 @kernel function calc_PS_kernel!(plank, trs, p)
     i = @index(Global)
-    @inbounds plank.PS[i] = calc_photosynthesis(trs.par[i], trs.T[i], plank.Chl[i], plank.Bm[i], plank.Bd[i], p) * plank.ac[i]
+    @inbounds plank.PS[i] = calc_photosynthesis(trs.par[i], trs.T[i], plank.Chl[i],
+                            plank.Bm[i], plank.Bd[i], p) * plank.ac[i]
 end
 
 function calc_PS!(plank, trs, p, arch::Architecture)
@@ -46,24 +70,16 @@ function calc_PS!(plank, trs, p, arch::Architecture)
 end
 
 ##### calculate repair rate (mmolC/individual/second)
-@kernel function calc_repair_kernel!(plank, p)
+@kernel function calc_C_alloc_kernel!(plank, p, ΔT)
     i = @index(Global)
-    @inbounds plank.RP[i] = plank.PS[i] * gamma_alloc(plank.Bm[i], plank.Bd[i], p)
+    @inbounds plank.BS[i] = plank.PS[i] * plank.γ[i]
+    @inbounds plank.RP[i] = plank.PS[i] * (1.0f0 - plank.γ[i])
+    @inbounds plank.RP[i] = max(0.0f0, min(plank.RP[i], plank.Bd[i] / ΔT))
+    @inbounds plank.RS[i] = plank.PS[i] - plank.RP[i] - plank.BS[i]
 end
-function calc_repair!(plank, p, arch)
-    kernel! = calc_repair_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, p)
-    return nothing
-end
-
-##### calculate biosynthesis rate (mmolC/individual/second)
-@kernel function calc_BS_kernel!(plank, p)
-    i = @index(Global)
-    @inbounds plank.BS[i] = plank.PS[i] * (1.0f0 - gamma_alloc(plank.Bm[i], plank.Bd[i], p))
-end
-function calc_BS!(plank, p, arch)
-    kernel! = calc_BS_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, p)
+function calc_C_alloc!(plank, p, ΔT, arch)
+    kernel! = calc_C_alloc_kernel!(device(arch), 256, (size(plank.ac,1)))
+    kernel!(plank, p, ΔT)
     return nothing
 end
 
@@ -83,21 +99,10 @@ function calc_thermal_damage!(plank, T, p, ΔT, arch)
     return nothing
 end
 
-##### calculate respiration (mmolC/individual/second)
-@kernel function calc_respir_kernel!(plank, T, p)
-    i = @index(Global)
-    @inbounds plank.RS[i] = p.respir * plank.Bm[i] * tempFunc(T[i], p) * plank.ac[i]
-end
-function calc_respir!(plank, T, p, arch)
-    kernel! = calc_respir_kernel!(device(arch), 256, (size(plank.ac,1)))
-    kernel!(plank, T, p)
-    return nothing
-end
-
 ##### update C quotas
 @kernel function update_quotas_kernel!(plank, ΔT)
     i = @index(Global)
-    @inbounds plank.Bm[i]  += (plank.BS[i] - plank.RS[i]) * ΔT
+    @inbounds plank.Bm[i]  += plank.BS[i] * ΔT
     @inbounds plank.Bd[i]  += (plank.TD[i] - plank.RP[i]) * ΔT
     @inbounds plank.age[i] += ΔT / 3600.0f0 * plank.ac[i]
 end

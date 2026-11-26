@@ -1,10 +1,11 @@
 # Model Simulation
 
-A `PlanktonSimulation` includes a `PlanktonModel` and its time step `ΔT` and number of time steps `nΔT`.
-It will time step the `PlanktonModel` by calling [`update!`](@ref).
+A `PlanktonSimulation` includes a `PlanktonModel` and its time step `ΔT` and number of time steps `iterations`.
+Call [`sim_run!`](@ref) to advance the model.
 
 ```@docs
 PlanktonSimulation
+sim_run!
 ```
 
 ## Model Diagnostics

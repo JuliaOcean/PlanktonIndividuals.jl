@@ -11,39 +11,48 @@
 
 `PlanktonIndividuals.jl` is a fast individual-based model written in Julia that can be run on both CPU and GPU. It simulates the life cycle of phytoplankton cells as Lagrangian particles in the ocean while nutrients are represented as Eulerian, density-based tracers using a [3rd order advection scheme](https://mitgcm.readthedocs.io/en/latest/algorithm/adv-schemes.html#third-order-direct-space-time-with-flux-limiting). The model is used to simulate and interpret the temporal and spacial variations of phytoplankton cell densities and stoichiometry as well as growth and division behaviors induced by diel cycle and physical motions ranging from sub-mesoscale to large scale processes.
 
-## Installation
+### Developing with PlanktonKernels
 
-To add `PlanktonIndividuals.jl` to your Julia environment:
-
-```julia
-using Pkg; Pkg.add("PlanktonIndividuals.jl")
-```
-
-## Use Examples
-
-### 1. Simple Flow Fields In Two Dimensions
+Shared architectures, grids, fields, transport, and biogeochemical numerics are
+provided by PlanktonKernels. With sibling checkouts, initialize the local dependency:
 
 ```julia
-using PlanktonIndividuals
-p = dirname(pathof(PlanktonIndividuals))
-#include(joinpath(p,"../examples/vertical_2D_example.jl"))
-include(joinpath(p,"../examples/horizontal_2D_example.jl"))
+using Pkg
+Pkg.activate(".")
+Pkg.develop(path="../PlanktonKernels.jl")
+Pkg.instantiate()
+Pkg.test()
 ```
 
-### 2. Closer Look Into One Grid Box
+Import shared grids, architectures, units, and biogeochemical helpers directly
+from `PlanktonKernels`. Field-copy helpers such as `vel_copy!` are available from
+`PlanktonKernels.Fields`.
+
+Tracer initialization now uses `PlanktonKernels.Biogeochemistry` directly.
+Use `PlanktonKernels.Fields.set_bc!` for tracer boundaries and
+`PlanktonIndividuals.set_bc_particle!` for particle boundaries. GPU methods are supplied by PlanktonKernels extensions
+when CUDA or Metal is loaded. Use one GPU backend per session.
+
+Individual defaults are defined in `src/Individuals/plankton_params.jl`, with
+separate methods for each physiology mode. Particle diffusivities `κhP` and `κvP`
+are per-species parameter arrays (m²/s), defaulting to zero, supplied through
+`phyto_setup`, `abiotic_setup`, or `colony_setup` parameters. They are no longer
+biogeochemical parameters. A colony moves as one particle using the diffusivities
+of its first species; other species follow that position.
+
+
+Model-specific settings live in `model.options`:
 
 ```julia
-using PlanktonIndividuals
-p = dirname(pathof(PlanktonIndividuals))
-include(joinpath(p,"../examples/0D_experiment.jl"))
+opt = model_options()
+opt.kc = 0.05
+opt.kw = 0.046
+opt.shared_graz = 0.0
+opt.max_individuals = 16384
+model = PlanktonModel(CPU(), grid; options=opt)
 ```
 
-### 3. Turbulent Flow Fields In Three Dimensions
-
-Here [Oceananigans.jl](https://github.com/climate-machine/Oceananigans.jl) is used to generate velocity fields and then use those to drive the individual-based model.
-
-```julia
-using PlanktonIndividuals
-p = dirname(pathof(PlanktonIndividuals))
-include(joinpath(p,"../examples/surface_mixing_3D_example.jl"))
-```
+`bgc_params` now accepts only PlanktonKernels biogeochemical parameters; light
+attenuation and grazing settings belong in options. Set particle limits through `options.max_individuals` and
+`options.max_candidates`. Each model retains the supplied options object. Particle limits determine allocations
+at construction and should not be changed afterward.

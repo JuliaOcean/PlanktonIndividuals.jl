@@ -1,8 +1,9 @@
 function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int, FT::DataType)
     rawdata = StructArray(x   = zeros(FT, maxN), y   = zeros(FT, maxN), z   = zeros(FT, maxN),
                           xi  = zeros(Int,maxN), yi  = zeros(Int,maxN), zi  = zeros(Int,maxN),
-                          Sz  = zeros(FT, maxN),
-                          Bm  = zeros(FT, maxN), Bd  = zeros(FT, maxN), Chl = zeros(FT, maxN),
+                          Sz  = zeros(FT, maxN), Bm  = zeros(FT, maxN), Bd  = zeros(FT, maxN),
+                          Chl = zeros(FT, maxN), γ   = zeros(FT, maxN),
+                          fNO3= zeros(FT, maxN), fNH4= zeros(FT, maxN), fPO4= zeros(FT, maxN),
                           gen = zeros(FT, maxN), age = zeros(FT, maxN),
                           idx = zeros(Int,maxN), ac  = zeros(Bool, maxN),
                           PS  = zeros(FT, maxN), BS  = zeros(FT, maxN), RS  = zeros(FT, maxN),
@@ -12,13 +13,18 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
-    param_names=(:Nsuper, :Cquota, :mean, :var, :α, :Φ, :Topt, :Tmax, :Ea_ref, :Topt_ref, :PCmax, :Chl2C, :respir, :f_T2B,
-                 :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, :mort_P, :mort_reg, :grazFracC, :mortFracC,
-                 :thermal, :is_bact)
+    param_names=(:κhP, :κvP, :Nsuper, :Cquota, :mean, :var, :α, :Φ, 
+                 :Topt, :Tmax, :Ea_ref, :Topt_ref, :PCmax, 
+                 :Chl2C, :f_T2B, :KsatNO3, :KsatNH4, :KsatPO4,
+                 :R_NC, :R_PC, 
+                 :grz_P, :dvid_type, :dvid_P, :dvid_reg, :dvid_reg2, 
+                 :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, 
+                 :mortFracC, :mortFracN, :mortFracP,
+                 :thermal, :is_bact, :max_ptc)
 
     pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))
-    for i in 1:length(param_names)
+    for i in eachindex(param_names)
         if param_names[i] ∉ pkeys
             throw(ArgumentError("PARAM: parameter not found $(param_names[i])"))
         else
@@ -26,7 +32,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
         end
     end
     p = NamedTuple{param_names}(FT.(tmp))
-    return phytoplankton(data, p)
+    return Phytoplankton(data, p)
 end
 
 function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)

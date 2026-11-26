@@ -47,27 +47,35 @@ end
 
 ##### 3. merge Particle 
 ##### Handles actual uptake with capacity limit. 
-@kernel function merge_particle_kernel!(intac, plank, plank_p, abiotic, max_candidates)
+@kernel function merge_particle_kernel!(intac, ptc, ac, max_ptc, max_candidates)
     k = @index(Global)
 
-    if abiotic.ac[k] == 1.0f0
+    if ac[k]
         for j in 1:max_candidates
             plank_id = intac[j, k]
-            if plank_id > 0  
-                if plank.ptc[plank_id] < plank_p.max_ptc
-                    KernelAbstractions.@atomic plank.ptc[plank_id] += 1.0f0
-                    abiotic.ac[k] = 0.0f0
+            if plank_id > 0
+                # Several abiotic particles may choose the same cell. Reserve a
+                # slot atomically so the capacity check and increment cannot race.
+                previous = KernelAbstractions.@atomic ptc[plank_id]
+                while previous < max_ptc
+                    observed, accepted = KernelAbstractions.@atomicreplace ptc[plank_id] previous => previous + one(previous)
+                    if accepted
+                        ac[k] = false
+                        break
+                    end
+                    previous = observed
+                end
+                if !ac[k]
                     break
                 end
             end
-        end     
-                
+        end
     end
 end
 
 function merge_particle!(intac, plank, plank_p, abiotic, max_candidates, arch::Architecture)
     kernel! = merge_particle_kernel!(device(arch), 256, (size(abiotic.ac, 1)))
-    kernel!(intac, plank, plank_p, abiotic, max_candidates)
+    kernel!(intac, plank.ptc, abiotic.ac, plank_p.max_ptc, max_candidates)
     return nothing
 end
 
@@ -139,83 +147,83 @@ end
 
 ##### particle boundary conditions
 ##### only positive fluxes are accepted for particles
-@kernel function calc_particle_bc_top_kernel!(tr_temp, abio_bc_top, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
+@kernel function calc_particle_bc_top_kernel!(tr_temp, bc_top_c, bc_top_v, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
     i, j = @index(Global, NTuple)
     ii = i + g.Hx
     jj = j + g.Hy
     kk = 1 + g.Hz
     @inbounds tr_temp[ii, jj, kk] = isless(rnd_3d[ii, jj, kk] * abio_p.sz_min * abio_p.Nsuper, 
-                                               getbc(abio_bc_top, i, j, iter) * ΔT * Az(ii, jj, kk, g))
+                                               getbc(bc_top_c, bc_top_v, i, j, iter) * ΔT * Az(ii, jj, kk, g))
 end
-@kernel function calc_particle_bc_bottom_kernel!(tr_temp, abio_bc_bottom, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
+@kernel function calc_particle_bc_bottom_kernel!(tr_temp, bc_bottom_c, bc_bottom_v, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
     i, j = @index(Global, NTuple)
     ii = i + g.Hx
     jj = j + g.Hy
     kk = g.Nz + g.Hz
     @inbounds tr_temp[ii, jj, kk] = isless(rnd_3d[ii, jj, kk] * abio_p.sz_min * abio_p.Nsuper, 
-                                               getbc(abio_bc_bottom, i, j, iter) * ΔT * Az(ii, jj, kk, g))
+                                               getbc(bc_bottom_c, bc_bottom_v, i, j, iter) * ΔT * Az(ii, jj, kk, g))
 end
-@kernel function calc_particle_bc_east_kernel!(tr_temp, abio_bc_east, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
+@kernel function calc_particle_bc_east_kernel!(tr_temp, bc_east_c, bc_east_v, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
     j, k = @index(Global, NTuple)
     ii = g.Nx + g.Hx
     jj = j + g.Hy
     kk = k + g.Hz
     @inbounds tr_temp[ii, jj, kk] = isless(rnd_3d[ii, jj, kk] * abio_p.sz_min * abio_p.Nsuper, 
-                                               getbc(abio_bc_east, j, k, iter) * ΔT * Ax(ii, jj, kk, g))
+                                               getbc(bc_east_c, bc_east_v, j, k, iter) * ΔT * Ax(ii, jj, kk, g))
 end
-@kernel function calc_particle_bc_west_kernel!(tr_temp, abio_bc_west, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
+@kernel function calc_particle_bc_west_kernel!(tr_temp, bc_west_c, bc_west_v, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
     j, k = @index(Global, NTuple)
     ii = 1 + g.Hx
     jj = j + g.Hy
     kk = k + g.Hz
     @inbounds tr_temp[ii, jj, kk] = isless(rnd_3d[ii, jj, kk] * abio_p.sz_min * abio_p.Nsuper, 
-                                               getbc(abio_bc_west, j, k, iter) * ΔT * Ax(ii, jj, kk, g))
+                                               getbc(bc_west_c, bc_west_v, j, k, iter) * ΔT * Ax(ii, jj, kk, g))
 end
-@kernel function calc_particle_bc_south_kernel!(tr_temp, abio_bc_south, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
+@kernel function calc_particle_bc_south_kernel!(tr_temp, bc_south_c, bc_south_v, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
     i, k = @index(Global, NTuple)
     ii = i + g.Hx
     jj = 1 + g.Hy
     kk = k + g.Hz
     @inbounds tr_temp[ii, jj, kk] = isless(rnd_3d[ii, jj, kk] * abio_p.sz_min * abio_p.Nsuper, 
-                                               getbc(abio_bc_south, i, k, iter) * ΔT * Ay(ii, jj, kk, g))
+                                               getbc(bc_south_c, bc_south_v, i, k, iter) * ΔT * Ay(ii, jj, kk, g))
 end
-@kernel function calc_particle_bc_north_kernel!(tr_temp, abio_bc_north, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
+@kernel function calc_particle_bc_north_kernel!(tr_temp, bc_north_c, bc_north_v, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid)
     i, k = @index(Global, NTuple)
     ii = i + g.Hx
     jj = g.Ny + g.Hy
     kk = k + g.Hz
     @inbounds tr_temp[ii, jj, kk] = isless(rnd_3d[ii, jj, kk] * abio_p.sz_min * abio_p.Nsuper, 
-                                               getbc(abio_bc_north, i, k, iter) * ΔT * Ay(ii, jj, kk, g))
+                                               getbc(bc_north_c, bc_north_v, i, k, iter) * ΔT * Ay(ii, jj, kk, g))
 end
 
 function calc_particle_bc_top!(tr_temp, abio_bc_top, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid, arch::Architecture)
     kernel! = calc_particle_bc_top_kernel!(device(arch), (16,16), (g.Nx, g.Ny))
-    kernel!(tr_temp, abio_bc_top, rnd_3d, abio_p, ΔT, iter, g)
+    kernel!(tr_temp, abio_bc_top.c, abio_bc_top.v, rnd_3d, abio_p, ΔT, iter, g)
     return nothing
 end
 function calc_particle_bc_bottom!(tr_temp, abio_bc_bottom, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid, arch::Architecture)
     kernel! = calc_particle_bc_bottom_kernel!(device(arch), (16,16), (g.Nx, g.Ny))
-    kernel!(tr_temp, abio_bc_bottom, rnd_3d, abio_p, ΔT, iter, g)
+    kernel!(tr_temp, abio_bc_bottom.c, abio_bc_bottom.v, rnd_3d, abio_p, ΔT, iter, g)
     return nothing
 end
 function calc_particle_bc_east!(tr_temp, abio_bc_east, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid, arch::Architecture)
     kernel! = calc_particle_bc_east_kernel!(device(arch), (16,16), (g.Ny, g.Nz))
-    kernel!(tr_temp, abio_bc_east, rnd_3d, abio_p, ΔT, iter, g)
+    kernel!(tr_temp, abio_bc_east.c, abio_bc_east.v, rnd_3d, abio_p, ΔT, iter, g)
     return nothing
 end
 function calc_particle_bc_west!(tr_temp, abio_bc_west, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid, arch::Architecture)
     kernel! = calc_particle_bc_west_kernel!(device(arch), (16,16), (g.Ny, g.Nz))
-    kernel!(tr_temp, abio_bc_west, rnd_3d, abio_p, ΔT, iter, g)
+    kernel!(tr_temp, abio_bc_west.c, abio_bc_west.v, rnd_3d, abio_p, ΔT, iter, g)
     return nothing
 end
 function calc_particle_bc_south!(tr_temp, abio_bc_south, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid, arch::Architecture)
     kernel! = calc_particle_bc_south_kernel!(device(arch), (16,16), (g.Nx, g.Nz))
-    kernel!(tr_temp, abio_bc_south, rnd_3d, abio_p, ΔT, iter, g)
+    kernel!(tr_temp, abio_bc_south.c, abio_bc_south.v, rnd_3d, abio_p, ΔT, iter, g)
     return nothing
 end
 function calc_particle_bc_north!(tr_temp, abio_bc_north, rnd_3d, abio_p, ΔT, iter, g::AbstractGrid, arch::Architecture)
     kernel! = calc_particle_bc_north_kernel!(device(arch), (16,16), (g.Nx, g.Nz))
-    kernel!(tr_temp, abio_bc_north, rnd_3d, abio_p, ΔT, iter, g)
+    kernel!(tr_temp, abio_bc_north.c, abio_bc_north.v, rnd_3d, abio_p, ΔT, iter, g)
     return nothing
 end
 

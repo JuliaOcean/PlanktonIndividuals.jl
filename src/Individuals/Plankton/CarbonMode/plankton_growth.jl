@@ -1,14 +1,14 @@
 ##### update physiological attributes of each individual
 function plankton_growth!(plank, trs, rnd, p, ΔT, t, arch::Architecture)
+    calc_nut_limit!(plank, trs, p, arch)
+
+    calc_gamma_alloc!(plank, p, arch)
+
     calc_PS!(plank, trs, p, arch)
 
-    calc_BS!(plank, p, arch)
-
-    calc_repair!(plank, p, arch)
+    calc_C_alloc!(plank, p, ΔT, arch)
 
     calc_thermal_damage!(plank, trs.T, p, ΔT, arch)
-
-    calc_respir!(plank, trs.T, p, arch)
 
     update_quotas!(plank, ΔT, arch)
 

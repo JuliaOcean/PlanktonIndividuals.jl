@@ -32,7 +32,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                           ) 
     data = replace_storage(array_type(arch), rawdata)
 
-    param_names=(:Nsuper, :Cquota, :C_DNA, :var, :CH2DNA, :Chl2DNA,:RNA2DNA, 
+    param_names=(:κhP, :κvP, :Nsuper, :Cquota, :C_DNA, :var, :CH2DNA, :Chl2DNA,:RNA2DNA,
                  :PRO_RB2DNA, :PRO_MC2DNA, :PRO_MN2DNA, :PRO_TN2DNA, 
                  :PRO_TP2DNA, :PRO_TFe2DNA, :PRO_RS2DNA, :PRO_PS2DNA, :PRO_OT2DNA,
                  :α, :Topt, :Tmax, :Ea, :is_nr, :is_croc, :is_tric, :PCmax, :VDOCmax, 
@@ -47,11 +47,11 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
                  :e_TNO3, :e_TPO4, :e_TFe, :e_RS, :e_CF, :e_NF, :e_NR, :e_SP, :e_DNA, :e_RNA, :e_min,
                  :k_sat_RNA, :k_DNA, :k_sat_DNA, :k_sat_PRO, 
                  :dvid_P, :dvid_reg, :grz_P, :mort_P, :mort_reg, :grazFracC, :grazFracN, :grazFracP, :grazFracFe,
-                 :mortFracC, :mortFracN, :mortFracP, :mortFracFe)
+                 :mortFracC, :mortFracN, :mortFracP, :mortFracFe, :max_ptc)
 
     pkeys = Symbol.(collect(keys(params)))
     tmp = zeros(length(param_names))
-    for i in 1:length(param_names)
+    for i in eachindex(param_names)
         if param_names[i] ∉ pkeys
             throw(ArgumentError("PARAM: parameter not found $(param_names[i])"))
         else
@@ -59,7 +59,7 @@ function construct_plankton(arch::Architecture, sp::Int, params::Dict, maxN::Int
         end
     end
     p = NamedTuple{param_names}(FT.(tmp))
-    return phytoplankton(data, p)
+    return Phytoplankton(data, p)
 end
 
 function initialize_plankton!(plank, N::Int, g::AbstractGrid, arch::Architecture)

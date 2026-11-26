@@ -1,27 +1,3 @@
-mutable struct PlanktonOutputWriter
-    filepath::String
-    write_log::Bool
-    save_diags::Bool
-    save_phytoplankton::Bool
-    save_abiotic_particle::Bool
-    save_colony::Bool
-    diags_file::String
-    phytoplankton_file::String
-    phytoplankton_include::Tuple
-    phytoplankton_iteration_interval::Int
-    abiotic_particle_file::String
-    abiotic_particle_include::Tuple
-    abiotic_particle_iteration_interval::Int
-    colony_file::String
-    colony_include::Tuple
-    colony_iteration_interval::Int
-    max_filesize::Number # in Bytes
-    part_diags::Int
-    part_phytoplankton::Int
-    part_abiotic_particle::Int
-    part_colony::Int
-end
-
 """
     PlanktonOutputWriter(;dir = "./results",
                                diags_prefix = "diags",
