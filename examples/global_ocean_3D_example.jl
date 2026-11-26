@@ -60,7 +60,6 @@ end
 grid = LoadLatLonGrid(;grid_info = grid_info, size = (360,160,50), lat = (-80,80), lon= (-180,180), landmask = mask)
 
 phyt_parameter = Dict("PCmax"   => [0.0], # maximum photosynthesis rate
-                      "respir"=> [0.0], # respiration rate
                       "dvid_P"  => [0.0], # probability of cell division
                       "mort_P"  => [0.0], # probability of cell natural death
                       "thermal" => [0.0]  # thermal damage and repair

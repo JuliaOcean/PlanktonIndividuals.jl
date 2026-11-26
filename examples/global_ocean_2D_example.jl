@@ -31,7 +31,6 @@ grid = LatLonGrid(size=(360, 160, 1), lat=(-80,80), lon=(-180,180), z=(0,-10), l
 # In order to change individuals and tracer to **passive** mode, we need to update some parameters.
 
 phyt_parameter = Dict("PCmax"   => [0.0], # maximum photosynthesis rate
-                      "respir"=> [0.0], # respiration rate
                       "dvid_P"  => [0.0], # probability of cell division
                       "mort_P"  => [0.0], # probability of cell natural death
                       "thermal" => [0.0]  # thermal damage and repair
